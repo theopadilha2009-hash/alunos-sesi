@@ -8,7 +8,13 @@ metadata:
 Verificado em 2026-09-17, depois do primeiro deploy de produção:
 
 - **Produção**: https://alunos-sesi.vercel.app (projeto `alunos-sesi`, escopo
-  pessoal `theopadilha2009-5085`, sem time).
+  pessoal `theopadilha2009-5085`; o `orgId` é `team_NZSAr4PoQtmbTxc2MxkMpKUu`).
+- **O projeto está ligado ao GitHub**: todo merge na `main` publica sozinho em
+  produção (~30s) e toda branch ganha preview. O alias
+  `alunos-sesi-git-main-…` é o deploy automático; `alunos-sesi.vercel.app` pode
+  apontar para um deploy manual, já que o CLI também cria alias de produção.
+  Descoberto em 2026-09-17 — antes disso eu tinha dito ao Théo que não havia
+  integração, e estava errado.
 - **Repo**: https://github.com/theopadilha2009-hash/alunos-sesi (público).
 - **Supabase**: projeto `adzauecsqoxgnvidrcfm`, org `Templates`, região
   `sa-east-1`. O schema vive em `src/sql/001_schema.sql` — o banco não tem
