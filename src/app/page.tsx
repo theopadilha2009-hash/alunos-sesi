@@ -1,69 +1,56 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link";
+import { Roseta } from "@/components/Roseta";
+import { Rodape, Topo } from "@/components/ds";
 
-export default function Home() {
+export default function Capa() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <Topo />
+
+      <main>
+        <div className="wrap capa">
+          <div>
+            <p className="eyebrow">Diretório da turma</p>
+            <h1>
+              Quem é quem,
+              <br />
+              <span className="vazado">e onde encontrar.</span>
+            </h1>
+            <p className="lede">
+              O LinkedIn e o GitHub de cada aluno, com nome e sala. Para você
+              conhecer a turma, achar quem mexe com o quê e aparecer para quem
+              está contratando.
+            </p>
+          </div>
+          <div className="capa-arte">
+            <Roseta tamanho={220} girando />
+          </div>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="wrap">
+          <div className="portas">
+            <Link href="/alunos" className="porta">
+              <b>Os alunos</b>
+              <span>
+                A lista completa, com busca, filtro por sala e os mais
+                estrelados. É aberta para todo mundo.
+              </span>
+              <em>Entrar →</em>
+            </Link>
+
+            <Link href="/adm" className="porta">
+              <b>Painel do ADM</b>
+              <span>
+                Cadastrar aluno, colar a lista da turma inteira de uma vez,
+                fixar e dar destaque. Só abre com o link do ADM.
+              </span>
+              <em>Acesso restrito →</em>
+            </Link>
+          </div>
         </div>
       </main>
-    </div>
+
+      <Rodape>Um aluno ajuda o outro a ser encontrado.</Rodape>
+    </>
   );
 }

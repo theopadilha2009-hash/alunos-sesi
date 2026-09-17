@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Só o que não depende de rede. Os testes aqui são de funções puras
+# (busca, parser da colagem, ranking) e não falam com o Supabase — o que
+# precisa de banco é verificado na mão, contra o projeto de verdade.
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Testes
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Valores de mentira: o build só precisa que existam para as
+          # rotas de servidor não explodirem na coleta. Nada aqui conecta.
+          NEXT_PUBLIC_SUPABASE_URL: https://exemplo.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: anon-de-mentira
+          SUPABASE_SERVICE_ROLE_KEY: service-de-mentira
+          ADM_CHAVE: chave-de-mentira
