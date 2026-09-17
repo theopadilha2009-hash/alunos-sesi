@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-17T21:09:27.489Z",
+  "source": "manual",
+  "stack": {
+    "primaryLanguage": "typescript",
+    "languages": [
+      "typescript",
+      "javascript",
+      "sql",
+      "css",
+      "shell"
+    ],
+    "frameworks": [
+      "nextjs",
+      "react",
+      "supabase"
+    ],
+    "buildTools": [
+      "next build",
+      "turbopack"
+    ],
+    "testFrameworks": [
+      "node:test"
+    ],
+    "packageManager": "npm"
+  },
+  "sensors": [
+    {
+      "id": "typecheck",
+      "name": "Tipos",
+      "description": "tsc --noEmit (strict) sobre o src/ e os tipos de rota gerados em .next/types. É a única checagem estática: o projeto não usa ESLint de propósito.",
+      "severity": "critical",
+      "command": "npm run typecheck",
+      "script": "typecheck"
+    },
+    {
+      "id": "test",
+      "name": "Testes das funções puras",
+      "description": "node --experimental-strip-types --test tests/*.test.mjs. Cobre só as funções puras de src/lib/ (busca, importar, links, ranking, slug); sem rede e sem Supabase.",
+      "severity": "critical",
+      "command": "npm test",
+      "script": "test"
+    },
+    {
+      "id": "build",
+      "name": "Build de produção",
+      "description": "next build com Turbopack. Pega erro de rota, arquivo \"use server\" e boundary de cliente; gera os tipos de rota que o typecheck consome.",
+      "severity": "critical",
+      "command": "npm run build",
+      "script": "build"
+    }
+  ]
+}
