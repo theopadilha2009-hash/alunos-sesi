@@ -3428,3 +3428,67 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Logo Oficial do SESI ─────────────────────────────────────────────── */
+
+.logo-sesi-wrap {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.logo-sesi-img {
+  display: block;
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Modo Escuro (padrão do sistema) */
+:root .logo-modo-light,
+:root[data-theme="dark"] .logo-modo-light {
+  display: none !important;
+}
+
+:root .logo-modo-dark,
+:root[data-theme="dark"] .logo-modo-dark {
+  display: block !important;
+}
+
+/* Modo Claro */
+:root[data-theme="light"] .logo-modo-light {
+  display: block !important;
+}
+
+:root[data-theme="light"] .logo-modo-dark {
+  display: none !important;
+}
+
+/* Crachá tem fundo escuro permanente */
+.cracha-card .logo-modo-light {
+  display: none !important;
+}
+.cracha-card .logo-modo-dark {
+  display: block !important;
+}
+
+/* Pulso sutil para indicador de carregamento/login */
+.logo-sesi-pulse {
+  animation: logo-pulse-anim 2.2s ease-in-out infinite;
+}
+
+@keyframes logo-pulse-anim {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0px var(--accent));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
+  }
+}
+

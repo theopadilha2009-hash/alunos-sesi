@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "Alunos SESI",
   description:
     "O diretório da turma: quem é quem, o LinkedIn e o GitHub de cada aluno.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/logo-sesi-icone.png",
+  },
   robots: { index: false, follow: false },
 };
 
