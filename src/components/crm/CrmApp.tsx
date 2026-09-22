@@ -83,6 +83,21 @@ export function CrmApp({
     return ordenarAlunos(filtrados);
   }, [naTela, salaSelecionada, query, meus, habilidadeFiltro]);
 
+  // Top 10 competências técnicas mais frequentes para o filtro interativo
+  const todasHabilidadesUnicas = useMemo(() => {
+    const contagem = new Map<string, number>();
+    for (const a of naTela) {
+      for (const h of a.habilidades ?? []) {
+        contagem.set(h, (contagem.get(h) ?? 0) + 1);
+      }
+    }
+    const ordenadas = Array.from(contagem.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([h]) => h)
+      .slice(0, 10);
+    return ["Todas", ...ordenadas];
+  }, [naTela]);
+
   const [modoVisualizacao, setModoVisualizacao] = useState<"tabela" | "cards">("tabela");
 
   // Agrupamento por sala para o Portfólio (organizado por sala na mesma ordem oficial)
@@ -315,6 +330,17 @@ export function CrmApp({
             </span>
           </div>
 
+          {meuAlunoNaTela ? (
+            <button
+              type="button"
+              className="btn-cracha-sidebar-rapido"
+              onClick={() => setAlunoCracha(meuAlunoNaTela)}
+              title="Visualizar e baixar meu crachá digital"
+            >
+              📇 Meu Crachá Digital (PNG)
+            </button>
+          ) : null}
+
           <form action={logoutAction} className="form-logout">
             <button
               type="submit"
@@ -423,6 +449,26 @@ export function CrmApp({
               ))}
             </div>
 
+            {/* Barra de Filtro Rápido por Competência Técnica */}
+            <div className="trilho-habilidades" role="group" aria-label="Filtrar por competência técnica">
+              <span className="label-habilidades">Competência:</span>
+              <div className="chips-habilidades-wrap">
+                {todasHabilidadesUnicas.map((hab) => (
+                  <button
+                    key={hab}
+                    type="button"
+                    className={`chip-hab ${habilidadeFiltro === hab ? "chip-hab-ativo" : ""}`}
+                    onClick={() => setHabilidadeFiltro(habilidadeFiltro === hab ? "Todas" : hab)}
+                  >
+                    {hab !== "Todas" ? (
+                      <span className="ponto-hab" style={{ background: corHabilidade(hab) }} />
+                    ) : null}
+                    {hab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Top 3 Projetos da Turma no Topo do Portfólio */}
             <TopProjetosTurma
               alunos={naTela}
@@ -443,6 +489,14 @@ export function CrmApp({
                 </div>
 
                 <div className="modo-visualizacao">
+                  <button
+                    type="button"
+                    className="btn-modo btn-imprimir-catalogo"
+                    onClick={() => window.print()}
+                    title="Imprimir ou salvar PDF da turma formatado para apresentação institucional"
+                  >
+                    🖨️ Imprimir Catálogo (PDF)
+                  </button>
                   <button
                     type="button"
                     className={`btn-modo ${modoVisualizacao === "tabela" ? "btn-modo-ativo" : ""}`}

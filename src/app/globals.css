@@ -4021,4 +4021,182 @@ body::before {
   contain-intrinsic-size: 70px;
 }
 
+/* ── Botão Rápido de Crachá na Sidebar ───────────────────────────────────── */
+.btn-cracha-sidebar-rapido {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text);
+  border-radius: var(--raio-p);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.2s var(--ease);
+}
 
+.btn-cracha-sidebar-rapido:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  transform: translateY(-1px);
+}
+
+/* ── Trilho de Habilidades Técnicas (Chips) ──────────────────────────────── */
+.trilho-habilidades {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--raio-p);
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.label-habilidades {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+}
+
+.chips-habilidades-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.chip-hab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+
+.chip-hab:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.chip-hab-ativo {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px -3px var(--glow);
+}
+
+.ponto-hab {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chip-hab-ativo .ponto-hab {
+  background: currentColor !important;
+}
+
+.btn-imprimir-catalogo {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+
+.btn-imprimir-catalogo:hover {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+/* ── Estilos de Impressão e Exportação em PDF ────────────────────────────── */
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 11pt;
+  }
+
+  /* Ocultar elementos desnecessários na versão impressa */
+  .crm-sidebar,
+  .crm-header,
+  .controles,
+  .trilho,
+  .trilho-habilidades,
+  .top-projetos-secao,
+  .portfolio-barra-visualizacao,
+  .tabela-acoes,
+  .tabela-acoes-botoes,
+  .modal-fundo,
+  .btn-modo,
+  .btn-cracha-acao,
+  .topo,
+  .rodape {
+    display: none !important;
+  }
+
+  .crm-container {
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  .crm-main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .portfolio-salas-container {
+    margin: 0 !important;
+  }
+
+  .secao-sala-bloco {
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    margin-bottom: 2cm !important;
+    page-break-inside: avoid;
+  }
+
+  .cabecalho-sala-bloco {
+    background: #f4f4f4 !important;
+    border-bottom: 2px solid #ccc !important;
+    color: #000 !important;
+  }
+
+  .tabela-alunos {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .tabela-alunos th,
+  .tabela-alunos td {
+    border: 1px solid #e0e0e0 !important;
+    color: #111 !important;
+    padding: 6pt 8pt !important;
+    font-size: 9.5pt !important;
+  }
+
+  .tabela-linha {
+    page-break-inside: avoid !important;
+  }
+}
