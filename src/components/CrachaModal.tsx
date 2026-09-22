@@ -5,6 +5,7 @@ import Link from "next/link";
 import QRCode from "qrcode";
 import { Roseta } from "@/components/Roseta";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
+import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -18,6 +19,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
+  const [baixando, setBaixando] = useState(false);
   const [rotacao, setRotacao] = useState({ x: 0, y: 0, brilhoX: 50, brilhoY: 50 });
 
   const urlPerfil =
@@ -99,6 +101,18 @@ export function CrachaModal({ aluno, onClose }: Props) {
       }
     }
     copiarLink();
+  }
+
+  async function handleBaixarCracha() {
+    if (baixando) return;
+    setBaixando(true);
+    try {
+      await baixarCrachaPng(aluno, qrCodeDataUrl);
+    } catch (err) {
+      console.error("Erro ao gerar imagem do crachá:", err);
+    } finally {
+      setBaixando(false);
+    }
   }
 
   const githubUrl = urlGithub(aluno.github);
@@ -245,6 +259,16 @@ export function CrachaModal({ aluno, onClose }: Props) {
           <button
             type="button"
             className="botao botao-primario"
+            onClick={handleBaixarCracha}
+            disabled={baixando}
+            title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico"
+          >
+            {baixando ? "⏳ Gerando PNG..." : "📥 Baixar Crachá (PNG)"}
+          </button>
+
+          <button
+            type="button"
+            className="botao botao-fraco"
             onClick={copiarLink}
           >
             {copiado ? "✓ Link Copiado!" : "📋 Copiar Link"}

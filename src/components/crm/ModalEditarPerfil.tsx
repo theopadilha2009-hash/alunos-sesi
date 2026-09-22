@@ -52,6 +52,28 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
     setMidias((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function handleUploadArquivoMidia(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) setNovaMidiaUrl(result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleUploadArquivoProjeto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) setNovoProjImg(result);
+    };
+    reader.readAsDataURL(file);
+  }
+
   function adicionarProjeto() {
     const titulo = novoProjTitulo.trim();
     if (!titulo) return;
@@ -227,9 +249,24 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
                 type="url"
                 value={novaMidiaUrl}
                 onChange={(e) => setNovaMidiaUrl(e.target.value)}
-                placeholder="Cole a URL da Imagem ou GIF (ex: https://.../animacao.gif)"
+                placeholder="Cole a URL ou escolha arquivo ao lado..."
                 className="input-flex"
               />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUploadArquivoMidia}
+                style={{ display: "none" }}
+                id="file-upload-midia"
+              />
+              <label
+                htmlFor="file-upload-midia"
+                className="botao botao-fraco"
+                style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+                title="Carregar imagem do seu dispositivo"
+              >
+                📁 Arquivo
+              </label>
               <select
                 value={novaMidiaTipo}
                 onChange={(e) => setNovaMidiaTipo(e.target.value as "imagem" | "gif")}
@@ -247,7 +284,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
               />
               <button
                 type="button"
-                className="botao botao-fraco btn-adicionar"
+                className="botao botao-primario btn-adicionar"
                 onClick={adicionarMidia}
               >
                 + Adicionar
@@ -258,10 +295,10 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
             {midias.length > 0 ? (
               <div className="grade-previa-midias">
                 {midias.map((m, idx) => (
-                  <div key={idx} className="card-midia-preview">
-                    <img src={m.url} alt={m.legenda || "Mídia do portfólio"} />
-                    <span className="badge-tipo-midia">{m.tipo.toUpperCase()}</span>
-                    {m.legenda ? <span className="legenda-midia">{m.legenda}</span> : null}
+                  <div key={idx} className="card-previa-midia">
+                    <img src={m.url} alt={m.legenda || "Mídia"} className="midia-img" />
+                    <span className="midia-tag">{m.tipo.toUpperCase()}</span>
+                    {m.legenda ? <span className="midia-legenda">{m.legenda}</span> : null}
                     <button
                       type="button"
                       className="btn-remover-midia"
@@ -273,9 +310,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="texto-vazio-secao">Nenhuma imagem ou GIF adicionado ainda.</p>
-            )}
+            ) : null}
 
             {/* Input oculto com JSON serializado */}
             <input type="hidden" name="midias" value={JSON.stringify(midias)} />
@@ -322,13 +357,31 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
               </div>
 
               <div className="campo">
-                <label>URL da Imagem de Capa do Projeto (Opcional)</label>
-                <input
-                  type="url"
-                  value={novoProjImg}
-                  onChange={(e) => setNovoProjImg(e.target.value)}
-                  placeholder="https://..."
-                />
+                <label>Imagem de Capa do Projeto (URL ou Arquivo)</label>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input
+                    type="url"
+                    value={novoProjImg}
+                    onChange={(e) => setNovoProjImg(e.target.value)}
+                    placeholder="Cole a URL ou escolha arquivo ao lado..."
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadArquivoProjeto}
+                    style={{ display: "none" }}
+                    id="file-upload-proj"
+                  />
+                  <label
+                    htmlFor="file-upload-proj"
+                    className="botao botao-fraco"
+                    style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+                    title="Carregar foto ou print do projeto do seu computador"
+                  >
+                    📁 Arquivo
+                  </label>
+                </div>
               </div>
 
               <button

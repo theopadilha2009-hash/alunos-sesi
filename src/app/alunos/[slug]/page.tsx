@@ -9,7 +9,29 @@ type Props = PageProps<"/alunos/[slug]">;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `${slug.replace(/-/g, " ")} · Alunos SESI` };
+  const aluno = await alunoPorSlug(slug);
+  if (!aluno) return { title: "Aluno · Alunos SESI" };
+
+  const titulo = `${aluno.nome} · Crachá Digital & Portfólio SESI`;
+  const descricao =
+    aluno.bio ||
+    `Conheça as competências, projetos e redes profissionais de ${aluno.nome} na Escola SESI.`;
+
+  return {
+    title: titulo,
+    description: descricao,
+    openGraph: {
+      title: titulo,
+      description: descricao,
+      type: "profile",
+      locale: "pt_BR",
+    },
+    twitter: {
+      card: "summary",
+      title: titulo,
+      description: descricao,
+    },
+  };
 }
 
 export default async function PerfilPage({ params }: Props) {
