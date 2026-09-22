@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { CrachaModal } from "@/components/CrachaModal";
+import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
 import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -149,27 +150,9 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
 
         <div className="perfil-grade-acoes">
           <div className="perfil-links">
-            {aluno.linkedin ? (
-              <a
-                className="pes pes-in botao-link-perfil"
-                href={aluno.linkedin}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                in · {linkedinHandle ?? "LinkedIn"}
-              </a>
-            ) : null}
-
-            {github ? (
-              <a
-                className="pes pes-gh botao-link-perfil"
-                href={github}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                gh · {aluno.github}
-              </a>
-            ) : null}
+            <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+            <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
+            <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
 
             <button
               type="button"

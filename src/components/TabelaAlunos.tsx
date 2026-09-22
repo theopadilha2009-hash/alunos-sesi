@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { GrupoRedes } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais, urlGithub } from "@/lib/links";
+import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
   ocupado: string | null;
   onEstrelar: (id: string, ev?: React.MouseEvent) => void;
   onAbrirCracha: (aluno: AlunoNaTela) => void;
+  onSelecionarAluno?: (aluno: AlunoNaTela) => void;
+  ocultarColunaSala?: boolean;
 };
 
 export function TabelaAlunos({
@@ -19,34 +22,47 @@ export function TabelaAlunos({
   ocupado,
   onEstrelar,
   onAbrirCracha,
+  onSelecionarAluno,
+  ocultarColunaSala = false,
 }: Props) {
+  if (alunos.length === 0) {
+    return (
+      <div className="vazio">
+        <b>Nenhum estudante encontrado nesta visualização</b>
+        <p>Tente ajustar os filtros ou os termos de busca digitados.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="tabela-container">
       <table className="tabela-alunos">
         <thead>
           <tr>
             <th scope="col">Aluno</th>
-            <th scope="col">Sala</th>
-            <th scope="col">Habilidades</th>
-            <th scope="col">Redes</th>
+            {!ocultarColunaSala ? <th scope="col">Sala</th> : null}
+            <th scope="col">Habilidades & Foco</th>
+            <th scope="col" style={{ minWidth: "16rem" }}>
+              Redes Profissionais (LinkedIn / GitHub)
+            </th>
             <th scope="col" style={{ textAlign: "right" }}>
               Estrelas
             </th>
             <th scope="col" style={{ textAlign: "center" }}>
-              Crachá
+              Crachá & Ações
             </th>
           </tr>
         </thead>
         <tbody>
           {alunos.map((aluno) => {
             const estrelado = meusVotos.includes(aluno.id);
-            const github = urlGithub(aluno.github);
 
             return (
               <tr
                 key={aluno.id}
                 className="tabela-linha"
                 style={{ ["--sala-cor" as string]: aluno.cor }}
+                onClick={() => onSelecionarAluno?.(aluno)}
               >
                 <td>
                   <div className="tabela-aluno-celula">
@@ -54,6 +70,7 @@ export function TabelaAlunos({
                       className="avatar mini-avatar"
                       style={{
                         background: `color-mix(in srgb, ${aluno.cor} 25%, var(--surface-2))`,
+                        border: `1.5px solid ${aluno.cor}`,
                       }}
                       aria-hidden="true"
                     >
@@ -61,12 +78,26 @@ export function TabelaAlunos({
                     </span>
                     <div>
                       <div className="tabela-nome-wrap">
-                        <Link
-                          href={`/alunos/${aluno.slug}`}
-                          className="tabela-aluno-nome"
-                        >
-                          {aluno.nome}
-                        </Link>
+                        {onSelecionarAluno ? (
+                          <button
+                            type="button"
+                            className="tabela-aluno-nome-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelecionarAluno(aluno);
+                            }}
+                          >
+                            {aluno.nome}
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/alunos/${aluno.slug}`}
+                            className="tabela-aluno-nome"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {aluno.nome}
+                          </Link>
+                        )}
                         {aluno.fixado ? (
                           <span className="selo selo-fixado">Fixado</span>
                         ) : null}
@@ -81,19 +112,21 @@ export function TabelaAlunos({
                   </div>
                 </td>
 
-                <td>
-                  {aluno.sala ? (
-                    <span
-                      className="cracha-sala-pill"
-                      style={{ borderColor: aluno.cor }}
-                    >
-                      <span className="ponto" style={{ background: aluno.cor }} />
-                      {aluno.sala}
-                    </span>
-                  ) : (
-                    <span className="tabela-sem-dado">—</span>
-                  )}
-                </td>
+                {!ocultarColunaSala ? (
+                  <td>
+                    {aluno.sala ? (
+                      <span
+                        className="cracha-sala-pill"
+                        style={{ borderColor: aluno.cor }}
+                      >
+                        <span className="ponto" style={{ background: aluno.cor }} />
+                        {aluno.sala}
+                      </span>
+                    ) : (
+                      <span className="tabela-sem-dado">—</span>
+                    )}
+                  </td>
+                ) : null}
 
                 <td>
                   {aluno.habilidades && aluno.habilidades.length > 0 ? (
@@ -115,36 +148,14 @@ export function TabelaAlunos({
                   )}
                 </td>
 
+                {/* Redes Sociais com badges destacados oficiais do LinkedIn e GitHub */}
                 <td>
-                  <div className="tabela-redes">
-                    {aluno.linkedin ? (
-                      <a
-                        className="pes pes-in"
-                        href={aluno.linkedin}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        aria-label={`LinkedIn de ${aluno.nome}`}
-                        title="LinkedIn"
-                      >
-                        in
-                      </a>
-                    ) : null}
-                    {github ? (
-                      <a
-                        className="pes pes-gh"
-                        href={github}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        aria-label={`GitHub de ${aluno.nome}`}
-                        title="GitHub"
-                      >
-                        gh
-                      </a>
-                    ) : null}
-                    {!aluno.linkedin && !github ? (
-                      <span className="tabela-sem-dado">—</span>
-                    ) : null}
-                  </div>
+                  <GrupoRedes
+                    linkedin={aluno.linkedin}
+                    github={aluno.github}
+                    instagram={aluno.instagram}
+                    nomeAluno={aluno.nome}
+                  />
                 </td>
 
                 <td style={{ textAlign: "right" }}>
@@ -153,7 +164,10 @@ export function TabelaAlunos({
                     className="estrela"
                     aria-pressed={estrelado}
                     disabled={ocupado === aluno.id}
-                    onClick={(e) => onEstrelar(aluno.id, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEstrelar(aluno.id, e);
+                    }}
                     aria-label={
                       estrelado
                         ? `Tirar estrela de ${aluno.nome}`
@@ -165,14 +179,26 @@ export function TabelaAlunos({
                 </td>
 
                 <td style={{ textAlign: "center" }}>
-                  <button
-                    type="button"
-                    className="mini botao-cracha-acao"
-                    onClick={() => onAbrirCracha(aluno)}
-                    title={`Abrir Crachá 3D de ${aluno.nome}`}
-                  >
-                    📇 Ver Crachá
-                  </button>
+                  <div className="tabela-acoes-botoes" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="mini botao-cracha-acao"
+                      onClick={() => onAbrirCracha(aluno)}
+                      title={`Abrir Crachá 3D de ${aluno.nome}`}
+                    >
+                      📇 Ver Crachá
+                    </button>
+                    {onSelecionarAluno ? (
+                      <button
+                        type="button"
+                        className="mini botao-ver-perfil-acao"
+                        onClick={() => onSelecionarAluno(aluno)}
+                        title={`Ver perfil completo de ${aluno.nome}`}
+                      >
+                        Perfil →
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             );
@@ -182,3 +208,4 @@ export function TabelaAlunos({
     </div>
   );
 }
+

@@ -919,29 +919,51 @@ a {
 /* ── tema ──────────────────────────────────────────────────────────────── */
 
 .botao-tema {
-  display: grid;
-  place-items: center;
-  width: 2.2rem;
-  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 2.35rem;
+  padding: 0 0.85rem;
   border: 1px solid var(--line);
   border-radius: var(--raio-p);
-  background: transparent;
-  color: var(--dim);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 0.95rem;
+  transition: all 0.16s var(--ease);
+  user-select: none;
 }
 
 .botao-tema:hover {
-  color: var(--text);
+  color: var(--accent);
   border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.botao-tema-compacto {
+  width: 2.35rem;
+  padding: 0;
+}
+
+.tema-icone {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.tema-texto {
+  font-size: 0.82rem;
+  letter-spacing: -0.01em;
 }
 
 /* ── Efeitos Visuais Ambientais ────────────────────────────────────────── */
 
 body::before {
   content: "";
-  position: fixed;
-  top: -160px;
+  position: absolute;
+  top: -120px;
   left: 50%;
   transform: translateX(-50%);
   width: min(100vw, 980px);
@@ -953,7 +975,7 @@ body::before {
     transparent 75%
   );
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
 /* ── Métricas com Barra Visual ─────────────────────────────────────────── */
@@ -2682,6 +2704,13 @@ body::before {
   margin: 0;
 }
 
+.crm-header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .crm-secao-conteudo {
   display: flex;
   flex-direction: column;
@@ -3491,4 +3520,505 @@ body::before {
     filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
   }
 }
+
+/* ── Badges Oficiais de Redes Sociais (LinkedIn e GitHub) ─────────────── */
+
+.grupo-redes-destacadas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.badge-rede {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--raio-p);
+  font-family: var(--fonte-texto);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), border-color 0.15s var(--ease);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.badge-rede:hover {
+  transform: translateY(-1px);
+}
+
+.badge-rede-icone-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Badge Oficial do LinkedIn */
+.badge-linkedin {
+  background: color-mix(in srgb, #0a66c2 18%, var(--surface-2));
+  color: #0a66c2;
+  border: 1px solid color-mix(in srgb, #0a66c2 45%, var(--line));
+}
+
+.badge-linkedin .in-icone {
+  color: #0a66c2;
+}
+
+.badge-linkedin:hover {
+  background: #0a66c2;
+  color: #ffffff;
+  border-color: #0a66c2;
+  box-shadow: 0 4px 12px -2px rgba(10, 102, 194, 0.45);
+}
+
+.badge-linkedin:hover .in-icone {
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .badge-linkedin {
+  background: color-mix(in srgb, #0a66c2 22%, var(--surface-2));
+  color: #3880ec;
+  border-color: color-mix(in srgb, #3880ec 50%, var(--line));
+}
+:root[data-theme="dark"] .badge-linkedin .in-icone {
+  color: #3880ec;
+}
+:root[data-theme="dark"] .badge-linkedin:hover {
+  background: #0a66c2;
+  color: #ffffff;
+}
+:root[data-theme="dark"] .badge-linkedin:hover .in-icone {
+  color: #ffffff;
+}
+
+/* Badge Oficial do GitHub */
+.badge-github {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.badge-github .gh-icone {
+  color: var(--text);
+}
+
+.badge-github:hover {
+  background: #24292e;
+  color: #ffffff;
+  border-color: #24292e;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+}
+
+.badge-github:hover .gh-icone {
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .badge-github {
+  background: #161b22;
+  color: #f0f6fc;
+  border-color: #30363d;
+}
+:root[data-theme="dark"] .badge-github:hover {
+  background: #21262d;
+  color: #58a6ff;
+  border-color: #58a6ff;
+  box-shadow: 0 4px 14px -3px rgba(88, 166, 255, 0.35);
+}
+:root[data-theme="dark"] .badge-github:hover .gh-icone {
+  color: #58a6ff;
+}
+
+/* Badge Instagram */
+.badge-instagram {
+  background: color-mix(in srgb, #e1306c 14%, var(--surface-2));
+  color: #e1306c;
+  border: 1px solid color-mix(in srgb, #e1306c 40%, var(--line));
+}
+
+.badge-instagram:hover {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+/* ── Top 3 Projetos da Turma ───────────────────────────────────────────── */
+
+.top-projetos-secao {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  border-radius: var(--raio);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent) 7%, var(--surface)) 0%,
+    var(--surface) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  box-shadow: 0 12px 30px -15px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.top-projetos-cabecalho {
+  margin-bottom: 1.25rem;
+}
+
+.top-projetos-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amarelo);
+  margin-bottom: 0.3rem;
+}
+
+.top-projetos-titulo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin: 0 0 0.25rem;
+}
+
+.top-projetos-subtitulo {
+  font-size: 0.88rem;
+  color: var(--dim);
+  margin: 0;
+}
+
+.top-projetos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 1.15rem;
+}
+
+.card-top-projeto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--raio-p);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  cursor: pointer;
+}
+
+.card-top-projeto:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.4);
+}
+
+.card-top-projeto.rank-1 {
+  border-color: color-mix(in srgb, var(--amarelo) 55%, var(--line));
+}
+
+.card-top-projeto.rank-2 {
+  border-color: color-mix(in srgb, #94a3b8 45%, var(--line));
+}
+
+.card-top-projeto.rank-3 {
+  border-color: color-mix(in srgb, #d97706 45%, var(--line));
+}
+
+.top-proj-capa-wrap {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  background: #000;
+}
+
+.top-proj-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s var(--ease);
+}
+
+.card-top-projeto:hover .top-proj-img {
+  transform: scale(1.04);
+}
+
+.top-proj-gradiente-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.75) 100%);
+  pointer-events: none;
+}
+
+.badge-rank {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.badge-rank-1 {
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+  color: #000;
+}
+
+.badge-rank-2 {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+.badge-rank-3 {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.top-proj-corpo {
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem;
+  flex: 1;
+}
+
+.top-proj-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.top-tag-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.top-proj-titulo {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.4rem;
+  line-height: 1.25;
+}
+
+.top-proj-desc {
+  font-size: 0.82rem;
+  color: var(--dim);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.top-proj-autor-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line-soft);
+  margin-top: auto;
+  margin-bottom: 0.8rem;
+}
+
+.top-autor-info {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+}
+
+.top-autor-textos {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-autor-nome {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.top-autor-sala {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.top-proj-redes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.top-proj-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.btn-cracha-top {
+  font-size: 0.8rem;
+}
+
+.botao-mini-proj {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+/* ── Portfólio Organizado por Sala ─────────────────────────────────────── */
+
+.portfolio-salas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.2rem;
+}
+
+.portfolio-barra-visualizacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.portfolio-barra-titulos {
+  display: flex;
+  flex-direction: column;
+}
+
+.portfolio-secao-titulo {
+  font-size: 1.22rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.portfolio-secao-sub {
+  font-size: 0.82rem;
+  color: var(--dim);
+}
+
+.secao-sala-bloco {
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.2);
+}
+
+.secao-sala-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--sala-cor, var(--accent)) 6%, var(--surface-2));
+  border-left: 4px solid var(--sala-cor, var(--accent));
+}
+
+.secao-sala-titulo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.ponto-grande {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.secao-sala-nome {
+  font-family: var(--fonte-titulo);
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text);
+}
+
+.secao-sala-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.secao-sala-hint {
+  font-size: 0.78rem;
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.tabela-aluno-nome-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s var(--ease);
+}
+
+.tabela-aluno-nome-btn:hover {
+  color: var(--accent);
+}
+
+.tabela-acoes-botoes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.botao-ver-perfil-acao {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.botao-ver-perfil-acao:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* Otimização de Performance nos Elementos Repetidos */
+.tabela-linha {
+  content-visibility: auto;
+  contain-intrinsic-size: 70px;
+}
+
 

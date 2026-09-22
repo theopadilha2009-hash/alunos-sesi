@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 const CHAVE = "sesi.tema";
 
 /** Escuro é o padrão; o botão só grava a escolha por cima. */
-export function TemaToggle() {
+export function TemaToggle({ compacto = false }: { compacto?: boolean }) {
   const [tema, setTema] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
@@ -27,12 +27,19 @@ export function TemaToggle() {
   return (
     <button
       type="button"
-      className="botao-tema"
+      className={`botao-tema ${compacto ? "botao-tema-compacto" : ""}`}
       onClick={alternar}
-      aria-label={tema === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"}
-      title={tema === "dark" ? "Tema claro" : "Tema escuro"}
+      aria-label={tema === "dark" ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
+      title={tema === "dark" ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
     >
-      {tema === "dark" ? "☀" : "☾"}
+      <span className="tema-icone" aria-hidden="true">
+        {tema === "dark" ? "☀️" : "🌙"}
+      </span>
+      {!compacto ? (
+        <span className="tema-texto">
+          {tema === "dark" ? "Modo Claro" : "Modo Escuro"}
+        </span>
+      ) : null}
     </button>
   );
 }

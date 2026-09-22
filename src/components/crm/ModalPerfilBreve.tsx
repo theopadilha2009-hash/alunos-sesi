@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CrachaModal } from "@/components/CrachaModal";
+import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
 import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -85,38 +86,9 @@ export function ModalPerfilBreve({ aluno, onFechar }: Props) {
 
             {/* Links Sociais (LinkedIn, GitHub, Instagram) */}
             <div className="breve-redes">
-              {aluno.linkedin ? (
-                <a
-                  href={aluno.linkedin}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="pes pes-in"
-                >
-                  in · {linkedinHandle ?? "LinkedIn"}
-                </a>
-              ) : null}
-
-              {github ? (
-                <a
-                  href={github}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="pes pes-gh"
-                >
-                  gh · @{aluno.github}
-                </a>
-              ) : null}
-
-              {aluno.instagram ? (
-                <a
-                  href={`https://instagram.com/${aluno.instagram.replace(/^@/, "")}`}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="pes pes-ig"
-                >
-                  📸 {aluno.instagram}
-                </a>
-              ) : null}
+              <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+              <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
+              <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
 
               <button
                 type="button"

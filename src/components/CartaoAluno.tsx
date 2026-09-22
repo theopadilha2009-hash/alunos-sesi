@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
 import Link from "next/link";
+import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais, urlGithub } from "@/lib/links";
+import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 export function CartaoAluno({
@@ -19,48 +19,11 @@ export function CartaoAluno({
   onEstrelar: (id: string, ev?: React.MouseEvent) => void;
   onAbrirCracha?: (aluno: AlunoNaTela) => void;
 }) {
-  const cardRef = useRef<HTMLLIElement>(null);
-  const [tilt, setTilt] = useState({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50, ativo: false });
-  const github = urlGithub(aluno.github);
-
-  function handleMouseMove(e: React.MouseEvent<HTMLLIElement>) {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const rotX = ((y - rect.height / 2) / (rect.height / 2)) * -6;
-    const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 6;
-
-    setTilt({
-      rotX,
-      rotY,
-      mouseX: (x / rect.width) * 100,
-      mouseY: (y / rect.height) * 100,
-      ativo: true,
-    });
-  }
-
-  function handleMouseLeave() {
-    setTilt({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50, ativo: false });
-  }
-
   return (
     <li
-      ref={cardRef}
-      className={`aluno ${tilt.ativo ? "aluno-tilt" : ""}`}
+      className="aluno"
       data-fixado={aluno.fixado ? "" : undefined}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={
-        {
-          ["--sala" as string]: aluno.cor,
-          ["--card-rot-x" as string]: `${tilt.rotX}deg`,
-          ["--card-rot-y" as string]: `${tilt.rotY}deg`,
-          ["--card-mx" as string]: `${tilt.mouseX}%`,
-          ["--card-my" as string]: `${tilt.mouseY}%`,
-        } as React.CSSProperties
-      }
+      style={{ ["--sala" as string]: aluno.cor }}
     >
       <div className="aluno-cabeca">
         <span className="avatar" aria-hidden="true">
@@ -110,31 +73,8 @@ export function CartaoAluno({
           </button>
         ) : null}
 
-        {aluno.linkedin ? (
-          <a
-            className="pes pes-in"
-            href={aluno.linkedin}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label={`LinkedIn de ${aluno.nome}`}
-            title="LinkedIn"
-          >
-            in
-          </a>
-        ) : null}
-
-        {github ? (
-          <a
-            className="pes pes-gh"
-            href={github}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label={`GitHub de ${aluno.nome}`}
-            title="GitHub"
-          >
-            gh
-          </a>
-        ) : null}
+        <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+        <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
 
         <button
           type="button"
@@ -155,3 +95,4 @@ export function CartaoAluno({
     </li>
   );
 }
+

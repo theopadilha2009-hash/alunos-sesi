@@ -7,8 +7,11 @@ import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
 import { ModalEditarPerfil } from "@/components/crm/ModalEditarPerfil";
 import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
+import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
+import { TemaToggle } from "@/components/TemaToggle";
+import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
 import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
@@ -79,6 +82,69 @@ export function CrmApp({
     );
     return ordenarAlunos(filtrados);
   }, [naTela, salaSelecionada, query, meus, habilidadeFiltro]);
+
+  const [modoVisualizacao, setModoVisualizacao] = useState<"tabela" | "cards">("tabela");
+
+  // Agrupamento por sala para o Portfólio (organizado por sala na mesma ordem oficial)
+  const gruposSalas = useMemo(() => {
+    if (salaSelecionada === ESTRELADOS) {
+      return [
+        {
+          id: ESTRELADOS,
+          nome: "Meus Alunos Estrelados",
+          cor: "var(--amarelo)",
+          alunos: visiveis,
+        },
+      ];
+    }
+
+    if (salaSelecionada !== TODAS) {
+      const salaObj = salas.find((s) => s.id === salaSelecionada);
+      const nome = salaObj?.nome ?? "Sala Selecionada";
+      return [
+        {
+          id: salaSelecionada,
+          nome,
+          cor: corDaSala(nome),
+          alunos: visiveis,
+        },
+      ];
+    }
+
+    // Quando "Todas as Salas": agrupa na ordem de salas
+    const map = new Map<string, AlunoNaTela[]>();
+    for (const a of visiveis) {
+      const sId = a.sala_id ?? "sem-sala";
+      if (!map.has(sId)) map.set(sId, []);
+      map.get(sId)!.push(a);
+    }
+
+    const resultado: Array<{ id: string; nome: string; cor: string; alunos: AlunoNaTela[] }> = [];
+
+    for (const s of salas) {
+      const alunosDaSala = map.get(s.id);
+      if (alunosDaSala && alunosDaSala.length > 0) {
+        resultado.push({
+          id: s.id,
+          nome: s.nome,
+          cor: corDaSala(s.nome),
+          alunos: alunosDaSala,
+        });
+      }
+    }
+
+    const semSala = map.get("sem-sala");
+    if (semSala && semSala.length > 0) {
+      resultado.push({
+        id: "sem-sala",
+        nome: "Outros Estudantes",
+        cor: "var(--dim)",
+        alunos: semSala,
+      });
+    }
+
+    return resultado;
+  }, [visiveis, salas, salaSelecionada]);
 
   // Todas as criações/projetos reunidos de todos os estudantes
   const todasCriacoes = useMemo(() => {
@@ -288,6 +354,7 @@ export function CrmApp({
           </div>
 
           <div className="crm-header-acoes">
+            <TemaToggle />
             <button
               type="button"
               className="botao botao-primario"
@@ -356,116 +423,149 @@ export function CrmApp({
               ))}
             </div>
 
-            {/* Grade de Portfólios dos Estudantes */}
-            <div className="grade-portfolio">
-              {visiveis.map((aluno) => {
-                const estrelado = meus.includes(aluno.id);
-                return (
-                  <article
-                    key={aluno.id}
-                    className="card-portfolio-estudante"
-                    style={{ ["--sala-cor" as string]: aluno.cor }}
-                    onClick={() => setAlunoBreveSelecionado(aluno)}
-                  >
-                    <header className="card-port-topo">
-                      <span className="avatar card-port-avatar">
-                        {iniciais(aluno.nome)}
-                      </span>
-                      <div className="card-port-titulos">
-                        <h3>{aluno.nome}</h3>
-                        {aluno.sala ? (
-                          <span className="card-port-sala" style={{ color: aluno.cor }}>
-                            {aluno.sala}
-                          </span>
-                        ) : null}
-                      </div>
+            {/* Top 3 Projetos da Turma no Topo do Portfólio */}
+            <TopProjetosTurma
+              alunos={naTela}
+              onAbrirPerfil={setAlunoBreveSelecionado}
+              onAbrirCracha={setAlunoCracha}
+            />
 
-                      <button
-                        type="button"
-                        className="estrela mini-estrela"
-                        aria-pressed={estrelado}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          estrelar(aluno.id, e);
-                        }}
-                      >
-                        {estrelado ? "★" : "☆"} {aluno.estrelas}
-                      </button>
+            {/* ── ORGANIZADO POR SALA COM OS ALUNOS CORRESPONDENTES ─── */}
+            <div className="portfolio-salas-container">
+              <div className="portfolio-barra-visualizacao">
+                <div className="portfolio-barra-titulos">
+                  <h3 className="portfolio-secao-titulo">
+                    🏛️ Salas & Estudantes SESI
+                  </h3>
+                  <span className="portfolio-secao-sub">
+                    Estudantes agrupados por sala com LinkedIn e GitHub em destaque
+                  </span>
+                </div>
+
+                <div className="modo-visualizacao">
+                  <button
+                    type="button"
+                    className={`btn-modo ${modoVisualizacao === "tabela" ? "btn-modo-ativo" : ""}`}
+                    onClick={() => setModoVisualizacao("tabela")}
+                    title="Formato Tabela com Redes Destacadas (Recomendado)"
+                  >
+                    📊 Tabela por Sala
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn-modo ${modoVisualizacao === "cards" ? "btn-modo-ativo" : ""}`}
+                    onClick={() => setModoVisualizacao("cards")}
+                    title="Formato Cards"
+                  >
+                    🗂️ Cards
+                  </button>
+                </div>
+              </div>
+
+              {gruposSalas.length === 0 ? (
+                <div className="vazio">
+                  <b>Nenhum estudante encontrado</b>
+                  <p>Tente ajustar a busca ou escolher outra sala no seletor acima.</p>
+                </div>
+              ) : (
+                gruposSalas.map((grupo) => (
+                  <section
+                    key={grupo.id}
+                    className="secao-sala-bloco"
+                    style={{ ["--sala-cor" as string]: grupo.cor }}
+                  >
+                    {/* Cabeçalho da Sala com Badge e Contagem */}
+                    <header className="secao-sala-cabecalho">
+                      <div className="secao-sala-titulo-wrap">
+                        <span className="ponto-grande" style={{ background: grupo.cor }} />
+                        <h4 className="secao-sala-nome">{grupo.nome}</h4>
+                        <span className="secao-sala-badge" style={{ borderColor: grupo.cor }}>
+                          {grupo.alunos.length} {grupo.alunos.length === 1 ? "aluno" : "alunos"}
+                        </span>
+                      </div>
+                      <span className="secao-sala-hint">
+                        {grupo.alunos.filter((a) => a.linkedin || a.github).length} com redes ativas
+                      </span>
                     </header>
 
-                    {aluno.bio ? (
-                      <p className="card-port-bio">{aluno.bio}</p>
-                    ) : null}
+                    {modoVisualizacao === "tabela" ? (
+                      /* Formato da Imagem 4 dentro de cada sala com redes em destaque */
+                      <TabelaAlunos
+                        alunos={grupo.alunos}
+                        meusVotos={meus}
+                        ocupado={ocupado}
+                        onEstrelar={estrelar}
+                        onAbrirCracha={setAlunoCracha}
+                        onSelecionarAluno={setAlunoBreveSelecionado}
+                        ocultarColunaSala={true}
+                      />
+                    ) : (
+                      /* Formato alternativo em Cards com redes oficiais */
+                      <div className="grade-portfolio">
+                        {grupo.alunos.map((aluno) => {
+                          const estrelado = meus.includes(aluno.id);
+                          return (
+                            <article
+                              key={aluno.id}
+                              className="card-portfolio-estudante"
+                              style={{ ["--sala-cor" as string]: aluno.cor }}
+                              onClick={() => setAlunoBreveSelecionado(aluno)}
+                            >
+                              <header className="card-port-topo">
+                                <span className="avatar card-port-avatar">
+                                  {iniciais(aluno.nome)}
+                                </span>
+                                <div className="card-port-titulos">
+                                  <h3>{aluno.nome}</h3>
+                                  <span className="card-port-sala" style={{ color: aluno.cor }}>
+                                    {grupo.nome}
+                                  </span>
+                                </div>
 
-                    {/* Redes Principais (LinkedIn, GitHub, Instagram) */}
-                    <div className="card-port-redes" onClick={(e) => e.stopPropagation()}>
-                      {aluno.linkedin ? (
-                        <a
-                          href={aluno.linkedin}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="pes pes-in"
-                        >
-                          in
-                        </a>
-                      ) : null}
-                      {aluno.github ? (
-                        <a
-                          href={`https://github.com/${aluno.github}`}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="pes pes-gh"
-                        >
-                          gh
-                        </a>
-                      ) : null}
-                      {aluno.instagram ? (
-                        <a
-                          href={`https://instagram.com/${aluno.instagram.replace(/^@/, "")}`}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="pes pes-ig"
-                        >
-                          📸
-                        </a>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="mini"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAlunoCracha(aluno);
-                        }}
-                      >
-                        📇 Crachá 3D
-                      </button>
-                    </div>
+                                <button
+                                  type="button"
+                                  className="estrela mini-estrela"
+                                  aria-pressed={estrelado}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    estrelar(aluno.id, e);
+                                  }}
+                                >
+                                  {estrelado ? "★" : "☆"} {aluno.estrelas}
+                                </button>
+                              </header>
 
-                    {/* Mídias & Criações em Destaque */}
-                    {aluno.midias && aluno.midias.length > 0 ? (
-                      <div className="card-port-galeria">
-                        {aluno.midias.slice(0, 3).map((m, idx) => (
-                          <div key={idx} className="thumb-port-container">
-                            <img src={m.url} alt={m.legenda || "Criação"} className="thumb-port-img" />
-                            <span className="thumb-port-tag">{m.tipo.toUpperCase()}</span>
-                          </div>
-                        ))}
+                              {aluno.bio ? (
+                                <p className="card-port-bio">{aluno.bio}</p>
+                              ) : null}
+
+                              {/* Redes Principais (LinkedIn & GitHub em alto destaque!) */}
+                              <div className="card-port-redes" onClick={(e) => e.stopPropagation()}>
+                                <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+                                <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
+                                <button
+                                  type="button"
+                                  className="mini"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAlunoCracha(aluno);
+                                  }}
+                                >
+                                  📇 Crachá 3D
+                                </button>
+                              </div>
+
+                              <footer className="card-port-rodape">
+                                <span className="ver-perfil-texto">Ver perfil completo & criações →</span>
+                              </footer>
+                            </article>
+                          );
+                        })}
                       </div>
-                    ) : aluno.projetos && aluno.projetos.length > 0 ? (
-                      <div className="card-port-projetos-resumo">
-                        <span className="badge-qtd-projetos">
-                          🚀 {aluno.projetos.length} criação(ões)
-                        </span>
-                        <span className="titulo-primeiro-proj">{aluno.projetos[0].titulo}</span>
-                      </div>
-                    ) : null}
-
-                    <footer className="card-port-rodape">
-                      <span className="ver-perfil-texto">Ver perfil completo & criações →</span>
-                    </footer>
-                  </article>
-                );
-              })}
+                    )}
+                  </section>
+                ))
+              )}
             </div>
           </div>
         ) : null}

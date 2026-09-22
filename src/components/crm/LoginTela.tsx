@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { cadastroAction, loginAction, type EstadoAcaoCrm } from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
+import { TemaToggle } from "@/components/TemaToggle";
 
 export function LoginTela() {
   const [modo, setModo] = useState<"login" | "cadastro">("login");
@@ -30,6 +31,9 @@ export function LoginTela() {
       <div className="login-mesh-glow" aria-hidden="true" />
 
       <div className="login-card">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.8rem" }}>
+          <TemaToggle />
+        </div>
         <header className="login-topo">
           <div className="login-marca">
             <Roseta tamanho={38} girando />

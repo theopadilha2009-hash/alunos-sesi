@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { salvarPerfilAction } from "@/app/acoes-crm";
+import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, UsuarioSessao } from "@/lib/tipos";
 
@@ -156,7 +157,9 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
 
             <div className="linha-campos">
               <div className="campo">
-                <label htmlFor="ed-in">LinkedIn</label>
+                <label htmlFor="ed-in" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                  <IconeLinkedIn tamanho={15} /> LinkedIn
+                </label>
                 <input
                   id="ed-in"
                   name="linkedin"
@@ -167,7 +170,9 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
               </div>
 
               <div className="campo">
-                <label htmlFor="ed-gh">GitHub</label>
+                <label htmlFor="ed-gh" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                  <IconeGitHub tamanho={15} /> GitHub
+                </label>
                 <input
                   id="ed-gh"
                   name="github"
@@ -178,7 +183,9 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
               </div>
 
               <div className="campo">
-                <label htmlFor="ed-ig">Instagram (Extra)</label>
+                <label htmlFor="ed-ig" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                  <IconeInstagram tamanho={15} /> Instagram
+                </label>
                 <input
                   id="ed-ig"
                   name="instagram"

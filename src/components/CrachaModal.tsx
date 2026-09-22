@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { Roseta } from "@/components/Roseta";
+import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -45,22 +46,32 @@ export function CrachaModal({ aluno, onClose }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const percentX = (x / rect.width) * 100;
-    const percentY = (y / rect.height) * 100;
-
-    const rotX = ((y - rect.height / 2) / (rect.height / 2)) * -14;
-    const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 14;
-
-    setRotacao({ x: rotX, y: rotY, brilhoX: percentX, brilhoY: percentY });
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const percentX = (x / rect.width) * 100;
+      const percentY = (y / rect.height) * 100;
+      const rotX = ((y - rect.height / 2) / (rect.height / 2)) * -14;
+      const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 14;
+      setRotacao({ x: rotX, y: rotY, brilhoX: percentX, brilhoY: percentY });
+    });
   }
 
   function handleMouseLeave() {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
     setRotacao({ x: 0, y: 0, brilhoX: 50, brilhoY: 50 });
   }
 
@@ -247,27 +258,8 @@ export function CrachaModal({ aluno, onClose }: Props) {
             ↗ Compartilhar
           </button>
 
-          {aluno.linkedin ? (
-            <a
-              href={aluno.linkedin}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="botao botao-fraco pes-in"
-            >
-              in LinkedIn
-            </a>
-          ) : null}
-
-          {githubUrl ? (
-            <a
-              href={githubUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="botao botao-fraco pes-gh"
-            >
-              gh GitHub
-            </a>
-          ) : null}
+          <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+          <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
 
           <Link
             href={`/alunos/${aluno.slug}`}
