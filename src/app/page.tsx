@@ -1,56 +1,44 @@
-import Link from "next/link";
-import { Roseta } from "@/components/Roseta";
-import { Rodape, Topo } from "@/components/ds";
+import { cookies } from "next/headers";
+import { CrmApp } from "@/components/crm/CrmApp";
+import { LoginTela } from "@/components/crm/LoginTela";
+import { obterSessao } from "@/lib/auth";
+import {
+  listarAlunos,
+  listarRetrato,
+  listarSalas,
+  votosDoVisitante,
+} from "@/lib/dados";
+import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 
-export default function Capa() {
+export const dynamic = "force-dynamic";
+
+export default async function PaginaPrincipal() {
+  const sessao = await obterSessao();
+
+  // Se não estiver logado, a abertura vai DIRETO para o Login e Senha
+  if (!sessao) {
+    return <LoginTela />;
+  }
+
+  // Usuário autenticado: carrega os dados e abre o CRM Escolar
+  const jar = await cookies();
+  const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value);
+
+  const [alunos, salas, retrato] = await Promise.all([
+    listarAlunos(),
+    listarSalas(),
+    listarRetrato(),
+  ]);
+
+  const meusVotos = visitante ? await votosDoVisitante(visitante) : [];
+
   return (
-    <>
-      <Topo />
-
-      <main>
-        <div className="wrap capa">
-          <div>
-            <p className="eyebrow">Diretório da turma</p>
-            <h1>
-              Quem é quem,
-              <br />
-              <span className="vazado">e onde encontrar.</span>
-            </h1>
-            <p className="lede">
-              O LinkedIn e o GitHub de cada aluno, com nome e sala. Para você
-              conhecer a turma, achar quem mexe com o quê e aparecer para quem
-              está contratando.
-            </p>
-          </div>
-          <div className="capa-arte">
-            <Roseta tamanho={220} girando />
-          </div>
-        </div>
-
-        <div className="wrap">
-          <div className="portas">
-            <Link href="/alunos" className="porta">
-              <b>Os alunos</b>
-              <span>
-                A lista completa, com busca, filtro por sala e os mais
-                estrelados. É aberta para todo mundo.
-              </span>
-              <em>Entrar →</em>
-            </Link>
-
-            <Link href="/adm" className="porta">
-              <b>Painel do ADM</b>
-              <span>
-                Cadastrar aluno, colar a lista da turma inteira de uma vez,
-                fixar e dar destaque. Só abre com o link do ADM.
-              </span>
-              <em>Acesso restrito →</em>
-            </Link>
-          </div>
-        </div>
-      </main>
-
-      <Rodape>Um aluno ajuda o outro a ser encontrado.</Rodape>
-    </>
+    <CrmApp
+      usuario={sessao}
+      alunosIniciais={alunos}
+      salas={salas}
+      retrato={retrato}
+      meusVotos={meusVotos}
+    />
   );
 }

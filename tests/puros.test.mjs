@@ -281,3 +281,25 @@ test("ranking de salas desempata por completude", () => {
     ["1ºC", "2ºB", "3ºA"],
   );
 });
+
+// ── habilidades ──────────────────────────────────────────────────────────
+
+test("extrai habilidades tecnicas da bio com precisao", async () => {
+  const { extrairHabilidades } = await import("../src/lib/habilidades.ts");
+  const bio = "Especialista em robotica FLL, programacao Python e Arduino para automacao.";
+  const habs = extrairHabilidades(bio);
+  assert.ok(habs.includes("Robótica"));
+  assert.ok(habs.includes("Python"));
+  assert.ok(habs.includes("Hardware & IoT"));
+});
+
+test("filtra alunos por habilidade tecnica", () => {
+  const alunos = [
+    { id: "1", nome: "Lucas", sala: "3ºA", salaId: "s1", estrelas: 0, habilidades: ["Robótica", "Python"] },
+    { id: "2", nome: "Sofia", sala: "3ºA", salaId: "s1", estrelas: 0, habilidades: ["Design & UI/UX"] },
+  ];
+  const robotica = filtrarAlunos(alunos, { habilidade: "Robótica" });
+  assert.deepEqual(robotica.map((a) => a.nome), ["Lucas"]);
+  const todas = filtrarAlunos(alunos, { habilidade: "Todas" });
+  assert.equal(todas.length, 2);
+});

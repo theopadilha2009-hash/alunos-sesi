@@ -12,7 +12,7 @@ import type { Aluno, RetratoSala, Sala } from "./tipos";
  */
 
 const CAMPOS_ALUNO =
-  "id,nome,slug,sala_id,linkedin,github,bio,foto_url,fixado,destaque,estrelas";
+  "id,nome,slug,sala_id,linkedin,github,instagram,bio,foto_url,fixado,destaque,estrelas,projetos,midias";
 
 export async function listarSalas(): Promise<Sala[]> {
   const { data, error } = await clientePublico()
@@ -49,6 +49,41 @@ export async function alunoPorSlug(slug: string): Promise<Aluno | null> {
     .maybeSingle();
   if (error) throw new Error(`alunoPorSlug: ${error.message}`);
   return (data as Aluno) ?? null;
+}
+
+export async function alunoPorId(id: string): Promise<Aluno | null> {
+  const { data, error } = await clientePublico()
+    .from("alunos")
+    .select(CAMPOS_ALUNO)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(`alunoPorId: ${error.message}`);
+  return (data as Aluno) ?? null;
+}
+
+/** Atualiza dados do perfil de um aluno autenticado */
+export async function atualizarPerfilAluno(
+  id: string,
+  dados: {
+    nome?: string;
+    linkedin?: string | null;
+    github?: string | null;
+    instagram?: string | null;
+    bio?: string | null;
+    foto_url?: string | null;
+    projetos?: unknown[];
+    midias?: unknown[];
+  },
+): Promise<Aluno> {
+  const { data, error } = await clienteAdmin()
+    .from("alunos")
+    .update(dados)
+    .eq("id", id)
+    .select(CAMPOS_ALUNO)
+    .single();
+
+  if (error) throw new Error(`atualizarPerfilAluno: ${error.message}`);
+  return data as Aluno;
 }
 
 /** Os ids que ESTE navegador já estrelou. Depende do cookie assinado. */

@@ -55,10 +55,11 @@ export type FiltroAluno = {
   id: string;
   salaId: string | null;
   estrelas: number;
+  habilidades?: string[];
 } & Buscavel;
 
 /**
- * Filtra por sala e por texto. A sala `★` é o atalho de "quem eu estreei",
+ * Filtra por sala, por habilidade e por texto. A sala `★` é o atalho de "quem eu estreei",
  * não uma sala de verdade — por isso ela vem antes do filtro de sala.
  */
 export function filtrarAlunos<T extends FiltroAluno>(
@@ -67,7 +68,8 @@ export function filtrarAlunos<T extends FiltroAluno>(
     sala = TODAS,
     query = "",
     estrelados = [],
-  }: { sala?: string; query?: string; estrelados?: string[] } = {},
+    habilidade = "",
+  }: { sala?: string; query?: string; estrelados?: string[]; habilidade?: string } = {},
 ): T[] {
   const meus = new Set(estrelados);
   return alunos.filter((a) => {
@@ -75,6 +77,14 @@ export function filtrarAlunos<T extends FiltroAluno>(
       if (!meus.has(a.id)) return false;
     } else if (sala !== TODAS && a.salaId !== sala) {
       return false;
+    }
+    if (habilidade && habilidade !== "Todas") {
+      const habs = a.habilidades ?? [];
+      const matchHab =
+        habs.some(
+          (h) => fold(h).includes(fold(habilidade)) || fold(habilidade).includes(fold(h)),
+        ) || Boolean(a.bio && fold(a.bio).includes(fold(habilidade)));
+      if (!matchHab) return false;
     }
     return matches(a, query);
   });
