@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/debug";
+import { verificarRateLimit } from "@/lib/seguranca";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
 
@@ -45,6 +47,15 @@ export async function POST(request: Request) {
     );
   }
 
+  // Rate limit: máx 30 ações de voto por minuto por visitante
+  const limit = verificarRateLimit(`voto:${visitante}`, 30, 60 * 1000);
+  if (!limit.permitido) {
+    return NextResponse.json(
+      { erro: "Muitos votos em pouco tempo. Aguarde alguns instantes." },
+      { status: 429 },
+    );
+  }
+
   const alunoId = await lerAlunoId(request);
   if (!alunoId) {
     return NextResponse.json({ erro: "Aluno inválido." }, { status: 400 });
@@ -75,6 +86,15 @@ export async function DELETE(request: Request) {
     return NextResponse.json(
       { erro: "Sem identidade de visitante — recarregue a página." },
       { status: 400 },
+    );
+  }
+
+  // Rate limit: máx 30 ações de voto por minuto por visitante
+  const limit = verificarRateLimit(`voto:${visitante}`, 30, 60 * 1000);
+  if (!limit.permitido) {
+    return NextResponse.json(
+      { erro: "Muitos votos em pouco tempo. Aguarde alguns instantes." },
+      { status: 429 },
     );
   }
 

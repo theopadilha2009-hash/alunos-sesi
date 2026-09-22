@@ -52,26 +52,88 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
     setMidias((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function handleUploadArquivoMidia(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) setNovaMidiaUrl(result);
-    };
-    reader.readAsDataURL(file);
+  async function comprimirImagemArquivo(file: File, maxDim = 1200, qualidade = 0.85): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (file.type === "image/gif") {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const img = new Image();
+      const urlObj = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(urlObj);
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+          return;
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", qualidade));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(urlObj);
+        reject(new Error("Erro ao carregar imagem"));
+      };
+      img.src = urlObj;
+    });
   }
 
-  function handleUploadArquivoProjeto(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUploadArquivoMidia(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) setNovoProjImg(result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataUrl = await comprimirImagemArquivo(file, 1280, 0.85);
+      setNovaMidiaUrl(dataUrl);
+    } catch {
+      // Fallback
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) setNovaMidiaUrl(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function handleUploadArquivoProjeto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await comprimirImagemArquivo(file, 1000, 0.85);
+      setNovoProjImg(dataUrl);
+    } catch {
+      // Fallback
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) setNovoProjImg(result);
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   function adicionarProjeto() {

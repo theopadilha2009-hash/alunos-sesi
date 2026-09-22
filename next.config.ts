@@ -3,18 +3,28 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4mb",
+    },
+  },
+
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // A chave do ADM sai da URL no primeiro redirect, mas enquanto ela
-          // está na barra de endereço qualquer subrecurso que a página
-          // carregasse mandaria a URL inteira no `Referer`. no-referrer
-          // fecha essa janela — é a segunda camada, depois do cookie.
           { key: "Referrer-Policy", value: "no-referrer" },
           { key: "X-Frame-Options", value: "DENY" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+          },
           {
             key: "Content-Security-Policy",
             value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",

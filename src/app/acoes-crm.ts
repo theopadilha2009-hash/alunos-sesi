@@ -2,8 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { autenticarUsuario, deslogarUsuario, obterSessao, registrarUsuario } from "@/lib/auth";
-import { atualizarPerfilAluno, alunoPorId } from "@/lib/dados";
+import { atualizarPerfilAluno } from "@/lib/dados";
+import { logger } from "@/lib/debug";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
+import {
+  sanitizarMidias,
+  sanitizarProjetos,
+  sanitizarTexto,
+  verificarRateLimit,
+} from "@/lib/seguranca";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import type { MidiaAluno, ProjetoAluno } from "@/lib/tipos";
 
@@ -50,7 +57,7 @@ export async function logoutAction(): Promise<void> {
   revalidatePath("/");
 }
 
-/** Salva as edições do perfil do estudante */
+/** Salva as edições do perfil do estudante com validação e sanitização estrita */
 export async function salvarPerfilAction(
   _prev: EstadoAcaoCrm,
   formData: FormData,
@@ -60,12 +67,21 @@ export async function salvarPerfilAction(
     return { ok: false, mensagem: "Você precisa estar conectado para editar o perfil." };
   }
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const salaNome = String(formData.get("sala") ?? "").trim();
+  // Rate limit: máx 20 salvamentos por minuto por aluno
+  const limit = verificarRateLimit(`salvar-perfil:${sessao.alunoId}`, 20, 60 * 1000);
+  if (!limit.permitido) {
+    return {
+      ok: false,
+      mensagem: "Muitas alterações em pouco tempo. Aguarde alguns instantes antes de salvar novamente.",
+    };
+  }
+
+  const nome = sanitizarTexto(formData.get("nome"), 100);
+  const salaNome = sanitizarTexto(formData.get("sala"), 30);
   const linkedinBruto = String(formData.get("linkedin") ?? "").trim();
   const githubBruto = String(formData.get("github") ?? "").trim();
   const instagramBruto = String(formData.get("instagram") ?? "").trim();
-  const bio = String(formData.get("bio") ?? "").trim();
+  const bio = sanitizarTexto(formData.get("bio"), 280);
   const projetosJson = String(formData.get("projetos") ?? "[]");
   const midiasJson = String(formData.get("midias") ?? "[]");
 
@@ -73,22 +89,25 @@ export async function salvarPerfilAction(
     return { ok: false, mensagem: "O nome precisa ter pelo menos 2 caracteres." };
   }
 
-  let projetos: ProjetoAluno[] = [];
+  let projetosBrutos: unknown[] = [];
   try {
-    projetos = JSON.parse(projetosJson);
+    projetosBrutos = JSON.parse(projetosJson);
   } catch {
-    projetos = [];
+    projetosBrutos = [];
   }
 
-  let midias: MidiaAluno[] = [];
+  let midiasBrutas: unknown[] = [];
   try {
-    midias = JSON.parse(midiasJson);
+    midiasBrutas = JSON.parse(midiasJson);
   } catch {
-    midias = [];
+    midiasBrutas = [];
   }
 
-  // Moderação preventiva para ambiente escolar:
-  // Verifica se há termos inadequados em legendas ou títulos
+  // Sanitização estrita e validação de URLs / esquemas
+  const projetos = sanitizarProjetos(projetosBrutos);
+  const midias = sanitizarMidias(midiasBrutas);
+
+  // Moderação preventiva para ambiente escolar
   const termosProibidos = /\b(porn|xxx|nsfw|sex|nude|violencia|arma|droga|aposta|bet)\b/i;
   for (const m of midias) {
     if (m.legenda && termosProibidos.test(m.legenda)) {
@@ -104,7 +123,9 @@ export async function salvarPerfilAction(
 
   // Normaliza instagram (garante @ ou link amigável)
   let instagram = instagramBruto ? instagramBruto.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "") : null;
-  if (instagram) instagram = `@${instagram}`;
+  if (instagram) {
+    instagram = sanitizarTexto(`@${instagram}`, 40);
+  }
 
   const db = clienteAdmin();
 
@@ -136,10 +157,12 @@ export async function salvarPerfilAction(
 
   try {
     await atualizarPerfilAluno(sessao.alunoId, dadosAtualizacao);
+    logger.info("CRM", `Perfil atualizado com sucesso: alunoId=${sessao.alunoId}, nome=${nome}`);
     revalidatePath("/");
     revalidatePath("/alunos");
     return { ok: true, mensagem: "Perfil atualizado com sucesso!" };
   } catch (err) {
+    logger.error("CRM", "Erro ao salvar perfil do aluno", err);
     return {
       ok: false,
       mensagem: err instanceof Error ? err.message : "Erro ao salvar perfil.",

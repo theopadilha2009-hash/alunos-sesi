@@ -1,6 +1,13 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { alunoPorId, alunoPorSlug } from "./dados";
+import { logger } from "./debug";
+import {
+  compararTempoConstante,
+  resetarRateLimit,
+  sanitizarTexto,
+  verificarRateLimit,
+} from "./seguranca";
 import {
   abrirAssinado,
   assinar,
@@ -59,8 +66,21 @@ export async function autenticarUsuario(
     return { ok: false, mensagem: "Informe o usuário e a senha." };
   }
 
+  // Proteção contra brute-force: máximo 5 tentativas por usuário a cada 5 minutos
+  const limit = verificarRateLimit(`login:${username}`, 5, 5 * 60 * 1000, 5 * 60 * 1000);
+  if (!limit.permitido) {
+    logger.warn("AUTH", `Tentativa de login bloqueada por rate limit para o usuário: ${username}`);
+    const minutos = Math.ceil((limit.tempoRestanteMs ?? 60000) / 60000);
+    return {
+      ok: false,
+      mensagem: `Muitas tentativas seguidas. Aguarde ${minutos} minuto(s) antes de tentar novamente.`,
+    };
+  }
+
   // Atalho do Super ADM theo1234
   if (username === "theo1234" && senha === "theo1234") {
+    resetarRateLimit(`login:${username}`);
+    logger.info("AUTH", "Login efetuado com sucesso como Super ADM theo1234");
     let aluno = await alunoPorSlug("telor-de-espadilha");
 
     const superAdmSessao: UsuarioSessao = {
@@ -78,7 +98,7 @@ export async function autenticarUsuario(
     return { ok: true, usuario: superAdmSessao };
   }
 
-  // Consulta no banco de dados
+  // Consulta no banco de dados com cliente administrativo isolado
   const db = clienteAdmin();
   const hash = hashSenha(senha);
 
@@ -89,12 +109,19 @@ export async function autenticarUsuario(
     .maybeSingle();
 
   if (error || !usuarioDb) {
+    logger.warn("AUTH", `Falha no login: usuário não encontrado (${username})`);
     return { ok: false, mensagem: "Usuário ou senha incorretos." };
   }
 
-  if (usuarioDb.senha_hash !== hash) {
+  // Comparação em tempo constante (evita timing attacks)
+  if (!compararTempoConstante(usuarioDb.senha_hash, hash)) {
+    logger.warn("AUTH", `Falha no login: senha incorreta para ${username}`);
     return { ok: false, mensagem: "Usuário ou senha incorretos." };
   }
+
+  // Sucesso: reseta contador de tentativas
+  resetarRateLimit(`login:${username}`);
+  logger.info("AUTH", `Usuário autenticado com sucesso: ${username} (role: ${usuarioDb.role})`);
 
   let nome = usuarioDb.username;
   let sala = null;
@@ -128,14 +155,24 @@ export async function registrarUsuario(dados: {
 }): Promise<{ ok: boolean; mensagem?: string; usuario?: UsuarioSessao }> {
   const username = dados.username.trim().toLowerCase();
   const senha = dados.senha.trim();
-  const nome = dados.nome.trim();
-  const salaNome = dados.salaNome.trim();
+  const nome = sanitizarTexto(dados.nome, 100);
+  const salaNome = sanitizarTexto(dados.salaNome, 30);
 
-  if (username.length < 3) {
-    return { ok: false, mensagem: "O nome de usuário deve ter pelo menos 3 caracteres." };
+  // Rate limit de novos cadastros (máx 10 por minuto global para prevenir spam)
+  const limit = verificarRateLimit("cadastro:global", 10, 60 * 1000);
+  if (!limit.permitido) {
+    return { ok: false, mensagem: "Muitos cadastros recentes. Aguarde 1 minuto." };
   }
-  if (senha.length < 4) {
-    return { ok: false, mensagem: "A senha deve ter pelo menos 4 caracteres." };
+
+  // Validação de formato do username: alfanumérico com ponto, underline ou hífen
+  if (!/^[a-z0-9_.-]{3,30}$/.test(username)) {
+    return {
+      ok: false,
+      mensagem: "O nome de usuário deve ter entre 3 e 30 caracteres (letras, números, '.', '_' ou '-').",
+    };
+  }
+  if (senha.length < 4 || senha.length > 100) {
+    return { ok: false, mensagem: "A senha deve ter entre 4 e 100 caracteres." };
   }
   if (nome.length < 2) {
     return { ok: false, mensagem: "Informe o seu nome completo." };

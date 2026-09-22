@@ -1,3 +1,4 @@
+import { logger } from "./debug";
 import { clienteAdmin } from "./supabase/admin";
 import { clientePublico } from "./supabase/publico";
 import type { Aluno, RetratoSala, Sala } from "./tipos";
@@ -14,14 +15,34 @@ import type { Aluno, RetratoSala, Sala } from "./tipos";
 const CAMPOS_ALUNO =
   "id,nome,slug,sala_id,linkedin,github,instagram,bio,foto_url,fixado,destaque,estrelas,projetos,midias";
 
+const TTL_CACHE_MS = 15 * 1000; // 15 segundos para acelerar navegação sem perder atualizações
+let cacheSalas: { expira: number; dados: Sala[] } | null = null;
+let cacheRetrato: { expira: number; dados: RetratoSala[] } | null = null;
+
+export function limparCacheDados(): void {
+  cacheSalas = null;
+  cacheRetrato = null;
+}
+
 export async function listarSalas(): Promise<Sala[]> {
+  const agora = Date.now();
+  if (cacheSalas && cacheSalas.expira > agora) {
+    return cacheSalas.dados;
+  }
+
   const { data, error } = await clientePublico()
     .from("salas")
     .select("id,nome,curso,turno,ordem")
     .order("ordem", { ascending: true })
     .order("nome", { ascending: true });
-  if (error) throw new Error(`listarSalas: ${error.message}`);
-  return (data ?? []) as Sala[];
+  if (error) {
+    logger.error("DADOS", "Erro em listarSalas", error);
+    throw new Error(`listarSalas: ${error.message}`);
+  }
+
+  const salas = (data ?? []) as Sala[];
+  cacheSalas = { expira: agora + TTL_CACHE_MS, dados: salas };
+  return salas;
 }
 
 export async function listarAlunos(): Promise<Aluno[]> {
@@ -29,16 +50,30 @@ export async function listarAlunos(): Promise<Aluno[]> {
     .from("alunos")
     .select(CAMPOS_ALUNO)
     .order("nome", { ascending: true });
-  if (error) throw new Error(`listarAlunos: ${error.message}`);
+  if (error) {
+    logger.error("DADOS", "Erro em listarAlunos", error);
+    throw new Error(`listarAlunos: ${error.message}`);
+  }
   return (data ?? []) as Aluno[];
 }
 
 export async function listarRetrato(): Promise<RetratoSala[]> {
+  const agora = Date.now();
+  if (cacheRetrato && cacheRetrato.expira > agora) {
+    return cacheRetrato.dados;
+  }
+
   const { data, error } = await clientePublico()
     .from("retrato_salas")
     .select("id,nome,curso,turno,ordem,alunos,com_linkedin,com_github,estrelas,completude");
-  if (error) throw new Error(`listarRetrato: ${error.message}`);
-  return (data ?? []) as RetratoSala[];
+  if (error) {
+    logger.error("DADOS", "Erro em listarRetrato", error);
+    throw new Error(`listarRetrato: ${error.message}`);
+  }
+
+  const retratos = (data ?? []) as RetratoSala[];
+  cacheRetrato = { expira: agora + TTL_CACHE_MS, dados: retratos };
+  return retratos;
 }
 
 export async function alunoPorSlug(slug: string): Promise<Aluno | null> {
@@ -82,7 +117,11 @@ export async function atualizarPerfilAluno(
     .select(CAMPOS_ALUNO)
     .single();
 
-  if (error) throw new Error(`atualizarPerfilAluno: ${error.message}`);
+  if (error) {
+    logger.error("DADOS", `Erro em atualizarPerfilAluno id=${id}`, error);
+    throw new Error(`atualizarPerfilAluno: ${error.message}`);
+  }
+  limparCacheDados();
   return data as Aluno;
 }
 

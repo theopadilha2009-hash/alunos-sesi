@@ -16,17 +16,12 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
   criado_em timestamptz NOT NULL DEFAULT now()
 );
 
--- RLS para tabela usuarios: acesso via service_role ou leitura básica
+-- RLS para tabela usuarios: bloqueio total para anon e authenticated.
+-- Toda autenticação e consulta de usuários é executada exclusivamente
+-- no servidor pelo clienteAdmin() (service_role).
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'usuarios' AND policyname = 'usuarios_leitura'
-  ) THEN
-    CREATE POLICY usuarios_leitura ON public.usuarios FOR SELECT TO anon, authenticated USING (true);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS usuarios_leitura ON public.usuarios;
 
 -- 3. Sala DSM3 e Perfil do Super ADM (Telor de Espadilha)
 DO $$
