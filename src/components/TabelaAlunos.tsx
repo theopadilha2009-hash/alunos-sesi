@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
 import { GrupoRedes } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
@@ -102,7 +103,9 @@ export function TabelaAlunos({
                           <span className="selo selo-fixado">Fixado</span>
                         ) : null}
                         {aluno.destaque ? (
-                          <span className="selo selo-adm">★ ADM</span>
+                          <span className="selo selo-adm">
+                            <IconeEscudo tamanho={11} /> ADM
+                          </span>
                         ) : null}
                       </div>
                       {aluno.bio ? (
@@ -174,7 +177,7 @@ export function TabelaAlunos({
                         : `Dar estrela para ${aluno.nome}`
                     }
                   >
-                    {estrelado ? "★" : "☆"} {aluno.estrelas}
+                    <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
                   </button>
                 </td>
 
@@ -184,9 +187,10 @@ export function TabelaAlunos({
                       type="button"
                       className="mini botao-cracha-acao"
                       onClick={() => onAbrirCracha(aluno)}
-                      title={`Abrir Crachá 3D de ${aluno.nome}`}
+                      title={`Abrir Crachá Digital de ${aluno.nome}`}
                     >
-                      📇 Ver Crachá
+                      <IconeCracha tamanho={13} />
+                      <span>Crachá</span>
                     </button>
                     {onSelecionarAluno ? (
                       <button

@@ -5,8 +5,23 @@ import { logoutAction } from "@/app/acoes-crm";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
-import { ModalEditarPerfil } from "@/components/crm/ModalEditarPerfil";
+import { PaginaMeuPerfil } from "@/components/crm/PaginaMeuPerfil";
+import { PainelAdmIntegrado } from "@/components/crm/PainelAdmIntegrado";
 import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
+import {
+  IconeCards,
+  IconeCracha,
+  IconeEditar,
+  IconeEscudo,
+  IconeEstrela,
+  IconeImprimir,
+  IconeLogout,
+  IconePortfolio,
+  IconeProjetos,
+  IconeSala,
+  IconeTabela,
+  IconeUsuario,
+} from "@/components/Icones";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
@@ -28,7 +43,7 @@ type Props = {
   meusVotos: string[];
 };
 
-type AbaAtiva = "portfolio" | "projetos" | "tabelas" | "adm";
+type AbaAtiva = "portfolio" | "projetos" | "tabelas" | "perfil" | "adm";
 
 export function CrmApp({
   usuario,
@@ -47,7 +62,6 @@ export function CrmApp({
   const [ocupado, setOcupado] = useState<string | null>(null);
 
   // Modais
-  const [modalEditarPerfilAberto, setModalEditarPerfilAberto] = useState(false);
   const [alunoBreveSelecionado, setAlunoBreveSelecionado] = useState<AlunoNaTela | null>(null);
   const [alunoCracha, setAlunoCracha] = useState<AlunoNaTela | null>(null);
   const [cmdAberto, setCmdAberto] = useState(false);
@@ -114,129 +128,115 @@ export function CrmApp({
     }
 
     if (salaSelecionada !== TODAS) {
-      const salaObj = salas.find((s) => s.id === salaSelecionada);
-      const nome = salaObj?.nome ?? "Sala Selecionada";
+      const s = salas.find((item) => item.id === salaSelecionada);
       return [
         {
           id: salaSelecionada,
-          nome,
-          cor: corDaSala(nome),
+          nome: s?.nome ?? "Sala Selecionada",
+          cor: corDaSala(s?.nome ?? ""),
           alunos: visiveis,
         },
       ];
     }
 
-    // Quando "Todas as Salas": agrupa na ordem de salas
-    const map = new Map<string, AlunoNaTela[]>();
-    for (const a of visiveis) {
-      const sId = a.sala_id ?? "sem-sala";
-      if (!map.has(sId)) map.set(sId, []);
-      map.get(sId)!.push(a);
-    }
+    // Se "Todas", agrupa por cada sala respeitando a ordem do banco
+    return salas
+      .map((s) => ({
+        id: s.id,
+        nome: s.nome,
+        cor: corDaSala(s.nome),
+        alunos: visiveis.filter((a) => a.sala_id === s.id || a.sala === s.nome),
+      }))
+      .filter((g) => g.alunos.length > 0);
+  }, [salas, salaSelecionada, visiveis]);
 
-    const resultado: Array<{ id: string; nome: string; cor: string; alunos: AlunoNaTela[] }> = [];
-
-    for (const s of salas) {
-      const alunosDaSala = map.get(s.id);
-      if (alunosDaSala && alunosDaSala.length > 0) {
-        resultado.push({
-          id: s.id,
-          nome: s.nome,
-          cor: corDaSala(s.nome),
-          alunos: alunosDaSala,
-        });
-      }
-    }
-
-    const semSala = map.get("sem-sala");
-    if (semSala && semSala.length > 0) {
-      resultado.push({
-        id: "sem-sala",
-        nome: "Outros Estudantes",
-        cor: "var(--dim)",
-        alunos: semSala,
-      });
-    }
-
-    return resultado;
-  }, [visiveis, salas, salaSelecionada]);
-
-  // Todas as criações/projetos reunidos de todos os estudantes
+  // Todas as criações/projetos agregados de todos os alunos
   const todasCriacoes = useMemo(() => {
-    const listaProjetos: Array<{
-      alunoNome: string;
-      alunoSala: string | null;
-      alunoAvatar: string;
-      alunoObjeto: AlunoNaTela;
+    const arr: Array<{
+      id: string;
       titulo: string;
       descricao: string;
       link?: string;
       imagem?: string;
+      alunoNome: string;
+      alunoSala: string | null;
+      alunoAvatar: string;
+      alunoSlug: string;
+      alunoObjeto: AlunoNaTela;
     }> = [];
 
     for (const a of naTela) {
       if (a.projetos && Array.isArray(a.projetos)) {
         for (const p of a.projetos) {
-          listaProjetos.push({
-            alunoNome: a.nome,
-            alunoSala: a.sala,
-            alunoAvatar: iniciais(a.nome),
-            alunoObjeto: a,
+          arr.push({
+            id: p.id,
             titulo: p.titulo,
             descricao: p.descricao,
             link: p.link,
             imagem: p.imagem,
+            alunoNome: a.nome,
+            alunoSala: a.sala,
+            alunoAvatar: iniciais(a.nome),
+            alunoSlug: a.slug,
+            alunoObjeto: a,
           });
         }
       }
     }
-    return listaProjetos;
+    return arr;
   }, [naTela]);
 
-  async function estrelar(id: string, ev?: React.MouseEvent) {
+  // Voto de Estrela Otimizado com som e confetes
+  async function estrelar(alunoId: string, ev?: React.MouseEvent) {
     if (ocupado) return;
-    const jaTem = meus.includes(id);
-    setOcupado(id);
+    setOcupado(alunoId);
 
-    if (!jaTem) {
-      tocarSomEstrela();
-      if (ev) dispararConfetes(ev.clientX, ev.clientY);
-      else dispararConfetes();
-    }
+    const eraEstrelado = meus.includes(alunoId);
+    const proximaListaMeus = eraEstrelado
+      ? meus.filter((id) => id !== alunoId)
+      : [...meus, alunoId];
 
-    setMeus((p) => (jaTem ? p.filter((x) => x !== id) : [...p, id]));
-    setLista((p) =>
-      p.map((a) =>
-        a.id === id
-          ? { ...a, estrelas: Math.max(0, a.estrelas + (jaTem ? -1 : 1)) }
+    setMeus(proximaListaMeus);
+    setLista((antiga) =>
+      antiga.map((a) =>
+        a.id === alunoId
+          ? { ...a, estrelas: Math.max(0, a.estrelas + (eraEstrelado ? -1 : 1)) }
           : a,
       ),
     );
 
+    if (!eraEstrelado) {
+      tocarSomEstrela();
+      if (ev) {
+        dispararConfetes(ev.clientX, ev.clientY);
+      }
+    }
+
     try {
       const resp = await fetch("/api/estrela", {
-        method: jaTem ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alunoId: id }),
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ alunoId }),
       });
-      const dados = (await resp.json()) as { estrelas?: number; votado?: boolean };
-      if (resp.ok && typeof dados.estrelas === "number") {
-        setLista((p) =>
-          p.map((a) => (a.id === id ? { ...a, estrelas: dados.estrelas ?? a.estrelas } : a)),
-        );
+      if (!resp.ok) {
+        setMeus(meus);
+        setLista(alunosIniciais);
       }
-    } catch {} finally {
+    } catch {
+      setMeus(meus);
+      setLista(alunosIniciais);
+    } finally {
       setOcupado(null);
     }
   }
 
-  const nomeExibicao = meuAlunoNaTela?.nome ?? usuario.nome ?? "Telor de Espadilha";
-  const salaExibicao = meuAlunoNaTela?.sala ?? usuario.sala ?? "DSM3";
-  const ehSuperAdm = usuario.role === "super_adm" || usuario.username === "theo1234";
+  const ehSuperAdm = usuario.role === "super_adm";
+  const nomeExibicao = usuario.nome || usuario.username;
+  const salaExibicao = usuario.sala || "SESI SP";
 
   return (
     <div className="crm-layout">
-      {/* ── BARRA LATERAL (SIDEBAR À ESQUERDA) ───────────────────────────── */}
+      {/* ── BARRA LATERAL (SIDEBAR CRM) ──────────────────────────────────── */}
       <aside className="crm-sidebar">
         {/* Topo da Sidebar: Marca & Workspace */}
         <div className="sidebar-topo">
@@ -254,19 +254,21 @@ export function CrmApp({
             onClick={() => setCmdAberto(true)}
             title="Buscar com Command Palette (⌘K)"
           >
-            <span>🔍 Buscar...</span>
+            <span>Buscar...</span>
             <kbd className="sidebar-kbd">⌘K</kbd>
           </button>
         </div>
 
-        {/* Abas Principais de Navegação */}
+        {/* Abas Principais de Navegação com Ícones SVG Limpos */}
         <nav className="sidebar-nav">
           <button
             type="button"
             className={`nav-item ${aba === "portfolio" ? "nav-item-ativo" : ""}`}
             onClick={() => setAba("portfolio")}
           >
-            <span className="nav-icone">📁</span>
+            <span className="nav-icone">
+              <IconePortfolio tamanho={18} />
+            </span>
             <span className="nav-label">Portfólio</span>
             <span className="nav-badge">{naTela.length}</span>
           </button>
@@ -276,7 +278,9 @@ export function CrmApp({
             className={`nav-item ${aba === "projetos" ? "nav-item-ativo" : ""}`}
             onClick={() => setAba("projetos")}
           >
-            <span className="nav-icone">🚀</span>
+            <span className="nav-icone">
+              <IconeProjetos tamanho={18} />
+            </span>
             <span className="nav-label">Projetos & Criações</span>
             <span className="nav-badge">{todasCriacoes.length}</span>
           </button>
@@ -286,8 +290,21 @@ export function CrmApp({
             className={`nav-item ${aba === "tabelas" ? "nav-item-ativo" : ""}`}
             onClick={() => setAba("tabelas")}
           >
-            <span className="nav-icone">📊</span>
+            <span className="nav-icone">
+              <IconeTabela tamanho={18} />
+            </span>
             <span className="nav-label">Tabelas & Alunos</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${aba === "perfil" ? "nav-item-ativo" : ""}`}
+            onClick={() => setAba("perfil")}
+          >
+            <span className="nav-icone">
+              <IconeUsuario tamanho={18} />
+            </span>
+            <span className="nav-label">Meu Perfil</span>
           </button>
 
           {ehSuperAdm ? (
@@ -296,21 +313,23 @@ export function CrmApp({
               className={`nav-item ${aba === "adm" ? "nav-item-ativo" : ""}`}
               onClick={() => setAba("adm")}
             >
-              <span className="nav-icone">🔒</span>
+              <span className="nav-icone">
+                <IconeEscudo tamanho={18} />
+              </span>
               <span className="nav-label">Painel ADM</span>
               <span className="nav-badge-adm">Super</span>
             </button>
           ) : null}
         </nav>
 
-        {/* Canto Inferior Esquerdo: Perfil do Usuário Logado */}
+        {/* Canto Inferior Esquerdo: Perfil do Usuário Logado & Ações Coesas */}
         <div className="sidebar-rodape">
           <div
             className="card-usuario-logado"
-            onClick={() => setModalEditarPerfilAberto(true)}
+            onClick={() => setAba("perfil")}
             role="button"
             tabIndex={0}
-            title="Clique para editar e personalizar seu perfil"
+            title="Acessar meu perfil e editor completo"
           >
             <div className="user-avatar-wrap">
               <span className="avatar user-avatar">{iniciais(nomeExibicao)}</span>
@@ -326,31 +345,35 @@ export function CrmApp({
             </div>
 
             <span className="user-editar-btn" aria-hidden="true" title="Editar Perfil">
-              ✏️
+              <IconeEditar tamanho={14} />
             </span>
           </div>
 
-          {meuAlunoNaTela ? (
-            <button
-              type="button"
-              className="btn-cracha-sidebar-rapido"
-              onClick={() => setAlunoCracha(meuAlunoNaTela)}
-              title="Visualizar e baixar meu crachá digital"
-            >
-              📇 Meu Crachá Digital (PNG)
-            </button>
-          ) : null}
+          <div className="sidebar-rodape-acoes">
+            {meuAlunoNaTela ? (
+              <button
+                type="button"
+                className="btn-sidebar-acao btn-sidebar-cracha"
+                onClick={() => setAlunoCracha(meuAlunoNaTela)}
+                title="Visualizar e baixar meu crachá digital"
+              >
+                <IconeCracha tamanho={15} />
+                <span>Meu Crachá</span>
+              </button>
+            ) : null}
 
-          <form action={logoutAction} className="form-logout">
-            <button
-              type="submit"
-              className="btn-logout"
-              title="Sair da conta"
-              aria-label="Sair da conta"
-            >
-              Sair ⎋
-            </button>
-          </form>
+            <form action={logoutAction} className="form-logout-inline">
+              <button
+                type="submit"
+                className="btn-sidebar-acao btn-sidebar-logout"
+                title="Encerrar sessão no CRM"
+                aria-label="Sair da conta"
+              >
+                <IconeLogout tamanho={15} />
+                <span>Sair</span>
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
 
@@ -366,7 +389,9 @@ export function CrmApp({
                   ? "Criações da Escola"
                   : aba === "tabelas"
                     ? "Gestão Tabular"
-                    : "Administração"}
+                    : aba === "perfil"
+                      ? "Configurações de Estudante"
+                      : "Administração"}
             </span>
             <h1 className="crm-header-titulo">
               {aba === "portfolio"
@@ -375,19 +400,24 @@ export function CrmApp({
                   ? "Criações & Projetos SESI"
                   : aba === "tabelas"
                     ? "Tabela de Alunos & Salas"
-                    : "Painel do Administrador"}
+                    : aba === "perfil"
+                      ? "Meu Perfil & Portfólio Pessoal"
+                      : "Painel do Administrador"}
             </h1>
           </div>
 
           <div className="crm-header-acoes">
             <TemaToggle />
-            <button
-              type="button"
-              className="botao botao-primario"
-              onClick={() => setModalEditarPerfilAberto(true)}
-            >
-              ✏️ Editar Meu Perfil
-            </button>
+            {aba !== "perfil" ? (
+              <button
+                type="button"
+                className="botao botao-primario"
+                onClick={() => setAba("perfil")}
+              >
+                <IconeEditar tamanho={15} />
+                <span>Editar Meu Perfil</span>
+              </button>
+            ) : null}
           </div>
         </header>
 
@@ -481,7 +511,8 @@ export function CrmApp({
               <div className="portfolio-barra-visualizacao">
                 <div className="portfolio-barra-titulos">
                   <h3 className="portfolio-secao-titulo">
-                    🏛️ Salas & Estudantes SESI
+                    <IconeSala tamanho={18} />
+                    <span>Salas & Estudantes SESI</span>
                   </h3>
                   <span className="portfolio-secao-sub">
                     Estudantes agrupados por sala com LinkedIn e GitHub em destaque
@@ -495,7 +526,8 @@ export function CrmApp({
                     onClick={() => window.print()}
                     title="Imprimir ou salvar PDF da turma formatado para apresentação institucional"
                   >
-                    🖨️ Imprimir Catálogo (PDF)
+                    <IconeImprimir tamanho={14} />
+                    <span>Imprimir Catálogo (PDF)</span>
                   </button>
                   <button
                     type="button"
@@ -503,7 +535,8 @@ export function CrmApp({
                     onClick={() => setModoVisualizacao("tabela")}
                     title="Formato Tabela com Redes Destacadas (Recomendado)"
                   >
-                    📊 Tabela por Sala
+                    <IconeTabela tamanho={14} />
+                    <span>Tabela por Sala</span>
                   </button>
                   <button
                     type="button"
@@ -511,7 +544,8 @@ export function CrmApp({
                     onClick={() => setModoVisualizacao("cards")}
                     title="Formato Cards"
                   >
-                    🗂️ Cards
+                    <IconeCards tamanho={14} />
+                    <span>Cards</span>
                   </button>
                 </div>
               </div>
@@ -585,7 +619,7 @@ export function CrmApp({
                                     estrelar(aluno.id, e);
                                   }}
                                 >
-                                  {estrelado ? "★" : "☆"} {aluno.estrelas}
+                                  <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
                                 </button>
                               </header>
 
@@ -593,7 +627,7 @@ export function CrmApp({
                                 <p className="card-port-bio">{aluno.bio}</p>
                               ) : null}
 
-                              {/* Redes Principais (LinkedIn & GitHub em alto destaque!) */}
+                              {/* Redes Principais (LinkedIn & GitHub em alto destaque) */}
                               <div className="card-port-redes" onClick={(e) => e.stopPropagation()}>
                                 <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
                                 <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
@@ -605,7 +639,7 @@ export function CrmApp({
                                     setAlunoCracha(aluno);
                                   }}
                                 >
-                                  📇 Crachá 3D
+                                  <IconeCracha tamanho={12} /> Crachá
                                 </button>
                               </div>
 
@@ -646,7 +680,8 @@ export function CrmApp({
                     <img src={p.imagem} alt={p.titulo} className="criacao-mural-capa" />
                   ) : (
                     <div className="criacao-mural-capa-placeholder">
-                      <span>🚀 Projeto SESI</span>
+                      <IconeProjetos tamanho={24} />
+                      <span>Projeto SESI</span>
                     </div>
                   )}
 
@@ -659,20 +694,35 @@ export function CrmApp({
                       </div>
                     </div>
 
-                    <h3>{p.titulo}</h3>
-                    <p>{p.descricao}</p>
+                    <h3 className="criacao-titulo">{p.titulo}</h3>
+                    <p className="criacao-desc">{p.descricao}</p>
 
-                    {p.link ? (
-                      <a
-                        href={p.link}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="link-criacao"
-                        onClick={(e) => e.stopPropagation()}
+                    <div className="criacao-rodape">
+                      {p.link ? (
+                        <a
+                          href={p.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="link-ext"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Acessar Criação ↗
+                        </a>
+                      ) : (
+                        <span className="criacao-sem-link">Sem link externo</span>
+                      )}
+
+                      <button
+                        type="button"
+                        className="btn-ver-autor"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAlunoBreveSelecionado(p.alunoObjeto);
+                        }}
                       >
-                        Acessar Projeto Externo ↗
-                      </a>
-                    ) : null}
+                        Perfil do Autor →
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -683,47 +733,50 @@ export function CrmApp({
         {/* ── ABA 3: TABELAS & ALUNOS ──────────────────────────────────── */}
         {aba === "tabelas" ? (
           <div className="crm-secao-conteudo">
+            <div className="bloco-cabecalho-tabela">
+              <h2>Tabela Geral de Estudantes SESI</h2>
+              <p>
+                Visualização tabular completa com filtros por sala, status de fixação e redes
+                profissionais.
+              </p>
+            </div>
+
             <TabelaAlunos
               alunos={visiveis}
               meusVotos={meus}
               ocupado={ocupado}
               onEstrelar={estrelar}
               onAbrirCracha={setAlunoCracha}
+              onSelecionarAluno={setAlunoBreveSelecionado}
             />
           </div>
         ) : null}
 
-        {/* ── ABA 4: PAINEL ADMINISTRATIVO ─────────────────────────────── */}
+        {/* ── ABA 4: MEU PERFIL (Página Completa Estilo Imagem 4) ──────── */}
+        {aba === "perfil" ? (
+          <div className="crm-secao-conteudo">
+            <PaginaMeuPerfil
+              usuario={usuario}
+              alunoAtual={meuAlunoNaTela}
+              salas={salas}
+            />
+          </div>
+        ) : null}
+
+        {/* ── ABA 5: PAINEL ADMINISTRATIVO INTEGRADO (Super ADM) ────────── */}
         {aba === "adm" && ehSuperAdm ? (
           <div className="crm-secao-conteudo">
-            <div className="bloco">
-              <header>
-                <h2>Gerenciamento da Turma (Super ADM)</h2>
-                <span>Acesso exclusivo para {usuario.username}</span>
-              </header>
-              <div className="corpo">
-                <p>
-                  Você pode navegar para a rota administrativa completa com suporte a importação em
-                  massa de planilhas ou gerenciar destaques diretamente no portfólio.
-                </p>
-                <a href="/adm" className="botao botao-primario">
-                  Abrir Painel ADM Completo →
-                </a>
-              </div>
-            </div>
+            <PainelAdmIntegrado
+              alunos={naTela}
+              salas={salas}
+              onAbrirCracha={(a) => setAlunoCracha(a)}
+              onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
+            />
           </div>
         ) : null}
       </main>
 
       {/* ── MODAIS INTEGRADOS ────────────────────────────────────────────── */}
-      {modalEditarPerfilAberto ? (
-        <ModalEditarPerfil
-          usuario={usuario}
-          alunoAtual={meuAlunoNaTela}
-          onFechar={() => setModalEditarPerfilAberto(false)}
-        />
-      ) : null}
-
       {alunoBreveSelecionado ? (
         <ModalPerfilBreve
           aluno={alunoBreveSelecionado}

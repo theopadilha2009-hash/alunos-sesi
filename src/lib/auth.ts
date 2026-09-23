@@ -143,6 +143,9 @@ export async function autenticarUsuario(
 
   const jar = await cookies();
   jar.set(COOKIE_USUARIO, criarTokenSessao(sessao), opcoesCookie(TRINTA_DIAS));
+  if (sessao.role === "super_adm") {
+    jar.set(COOKIE_ADM, crachaAdm(), opcoesCookie(TRINTA_DIAS));
+  }
   return { ok: true, usuario: sessao };
 }
 
@@ -274,4 +277,5 @@ export async function registrarUsuario(dados: {
 export async function deslogarUsuario(): Promise<void> {
   const jar = await cookies();
   jar.delete(COOKIE_USUARIO);
+  jar.delete(COOKIE_ADM);
 }

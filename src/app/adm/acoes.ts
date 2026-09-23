@@ -6,6 +6,7 @@ import type { Estado } from "@/app/adm/estado";
 import { fold } from "@/lib/busca";
 import { parseLista, type ErroLinha } from "@/lib/importar";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
+import { obterSessao } from "@/lib/auth";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
 import { slugUnico } from "@/lib/slug";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -13,18 +14,19 @@ import { clienteAdmin } from "@/lib/supabase/admin";
 /**
  * Toda ação do painel começa por `exigirAdm()`.
  *
- * O proxy NÃO cobre Server Function: elas são POSTs para a rota onde são
- * usadas, então um matcher que exclui um caminho também pula a checagem
- * dele. Por isso a guarda mora aqui, em cada ação, e não só no layout.
+ * Aceita tanto o cookie legado `COOKIE_ADM` quanto a sessão de `super_adm`
+ * autenticada no CRM.
  */
 async function exigirAdm() {
   const jar = await cookies();
-  if (!crachaValido(jar.get(COOKIE_ADM)?.value)) {
-    throw new Error("Acesso restrito ao ADM.");
-  }
+  if (crachaValido(jar.get(COOKIE_ADM)?.value)) return;
+  const sessao = await obterSessao();
+  if (sessao && sessao.role === "super_adm") return;
+  throw new Error("Acesso restrito ao ADM.");
 }
 
 function revalidar() {
+  revalidatePath("/");
   revalidatePath("/alunos");
   revalidatePath("/adm");
 }

@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { Roseta } from "@/components/Roseta";
-import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
+import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
+import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais, urlGithub } from "@/lib/links";
+import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -20,7 +21,6 @@ export function CrachaModal({ aluno, onClose }: Props) {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState(false);
-  const [rotacao, setRotacao] = useState({ x: 0, y: 0, brilhoX: 50, brilhoY: 50 });
 
   const urlPerfil =
     typeof window !== "undefined"
@@ -29,7 +29,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
 
   useEffect(() => {
     QRCode.toDataURL(urlPerfil, {
-      width: 220,
+      width: 240,
       margin: 1,
       color: {
         dark: "#0b1418",
@@ -48,59 +48,12 @@ export function CrachaModal({ aluno, onClose }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      const percentX = (x / rect.width) * 100;
-      const percentY = (y / rect.height) * 100;
-      const rotX = ((y - rect.height / 2) / (rect.height / 2)) * -14;
-      const rotY = ((x - rect.width / 2) / (rect.width / 2)) * 14;
-      setRotacao({ x: rotX, y: rotY, brilhoX: percentX, brilhoY: percentY });
-    });
-  }
-
-  function handleMouseLeave() {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    setRotacao({ x: 0, y: 0, brilhoX: 50, brilhoY: 50 });
-  }
-
   async function copiarLink() {
     try {
       await navigator.clipboard.writeText(urlPerfil);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2400);
-    } catch {
-      // Fallback silencioso
-    }
-  }
-
-  async function compartilhar() {
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: `${aluno.nome} · Alunos SESI`,
-          text: `Confira o perfil de ${aluno.nome} no diretório de Alunos SESI!`,
-          url: urlPerfil,
-        });
-        return;
-      } catch {
-        // Usuário cancelou
-      }
-    }
-    copiarLink();
+    } catch {}
   }
 
   async function handleBaixarCracha() {
@@ -115,7 +68,6 @@ export function CrachaModal({ aluno, onClose }: Props) {
     }
   }
 
-  const githubUrl = urlGithub(aluno.github);
   const matricula = `SESI-${aluno.slug.toUpperCase().slice(0, 10)}-${aluno.estrelas.toString().padStart(2, "0")}`;
 
   return (
@@ -142,30 +94,18 @@ export function CrachaModal({ aluno, onClose }: Props) {
           <div className="cracha-gancho" />
         </div>
 
+        {/* Card do Crachá: Leve, nítido, sem bola holográfica pesada e com contraste impecável */}
         <div
           ref={cardRef}
-          className="cracha-card"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          style={
-            {
-              "--rot-x": `${rotacao.x}deg`,
-              "--rot-y": `${rotacao.y}deg`,
-              "--brilho-x": `${rotacao.brilhoX}%`,
-              "--brilho-y": `${rotacao.brilhoY}%`,
-              "--sala-cor": aluno.cor,
-            } as React.CSSProperties
-          }
+          className="cracha-card cracha-card-leve"
+          style={{ ["--sala-cor" as string]: aluno.cor }}
         >
-          {/* Efeito Holográfico Metalizado */}
-          <div className="cracha-holograma" aria-hidden="true" />
-
           {/* Abertura do Passante de Cordão */}
           <div className="cracha-furo" aria-hidden="true" />
 
           <header className="cracha-cabecalho">
             <div className="cracha-marca">
-              <Roseta tamanho={24} />
+              <Roseta tamanho={26} />
               <div>
                 <span className="cracha-logo-texto">ESCOLA SESI</span>
                 <span className="cracha-sub">STUDENT PASS · 2026</span>
@@ -185,7 +125,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
               </span>
               {aluno.estrelas > 0 ? (
                 <span className="cracha-estrela-badge" title="Estrelas recebidas">
-                  ★ {aluno.estrelas}
+                  <IconeEstrela preenchida tamanho={11} /> {aluno.estrelas}
                 </span>
               ) : null}
             </div>
@@ -200,14 +140,14 @@ export function CrachaModal({ aluno, onClose }: Props) {
                   </span>
                 ) : null}
                 {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-                {aluno.destaque ? <span className="selo selo-adm">★ Destaque</span> : null}
+                {aluno.destaque ? <span className="selo selo-adm">Destaque</span> : null}
               </div>
 
               {aluno.bio ? <p className="cracha-bio">{aluno.bio}</p> : null}
 
               {aluno.habilidades && aluno.habilidades.length > 0 ? (
                 <div className="cracha-habilidades">
-                  {aluno.habilidades.map((hab) => (
+                  {aluno.habilidades.slice(0, 3).map((hab) => (
                     <span
                       key={hab}
                       className="tag-habilidade"
@@ -254,44 +194,48 @@ export function CrachaModal({ aluno, onClose }: Props) {
           </div>
         </div>
 
-        {/* Ações do Crachá */}
-        <div className="cracha-acoes">
-          <button
-            type="button"
-            className="botao botao-primario"
-            onClick={handleBaixarCracha}
-            disabled={baixando}
-            title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico"
-          >
-            {baixando ? "⏳ Gerando PNG..." : "📥 Baixar Crachá (PNG)"}
-          </button>
+        {/* Ações Coesas e Organizadas em Dois Níveis Elegantes */}
+        <div className="cracha-acoes-deck">
+          <div className="cracha-acoes-principais">
+            <button
+              type="button"
+              className="btn-cracha-acao btn-cracha-download"
+              onClick={handleBaixarCracha}
+              disabled={baixando}
+              title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico"
+            >
+              <IconeDownload tamanho={16} />
+              <span>{baixando ? "Gerando PNG..." : "Baixar Crachá (PNG)"}</span>
+            </button>
 
-          <button
-            type="button"
-            className="botao botao-fraco"
-            onClick={copiarLink}
-          >
-            {copiado ? "✓ Link Copiado!" : "📋 Copiar Link"}
-          </button>
+            <button
+              type="button"
+              className="btn-cracha-acao btn-cracha-copiar"
+              onClick={copiarLink}
+              title="Copiar link do portfólio"
+            >
+              <IconeCopiar tamanho={15} />
+              <span>{copiado ? "Link Copiado!" : "Copiar Link"}</span>
+            </button>
 
-          <button
-            type="button"
-            className="botao botao-fraco"
-            onClick={compartilhar}
-          >
-            ↗ Compartilhar
-          </button>
+            <Link
+              href={`/alunos/${aluno.slug}`}
+              className="btn-cracha-acao btn-cracha-link"
+              onClick={onClose}
+              title="Acessar página pública do estudante"
+            >
+              <IconeLinkExterno tamanho={14} />
+              <span>Ver Página</span>
+            </Link>
+          </div>
 
-          <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
-          <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
-
-          <Link
-            href={`/alunos/${aluno.slug}`}
-            className="botao botao-fraco"
-            onClick={onClose}
-          >
-            Ver Página →
-          </Link>
+          {(aluno.linkedin || aluno.github || aluno.instagram) ? (
+            <div className="cracha-acoes-redes">
+              <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+              <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
+              <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

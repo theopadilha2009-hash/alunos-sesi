@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { autenticarUsuario, deslogarUsuario, obterSessao, registrarUsuario } from "@/lib/auth";
-import { atualizarPerfilAluno } from "@/lib/dados";
+import { atualizarPerfilAluno, alunoPorSlug } from "@/lib/dados";
 import { logger } from "@/lib/debug";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import {
@@ -63,12 +63,22 @@ export async function salvarPerfilAction(
   formData: FormData,
 ): Promise<EstadoAcaoCrm> {
   const sessao = await obterSessao();
-  if (!sessao || !sessao.alunoId) {
+  if (!sessao) {
     return { ok: false, mensagem: "Você precisa estar conectado para editar o perfil." };
   }
 
+  let alunoId = sessao.alunoId;
+  if (!alunoId && sessao.role === "super_adm") {
+    const telor = await alunoPorSlug("telor-de-espadilha");
+    if (telor) alunoId = telor.id;
+  }
+
+  if (!alunoId) {
+    return { ok: false, mensagem: "Perfil de estudante não associado a esta conta." };
+  }
+
   // Rate limit: máx 20 salvamentos por minuto por aluno
-  const limit = verificarRateLimit(`salvar-perfil:${sessao.alunoId}`, 20, 60 * 1000);
+  const limit = verificarRateLimit(`salvar-perfil:${alunoId}`, 20, 60 * 1000);
   if (!limit.permitido) {
     return {
       ok: false,
@@ -156,8 +166,8 @@ export async function salvarPerfilAction(
   }
 
   try {
-    await atualizarPerfilAluno(sessao.alunoId, dadosAtualizacao);
-    logger.info("CRM", `Perfil atualizado com sucesso: alunoId=${sessao.alunoId}, nome=${nome}`);
+    await atualizarPerfilAluno(alunoId, dadosAtualizacao);
+    logger.info("CRM", `Perfil atualizado com sucesso: alunoId=${alunoId}, nome=${nome}`);
     revalidatePath("/");
     revalidatePath("/alunos");
     return { ok: true, mensagem: "Perfil atualizado com sucesso!" };

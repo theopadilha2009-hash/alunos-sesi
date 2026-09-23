@@ -8,6 +8,7 @@ import { Rodape, Topo } from "@/components/ds";
 import { listarAlunos, listarSalas } from "@/lib/dados";
 import { corDaSala } from "@/lib/cores";
 import { ordenarAlunos } from "@/lib/ranking";
+import { obterSessao } from "@/lib/auth";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -18,7 +19,9 @@ export const metadata: Metadata = {
 
 export default async function AdmPage() {
   const jar = await cookies();
-  if (!crachaValido(jar.get(COOKIE_ADM)?.value)) notFound();
+  const sessao = await obterSessao();
+  const autorizado = crachaValido(jar.get(COOKIE_ADM)?.value) || sessao?.role === "super_adm";
+  if (!autorizado) notFound();
 
   const [alunos, salas] = await Promise.all([listarAlunos(), listarSalas()]);
   const nomePorId = new Map(salas.map((s) => [s.id, s.nome]));
