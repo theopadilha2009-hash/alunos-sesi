@@ -9,8 +9,18 @@ export function TemaToggle({ compacto = false }: { compacto?: boolean }) {
   const [tema, setTema] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
-    const salvo = localStorage.getItem(CHAVE);
-    if (salvo === "light" || salvo === "dark") setTema(salvo);
+    try {
+      const salvo = localStorage.getItem(CHAVE);
+      if (salvo === "light" || salvo === "dark") {
+        setTema(salvo);
+        document.documentElement.dataset.theme = salvo;
+        return;
+      }
+    } catch {}
+    const atual = document.documentElement.dataset.theme;
+    if (atual === "light" || atual === "dark") {
+      setTema(atual);
+    }
   }, []);
 
   function alternar() {
