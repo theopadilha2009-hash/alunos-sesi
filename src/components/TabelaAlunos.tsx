@@ -119,11 +119,11 @@ export function TabelaAlunos({
                   <td>
                     {aluno.sala ? (
                       <span
-                        className="cracha-sala-pill"
-                        style={{ borderColor: aluno.cor }}
+                        className="badge-sala-tabela"
+                        style={{ ["--sala-cor" as string]: aluno.cor }}
                       >
-                        <span className="ponto" style={{ background: aluno.cor }} />
-                        {aluno.sala}
+                        <span className="ponto-sala" style={{ background: aluno.cor }} />
+                        <span>{aluno.sala}</span>
                       </span>
                     ) : (
                       <span className="tabela-sem-dado">—</span>
@@ -133,21 +133,15 @@ export function TabelaAlunos({
 
                 <td>
                   {aluno.habilidades && aluno.habilidades.length > 0 ? (
-                    <div className="tabela-habilidades">
+                    <div className="tabela-habilidades-clean">
                       {aluno.habilidades.slice(0, 3).map((hab) => (
-                        <span
-                          key={hab}
-                          className="tag-habilidade"
-                          style={{
-                            ["--cor-tag" as string]: corHabilidade(hab),
-                          }}
-                        >
+                        <span key={hab} className="tag-habilidade-clean">
                           {hab}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <span className="tabela-sem-dado">—</span>
+                    <span className="tabela-sem-dado">Geral</span>
                   )}
                 </td>
 

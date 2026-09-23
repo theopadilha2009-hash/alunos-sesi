@@ -919,44 +919,48 @@ a {
 
 /* ── tema ──────────────────────────────────────────────────────────────── */
 
-.botao-tema {
+.botao-tema,
+.botao-tema-icone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  height: 2.35rem;
-  padding: 0 0.85rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
   border: 1px solid var(--line);
-  border-radius: var(--raio-p);
+  border-radius: 12px;
   background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
+  color: var(--dim);
   cursor: pointer;
   transition: all 0.16s var(--ease);
   user-select: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
 }
 
+.botao-tema-icone:hover,
 .botao-tema:hover {
   color: var(--accent);
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
   background: var(--surface-2);
+  transform: translateY(-1px);
 }
 
 .botao-tema-compacto {
-  width: 2.35rem;
+  width: 2.4rem;
+  height: 2.4rem;
   padding: 0;
 }
 
 .tema-icone {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
 .tema-texto {
-  font-size: 0.82rem;
-  letter-spacing: -0.01em;
+  display: none;
 }
 
 /* ── Efeitos Visuais Ambientais ────────────────────────────────────────── */
@@ -1412,7 +1416,7 @@ body::before {
   font-size: 0.85rem;
 }
 
-/* ── Modal Backdrop Genérico ───────────────────────────────────────────── */
+/* ── Modal Backdrop Genérico (Otimizado sem lag) ────────────────────────── */
 
 .modal-backdrop {
   position: fixed;
@@ -1421,9 +1425,12 @@ body::before {
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgb(0 0 0 / 0.75);
-  backdrop-filter: blur(8px);
-  animation: fadeIn 0.2s var(--ease);
+  background: rgba(4, 7, 12, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  will-change: opacity;
+  transform: translateZ(0);
+  animation: fadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
@@ -1438,15 +1445,17 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 26rem;
+  max-width: 28rem;
   width: 100%;
-  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  perspective: 1200px;
+  contain: layout style;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes scaleUp {
   from {
-    transform: scale(0.92) translateY(15px);
+    transform: scale(0.95) translateY(10px);
     opacity: 0;
   }
   to {
@@ -1465,12 +1474,13 @@ body::before {
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #111a22;
+  color: #ffffff;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgb(0 0 0 / 0.4);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.5);
+  transition: all 0.15s ease;
 }
 
 .cracha-fechar:hover {
@@ -1490,63 +1500,74 @@ body::before {
 .cracha-fita {
   width: 44px;
   height: 24px;
-  background: linear-gradient(90deg, var(--ciano), var(--azul), var(--ciano));
+  background: linear-gradient(90deg, #38c7bd, #3b82f6, #38c7bd);
   border-radius: 4px 4px 0 0;
-  border: 1px solid rgb(255 255 255 / 0.2);
+  border: 1px solid rgb(255 255 255 / 0.3);
 }
 
 .cracha-gancho {
   width: 26px;
   height: 12px;
-  background: #a0aab2;
+  background: #cbd5e1;
   border-radius: 2px 2px 6px 6px;
-  border: 1px solid #718096;
+  border: 1px solid #64748b;
 }
 
 .cracha-card,
 .cracha-card-leve {
+  --text: #ffffff !important;
+  --dim: #e2e8f0 !important;
+  --faint: #94a3b8 !important;
+  color: #ffffff !important;
   position: relative;
   width: 100%;
-  border-radius: 22px;
-  border: 2px solid color-mix(in srgb, var(--sala-cor, var(--accent)) 80%, var(--line));
-  background: linear-gradient(165deg, #0e171f 0%, #070b0e 100%);
-  padding: 1.75rem 1.5rem;
+  border-radius: 24px;
+  border: 2px solid color-mix(in srgb, var(--sala-cor, #38c7bd) 85%, rgba(255, 255, 255, 0.2));
+  background: linear-gradient(165deg, #101923 0%, #080d12 100%);
+  padding: 1.85rem 1.65rem;
   box-shadow:
-    0 25px 60px -15px rgb(0 0 0 / 0.95),
-    0 0 35px -10px color-mix(in srgb, var(--sala-cor, var(--accent)) 45%, transparent);
-  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
+    0 30px 70px -15px rgb(0 0 0 / 0.98),
+    0 0 40px -10px color-mix(in srgb, var(--sala-cor, #38c7bd) 40%, transparent);
   overflow: hidden;
-}
-
-.cracha-card-leve:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 32px 70px -15px rgb(0 0 0 / 0.98),
-    0 0 45px -8px color-mix(in srgb, var(--sala-cor, var(--accent)) 55%, transparent);
+  contain: layout style;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .cracha-card .cracha-nome {
   color: #ffffff !important;
+  font-size: 1.35rem !important;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .cracha-card .cracha-logo-texto {
   color: #ffffff !important;
+  font-weight: 800;
 }
 
 .cracha-card .cracha-sub {
   color: #38c7bd !important;
+  font-weight: 800;
 }
 
 .cracha-card .cracha-bio {
-  color: #cbd5e1 !important;
+  color: #e2e8f0 !important;
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 .cracha-card .cracha-sala-pill {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  font-weight: 700;
+}
+
+.cracha-card .tag-habilidade {
+  background: rgba(255, 255, 255, 0.1) !important;
   color: #f1f5f9 !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 .cracha-card .cracha-estrela-badge {
@@ -1556,6 +1577,19 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+}
+
+.cracha-card .cracha-qr-dica {
+  color: #94a3b8 !important;
+}
+
+.cracha-card .cracha-matricula-texto {
+  color: #cbd5e1 !important;
+  font-family: monospace;
+}
+
+.cracha-card .cracha-codigo-barras .barra {
+  background: #e2e8f0 !important;
 }
 
 .cracha-furo {
@@ -1692,6 +1726,36 @@ body::before {
   letter-spacing: 0.06em;
   color: var(--text);
   background: var(--surface-2);
+}
+
+.badge-sala-tabela {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.26rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--sala-cor, var(--accent)) 30%, var(--line));
+  background: color-mix(in srgb, var(--sala-cor, var(--accent)) 8%, var(--surface-2));
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.ponto-sala {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--sala-cor, var(--accent));
+}
+
+.tabela-habilidades-clean {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
 }
 
 .cracha-bio {
@@ -3404,9 +3468,12 @@ body::before {
   border-radius: 22px;
   border: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: 0 32px 80px -15px rgba(0, 0, 0, 0.75), 0 0 0 1px var(--line);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 0 1px var(--line);
   overflow-y: auto;
-  animation: scaleUp 0.22s var(--ease);
+  contain: layout style;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  animation: scaleUp 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .breve-topo {
@@ -3503,7 +3570,48 @@ body::before {
 .breve-redes {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.6rem;
+}
+
+.btn-copiar-breve {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--raio-p);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s var(--ease);
+}
+
+.btn-copiar-breve:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--surface-3, var(--surface-2));
+}
+
+.tag-habilidade-clean {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+}
+
+.tag-habilidade-clean:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .breve-secao-titulo {

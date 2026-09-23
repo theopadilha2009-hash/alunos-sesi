@@ -85,7 +85,14 @@ export function CrmApp({
     if (usuario.alunoId) {
       return naTela.find((a) => a.id === usuario.alunoId) ?? null;
     }
-    return naTela.find((a) => a.slug === "telor-de-espadilha") ?? null;
+    return (
+      naTela.find(
+        (a) =>
+          a.slug === "theo-padilha" ||
+          a.slug === "telor-de-espadilha" ||
+          a.id === "a1417080-b591-4cc9-8558-5650a3da0546",
+      ) ?? null
+    );
   }, [naTela, usuario.alunoId]);
 
   // Filtro de alunos visíveis no Portfólio
@@ -781,6 +788,10 @@ export function CrmApp({
         <ModalPerfilBreve
           aluno={alunoBreveSelecionado}
           onFechar={() => setAlunoBreveSelecionado(null)}
+          onAbrirCracha={(a) => {
+            setAlunoBreveSelecionado(null);
+            setAlunoCracha(a);
+          }}
         />
       ) : null}
 

@@ -40,8 +40,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   const [linkCopiado, setLinkCopiado] = useState(false);
 
   // Campos do Aluno
-  const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "");
+  const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "Theo Padilha");
   const [sala, setSala] = useState(alunoAtual?.sala ?? usuario.sala ?? "DSM3");
+  const [email, setEmail] = useState(usuario.email ?? "theopadilha2009@gmail.com");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
   const [bio, setBio] = useState(alunoAtual?.bio ?? "");
   const [linkedin, setLinkedin] = useState(alunoAtual?.linkedin ?? "");
   const [github, setGithub] = useState(alunoAtual?.github ?? "");
@@ -70,8 +73,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
   const urlPerfil =
     typeof window !== "undefined"
-      ? `${window.location.origin}/alunos/${alunoAtual?.slug ?? "telor-de-espadilha"}`
-      : `https://alunos-sesi.vercel.app/alunos/${alunoAtual?.slug ?? "telor-de-espadilha"}`;
+      ? `${window.location.origin}/alunos/${alunoAtual?.slug ?? "theo-padilha"}`
+      : `https://alunos-sesi.vercel.app/alunos/${alunoAtual?.slug ?? "theo-padilha"}`;
 
   async function copiarLink() {
     try {
@@ -232,7 +235,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           ) : null}
 
           <Link
-            href={`/alunos/${alunoAtual?.slug ?? "telor-de-espadilha"}`}
+            href={`/alunos/${alunoAtual?.slug ?? "theo-padilha"}`}
             target="_blank"
             className="btn-perfil-acao"
             title="Abrir portfólio público em nova aba"
@@ -300,6 +303,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
       <form action={formAction} className="perfil-grid-layout">
         <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
         <input type="hidden" name="midias" value={JSON.stringify(midias)} />
+        <input type="hidden" name="email" value={email} />
+        <input type="hidden" name="novaSenha" value={novaSenha} />
+        <input type="hidden" name="confirmarSenha" value={confirmarSenha} />
 
         {/* ── COLUNA ESQUERDA: RESUMO, AÇÕES E CONTATOS ─────────────────── */}
         <aside className="perfil-coluna-esquerda">
@@ -855,16 +861,104 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           {/* ── ABA 4: CONTA & SEGURANÇA ────────────────────────────────────── */}
           {abaAtiva === "conta" ? (
             <div className="perfil-tab-painel">
+              {/* Card 1: Identidade, Nome Visual e E-mail */}
               <div className="painel-card">
                 <header className="painel-card-topo">
-                  <h3>Credenciais de Acesso ao CRM</h3>
-                  <p>Informações de autenticação e proteção da sua conta escolar</p>
+                  <h3>Nome Visual & E-mail Cadastrado</h3>
+                  <p>Configure sua identificação visível para a turma e seu e-mail institucional</p>
+                </header>
+
+                <div className="formulario-corpo">
+                  <div className="form-dupla">
+                    <label className="campo-form">
+                      <span className="label-texto">Nome Visual de Exibição *</span>
+                      <input
+                        type="text"
+                        name="nome"
+                        className="input-texto"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        placeholder="Ex: Theo Padilha"
+                        required
+                      />
+                      <span className="campo-dica">
+                        Nome que aparece em destaque na vitrine, no crachá e nas listagens escolares.
+                      </span>
+                    </label>
+
+                    <label className="campo-form">
+                      <span className="label-texto">E-mail Cadastrado *</span>
+                      <input
+                        type="email"
+                        name="email"
+                        className="input-texto"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu.email@exemplo.com"
+                        required
+                      />
+                      <span className="campo-dica">
+                        E-mail para comunicações, credenciais e recuperação de acesso.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Alteração de Senha Segura */}
+              <div className="painel-card">
+                <header className="painel-card-topo">
+                  <h3>Alterar Senha de Acesso</h3>
+                  <p>Defina uma nova senha para proteger seu acesso ao sistema</p>
+                </header>
+
+                <div className="formulario-corpo">
+                  <div className="form-dupla">
+                    <label className="campo-form">
+                      <span className="label-texto">Nova Senha</span>
+                      <input
+                        type="password"
+                        name="novaSenha"
+                        className="input-texto"
+                        value={novaSenha}
+                        onChange={(e) => setNovaSenha(e.target.value)}
+                        placeholder="Mínimo 4 caracteres (opcional)"
+                        autoComplete="new-password"
+                      />
+                    </label>
+
+                    <label className="campo-form">
+                      <span className="label-texto">Confirmar Nova Senha</span>
+                      <input
+                        type="password"
+                        name="confirmarSenha"
+                        className="input-texto"
+                        value={confirmarSenha}
+                        onChange={(e) => setConfirmarSenha(e.target.value)}
+                        placeholder="Repita a nova senha digitada"
+                        autoComplete="new-password"
+                      />
+                    </label>
+                  </div>
+                  {novaSenha && novaSenha !== confirmarSenha ? (
+                    <span className="aviso-senha-invalida" style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}>
+                      ⚠ A confirmação de senha não coincide com a nova senha digitada.
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Card 3: Credenciais e Nível de Acesso */}
+              <div className="painel-card">
+                <header className="painel-card-topo">
+                  <h3>Credenciais de Autenticação</h3>
+                  <p>Informações técnicas e proteção criptográfica da sua conta</p>
                 </header>
 
                 <div className="formulario-corpo">
                   <div className="info-bloco-seguranca">
                     <div className="seguranca-item">
-                      <span className="seguranca-rotulo">Nome de Usuário</span>
+                      <span className="seguranca-rotulo">Nome de Usuário (Login)</span>
                       <span className="seguranca-dado">@{usuario.username}</span>
                     </div>
                     <div className="seguranca-item">
@@ -874,8 +968,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                       </span>
                     </div>
                     <div className="seguranca-item">
-                      <span className="seguranca-rotulo">Identificador do Registro</span>
-                      <span className="seguranca-dado" style={{ fontFamily: "monospace" }}>
+                      <span className="seguranca-rotulo">E-mail Vinculado</span>
+                      <span className="seguranca-dado">{email}</span>
+                    </div>
+                    <div className="seguranca-item">
+                      <span className="seguranca-rotulo">ID do Registro</span>
+                      <span className="seguranca-dado" style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
                         {usuario.id}
                       </span>
                     </div>

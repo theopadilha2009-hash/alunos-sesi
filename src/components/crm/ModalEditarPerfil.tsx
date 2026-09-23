@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { salvarPerfilAction } from "@/app/acoes-crm";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
+import { IconeEscudo } from "@/components/Icones";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, UsuarioSessao } from "@/lib/tipos";
 
@@ -196,7 +197,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
 
           {/* Dados Principais */}
           <section className="drawer-secao">
-            <h3 className="secao-titulo">👤 Identificação Básica</h3>
+            <h3 className="secao-titulo">Identificação Básica</h3>
 
             <div className="linha-campos">
               <div className="campo">
@@ -205,7 +206,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
                   id="ed-nome"
                   name="nome"
                   type="text"
-                  defaultValue={alunoAtual?.nome ?? usuario.nome ?? "Telor de Espadilha"}
+                  defaultValue={alunoAtual?.nome ?? usuario.nome ?? "Theo Padilha"}
                   required
                 />
               </div>
@@ -237,7 +238,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
 
           {/* Redes & Contatos (LinkedIn, GitHub, Instagram, etc) */}
           <section className="drawer-secao">
-            <h3 className="secao-titulo">🌐 Redes & Conexões</h3>
+            <h3 className="secao-titulo">Redes & Conexões</h3>
 
             <div className="linha-campos">
               <div className="campo">
@@ -285,7 +286,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
           <section className="drawer-secao">
             <div className="secao-cabecalho-com-alerta">
               <div>
-                <h3 className="secao-titulo">🖼️ Espaço para Imagens e GIFs</h3>
+                <h3 className="secao-titulo">Espaço para Imagens e GIFs</h3>
                 <span className="secao-desc">
                   Mostre capturas, protótipos, GIFs de robôs ou animações dos seus projetos.
                 </span>
@@ -294,7 +295,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
 
             {/* Aviso de Moderação Escolar Seguro */}
             <div className="alerta-escola-segura">
-              <span className="alerta-icone">🛡️</span>
+              <span className="alerta-icone"><IconeEscudo tamanho={16} /></span>
               <div className="alerta-texto">
                 <b>Diretriz de Segurança Escolar SESI (Classificação Livre)</b>
                 <span>
@@ -380,7 +381,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
 
           {/* Criações & Projetos da Escola */}
           <section className="drawer-secao">
-            <h3 className="secao-titulo">🚀 Criações & Projetos do Estudante</h3>
+            <h3 className="secao-titulo">Criações & Projetos do Estudante</h3>
             <span className="secao-desc">
               Projetos de robótica, desenvolvimento web, circuitos e feiras que você criou.
             </span>
@@ -497,7 +498,7 @@ export function ModalEditarPerfil({ usuario, alunoAtual, onFechar }: Props) {
               className="botao botao-primario-grande"
               disabled={carregando}
             >
-              {carregando ? "Salvando Perfil..." : "Salvar Alterações no Portfólio ✓"}
+              {carregando ? "Salvando Perfil..." : "Salvar Alterações no Portfólio"}
             </button>
           </footer>
         </form>

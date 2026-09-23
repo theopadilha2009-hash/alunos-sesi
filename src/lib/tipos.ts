@@ -60,4 +60,5 @@ export type UsuarioSessao = {
   nome?: string | null;
   sala?: string | null;
   avatar?: string | null;
+  email?: string | null;
 };

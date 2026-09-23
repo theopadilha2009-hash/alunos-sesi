@@ -81,15 +81,16 @@ export async function autenticarUsuario(
   if (username === "theo1234" && senha === "theo1234") {
     resetarRateLimit(`login:${username}`);
     logger.info("AUTH", "Login efetuado com sucesso como Super ADM theo1234");
-    let aluno = await alunoPorSlug("telor-de-espadilha");
+    let aluno = (await alunoPorSlug("theo-padilha")) || (await alunoPorId("a1417080-b591-4cc9-8558-5650a3da0546"));
 
     const superAdmSessao: UsuarioSessao = {
-      id: "super-adm-theo1234",
+      id: "c4bb2876-ea82-4cda-8ac7-d06cdc79875e",
       username: "theo1234",
       role: "super_adm",
-      alunoId: aluno ? aluno.id : null,
-      nome: aluno ? aluno.nome : "Telor de Espadilha",
+      alunoId: aluno ? aluno.id : "a1417080-b591-4cc9-8558-5650a3da0546",
+      nome: aluno ? aluno.nome : "Theo Padilha",
       sala: "DSM3",
+      email: "theopadilha2009@gmail.com",
     };
 
     const jar = await cookies();
@@ -125,6 +126,7 @@ export async function autenticarUsuario(
 
   let nome = usuarioDb.username;
   let sala = null;
+  let email = usuarioDb.username === "theo1234" ? "theopadilha2009@gmail.com" : `${usuarioDb.username}@aluno.sesisp.org.br`;
   if (usuarioDb.aluno_id) {
     const aluno = await alunoPorId(usuarioDb.aluno_id);
     if (aluno) {
@@ -139,6 +141,7 @@ export async function autenticarUsuario(
     alunoId: usuarioDb.aluno_id,
     nome,
     sala,
+    email,
   };
 
   const jar = await cookies();

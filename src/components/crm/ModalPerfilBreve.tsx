@@ -1,23 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { CrachaModal } from "@/components/CrachaModal";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
-import { corHabilidade } from "@/lib/habilidades";
+import {
+  IconeCheck,
+  IconeCopiar,
+  IconeCracha,
+  IconeEscudo,
+  IconeEstrela,
+} from "@/components/Icones";
 import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
   aluno: AlunoNaTela;
   onFechar: () => void;
+  onAbrirCracha?: (aluno: AlunoNaTela) => void;
 };
 
-export function ModalPerfilBreve({ aluno, onFechar }: Props) {
-  const [crachaAberto, setCrachaAberto] = useState(false);
+export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   const [copiado, setCopiado] = useState(false);
-
-  const github = urlGithub(aluno.github);
-  const linkedinHandle = handleLinkedin(aluno.linkedin);
 
   const urlPerfil =
     typeof window !== "undefined"
@@ -32,152 +34,172 @@ export function ModalPerfilBreve({ aluno, onFechar }: Props) {
     } catch {}
   }
 
-  return (
-    <>
-      <div className="modal-backdrop" onClick={onFechar} role="dialog" aria-modal="true">
-        <div className="modal-perfil-breve" onClick={(e) => e.stopPropagation()}>
-          <header
-            className="breve-topo"
-            style={{ ["--sala-cor" as string]: aluno.cor }}
-          >
-            <button
-              type="button"
-              className="drawer-fechar"
-              onClick={onFechar}
-              aria-label="Fechar"
-            >
-              ✕
-            </button>
+  function handleAbrirCracha() {
+    if (onAbrirCracha) {
+      onAbrirCracha(aluno);
+    }
+  }
 
-            <div className="breve-avatar-wrap">
-              <span className="avatar breve-avatar">
-                {iniciais(aluno.nome)}
-              </span>
+  return (
+    <div className="modal-backdrop" onClick={onFechar} role="dialog" aria-modal="true">
+      <div className="modal-perfil-breve" onClick={(e) => e.stopPropagation()}>
+        <header
+          className="breve-topo"
+          style={{ ["--sala-cor" as string]: aluno.cor }}
+        >
+          <button
+            type="button"
+            className="drawer-fechar"
+            onClick={onFechar}
+            aria-label="Fechar modal"
+            title="Fechar"
+          >
+            ✕
+          </button>
+
+          <div className="breve-avatar-wrap">
+            <span className="avatar breve-avatar">
+              {iniciais(aluno.nome)}
+            </span>
+            {onAbrirCracha ? (
               <button
                 type="button"
                 className="btn-abrir-cracha-pill"
-                onClick={() => setCrachaAberto(true)}
+                onClick={handleAbrirCracha}
+                title="Abrir crachá digital institucional"
               >
-                📇 Ver Crachá 3D
+                <IconeCracha tamanho={14} />
+                <span>Ver Crachá</span>
               </button>
-            </div>
-
-            <div className="breve-identificacao">
-              <div className="breve-nome-linha">
-                <h2>{aluno.nome}</h2>
-                {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-                {aluno.destaque ? <span className="selo selo-adm">★ ADM</span> : null}
-              </div>
-
-              <div className="breve-meta-linha">
-                {aluno.sala ? (
-                  <span className="cracha-sala-pill" style={{ borderColor: aluno.cor }}>
-                    <span className="ponto" style={{ background: aluno.cor }} />
-                    {aluno.sala}
-                  </span>
-                ) : null}
-                <span className="breve-estrelas">★ {aluno.estrelas} estrelas</span>
-              </div>
-            </div>
-          </header>
-
-          <div className="breve-corpo">
-            {aluno.bio ? <p className="breve-bio">{aluno.bio}</p> : null}
-
-            {/* Links Sociais (LinkedIn, GitHub, Instagram) */}
-            <div className="breve-redes">
-              <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
-              <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
-              <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
-
-              <button
-                type="button"
-                className="pes"
-                onClick={copiarLink}
-                title="Copiar link do portfólio"
-              >
-                {copiado ? "✓ Copiado!" : "🔗 Copiar Link"}
-              </button>
-            </div>
-
-            {/* Habilidades */}
-            {aluno.habilidades && aluno.habilidades.length > 0 ? (
-              <div className="breve-secao">
-                <span className="breve-secao-titulo">Competências Técnicas</span>
-                <div className="tags-container">
-                  {aluno.habilidades.map((hab) => (
-                    <span
-                      key={hab}
-                      className="tag-habilidade"
-                      style={{ ["--cor-tag" as string]: corHabilidade(hab) }}
-                    >
-                      {hab}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Criações & Projetos da Escola */}
-            {aluno.projetos && aluno.projetos.length > 0 ? (
-              <div className="breve-secao">
-                <span className="breve-secao-titulo">Projetos & Criações da Escola</span>
-                <div className="grade-projetos-aluno">
-                  {aluno.projetos.map((p) => (
-                    <div key={p.id} className="card-projeto-vitrine">
-                      {p.imagem ? (
-                        <img src={p.imagem} alt={p.titulo} className="foto-projeto" />
-                      ) : null}
-                      <div className="conteudo-projeto">
-                        <h4>{p.titulo}</h4>
-                        <p>{p.descricao}</p>
-                        {p.link ? (
-                          <a href={p.link} target="_blank" rel="noreferrer" className="link-ext">
-                            Acessar Criação ↗
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {/* Galeria de Mídias (Imagens e GIFs) */}
-            {aluno.midias && aluno.midias.length > 0 ? (
-              <div className="breve-secao">
-                <span className="breve-secao-titulo">Galeria de Criações (Imagens & GIFs)</span>
-                <div className="grade-midias-aluno">
-                  {aluno.midias.map((m, idx) => (
-                    <div key={idx} className="card-midia-aluno">
-                      <img src={m.url} alt={m.legenda || "Criação do estudante"} />
-                      <span className="badge-tipo-midia">{m.tipo.toUpperCase()}</span>
-                      {m.legenda ? <span className="legenda-midia">{m.legenda}</span> : null}
-                    </div>
-                  ))}
-                </div>
-              </div>
             ) : null}
           </div>
 
-          <footer className="breve-rodape">
+          <div className="breve-identificacao">
+            <div className="breve-nome-linha">
+              <h2>{aluno.nome}</h2>
+              {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
+              {aluno.destaque ? (
+                <span className="selo selo-adm">
+                  <IconeEscudo tamanho={11} /> ADM
+                </span>
+              ) : null}
+            </div>
+
+            <div className="breve-meta-linha">
+              {aluno.sala ? (
+                <span className="badge-sala-tabela" style={{ ["--sala-cor" as string]: aluno.cor }}>
+                  <span className="ponto" style={{ background: aluno.cor }} />
+                  {aluno.sala}
+                </span>
+              ) : null}
+              <span className="breve-estrelas">
+                <IconeEstrela preenchida tamanho={12} /> {aluno.estrelas} estrelas
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div className="breve-corpo">
+          {aluno.bio ? <p className="breve-bio">{aluno.bio}</p> : null}
+
+          {/* Links Sociais (LinkedIn, GitHub, Instagram) */}
+          <div className="breve-redes">
+            <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+            <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
+            <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+
+            <button
+              type="button"
+              className="btn-copiar-breve"
+              onClick={copiarLink}
+              title="Copiar link do portfólio"
+            >
+              {copiado ? (
+                <>
+                  <IconeCheck tamanho={13} />
+                  <span>Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <IconeCopiar tamanho={13} />
+                  <span>Copiar Link</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Habilidades - Layout Clean sem poluição visual */}
+          {aluno.habilidades && aluno.habilidades.length > 0 ? (
+            <div className="breve-secao">
+              <span className="breve-secao-titulo">Competências Técnicas</span>
+              <div className="tags-container">
+                {aluno.habilidades.map((hab) => (
+                  <span key={hab} className="tag-habilidade-clean">
+                    {hab}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Criações & Projetos da Escola */}
+          {aluno.projetos && aluno.projetos.length > 0 ? (
+            <div className="breve-secao">
+              <span className="breve-secao-titulo">Projetos & Criações da Escola</span>
+              <div className="grade-projetos-aluno">
+                {aluno.projetos.map((p) => (
+                  <div key={p.id} className="card-projeto-vitrine">
+                    {p.imagem ? (
+                      <img src={p.imagem} alt={p.titulo} className="foto-projeto" loading="lazy" />
+                    ) : null}
+                    <div className="conteudo-projeto">
+                      <h4>{p.titulo}</h4>
+                      <p>{p.descricao}</p>
+                      {p.link ? (
+                        <a href={p.link} target="_blank" rel="noreferrer" className="link-ext">
+                          Acessar Criação ↗
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Galeria de Mídias (Imagens e GIFs) */}
+          {aluno.midias && aluno.midias.length > 0 ? (
+            <div className="breve-secao">
+              <span className="breve-secao-titulo">Galeria de Criações (Imagens & GIFs)</span>
+              <div className="grade-midias-aluno">
+                {aluno.midias.map((m, idx) => (
+                  <div key={idx} className="card-midia-aluno">
+                    <img src={m.url} alt={m.legenda || "Criação do estudante"} loading="lazy" />
+                    <span className="badge-tipo-midia">{m.tipo.toUpperCase()}</span>
+                    {m.legenda ? <span className="legenda-midia">{m.legenda}</span> : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <footer className="breve-rodape">
+          {onAbrirCracha ? (
             <button
               type="button"
               className="botao botao-primario"
-              onClick={() => setCrachaAberto(true)}
+              onClick={handleAbrirCracha}
             >
-              📇 Abrir Crachá Holográfico 3D
+              <IconeCracha tamanho={16} />
+              <span>Abrir Crachá Digital</span>
             </button>
-            <button type="button" className="botao botao-fraco" onClick={onFechar}>
-              Fechar
-            </button>
-          </footer>
-        </div>
+          ) : null}
+          <button type="button" className="botao botao-fraco" onClick={onFechar}>
+            Fechar
+          </button>
+        </footer>
       </div>
-
-      {crachaAberto ? (
-        <CrachaModal aluno={aluno} onClose={() => setCrachaAberto(false)} />
-      ) : null}
-    </>
+    </div>
   );
 }

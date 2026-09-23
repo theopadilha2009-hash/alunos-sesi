@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconeLua, IconeSol } from "@/components/Icones";
 
 const CHAVE = "sesi.tema";
 
-/** Escuro é o padrão; o botão só grava a escolha por cima. */
-export function TemaToggle({ compacto = false }: { compacto?: boolean }) {
+/** Alternador minimalista de tema (somente botão de ícone SVG, sem emoji nem texto) */
+export function TemaToggle({ compacto = true }: { compacto?: boolean }) {
   const [tema, setTema] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
@@ -37,19 +38,13 @@ export function TemaToggle({ compacto = false }: { compacto?: boolean }) {
   return (
     <button
       type="button"
-      className={`botao-tema ${compacto ? "botao-tema-compacto" : ""}`}
+      className="botao-tema-icone"
       onClick={alternar}
       aria-label={tema === "dark" ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-      title={tema === "dark" ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
+      title={tema === "dark" ? "Alternar para Modo Claro" : "Alternar para Modo Escuro"}
     >
-      <span className="tema-icone" aria-hidden="true">
-        {tema === "dark" ? "☀️" : "🌙"}
-      </span>
-      {!compacto ? (
-        <span className="tema-texto">
-          {tema === "dark" ? "Modo Claro" : "Modo Escuro"}
-        </span>
-      ) : null}
+      {tema === "dark" ? <IconeSol tamanho={18} /> : <IconeLua tamanho={18} />}
     </button>
   );
 }
+

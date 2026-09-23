@@ -38,7 +38,13 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
     const encontrados: ItemProjetoTop[] = [];
 
     // Mapeamento dos alunos mais destacados
-    const telor = alunos.find((a) => a.slug === "telor-de-espadilha") ?? alunos[0];
+    const telor =
+      alunos.find(
+        (a) =>
+          a.slug === "theo-padilha" ||
+          a.slug === "telor-de-espadilha" ||
+          a.id === "a1417080-b591-4cc9-8558-5650a3da0546",
+      ) ?? alunos[0];
     const lucas = alunos.find((a) => a.slug.includes("lucas") || a.sala?.includes("Robótica")) ?? alunos[1] ?? telor;
     const beatriz = alunos.find((a) => a.slug.includes("beatriz") || a.sala?.includes("Desenvolvimento")) ?? alunos[2] ?? telor;
 

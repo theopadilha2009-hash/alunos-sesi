@@ -137,7 +137,25 @@ export async function salvarPerfilAction(
     instagram = sanitizarTexto(`@${instagram}`, 40);
   }
 
+  const email = sanitizarTexto(formData.get("email"), 100);
+  const novaSenha = String(formData.get("novaSenha") ?? "").trim();
+  const confirmarSenha = String(formData.get("confirmarSenha") ?? "").trim();
+
   const db = clienteAdmin();
+
+  // Atualização opcional de senha se informada no formulário
+  if (novaSenha) {
+    if (novaSenha.length < 4) {
+      return { ok: false, mensagem: "A nova senha deve ter no mínimo 4 caracteres." };
+    }
+    if (novaSenha !== confirmarSenha) {
+      return { ok: false, mensagem: "A confirmação da nova senha não confere." };
+    }
+    const { hashSenha } = await import("@/lib/auth");
+    const novaHash = hashSenha(novaSenha);
+    await db.from("usuarios").update({ senha_hash: novaHash }).eq("username", sessao.username);
+    logger.info("AUTH", `Senha atualizada para o usuário: ${sessao.username}`);
+  }
 
   // Se a sala mudou, garante ela
   let salaId: string | null = null;
@@ -168,9 +186,24 @@ export async function salvarPerfilAction(
   try {
     await atualizarPerfilAluno(alunoId, dadosAtualizacao);
     logger.info("CRM", `Perfil atualizado com sucesso: alunoId=${alunoId}, nome=${nome}`);
+
+    // Atualiza a sessão ativa no cookie para refletir o novo nome e sala instantaneamente
+    const { cookies } = await import("next/headers");
+    const { criarTokenSessao, COOKIE_USUARIO } = await import("@/lib/auth");
+    const { opcoesCookie, TRINTA_DIAS } = await import("@/lib/sessao");
+
+    const novaSessao = {
+      ...sessao,
+      nome,
+      sala: salaNome || sessao.sala,
+      email: email || sessao.email,
+    };
+    const jar = await cookies();
+    jar.set(COOKIE_USUARIO, criarTokenSessao(novaSessao), opcoesCookie(TRINTA_DIAS));
+
     revalidatePath("/");
     revalidatePath("/alunos");
-    return { ok: true, mensagem: "Perfil atualizado com sucesso!" };
+    return { ok: true, mensagem: novaSenha ? "Perfil e senha atualizados com sucesso!" : "Perfil atualizado com sucesso!" };
   } catch (err) {
     logger.error("CRM", "Erro ao salvar perfil do aluno", err);
     return {
@@ -179,3 +212,84 @@ export async function salvarPerfilAction(
     };
   }
 }
+
+/** Altera credenciais de segurança, senha e nome visual do usuário */
+export async function alterarSegurancaAction(
+  _prev: EstadoAcaoCrm,
+  formData: FormData,
+): Promise<EstadoAcaoCrm> {
+  const sessao = await obterSessao();
+  if (!sessao) {
+    return { ok: false, mensagem: "Você precisa estar conectado para alterar dados de segurança." };
+  }
+
+  const nome = sanitizarTexto(formData.get("nome"), 100);
+  const email = sanitizarTexto(formData.get("email"), 100);
+  const novaSenha = String(formData.get("novaSenha") ?? "").trim();
+  const confirmarSenha = String(formData.get("confirmarSenha") ?? "").trim();
+
+  const db = clienteAdmin();
+  const mudancas: string[] = [];
+
+  // 1. Atualização de Senha
+  if (novaSenha) {
+    if (novaSenha.length < 4) {
+      return { ok: false, mensagem: "A nova senha deve ter no mínimo 4 caracteres." };
+    }
+    if (novaSenha !== confirmarSenha) {
+      return { ok: false, mensagem: "A confirmação de senha não coincide com a nova senha digitada." };
+    }
+
+    const { hashSenha } = await import("@/lib/auth");
+    const novaHash = hashSenha(novaSenha);
+    const { error: errSenha } = await db
+      .from("usuarios")
+      .update({ senha_hash: novaHash })
+      .eq("username", sessao.username);
+
+    if (errSenha) {
+      logger.error("AUTH", "Erro ao atualizar senha no banco", errSenha);
+      return { ok: false, mensagem: "Erro ao salvar nova senha no banco de dados." };
+    }
+    mudancas.push("senha alterada com sucesso");
+  }
+
+  // 2. Atualização de Nome Visual no Perfil
+  let alunoId = sessao.alunoId;
+  if (!alunoId && sessao.role === "super_adm") {
+    const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
+    if (theo) alunoId = theo.id;
+  }
+
+  if (nome && nome.length >= 2 && alunoId) {
+    const { error: errNome } = await db.from("alunos").update({ nome }).eq("id", alunoId);
+    if (!errNome) {
+      mudancas.push("nome visual atualizado");
+    }
+  }
+
+  // 3. Atualização do Cookie de Sessão
+  const { cookies } = await import("next/headers");
+  const { criarTokenSessao, COOKIE_USUARIO } = await import("@/lib/auth");
+  const { opcoesCookie, TRINTA_DIAS } = await import("@/lib/sessao");
+
+  const novaSessao = {
+    ...sessao,
+    nome: nome && nome.length >= 2 ? nome : sessao.nome,
+    email: email || sessao.email,
+  };
+
+  const jar = await cookies();
+  jar.set(COOKIE_USUARIO, criarTokenSessao(novaSessao), opcoesCookie(TRINTA_DIAS));
+
+  revalidatePath("/");
+  revalidatePath("/alunos");
+  revalidatePath("/adm");
+
+  const msg = mudancas.length > 0
+    ? `Configurações atualizadas: ${mudancas.join(" e ")}!`
+    : "Dados salvos com sucesso!";
+
+  return { ok: true, mensagem: msg, usuario: novaSessao };
+}
+

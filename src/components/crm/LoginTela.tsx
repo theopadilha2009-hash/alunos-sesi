@@ -142,7 +142,7 @@ export function LoginTela() {
                 id="cad-nome"
                 name="nome"
                 type="text"
-                placeholder="Ex.: Telor de Espadilha"
+                placeholder="Ex.: Theo Padilha"
                 required
               />
             </div>
