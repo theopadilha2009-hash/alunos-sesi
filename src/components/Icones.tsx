@@ -427,3 +427,65 @@ export function IconeGaleria({ tamanho = 16, className = "" }: { tamanho?: numbe
     </svg>
   );
 }
+
+export function IconeFogo({ tamanho = 16, className = "" }: { tamanho?: number; className?: string }) {
+  return (
+    <svg
+      width={tamanho}
+      height={tamanho}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    >
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z" />
+    </svg>
+  );
+}
+
+export function IconeSolLua({ tamanho = 16, className = "" }: { tamanho?: number; className?: string }) {
+  return (
+    <svg
+      width={tamanho}
+      height={tamanho}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    >
+      <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.5 5.5 0 0 1-7.54-7.54C12.92 3.04 12.46 3 12 3z" />
+    </svg>
+  );
+}
+
+export function IconeLink({ tamanho = 16, className = "" }: { tamanho?: number; className?: string }) {
+  return (
+    <svg
+      width={tamanho}
+      height={tamanho}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+

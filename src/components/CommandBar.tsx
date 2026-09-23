@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { fold } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
 import { iniciais } from "@/lib/links";
+import {
+  IconeEscudo,
+  IconeEstrela,
+  IconeLink,
+  IconeSolLua,
+  IconeUsuario,
+} from "@/components/Icones";
 import type { AlunoNaTela, Sala } from "@/lib/tipos";
 
 type Props = {
@@ -40,7 +47,7 @@ type ItemResultado =
       id: string;
       titulo: string;
       subtitulo: string;
-      icone: string;
+      icone: React.ReactNode;
       executar: () => void;
     };
 
@@ -73,7 +80,7 @@ export function CommandBar({
         id: "acao-estrelados",
         titulo: "Ver Meus Estrelados",
         subtitulo: "Filtrar apenas os alunos que você favoritou",
-        icone: "★",
+        icone: <IconeEstrela preenchida tamanho={16} />,
         executar: () => {
           onSelecionarSala?.("★");
           onFechar();
@@ -84,7 +91,7 @@ export function CommandBar({
         id: "acao-todas-salas",
         titulo: "Ver Todos os Alunos",
         subtitulo: "Remover filtros e mostrar a turma completa",
-        icone: "👥",
+        icone: <IconeUsuario tamanho={16} />,
         executar: () => {
           onSelecionarSala?.("Todas");
           onFechar();
@@ -95,7 +102,7 @@ export function CommandBar({
         id: "acao-tema",
         titulo: "Alternar Tema Claro / Escuro",
         subtitulo: "Muda o contraste de exibição do sistema",
-        icone: "🌓",
+        icone: <IconeSolLua tamanho={16} />,
         executar: () => {
           const atual = document.documentElement.getAttribute("data-theme") ?? "dark";
           const proximo = atual === "dark" ? "light" : "dark";
@@ -111,7 +118,7 @@ export function CommandBar({
         id: "acao-adm",
         titulo: "Ir para Painel do ADM",
         subtitulo: "Cadastrar alunos e gerenciar destaques",
-        icone: "🔒",
+        icone: <IconeEscudo tamanho={16} />,
         executar: () => {
           router.push("/adm");
           onFechar();
@@ -122,7 +129,7 @@ export function CommandBar({
         id: "acao-copiar-vitrine",
         titulo: "Copiar Link da Vitrine",
         subtitulo: "Compartilhe o diretório com a turma",
-        icone: "🔗",
+        icone: <IconeLink tamanho={16} />,
         executar: () => {
           if (typeof navigator !== "undefined") {
             navigator.clipboard.writeText(

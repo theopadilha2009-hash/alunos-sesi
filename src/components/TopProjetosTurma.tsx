@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
+import { IconeFogo } from "@/components/Icones";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -121,7 +122,7 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
       <header className="top-projetos-cabecalho">
         <div className="top-projetos-titulo-wrap">
           <span className="top-projetos-tag">
-            <span className="ponto-fogo">🔥</span> DESTAQUES DA ESCOLA
+            <IconeFogo tamanho={13} /> DESTAQUES DA ESCOLA
           </span>
           <h2 className="top-projetos-titulo">Top 3 Projetos da Turma</h2>
           <p className="top-projetos-subtitulo">
