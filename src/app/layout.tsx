@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import "./globals.css";
 
@@ -14,10 +14,22 @@ const bricolage = Bricolage_Grotesque({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#E30613",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "Alunos SESI",
+  title: "Alunos SESI SC · Joinville",
   description:
-    "O diretório da turma: quem é quem, o LinkedIn e o GitHub de cada aluno.",
+    "Diretório oficial de talentos, crachás digitais e ecossistema escolar do SESI SENAI Joinville - SC.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SESI Joinville",
+  },
   icons: {
     icon: "/favicon.ico",
     apple: "/logo-sesi-icone.png",
@@ -38,7 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('sesi.tema');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}",
+              "try{var t=localStorage.getItem('sesi.tema');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){};if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
           }}
         />
       </head>

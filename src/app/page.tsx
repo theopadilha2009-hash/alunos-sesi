@@ -4,6 +4,7 @@ import { LoginTela } from "@/components/crm/LoginTela";
 import { obterSessao } from "@/lib/auth";
 import {
   listarAlunos,
+  listarDesafios,
   listarRetrato,
   listarSalas,
   votosDoVisitante,
@@ -24,10 +25,11 @@ export default async function PaginaPrincipal() {
   const jar = await cookies();
   const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value);
 
-  const [alunos, salas, retrato] = await Promise.all([
+  const [alunos, salas, retrato, desafios] = await Promise.all([
     listarAlunos(),
     listarSalas(),
     listarRetrato(),
+    listarDesafios(),
   ]);
 
   const meusVotos = visitante ? await votosDoVisitante(visitante) : [];
@@ -39,6 +41,7 @@ export default async function PaginaPrincipal() {
       salas={salas}
       retrato={retrato}
       meusVotos={meusVotos}
+      desafiosIniciais={desafios}
     />
   );
 }

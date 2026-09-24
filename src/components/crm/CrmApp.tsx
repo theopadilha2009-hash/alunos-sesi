@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
@@ -20,6 +20,7 @@ import {
   IconeProjetos,
   IconeSala,
   IconeTabela,
+  IconeTrofeu,
   IconeUsuario,
 } from "@/components/Icones";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
@@ -27,13 +28,14 @@ import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { TemaToggle } from "@/components/TemaToggle";
 import { TopProjetosTurma } from "@/components/TopProjetosTurma";
+import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
 import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
-import type { Aluno, AlunoNaTela, RetratoSala, Sala, UsuarioSessao } from "@/lib/tipos";
+import type { Aluno, AlunoNaTela, DesafioHackathon, RetratoSala, Sala, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
   usuario: UsuarioSessao;
@@ -41,9 +43,10 @@ type Props = {
   salas: Sala[];
   retrato: RetratoSala[];
   meusVotos: string[];
+  desafiosIniciais?: DesafioHackathon[];
 };
 
-type AbaAtiva = "portfolio" | "projetos" | "tabelas" | "perfil" | "adm";
+type AbaAtiva = "portfolio" | "projetos" | "desafios" | "tabelas" | "perfil" | "adm";
 
 export function CrmApp({
   usuario,
@@ -51,8 +54,10 @@ export function CrmApp({
   salas,
   retrato,
   meusVotos,
+  desafiosIniciais = [],
 }: Props) {
   const [aba, setAba] = useState<AbaAtiva>("portfolio");
+  const [desafios, setDesafios] = useState<DesafioHackathon[]>(desafiosIniciais);
   const [query, setQuery] = useState("");
   const [salaSelecionada, setSalaSelecionada] = useState<string>(TODAS);
   const [habilidadeFiltro, setHabilidadeFiltro] = useState<string>("Todas");
@@ -94,6 +99,18 @@ export function CrmApp({
       ) ?? null
     );
   }, [naTela, usuario.alunoId]);
+
+  // Suporte a PWA shortcuts (?aba=desafios, ?aba=cracha)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const abaParam = params.get("aba");
+    if (abaParam === "desafios") {
+      setAba("desafios");
+    } else if (abaParam === "cracha" && meuAlunoNaTela) {
+      setAlunoCracha(meuAlunoNaTela);
+    }
+  }, [meuAlunoNaTela]);
 
   // Filtro de alunos visíveis no Portfólio
   const visiveis = useMemo(() => {
@@ -293,6 +310,18 @@ export function CrmApp({
             </span>
             <span className="nav-label">Projetos & Criações</span>
             <span className="nav-badge">{todasCriacoes.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${aba === "desafios" ? "nav-item-ativo" : ""}`}
+            onClick={() => setAba("desafios")}
+          >
+            <span className="nav-icone">
+              <IconeTrofeu tamanho={18} />
+            </span>
+            <span className="nav-label">Mural de Desafios</span>
+            <span className="nav-badge">{desafios.length}</span>
           </button>
 
           <button
@@ -743,6 +772,13 @@ export function CrmApp({
                 </div>
               ))}
             </div>
+          </div>
+        ) : null}
+
+        {/* ── ABA: MURAL DE DESAFIOS & HACKATHONS SESI ─────────────── */}
+        {aba === "desafios" ? (
+          <div className="crm-secao-conteudo">
+            <MuralDesafios desafios={desafios} usuario={usuario} />
           </div>
         ) : null}
 

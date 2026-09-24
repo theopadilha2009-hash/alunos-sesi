@@ -1,0 +1,42 @@
+{
+  "name": "Alunos SESI SC · Joinville",
+  "short_name": "SESI Joinville",
+  "description": "Plataforma oficial de talentos, crachás digitais e ecossistema escolar do SESI SENAI SC Joinville.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B0F17",
+  "theme_color": "#E30613",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/logo-sesi-icone.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-sesi.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Meu Crachá Digital",
+      "short_name": "Crachá",
+      "description": "Acesso rápido ao crachá e identidade estudantil",
+      "url": "/?aba=cracha",
+      "icons": [{ "src": "/logo-sesi-icone.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mural de Desafios",
+      "short_name": "Desafios",
+      "description": "Ver hackathons e desafios abertos no SESI",
+      "url": "/?aba=desafios",
+      "icons": [{ "src": "/logo-sesi-icone.png", "sizes": "192x192" }]
+    }
+  ]
+}

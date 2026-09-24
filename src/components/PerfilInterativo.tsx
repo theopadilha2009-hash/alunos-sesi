@@ -3,7 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
+import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { CrachaModal } from "@/components/CrachaModal";
+import { CurriculoImpressao } from "@/components/CurriculoImpressao";
+import {
+  IconeCheck,
+  IconeCopiar,
+  IconeCracha,
+  IconeDownload,
+  IconeEscudo,
+  IconeEstrela,
+  IconeLinkExterno,
+  IconePlus,
+  IconeProjetos,
+} from "@/components/Icones";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
 import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
@@ -17,15 +30,20 @@ type Props = {
 
 export function PerfilInterativo({ aluno, salaNome }: Props) {
   const [crachaAberto, setCrachaAberto] = useState(false);
+  const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
   const [estrelas, setEstrelas] = useState(aluno.estrelas);
   const [estrelado, setEstrelado] = useState(false);
   const [carregandoVoto, setCarregandoVoto] = useState(false);
 
+  // Apoio de Competências (+1 estilo LinkedIn)
+  const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
+  const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
+
   const github = urlGithub(aluno.github);
   const linkedinHandle = handleLinkedin(aluno.linkedin);
-  const habilidades = extrairHabilidades(aluno.bio);
+  const habilidades = aluno.habilidades && aluno.habilidades.length > 0 ? aluno.habilidades : extrairHabilidades(aluno.bio);
 
   const urlAtual =
     typeof window !== "undefined"
@@ -53,6 +71,21 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
     } catch {}
   }
 
+  async function handleApoiarCompetencia(hab: string) {
+    if (apoiandoHab) return;
+    setApoiandoHab(hab);
+    setVotos((prev) => ({ ...prev, [hab]: (prev[hab] || 0) + 1 }));
+
+    try {
+      const res = await apoiarHabilidadeAction(aluno.id, hab);
+      if (res.ok && res.votos) {
+        setVotos(res.votos);
+      }
+    } catch {} finally {
+      setTimeout(() => setApoiandoHab(null), 400);
+    }
+  }
+
   async function votarEstrela(ev: React.MouseEvent) {
     if (carregandoVoto) return;
     setCarregandoVoto(true);
@@ -78,7 +111,6 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
         setEstrelado(Boolean(dados.votado));
       }
     } catch {
-      // Reverte em caso de erro
       setEstrelado(!proximoEstrelado);
       setEstrelas((prev) => Math.max(0, prev + (proximoEstrelado ? -1 : 1)));
     } finally {
@@ -86,17 +118,41 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
     }
   }
 
-  const textoWhatsApp = encodeURIComponent(
-    `Confira o perfil de ${aluno.nome} da Escola SESI: ${urlAtual}`,
-  );
-  const linkWhatsApp = `https://api.whatsapp.com/send?text=${textoWhatsApp}`;
+  const stickers = Array.isArray(aluno.stickers) ? aluno.stickers : [];
+  const stickersBanner = stickers.filter((s) => s.alvo !== "projeto");
+  const stickersDoProjeto = (projId: string) =>
+    stickers.filter((s) => s.alvo === "projeto" && s.projetoId === projId);
 
   return (
     <>
       <article
         className="perfil perfil-moderno"
-        style={{ ["--sala" as string]: aluno.cor }}
+        style={{ ["--sala" as string]: aluno.cor, position: "relative", overflow: "hidden" }}
       >
+        {/* Stickers / GIFs Flutuantes posicionados estilo Canva no topo do perfil */}
+        {stickersBanner.map((st) => (
+          <div
+            key={st.id}
+            className="sticker-flutuante-perfil"
+            style={{
+              position: "absolute",
+              left: `${st.x}%`,
+              top: `${st.y}%`,
+              width: `${st.tamanho || 64}px`,
+              transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
+              pointerEvents: "none",
+              zIndex: 3,
+            }}
+            title={st.rotulo || "Sticker"}
+          >
+            <img
+              src={st.url}
+              alt={st.rotulo || "Elemento visual"}
+              style={{ width: "100%", height: "auto", display: "block" }}
+            />
+          </div>
+        ))}
+
         <div className="perfil-topo">
           <div className="perfil-avatar-wrap">
             <span className="avatar perfil-avatar" aria-hidden="true">
@@ -108,7 +164,8 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
               onClick={() => setCrachaAberto(true)}
               title="Abrir Crachá Digital 3D"
             >
-              📇 Crachá
+              <IconeCracha tamanho={14} />
+              <span>Crachá Digital</span>
             </button>
           </div>
 
@@ -123,27 +180,114 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
               ) : null}
               {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
               {aluno.destaque ? (
-                <span className="selo selo-adm">★ Destaque do ADM</span>
+                <span className="selo selo-adm">
+                  <IconeEscudo tamanho={11} /> Destaque do ADM
+                </span>
               ) : null}
+              <Link
+                href={`/validar/${aluno.slug}`}
+                target="_blank"
+                className="selo-verificado-pill"
+                title="Página de verificação com selo verde oficial"
+              >
+                <IconeEscudo tamanho={12} />
+                <span>Matrícula Validada SESI Joinville</span>
+              </Link>
             </div>
           </div>
         </div>
 
         {aluno.bio ? <p className="perfil-bio-destaque">{aluno.bio}</p> : null}
 
+        {/* Validação de Competências Técnicas (Endorsements / Apoios +1) */}
         {habilidades.length > 0 ? (
           <div className="perfil-habilidades">
-            <span className="perfil-label-secao">Competências & Tecnologias:</span>
+            <div className="perfil-hab-topo-linha">
+              <span className="perfil-label-secao">Competências & Prova Social dos Colegas:</span>
+              <span className="perfil-hab-sub">Clique em +1 para apoiar uma competência</span>
+            </div>
             <div className="tags-container">
-              {habilidades.map((hab) => (
-                <span
-                  key={hab}
-                  className="tag-habilidade"
-                  style={{ ["--cor-tag" as string]: corHabilidade(hab) }}
-                >
-                  {hab}
-                </span>
-              ))}
+              {habilidades.map((hab) => {
+                const count = votos[hab] || 0;
+                const apoiandoEste = apoiandoHab === hab;
+
+                return (
+                  <div key={hab} className="endorsement-pill">
+                    <span className="endorsement-nome">{hab}</span>
+                    <button
+                      type="button"
+                      className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
+                      onClick={() => handleApoiarCompetencia(hab)}
+                      title={`Apoiar ${hab} de ${aluno.nome}`}
+                    >
+                      <IconePlus tamanho={11} />
+                      <span>1</span>
+                    </button>
+                    {count > 0 ? (
+                      <span className="endorsement-count" title={`${count} apoios recebidos`}>
+                        {count}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Grade de Criações e Projetos */}
+        {aluno.projetos && aluno.projetos.length > 0 ? (
+          <div className="perfil-projetos-secao">
+            <span className="perfil-label-secao">Projetos & Inovações Desenvolvidas:</span>
+            <div className="grade-projetos-aluno">
+              {aluno.projetos.map((p) => {
+                const stickersProj = stickersDoProjeto(p.id);
+
+                return (
+                  <div
+                    key={p.id}
+                    className="card-projeto-vitrine"
+                    style={{ position: "relative", overflow: "hidden" }}
+                  >
+                    {/* Stickers / GIFs específicos deste projeto */}
+                    {stickersProj.map((st) => (
+                      <div
+                        key={st.id}
+                        className="sticker-flutuante-proj"
+                        style={{
+                          position: "absolute",
+                          left: `${st.x}%`,
+                          top: `${st.y}%`,
+                          width: `${st.tamanho || 54}px`,
+                          transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
+                          pointerEvents: "none",
+                          zIndex: 4,
+                        }}
+                        title={st.rotulo || "Elemento visual"}
+                      >
+                        <img
+                          src={st.url}
+                          alt={st.rotulo || "Sticker"}
+                          style={{ width: "100%", height: "auto", display: "block" }}
+                        />
+                      </div>
+                    ))}
+
+                    {p.imagem ? (
+                      <img src={p.imagem} alt={p.titulo} className="foto-projeto" loading="lazy" />
+                    ) : null}
+                    <div className="conteudo-projeto">
+                      <h4>{p.titulo}</h4>
+                      <p>{p.descricao}</p>
+                      {p.link ? (
+                        <a href={p.link} target="_blank" rel="noreferrer" className="link-ext">
+                          Acessar Demonstração ↗
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : null}
@@ -160,13 +304,14 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
               aria-pressed={estrelado}
               disabled={carregandoVoto}
               onClick={votarEstrela}
-              title="Dar estrela"
+              title="Dar estrela de reconhecimento ao aluno"
             >
-              {estrelado ? "★" : "☆"} {estrelas} estrelas
+              <IconeEstrela preenchida={estrelado} tamanho={16} />
+              <span>{estrelas} estrelas</span>
             </button>
           </div>
 
-          {/* Cartão de Compartilhamento & QR Code */}
+          {/* Cartão de Compartilhamento & Ações Oficiais */}
           <div className="perfil-compartilhar-box">
             <div className="qrcode-bloco">
               {qrCodeDataUrl ? (
@@ -187,47 +332,78 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
                 className="botao botao-primario"
                 onClick={() => setCrachaAberto(true)}
               >
-                📇 Abrir Crachá 3D Holográfico
+                <IconeCracha tamanho={16} />
+                <span>Abrir Crachá Digital 3D</span>
               </button>
+
+              <button
+                type="button"
+                className="botao botao-secundario"
+                onClick={() => setCurriculoAberto(true)}
+                title="Gerar e imprimir mini-currículo em folha A4"
+              >
+                <IconeDownload tamanho={15} />
+                <span>Mini-Currículo (PDF A4)</span>
+              </button>
+
+              <Link
+                href={`/u/${aluno.slug}`}
+                target="_blank"
+                className="botao botao-fraco"
+                title="Abrir versão rápida para Cartão NFC e Link na Bio"
+              >
+                <span>Cartão NFC / Link na Bio</span>
+              </Link>
+
+              <Link
+                href={`/validar/${aluno.slug}`}
+                target="_blank"
+                className="botao botao-fraco"
+                title="Página de verificação com selo verde oficial do SESI"
+              >
+                <IconeEscudo tamanho={14} />
+                <span>Validar Matrícula SESI</span>
+              </Link>
 
               <button
                 type="button"
                 className="botao botao-fraco"
                 onClick={copiarLink}
               >
-                {copiado ? "✓ Link Copiado!" : "📋 Copiar Link do Perfil"}
+                {copiado ? (
+                  <>
+                    <IconeCheck tamanho={14} />
+                    <span>Link Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <IconeCopiar tamanho={14} />
+                    <span>Copiar Link do Perfil</span>
+                  </>
+                )}
               </button>
-
-              <a
-                href={linkWhatsApp}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="botao botao-fraco botao-whats"
-              >
-                💬 Compartilhar no WhatsApp
-              </a>
             </div>
           </div>
         </div>
 
-        {!aluno.linkedin && !github ? (
-          <p style={{ marginTop: "1.5rem", color: "var(--faint)" }}>
-            Este aluno ainda não cadastrou LinkedIn nem GitHub.
-          </p>
-        ) : null}
-
         <p style={{ marginTop: "2.5rem" }}>
-          <Link href="/alunos" className="botao botao-fraco">
+          <Link href="/" className="botao botao-fraco">
             ← Voltar para a turma
           </Link>
         </p>
       </article>
 
+      {/* Crachá 3D Modal */}
       {crachaAberto ? (
         <CrachaModal
           aluno={{ ...aluno, sala: salaNome, habilidades }}
           onClose={() => setCrachaAberto(false)}
         />
+      ) : null}
+
+      {/* Mini-Currículo A4 Modal */}
+      {curriculoAberto ? (
+        <CurriculoImpressao aluno={aluno} onFechar={() => setCurriculoAberto(false)} />
       ) : null}
     </>
   );

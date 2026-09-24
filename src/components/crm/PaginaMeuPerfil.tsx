@@ -18,13 +18,16 @@ import {
   IconeLixeira,
   IconePlus,
   IconeProjetos,
+  IconeSparkles,
   IconeUpload,
   IconeUsuario,
 } from "@/components/Icones";
+import { CurriculoImpressao } from "@/components/CurriculoImpressao";
+import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
-import type { AlunoNaTela, MidiaAluno, ProjetoAluno, UsuarioSessao } from "@/lib/tipos";
+import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
   usuario: UsuarioSessao;
@@ -35,9 +38,15 @@ type Props = {
 
 export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
-  const [abaAtiva, setAbaAtiva] = useState<"dados" | "projetos" | "midias" | "conta">("dados");
+  const [abaAtiva, setAbaAtiva] = useState<"dados" | "projetos" | "estudio" | "midias" | "conta">("dados");
   const [crachaAberto, setCrachaAberto] = useState(false);
+  const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
+
+  // Stickers e Elementos Decorativos Estilo Canva
+  const [stickers, setStickers] = useState<StickerPerfil[]>(
+    alunoAtual?.stickers && Array.isArray(alunoAtual.stickers) ? alunoAtual.stickers : [],
+  );
 
   // Campos do Aluno
   const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "Theo Padilha");
@@ -234,6 +243,37 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </button>
           ) : null}
 
+          {alunoAtual ? (
+            <button
+              type="button"
+              className="btn-perfil-acao"
+              onClick={() => setCurriculoAberto(true)}
+              title="Gerar Mini-Currículo em formato A4"
+            >
+              <IconeDownload tamanho={15} />
+              <span>Mini-Currículo (A4)</span>
+            </button>
+          ) : null}
+
+          <Link
+            href={`/u/${alunoAtual?.slug ?? "theo-padilha"}`}
+            target="_blank"
+            className="btn-perfil-acao"
+            title="Abrir cartão NFC / Link na Bio"
+          >
+            <span>Cartão NFC / Bio</span>
+          </Link>
+
+          <Link
+            href={`/validar/${alunoAtual?.slug ?? "theo-padilha"}`}
+            target="_blank"
+            className="btn-perfil-acao"
+            title="Verificar autenticidade oficial da matrícula"
+          >
+            <IconeEscudo tamanho={14} />
+            <span>Validar Matrícula</span>
+          </Link>
+
           <Link
             href={`/alunos/${alunoAtual?.slug ?? "theo-padilha"}`}
             target="_blank"
@@ -247,7 +287,27 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
       </div>
 
       {/* ── BANNER HERO INSTITUCIONAL (Estilo Imagem 4) ────────────────────── */}
-      <section className="perfil-hero-banner">
+      <section className="perfil-hero-banner" style={{ position: "relative", overflow: "hidden" }}>
+        {/* Stickers posicionados estilo Canva no banner */}
+        {stickers.filter((s) => s.alvo !== "projeto").map((st) => (
+          <div
+            key={st.id}
+            className="sticker-flutuante-hero"
+            style={{
+              position: "absolute",
+              left: `${st.x}%`,
+              top: `${st.y}%`,
+              width: `${st.tamanho || 70}px`,
+              transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
+              pointerEvents: "none",
+              zIndex: 3,
+            }}
+            title={st.rotulo || "Elemento visual"}
+          >
+            <img src={st.url} alt={st.rotulo || "Sticker"} style={{ width: "100%", height: "auto", display: "block" }} />
+          </div>
+        ))}
+
         <div className="hero-banner-conteudo">
           <div className="hero-banner-avatar-wrap">
             <span className="hero-banner-avatar">{iniciais(nome)}</span>
@@ -312,6 +372,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
         <input type="hidden" name="confirmarSenha" value={confirmarSenha} />
         <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
         <input type="hidden" name="midias" value={JSON.stringify(midias)} />
+        <input type="hidden" name="stickers" value={JSON.stringify(stickers)} />
 
         {/* ── COLUNA ESQUERDA: RESUMO, AÇÕES E CONTATOS ─────────────────── */}
         <aside className="perfil-coluna-esquerda">
@@ -353,12 +414,21 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
               <button
                 type="button"
                 className="btn-acao-rapida"
-                onClick={() => window.print()}
-                title="Imprimir ficha cadastral"
+                onClick={() => setCurriculoAberto(true)}
+                title="Gerar Mini-Currículo A4 para vagas de estágio"
               >
-                <IconeImprimir tamanho={15} />
-                <span>Imprimir / PDF</span>
+                <IconeDownload tamanho={15} />
+                <span>Mini-Currículo A4</span>
               </button>
+
+              <Link
+                href={`/u/${alunoAtual?.slug ?? "theo-padilha"}`}
+                target="_blank"
+                className="btn-acao-rapida"
+                title="Abrir versão Cartão NFC / Linktree"
+              >
+                <span>Cartão NFC / Bio</span>
+              </Link>
             </div>
           </div>
 
@@ -469,6 +539,18 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
               <IconeProjetos tamanho={15} />
               <span>Projetos & Criações</span>
               {projetos.length > 0 ? <span className="tab-contador">{projetos.length}</span> : null}
+            </button>
+
+            <button
+              type="button"
+              className={`perfil-tab-btn ${abaAtiva === "estudio" ? "perfil-tab-ativo" : ""}`}
+              onClick={() => setAbaAtiva("estudio")}
+              role="tab"
+              aria-selected={abaAtiva === "estudio"}
+            >
+              <IconeSparkles tamanho={15} />
+              <span>Estúdio Canva & GIFs</span>
+              {stickers.length > 0 ? <span className="tab-contador">{stickers.length}</span> : null}
             </button>
 
             <button
@@ -745,6 +827,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
               </div>
             </div>
 
+          {/* ── ABA ESTÚDIO VISUAL (CANVA) ────────────────────────── */}
+          <div className="perfil-tab-painel" style={{ display: abaAtiva === "estudio" ? "block" : "none" }}>
+            <StickerCanvas
+              nomeAluno={nome}
+              salaAluno={sala}
+              projetos={projetos}
+              stickers={stickers}
+              onChangeStickers={setStickers}
+            />
+          </div>
+
           {/* ── ABA 3: GALERIA DE MÍDIAS (Sem bugs de layout da Imagem 3) ──── */}
           <div className="perfil-tab-painel" style={{ display: abaAtiva === "midias" ? "block" : "none" }}>
               <div className="painel-card">
@@ -999,6 +1092,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
       {/* Crachá Modal */}
       {crachaAberto && alunoAtual ? (
         <CrachaModal aluno={alunoAtual} onClose={() => setCrachaAberto(false)} />
+      ) : null}
+
+      {/* Mini-Currículo A4 Modal */}
+      {curriculoAberto && alunoAtual ? (
+        <CurriculoImpressao aluno={alunoAtual} onFechar={() => setCurriculoAberto(false)} />
       ) : null}
     </div>
   );

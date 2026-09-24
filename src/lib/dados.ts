@@ -1,7 +1,7 @@
 import { logger } from "./debug";
 import { clienteAdmin } from "./supabase/admin";
 import { clientePublico } from "./supabase/publico";
-import type { Aluno, RetratoSala, Sala } from "./tipos";
+import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } from "./tipos";
 
 /**
  * A única ponte entre a tela e o Supabase.
@@ -13,7 +13,7 @@ import type { Aluno, RetratoSala, Sala } from "./tipos";
  */
 
 const CAMPOS_ALUNO =
-  "id,nome,slug,sala_id,linkedin,github,instagram,bio,foto_url,fixado,destaque,estrelas,projetos,midias";
+  "id,nome,slug,sala_id,linkedin,github,instagram,bio,foto_url,fixado,destaque,estrelas,projetos,midias,stickers,habilidades_votos,insignias";
 
 const TTL_CACHE_MS = 15 * 1000; // 15 segundos para acelerar navegação sem perder atualizações
 let cacheSalas: { expira: number; dados: Sala[] } | null = null;
@@ -108,6 +108,9 @@ export async function atualizarPerfilAluno(
     foto_url?: string | null;
     projetos?: unknown[];
     midias?: unknown[];
+    stickers?: unknown[];
+    habilidades_votos?: Record<string, number>;
+    insignias?: string[];
   },
 ): Promise<Aluno> {
   const { data, error } = await clienteAdmin()
@@ -123,6 +126,117 @@ export async function atualizarPerfilAluno(
   }
   limparCacheDados();
   return data as Aluno;
+}
+
+/** Apoia uma competência técnica específica de um colega (Endorsement) */
+export async function apoiarHabilidade(
+  alunoId: string,
+  habilidade: string,
+): Promise<{ ok: boolean; votos: Record<string, number> }> {
+  const db = clienteAdmin();
+  const { data: aluno, error: errLeitura } = await db
+    .from("alunos")
+    .select("habilidades_votos")
+    .eq("id", alunoId)
+    .maybeSingle();
+
+  if (errLeitura || !aluno) {
+    throw new Error("Aluno não encontrado para apoio de habilidade.");
+  }
+
+  const mapaAtual: Record<string, number> = (aluno.habilidades_votos as Record<string, number>) || {};
+  const total = (mapaAtual[habilidade] || 0) + 1;
+  const novoMapa = { ...mapaAtual, [habilidade]: total };
+
+  const { error: errUpdate } = await db
+    .from("alunos")
+    .update({ habilidades_votos: novoMapa })
+    .eq("id", alunoId);
+
+  if (errUpdate) {
+    throw new Error(`Erro ao registrar apoio: ${errUpdate.message}`);
+  }
+
+  limparCacheDados();
+  return { ok: true, votos: novoMapa };
+}
+
+/** Lista todos os desafios e hackathons ativos do SESI Joinville */
+export async function listarDesafios(): Promise<DesafioHackathon[]> {
+  const { data, error } = await clientePublico()
+    .from("desafios")
+    .select("id,titulo,subtitulo,categoria,prazo,recompensa,insignia_icone,descricao,criterios,submissoes_count,ativo")
+    .order("prazo", { ascending: true });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao listar desafios", error);
+    return [];
+  }
+
+  return (data ?? []).map((d) => ({
+    id: d.id,
+    titulo: d.titulo,
+    subtitulo: d.subtitulo,
+    categoria: d.categoria as DesafioHackathon["categoria"],
+    prazo: d.prazo,
+    recompensa: d.recompensa,
+    insigniaIcone: d.insignia_icone,
+    descricao: d.descricao,
+    criterios: Array.isArray(d.criterios) ? d.criterios : [],
+    submissoesCount: d.submissoes_count ?? 0,
+    ativo: Boolean(d.ativo),
+  }));
+}
+
+/** Registra a submissão de um estudante a um desafio técnico */
+export async function submeterDesafio(dados: {
+  desafioId: string;
+  alunoId: string;
+  alunoNome: string;
+  alunoSala: string;
+  tituloProjeto: string;
+  linkProjeto?: string;
+  descricao: string;
+}): Promise<SubmissaoDesafio> {
+  const db = clienteAdmin();
+  const { data, error } = await db
+    .from("submissoes_desafios")
+    .insert({
+      desafio_id: dados.desafioId,
+      aluno_id: dados.alunoId,
+      titulo_projeto: dados.tituloProjeto,
+      link_projeto: dados.linkProjeto || null,
+      descricao: dados.descricao,
+    })
+    .select("id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em")
+    .single();
+
+  if (error || !data) {
+    logger.error("DADOS", "Erro ao submeter projeto para desafio", error);
+    throw new Error(`Erro ao submeter desafio: ${error?.message}`);
+  }
+
+  // Incrementa contagem de submissões no desafio
+  try {
+    const { data: d } = await db.from("desafios").select("submissoes_count").eq("id", dados.desafioId).single();
+    if (d) {
+      await db.from("desafios").update({ submissoes_count: (d.submissoes_count || 0) + 1 }).eq("id", dados.desafioId);
+    }
+  } catch {}
+
+  limparCacheDados();
+  return {
+    id: data.id,
+    desafioId: data.desafio_id,
+    alunoId: data.aluno_id,
+    alunoNome: dados.alunoNome,
+    alunoSala: dados.alunoSala,
+    tituloProjeto: data.titulo_projeto,
+    linkProjeto: data.link_projeto ?? "",
+    descricao: data.descricao,
+    aprovado: data.aprovado ?? false,
+    criadoEm: data.criado_em,
+  };
 }
 
 /** Os ids que ESTE navegador já estrelou. Depende do cookie assinado. */

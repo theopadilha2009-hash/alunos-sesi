@@ -28,6 +28,46 @@ export type MidiaAluno = {
   legenda?: string;
 };
 
+export type StickerPerfil = {
+  id: string;
+  url: string;
+  tipo: "gif" | "sticker";
+  rotulo?: string;
+  x: number; // porcentagem horizontal (0 a 100)
+  y: number; // porcentagem vertical (0 a 100)
+  tamanho?: number; // largura em px
+  rotacao?: number; // rotação em graus
+  alvo?: "banner" | "projeto";
+  projetoId?: string;
+};
+
+export type DesafioHackathon = {
+  id: string;
+  titulo: string;
+  subtitulo: string;
+  categoria: "Robótica FLL" | "Desenvolvimento Web" | "Inteligência Artificial" | "Automação IoT" | "Design & UI/UX";
+  prazo: string;
+  recompensa: string;
+  insigniaIcone: string;
+  descricao: string;
+  criterios: string[];
+  submissoesCount: number;
+  ativo: boolean;
+};
+
+export type SubmissaoDesafio = {
+  id: string;
+  desafioId: string;
+  alunoId: string;
+  alunoNome: string;
+  alunoSala: string;
+  tituloProjeto: string;
+  linkProjeto: string;
+  descricao: string;
+  aprovado?: boolean;
+  criadoEm: string;
+};
+
 export type Aluno = {
   id: string;
   nome: string;
@@ -43,6 +83,9 @@ export type Aluno = {
   estrelas: number;
   projetos?: ProjetoAluno[];
   midias?: MidiaAluno[];
+  stickers?: StickerPerfil[];
+  habilidades_votos?: Record<string, number>;
+  insignias?: string[];
 };
 
 /** Aluno já com o nome da sala resolvido, do jeito que a tela consome. */

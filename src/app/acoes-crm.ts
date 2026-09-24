@@ -94,6 +94,7 @@ export async function salvarPerfilAction(
   const bio = sanitizarTexto(formData.get("bio"), 280);
   const projetosJson = String(formData.get("projetos") ?? "[]");
   const midiasJson = String(formData.get("midias") ?? "[]");
+  const stickersJson = String(formData.get("stickers") ?? "[]");
 
   if (nome.length < 2) {
     return { ok: false, mensagem: "O nome precisa ter pelo menos 2 caracteres." };
@@ -111,6 +112,13 @@ export async function salvarPerfilAction(
     midiasBrutas = JSON.parse(midiasJson);
   } catch {
     midiasBrutas = [];
+  }
+
+  let stickers: unknown[] = [];
+  try {
+    stickers = JSON.parse(stickersJson);
+  } catch {
+    stickers = [];
   }
 
   // Sanitização estrita e validação de URLs / esquemas
@@ -177,6 +185,7 @@ export async function salvarPerfilAction(
     instagram,
     projetos,
     midias,
+    stickers,
   };
 
   if (salaId) {
@@ -291,5 +300,69 @@ export async function alterarSegurancaAction(
     : "Dados salvos com sucesso!";
 
   return { ok: true, mensagem: msg, usuario: novaSessao };
+}
+
+/** Apoia uma competência de um estudante (Endorsement) */
+export async function apoiarHabilidadeAction(
+  alunoId: string,
+  habilidade: string,
+): Promise<{ ok: boolean; mensagem?: string; votos?: Record<string, number> }> {
+  try {
+    const { apoiarHabilidade } = await import("@/lib/dados");
+    const res = await apoiarHabilidade(alunoId, habilidade);
+    revalidatePath("/");
+    revalidatePath("/alunos");
+    return { ok: true, votos: res.votos };
+  } catch (err) {
+    return { ok: false, mensagem: err instanceof Error ? err.message : "Erro ao apoiar competência" };
+  }
+}
+
+/** Submete uma criação a um desafio do mural de hackathons SESI */
+export async function submeterDesafioAction(
+  _prev: EstadoAcaoCrm,
+  formData: FormData,
+): Promise<EstadoAcaoCrm> {
+  const sessao = await obterSessao();
+  if (!sessao) {
+    return { ok: false, mensagem: "Faça login no CRM para submeter seu projeto ao desafio." };
+  }
+
+  const desafioId = String(formData.get("desafioId") ?? "");
+  const tituloProjeto = sanitizarTexto(formData.get("tituloProjeto"), 100);
+  const linkProjeto = String(formData.get("linkProjeto") ?? "").trim();
+  const descricao = sanitizarTexto(formData.get("descricao"), 500);
+
+  if (!desafioId || !tituloProjeto || !descricao) {
+    return { ok: false, mensagem: "Preencha todos os campos obrigatórios da submissão." };
+  }
+
+  let alunoId = sessao.alunoId;
+  if (!alunoId && sessao.role === "super_adm") {
+    const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
+    if (theo) alunoId = theo.id;
+  }
+
+  if (!alunoId) {
+    return { ok: false, mensagem: "Perfil de estudante não encontrado." };
+  }
+
+  try {
+    const { submeterDesafio } = await import("@/lib/dados");
+    await submeterDesafio({
+      desafioId,
+      alunoId,
+      alunoNome: sessao.nome ?? sessao.username,
+      alunoSala: sessao.sala ?? "DSM3",
+      tituloProjeto,
+      linkProjeto: linkProjeto || undefined,
+      descricao,
+    });
+
+    revalidatePath("/");
+    return { ok: true, mensagem: "Projeto submetido com sucesso ao Desafio SESI Joinville! Parabéns pela iniciativa!" };
+  } catch (err) {
+    return { ok: false, mensagem: err instanceof Error ? err.message : "Falha ao enviar submissão." };
+  }
 }
 
