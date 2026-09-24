@@ -25,6 +25,14 @@ Verificado em 2026-09-17, depois do primeiro deploy de produção:
   cadastradas como *Sensitive* em Production na Vercel. `SUPABASE_DB_URL` e
   `VERCEL_TOKEN` **não** sobem: são só da máquina, usados pelos scripts.
 
+  Verificado em 2026-09-24: o app passou a exigir **`SESSAO_SEGREDO`** (mestre do
+  HMAC das sessões, com HKDF por propósito; a `ADM_CHAVE` só abre `/adm/<chave>`).
+  Sem ela a vitrine sobe, mas `segredo()` lança e **login e link do ADM quebram**.
+  O `scripts/vercel-env.sh` do repo só faz `pull`/`list`/`deploy` — não tem `add`,
+  e `vercel login` está no deny do kit, então cadastrar env nova é passo manual no
+  dashboard. Rotacionar o valor mata todos os `sesi.*`: os visitantes ganham id
+  novo e podem estrelar de novo os mesmos alunos.
+
 **Why:** o endereço de produção não é adivinhável a partir do código, e o
 `alunos-sesi-theopadilha2009-5085s-projects.vercel.app` (o domínio do time) está
 atrás de Deployment Protection — abre uma tela de login da Vercel e devolve 200
