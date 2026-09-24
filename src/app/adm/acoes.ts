@@ -6,6 +6,7 @@ import type { Estado } from "@/app/adm/estado";
 import { fold } from "@/lib/busca";
 import { parseLista, type ErroLinha } from "@/lib/importar";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
+import { sanitizarTexto } from "@/lib/seguranca";
 import { obterSessao } from "@/lib/auth";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
 import { slugUnico } from "@/lib/slug";
@@ -16,13 +17,26 @@ import { clienteAdmin } from "@/lib/supabase/admin";
  *
  * Aceita tanto o cookie legado `COOKIE_ADM` quanto a sessão de `super_adm`
  * autenticada no CRM.
+ *
+ * O `role` é relido do banco de propósito. Ele viaja dentro do token assinado,
+ * então é um retrato da hora do login: um rebaixamento no banco ficaria sem
+ * efeito por até 30 dias, que é a validade do cookie. Uma query por ação de
+ * painel fecha essa janela — e o painel não é rota quente.
  */
 async function exigirAdm() {
   const jar = await cookies();
   if (crachaValido(jar.get(COOKIE_ADM)?.value)) return;
+
   const sessao = await obterSessao();
-  if (sessao && sessao.role === "super_adm") return;
-  throw new Error("Acesso restrito ao ADM.");
+  if (!sessao) throw new Error("Acesso restrito ao ADM.");
+
+  const { data } = await clienteAdmin()
+    .from("usuarios")
+    .select("role")
+    .eq("id", sessao.id)
+    .maybeSingle();
+
+  if (data?.role !== "super_adm") throw new Error("Acesso restrito ao ADM.");
 }
 
 function revalidar() {
@@ -264,6 +278,47 @@ export async function alternar(formData: FormData): Promise<void> {
     .from("alunos")
     .update({ [campo]: !atual[campo as "fixado" | "destaque"] })
     .eq("id", id);
+
+  revalidar();
+}
+
+// ── sala do aluno ────────────────────────────────────────────────────────
+
+/**
+ * Move um aluno de turma.
+ *
+ * Existe porque o aluno deixou de poder fazer isso: `salvarPerfilAction` lia
+ * `sala` do formulário e criava a sala se não existisse, então qualquer conta
+ * logada se movia de turma com um POST.
+ *
+ * A sala é criada se não existir: quem digita aqui é o ADM, e ele é a
+ * autoridade sobre a lista de turmas — o oposto do cadastro anônimo, que agora
+ * só aceita turma existente.
+ *
+ * Devolve `void` (e não `Estado`) porque é chamada direto como `action` de um
+ * `<form>` no painel, igual a `alternar` e `removerAluno`: ação de formulário
+ * simples recebe só o `FormData`, não o par `(estado, formData)` do
+ * `useActionState`.
+ *
+ * O cookie de sessão do próprio aluno continua com a sala antiga até ele logar
+ * de novo — não dá para reescrever o cookie de outra pessoa daqui. A vitrine, o
+ * crachá e a listagem leem do banco e já refletem a troca.
+ */
+export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
+  await exigirAdm();
+
+  const alunoId = texto(formData, "alunoId");
+  const nomeSala = sanitizarTexto(texto(formData, "sala"), 30);
+
+  if (!alunoId || nomeSala.length < 2) return;
+
+  const db = clienteAdmin();
+
+  const { data: aluno } = await db.from("alunos").select("id").eq("id", alunoId).maybeSingle();
+  if (!aluno) return;
+
+  const salaId = await garantirSala(db, nomeSala);
+  await db.from("alunos").update({ sala_id: salaId }).eq("id", alunoId);
 
   revalidar();
 }

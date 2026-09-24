@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "senha": "node --experimental-strip-types scripts/definir-senha.mjs"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.1",
     "@supabase/supabase-js": "^2.58.0",
     "canvas-confetti": "^1.9.4",
     "next": "16.3.5",

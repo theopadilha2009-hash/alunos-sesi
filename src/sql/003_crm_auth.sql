@@ -1,5 +1,16 @@
 -- 003_crm_auth.sql — CRM Escolar SESI, Autenticação e Portfólio
 -- Adiciona suporte a usuários, instagram, projetos, mídias (imagens/GIFs) e perfil do Super ADM.
+--
+-- ATENÇÃO — este arquivo já foi uma armadilha. Ele nasce o usuário com
+-- senha_hash = '!bloqueado' (formato que o app recusa, ver src/lib/senha.ts),
+-- porque um banco novo tem que nascer SEM credencial utilizável: antes ele
+-- gravava um SHA-256 de uma senha conhecida, e o repositório é público.
+--
+-- Para definir a senha de um usuário, use `npm run senha -- --usuario <nome>`
+-- (scripts/definir-senha.mjs), que grava argon2id.
+--
+-- Reaplicar este arquivo NÃO mexe mais na senha de quem já existe: o
+-- `DO UPDATE` do fim só toca em role e aluno_id.
 
 -- 1. Colunas extras na tabela alunos
 ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS instagram text;
@@ -28,9 +39,11 @@ DO $$
 DECLARE
   v_sala_dsm3 uuid;
   v_aluno_id uuid;
-  -- Hash SHA-256 de 'theo1234' com o salt padrão 'sesi_salt_2026'
-  -- echo -n "sesi_salt_2026:theo1234" | shasum -a 256
-  v_senha_hash text := '9a72134cf33be074e6ef26e5e8e9dfab1e01235b83ae6c78bf30fe359a35e61c';
+  -- Sentinela que o app reconhece como "não autenticável" (SENHA_BLOQUEADA em
+  -- src/lib/senha.ts). O usuário existe, mas ninguém entra com ele até rodar
+  -- `npm run senha`. Antes daqui saía um SHA-256 de uma senha que estava
+  -- anunciada na tela de login.
+  v_senha_hash text := '!bloqueado';
 BEGIN
   -- Garante a sala DSM3
   INSERT INTO public.salas (nome, curso, turno, ordem)
@@ -111,7 +124,8 @@ BEGIN
   INSERT INTO public.usuarios (username, senha_hash, role, aluno_id)
   VALUES ('theo1234', v_senha_hash, 'super_adm', v_aluno_id)
   ON CONFLICT (username) DO UPDATE SET
-    senha_hash = EXCLUDED.senha_hash,
+    -- senha_hash NÃO entra aqui de propósito: reaplicar a migration rebaixava
+    -- para o hash literal e derrubava a senha que o usuário já tinha trocado.
     role = EXCLUDED.role,
     aluno_id = EXCLUDED.aluno_id;
 

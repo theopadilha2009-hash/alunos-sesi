@@ -83,3 +83,14 @@ export function corHabilidade(nome: string): string {
   const meta = LISTA_HABILIDADES.find((h) => h.nome.toLowerCase() === nome.toLowerCase());
   return meta ? meta.cor : "#3fc2bc";
 }
+
+/**
+ * Allowlist das habilidades que podem receber endosso.
+ *
+ * Comparação **exata**, não case-insensitive: a PK de `public.endossos` trata
+ * `Python` e `python` como habilidades distintas, então tolerar caixa aqui
+ * criaria duas linhas para a mesma competência.
+ */
+export function habilidadePermitida(nome: unknown): nome is string {
+  return typeof nome === "string" && LISTA_HABILIDADES.some((h) => h.nome === nome);
+}

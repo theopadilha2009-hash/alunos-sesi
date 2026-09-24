@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Bricolage_Grotesque, Manrope } from "next/font/google";
+import { NONCE_HEADER } from "@/lib/csp";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -37,7 +39,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // O nonce vem do proxy.ts, que é quem gera a CSP desta requisição. Ler
+  // `headers()` torna o layout dinâmico — não é regressão, porque todas as
+  // páginas reais já chamam `cookies()`.
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined;
+
   return (
     <html
       lang="pt-BR"
@@ -48,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Roda antes da primeira pintura: sem isso a página aparece escura
             e pisca para clara quando o React hidrata. */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
               "try{var t=localStorage.getItem('sesi.tema');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){};if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",

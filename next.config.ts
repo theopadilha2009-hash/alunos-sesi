@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // O argon2 é um addon nativo (.node). Sem isto o Next tenta empacotá-lo e o
+  // build quebra na Vercel — o binário pré-compilado tem que ser resolvido em
+  // runtime, não bundlado.
+  serverExternalPackages: ["@node-rs/argon2"],
+
   experimental: {
     serverActions: {
       bodySizeLimit: "4mb",
@@ -25,10 +30,10 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
           },
-          {
-            key: "Content-Security-Policy",
-            value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
-          },
+          // A CSP saiu daqui de propósito: ela precisa de um nonce por
+          // requisição, e isso só o proxy.ts consegue gerar. Manter as duas
+          // faria o navegador aplicar a interseção das duas políticas.
+          // Ver src/lib/csp.ts.
         ],
       },
       {

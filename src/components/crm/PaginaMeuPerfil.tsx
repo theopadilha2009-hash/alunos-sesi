@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { salvarPerfilAction } from "@/app/acoes-crm";
+import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
 import { CrachaModal } from "@/components/CrachaModal";
 import {
   IconeCheck,
@@ -38,6 +38,18 @@ type Props = {
 
 export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
+  const [estadoSeguranca, acaoSeguranca, alterandoSenha] = useActionState(alterarSegurancaAction, {
+    ok: false,
+  });
+
+  // Senha trocada: limpa os campos para o formulário não reenviar o valor antigo.
+  useEffect(() => {
+    if (estadoSeguranca.ok) {
+      setSenhaAtual("");
+      setNovaSenha("");
+      setConfirmarSenha("");
+    }
+  }, [estadoSeguranca]);
   const [abaAtiva, setAbaAtiva] = useState<"dados" | "projetos" | "estudio" | "midias" | "conta">("dados");
   const [crachaAberto, setCrachaAberto] = useState(false);
   const [curriculoAberto, setCurriculoAberto] = useState(false);
@@ -52,6 +64,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "Theo Padilha");
   const [sala, setSala] = useState(alunoAtual?.sala ?? usuario.sala ?? "DSM3");
   const [email, setEmail] = useState(usuario.email ?? "theopadilha2009@gmail.com");
+  const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [bio, setBio] = useState(alunoAtual?.bio ?? "");
@@ -362,14 +375,16 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
       {/* ── FORMULÁRIO PRINCIPAL DE EDIÇÃO EM DOIS BLOCOS (Imagem 4) ─────── */}
       <form action={formAction} className="perfil-grid-layout">
         <input type="hidden" name="nome" value={nome} />
-        <input type="hidden" name="sala" value={sala} />
+        {/* `sala` não vai no payload de propósito: o action do aluno ignora o
+            campo, e mandar um valor que ninguém lê só sugere que ele manda. */}
         <input type="hidden" name="bio" value={bio} />
         <input type="hidden" name="linkedin" value={linkedin} />
         <input type="hidden" name="github" value={github} />
         <input type="hidden" name="instagram" value={instagram} />
         <input type="hidden" name="email" value={email} />
-        <input type="hidden" name="novaSenha" value={novaSenha} />
-        <input type="hidden" name="confirmarSenha" value={confirmarSenha} />
+        {/* A troca de senha sai pelo botão próprio do card de segurança
+            (formAction={acaoSeguranca}); o "Salvar Todas as Alterações" não
+            recebe estes campos de propósito. */}
         <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
         <input type="hidden" name="midias" value={JSON.stringify(midias)} />
         <input type="hidden" name="stickers" value={JSON.stringify(stickers)} />
@@ -599,19 +614,22 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     />
                   </label>
 
+                  {/* Sala é somente leitura: quem move aluno de turma é o ADM.
+                      Antes era um <select> que salvava de verdade, então o
+                      aluno trocava de sala sozinho; agora seria um campo que
+                      grava nada e volta no reload — pior que não existir. */}
                   <label className="campo-form">
-                    <span className="label-texto">Sala / Turma *</span>
-                    <select
-                      className="input-select"
+                    <span className="label-texto">Sala / Turma</span>
+                    <input
+                      type="text"
+                      className="input-texto input-somente-leitura"
                       value={sala}
-                      onChange={(e) => setSala(e.target.value)}
-                    >
-                      {salas.map((s) => (
-                        <option key={s.id} value={s.nome}>
-                          {s.nome}
-                        </option>
-                      ))}
-                    </select>
+                      readOnly
+                      aria-readonly="true"
+                    />
+                    <span className="dica-campo">
+                      Para mudar de turma, fale com o professor ou com o ADM.
+                    </span>
                   </label>
                 </div>
 
@@ -993,19 +1011,33 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             <div className="painel-card">
               <header className="painel-card-topo">
                 <h3>Alterar Senha de Acesso</h3>
-                <p>Defina uma nova senha para proteger seu acesso ao sistema</p>
+                <p>Confirme a senha atual e defina uma nova com pelo menos 8 caracteres</p>
               </header>
 
               <div className="formulario-corpo">
+                <label className="campo-form">
+                  <span className="label-texto">Senha Atual</span>
+                  <input
+                    type="password"
+                    name="senhaAtual"
+                    className="input-texto"
+                    value={senhaAtual}
+                    onChange={(e) => setSenhaAtual(e.target.value)}
+                    placeholder="Sua senha de hoje, para confirmar que é você"
+                    autoComplete="current-password"
+                  />
+                </label>
+
                 <div className="form-dupla">
                   <label className="campo-form">
                     <span className="label-texto">Nova Senha</span>
                     <input
                       type="password"
+                      name="novaSenha"
                       className="input-texto"
                       value={novaSenha}
                       onChange={(e) => setNovaSenha(e.target.value)}
-                      placeholder="Mínimo 4 caracteres (opcional)"
+                      placeholder="Mínimo 8 caracteres (opcional)"
                       autoComplete="new-password"
                     />
                   </label>
@@ -1014,6 +1046,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     <span className="label-texto">Confirmar Nova Senha</span>
                     <input
                       type="password"
+                      name="confirmarSenha"
                       className="input-texto"
                       value={confirmarSenha}
                       onChange={(e) => setConfirmarSenha(e.target.value)}
@@ -1027,6 +1060,39 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     ⚠ A confirmação de senha não coincide com a nova senha digitada.
                   </span>
                 ) : null}
+                {novaSenha && novaSenha.length < 8 ? (
+                  <span className="aviso-senha-invalida" style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}>
+                    ⚠ A nova senha precisa ter pelo menos 8 caracteres.
+                  </span>
+                ) : null}
+                {novaSenha && !senhaAtual ? (
+                  <span className="aviso-senha-invalida" style={{ color: "var(--amarelo)", fontSize: "0.82rem", fontWeight: 700 }}>
+                    ⚠ Informe a senha atual para confirmar a troca.
+                  </span>
+                ) : null}
+
+                {estadoSeguranca.mensagem ? (
+                  <span
+                    className="aviso-senha-invalida"
+                    style={{
+                      color: estadoSeguranca.ok ? "var(--verde)" : "var(--vermelho)",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {estadoSeguranca.ok ? "✓" : "⚠"} {estadoSeguranca.mensagem}
+                  </span>
+                ) : null}
+
+                <button
+                  type="submit"
+                  className="botao botao-primario"
+                  formAction={acaoSeguranca}
+                  disabled={alterandoSenha || !novaSenha}
+                >
+                  <IconeEscudo tamanho={16} />
+                  <span>{alterandoSenha ? "Alterando senha..." : "Alterar Senha"}</span>
+                </button>
               </div>
             </div>
 
@@ -1064,8 +1130,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 <div className="aviso-seguranca-box">
                   <IconeEscudo tamanho={20} />
                   <p>
-                    Sua conta possui acesso protegido por hash criptográfico seguro (PBKDF2/SHA-256) e
-                    sessão com cookie HttpOnly de integridade estrita.
+                    Sua conta possui acesso protegido por hash criptográfico Argon2id e sessão com
+                    cookie HttpOnly de integridade estrita.
                   </p>
                 </div>
               </div>

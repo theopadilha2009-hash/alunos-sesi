@@ -23,7 +23,7 @@ export default async function PaginaPrincipal() {
 
   // Usuário autenticado: carrega os dados e abre o CRM Escolar
   const jar = await cookies();
-  const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value);
+  const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value, "visitante");
 
   const [alunos, salas, retrato, desafios] = await Promise.all([
     listarAlunos(),

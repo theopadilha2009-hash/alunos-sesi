@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import type { MidiaAluno, ProjetoAluno } from "./tipos";
+import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos";
 
 /**
  * Utilitários de Segurança e Sanitização.
@@ -46,8 +46,11 @@ export function urlSegura(url: unknown): string | null {
 /**
  * Valida URLs de imagem e capas. Permite HTTP/HTTPS e data URLs de imagens
  * leves (até 1.5MB de base64). Rejeita scripts ou data:text/html.
+ *
+ * `maxDataUrl` deixa quem chama apertar o teto do data URL — sticker tem
+ * limite bem menor que mídia de perfil.
  */
-export function urlImagemSegura(url: unknown): string | null {
+export function urlImagemSegura(url: unknown, maxDataUrl = 2 * 1024 * 1024): string | null {
   if (typeof url !== "string") return null;
   const limpa = url.trim();
   if (!limpa) return null;
@@ -57,7 +60,7 @@ export function urlImagemSegura(url: unknown): string | null {
   }
 
   // Permite data URL somente de imagens válidas com tamanho sob controle
-  if (limpa.startsWith("data:image/") && limpa.length <= 2 * 1024 * 1024) {
+  if (limpa.startsWith("data:image/") && limpa.length <= maxDataUrl) {
     if (REGEX_DATA_IMAGE.test(limpa)) {
       return limpa;
     }
@@ -221,4 +224,101 @@ export function sanitizarMidias(bruto: unknown[]): MidiaAluno[] {
   }
 
   return sanitizadas;
+}
+
+// ── 6. Stickers do perfil (Estúdio) ─────────────────────────────────────────
+
+export const LIMITES_STICKERS = {
+  max: 12,
+  tamanhoMin: 16,
+  tamanhoMax: 320,
+  tamanhoPadrao: 64,
+  maxRotulo: 40,
+  /** Por sticker: 12 × 4 MB estouraria o bodySizeLimit de 4mb do app. */
+  maxDataUrlBytes: 512 * 1024,
+  /** Soma dos data URLs de um mesmo perfil. */
+  maxTotalBytes: 2 * 1024 * 1024,
+} as const;
+
+function numeroLimitado(valor: unknown, min: number, max: number, padrao: number): number {
+  if (typeof valor !== "number" || !Number.isFinite(valor)) return padrao;
+  return Math.round(Math.min(max, Math.max(min, valor)) * 100) / 100;
+}
+
+/** Normaliza para -180..180. `720` vira `0`, `200` vira `-160`. */
+function rotacaoNormalizada(valor: unknown): number {
+  if (typeof valor !== "number" || !Number.isFinite(valor)) return 0;
+  const resto = valor % 360;
+  const normalizado = resto > 180 ? resto - 360 : resto < -180 ? resto + 360 : resto;
+  return Math.round(normalizado * 100) / 100;
+}
+
+/**
+ * Sanitiza os stickers do Estúdio. Sem isto o aluno gravava JSON arbitrário no
+ * JSONB — inclusive URL fora do allowlist de imagem, coordenada absurda e
+ * centenas de entradas.
+ *
+ * Sticker de projeto que aponta para projeto inexistente é **descartado**, não
+ * realocado para o banner: mudar de lugar o que o aluno posicionou é pior que
+ * sumir.
+ */
+export function sanitizarStickers(
+  bruto: unknown[],
+  projetoIdsPermitidos: readonly string[] = [],
+): StickerPerfil[] {
+  if (!Array.isArray(bruto)) return [];
+
+  const sanitizados: StickerPerfil[] = [];
+  const idsUsados = new Set<string>();
+  let bytesAcumulados = 0;
+
+  for (const item of bruto) {
+    if (sanitizados.length >= LIMITES_STICKERS.max) break;
+    if (!item || typeof item !== "object") continue;
+    const s = item as Record<string, unknown>;
+
+    const url = urlImagemSegura(s.url, LIMITES_STICKERS.maxDataUrlBytes);
+    if (!url) continue;
+
+    const alvo: StickerPerfil["alvo"] = s.alvo === "projeto" ? "projeto" : "banner";
+    let projetoId: string | undefined;
+    if (alvo === "projeto") {
+      const candidato = typeof s.projetoId === "string" ? s.projetoId : "";
+      if (!candidato || !projetoIdsPermitidos.includes(candidato)) continue;
+      projetoId = candidato;
+    }
+
+    // A contagem de bytes vem DEPOIS do descarte acima de propósito: cobrar
+    // orçamento por item que não entra na lista faria um data URL de projeto
+    // inválido derrubar os stickers de banner válidos que vêm depois.
+    if (url.startsWith("data:")) {
+      bytesAcumulados += url.length;
+      if (bytesAcumulados > LIMITES_STICKERS.maxTotalBytes) break;
+    }
+
+    // O id vem do cliente e vira `key` do React: repetido, duplica a chave.
+    const id = typeof s.id === "string" && s.id ? s.id.slice(0, 50) : `st-${sanitizados.length + 1}`;
+    if (idsUsados.has(id)) continue;
+    idsUsados.add(id);
+
+    sanitizados.push({
+      id,
+      url,
+      tipo: s.tipo === "gif" ? "gif" : "sticker",
+      rotulo: (s.rotulo ? sanitizarTexto(s.rotulo, LIMITES_STICKERS.maxRotulo) : "") || undefined,
+      x: numeroLimitado(s.x, 0, 100, 50),
+      y: numeroLimitado(s.y, 0, 100, 50),
+      tamanho: numeroLimitado(
+        s.tamanho,
+        LIMITES_STICKERS.tamanhoMin,
+        LIMITES_STICKERS.tamanhoMax,
+        LIMITES_STICKERS.tamanhoPadrao,
+      ),
+      rotacao: rotacaoNormalizada(s.rotacao),
+      alvo,
+      projetoId,
+    });
+  }
+
+  return sanitizados;
 }
