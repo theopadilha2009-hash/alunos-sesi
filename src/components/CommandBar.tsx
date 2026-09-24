@@ -6,6 +6,7 @@ import { fold } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
 import { iniciais } from "@/lib/links";
 import {
+  IconeBusca,
   IconeEscudo,
   IconeEstrela,
   IconeLink,
@@ -239,7 +240,7 @@ export function CommandBar({
       <div className="cmd-container" onClick={(e) => e.stopPropagation()}>
         <div className="cmd-campo">
           <span className="cmd-icone" aria-hidden="true">
-            🔍
+            <IconeBusca tamanho={16} />
           </span>
           <input
             ref={inputRef}

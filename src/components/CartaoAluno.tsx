@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
+import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -60,7 +61,11 @@ export function CartaoAluno({
 
       <div className="aluno-pes">
         {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-        {aluno.destaque ? <span className="selo selo-adm">★ ADM</span> : null}
+        {aluno.destaque ? (
+          <span className="selo selo-adm">
+            <IconeEscudo tamanho={10} /> ADM
+          </span>
+        ) : null}
 
         {onAbrirCracha ? (
           <button
@@ -69,7 +74,8 @@ export function CartaoAluno({
             onClick={() => onAbrirCracha(aluno)}
             title="Abrir Crachá Holográfico 3D"
           >
-            📇 Crachá
+            <IconeCracha tamanho={13} />
+            <span>Crachá</span>
           </button>
         ) : null}
 
@@ -89,7 +95,7 @@ export function CartaoAluno({
           }
           title={estrelado ? "Tirar a estrela" : "Dar estrela"}
         >
-          {estrelado ? "★" : "☆"} {aluno.estrelas}
+          <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
         </button>
       </div>
     </li>

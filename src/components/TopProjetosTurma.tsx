@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
-import { IconeFogo } from "@/components/Icones";
+import { IconeCracha, IconeFogo } from "@/components/Icones";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -155,7 +155,7 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
               />
               <div className="top-proj-gradiente-overlay" />
               <span className={`badge-rank badge-rank-${proj.rank}`}>
-                {proj.rank === 1 ? "🥇 #1 Top Projeto" : proj.rank === 2 ? "🥈 #2 Destaque" : "🥉 #3 Destaque"}
+                {proj.rank === 1 ? "#1 Top Projeto" : proj.rank === 2 ? "#2 Destaque" : "#3 Destaque"}
               </span>
             </div>
 
@@ -216,7 +216,8 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
                   className="mini btn-cracha-top"
                   onClick={() => onAbrirCracha(proj.autor.objetoAluno)}
                 >
-                  📇 Crachá 3D
+                  <IconeCracha tamanho={13} />
+                  <span>Crachá 3D</span>
                 </button>
                 {proj.link ? (
                   <a

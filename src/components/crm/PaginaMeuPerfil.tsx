@@ -301,11 +301,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
       {/* ── FORMULÁRIO PRINCIPAL DE EDIÇÃO EM DOIS BLOCOS (Imagem 4) ─────── */}
       <form action={formAction} className="perfil-grid-layout">
-        <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
-        <input type="hidden" name="midias" value={JSON.stringify(midias)} />
+        <input type="hidden" name="nome" value={nome} />
+        <input type="hidden" name="sala" value={sala} />
+        <input type="hidden" name="bio" value={bio} />
+        <input type="hidden" name="linkedin" value={linkedin} />
+        <input type="hidden" name="github" value={github} />
+        <input type="hidden" name="instagram" value={instagram} />
         <input type="hidden" name="email" value={email} />
         <input type="hidden" name="novaSenha" value={novaSenha} />
         <input type="hidden" name="confirmarSenha" value={confirmarSenha} />
+        <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
+        <input type="hidden" name="midias" value={JSON.stringify(midias)} />
 
         {/* ── COLUNA ESQUERDA: RESUMO, AÇÕES E CONTATOS ─────────────────── */}
         <aside className="perfil-coluna-esquerda">
@@ -369,7 +375,6 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 </label>
                 <input
                   id="perfil-linkedin"
-                  name="linkedin"
                   type="text"
                   className="input-rede"
                   value={linkedin}
@@ -384,7 +389,6 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 </label>
                 <input
                   id="perfil-github"
-                  name="github"
                   type="text"
                   className="input-rede"
                   value={github}
@@ -399,7 +403,6 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 </label>
                 <input
                   id="perfil-instagram"
-                  name="instagram"
                   type="text"
                   className="input-rede"
                   value={instagram}
@@ -493,61 +496,57 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           </div>
 
           {/* ── ABA 1: DADOS & BIO ─────────────────────────────────────────── */}
-          {abaAtiva === "dados" ? (
-            <div className="perfil-tab-painel">
-              <div className="painel-card">
-                <header className="painel-card-topo">
-                  <h3>Dados Cadastrais do Aluno</h3>
-                  <p>Informações principais exibidas na vitrine e crachá do SESI</p>
-                </header>
+          <div className="perfil-tab-painel" style={{ display: abaAtiva === "dados" ? "block" : "none" }}>
+            <div className="painel-card">
+              <header className="painel-card-topo">
+                <h3>Dados Cadastrais do Aluno</h3>
+                <p>Informações principais exibidas na vitrine e crachá do SESI</p>
+              </header>
 
-                <div className="formulario-corpo">
-                  <div className="form-dupla">
-                    <label className="campo-form">
-                      <span className="label-texto">Nome Completo *</span>
-                      <input
-                        type="text"
-                        name="nome"
-                        className="input-texto"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        required
-                        placeholder="Seu nome oficial"
-                      />
-                    </label>
-
-                    <label className="campo-form">
-                      <span className="label-texto">Sala / Turma *</span>
-                      <select
-                        name="sala"
-                        className="input-select"
-                        value={sala}
-                        onChange={(e) => setSala(e.target.value)}
-                      >
-                        {salas.map((s) => (
-                          <option key={s.id} value={s.nome}>
-                            {s.nome}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-
+              <div className="formulario-corpo">
+                <div className="form-dupla">
                   <label className="campo-form">
-                    <div className="label-com-contagem">
-                      <span className="label-texto">Bio & Apresentação Pessoal</span>
-                      <span className="contagem-caracteres">{bio.length} / 280</span>
-                    </div>
-                    <textarea
-                      name="bio"
-                      className="input-textarea"
-                      rows={4}
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      maxLength={280}
-                      placeholder="Descreva seu foco de aprendizado, tecnologias que domina e aspirações no SESI..."
+                    <span className="label-texto">Nome Completo *</span>
+                    <input
+                      type="text"
+                      className="input-texto"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      required
+                      placeholder="Seu nome oficial"
                     />
                   </label>
+
+                  <label className="campo-form">
+                    <span className="label-texto">Sala / Turma *</span>
+                    <select
+                      className="input-select"
+                      value={sala}
+                      onChange={(e) => setSala(e.target.value)}
+                    >
+                      {salas.map((s) => (
+                        <option key={s.id} value={s.nome}>
+                          {s.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <label className="campo-form">
+                  <div className="label-com-contagem">
+                    <span className="label-texto">Bio & Apresentação Pessoal</span>
+                    <span className="contagem-caracteres">{bio.length} / 280</span>
+                  </div>
+                  <textarea
+                    className="input-textarea"
+                    rows={4}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    maxLength={280}
+                    placeholder="Descreva seu foco de aprendizado, tecnologias que domina e aspirações no SESI..."
+                  />
+                </label>
 
                   {/* Gerenciamento Interativo de Competências Técnicas */}
                   <div className="campo-form">
@@ -599,11 +598,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 </div>
               </div>
             </div>
-          ) : null}
 
           {/* ── ABA 2: PROJETOS & CRIAÇÕES ─────────────────────────────────── */}
-          {abaAtiva === "projetos" ? (
-            <div className="perfil-tab-painel">
+          <div className="perfil-tab-painel" style={{ display: abaAtiva === "projetos" ? "block" : "none" }}>
               {/* Projetos Existentes */}
               <div className="painel-card">
                 <header className="painel-card-topo">
@@ -747,11 +744,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 </div>
               </div>
             </div>
-          ) : null}
 
           {/* ── ABA 3: GALERIA DE MÍDIAS (Sem bugs de layout da Imagem 3) ──── */}
-          {abaAtiva === "midias" ? (
-            <div className="perfil-tab-painel">
+          <div className="perfil-tab-painel" style={{ display: abaAtiva === "midias" ? "block" : "none" }}>
               <div className="painel-card">
                 <header className="painel-card-topo">
                   <h3>Galeria de Fotos & Demonstrações ({midias.length})</h3>
@@ -856,140 +851,133 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                 </div>
               </div>
             </div>
-          ) : null}
 
           {/* ── ABA 4: CONTA & SEGURANÇA ────────────────────────────────────── */}
-          {abaAtiva === "conta" ? (
-            <div className="perfil-tab-painel">
-              {/* Card 1: Identidade, Nome Visual e E-mail */}
-              <div className="painel-card">
-                <header className="painel-card-topo">
-                  <h3>Nome Visual & E-mail Cadastrado</h3>
-                  <p>Configure sua identificação visível para a turma e seu e-mail institucional</p>
-                </header>
+          <div className="perfil-tab-painel" style={{ display: abaAtiva === "conta" ? "block" : "none" }}>
+            {/* Card 1: Identidade, Nome Visual e E-mail */}
+            <div className="painel-card">
+              <header className="painel-card-topo">
+                <h3>Nome Visual & E-mail Cadastrado</h3>
+                <p>Configure sua identificação visível para a turma e seu e-mail institucional</p>
+              </header>
 
-                <div className="formulario-corpo">
-                  <div className="form-dupla">
-                    <label className="campo-form">
-                      <span className="label-texto">Nome Visual de Exibição *</span>
-                      <input
-                        type="text"
-                        name="nome"
-                        className="input-texto"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        placeholder="Ex: Theo Padilha"
-                        required
-                      />
-                      <span className="campo-dica">
-                        Nome que aparece em destaque na vitrine, no crachá e nas listagens escolares.
-                      </span>
-                    </label>
-
-                    <label className="campo-form">
-                      <span className="label-texto">E-mail Cadastrado *</span>
-                      <input
-                        type="email"
-                        name="email"
-                        className="input-texto"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="seu.email@exemplo.com"
-                        required
-                      />
-                      <span className="campo-dica">
-                        E-mail para comunicações, credenciais e recuperação de acesso.
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 2: Alteração de Senha Segura */}
-              <div className="painel-card">
-                <header className="painel-card-topo">
-                  <h3>Alterar Senha de Acesso</h3>
-                  <p>Defina uma nova senha para proteger seu acesso ao sistema</p>
-                </header>
-
-                <div className="formulario-corpo">
-                  <div className="form-dupla">
-                    <label className="campo-form">
-                      <span className="label-texto">Nova Senha</span>
-                      <input
-                        type="password"
-                        name="novaSenha"
-                        className="input-texto"
-                        value={novaSenha}
-                        onChange={(e) => setNovaSenha(e.target.value)}
-                        placeholder="Mínimo 4 caracteres (opcional)"
-                        autoComplete="new-password"
-                      />
-                    </label>
-
-                    <label className="campo-form">
-                      <span className="label-texto">Confirmar Nova Senha</span>
-                      <input
-                        type="password"
-                        name="confirmarSenha"
-                        className="input-texto"
-                        value={confirmarSenha}
-                        onChange={(e) => setConfirmarSenha(e.target.value)}
-                        placeholder="Repita a nova senha digitada"
-                        autoComplete="new-password"
-                      />
-                    </label>
-                  </div>
-                  {novaSenha && novaSenha !== confirmarSenha ? (
-                    <span className="aviso-senha-invalida" style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}>
-                      ⚠ A confirmação de senha não coincide com a nova senha digitada.
+              <div className="formulario-corpo">
+                <div className="form-dupla">
+                  <label className="campo-form">
+                    <span className="label-texto">Nome Visual de Exibição *</span>
+                    <input
+                      type="text"
+                      className="input-texto"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      placeholder="Ex: Theo Padilha"
+                      required
+                    />
+                    <span className="campo-dica">
+                      Nome que aparece em destaque na vitrine, no crachá e nas listagens escolares.
                     </span>
-                  ) : null}
-                </div>
-              </div>
+                  </label>
 
-              {/* Card 3: Credenciais e Nível de Acesso */}
-              <div className="painel-card">
-                <header className="painel-card-topo">
-                  <h3>Credenciais de Autenticação</h3>
-                  <p>Informações técnicas e proteção criptográfica da sua conta</p>
-                </header>
-
-                <div className="formulario-corpo">
-                  <div className="info-bloco-seguranca">
-                    <div className="seguranca-item">
-                      <span className="seguranca-rotulo">Nome de Usuário (Login)</span>
-                      <span className="seguranca-dado">@{usuario.username}</span>
-                    </div>
-                    <div className="seguranca-item">
-                      <span className="seguranca-rotulo">Privilégio da Conta</span>
-                      <span className="seguranca-dado">
-                        {ehSuperAdm ? "Super Administrador (Acesso Total)" : "Estudante SESI"}
-                      </span>
-                    </div>
-                    <div className="seguranca-item">
-                      <span className="seguranca-rotulo">E-mail Vinculado</span>
-                      <span className="seguranca-dado">{email}</span>
-                    </div>
-                    <div className="seguranca-item">
-                      <span className="seguranca-rotulo">ID do Registro</span>
-                      <span className="seguranca-dado" style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-                        {usuario.id}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="aviso-seguranca-box">
-                    <IconeEscudo tamanho={20} />
-                    <p>
-                      Sua conta possui acesso protegido por hash criptográfico seguro (PBKDF2/SHA-256) e
-                      sessão com cookie HttpOnly de integridade estrita.
-                    </p>
-                  </div>
+                  <label className="campo-form">
+                    <span className="label-texto">E-mail Cadastrado *</span>
+                    <input
+                      type="email"
+                      className="input-texto"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu.email@exemplo.com"
+                      required
+                    />
+                    <span className="campo-dica">
+                      E-mail para comunicações, credenciais e recuperação de acesso.
+                    </span>
+                  </label>
                 </div>
               </div>
             </div>
-          ) : null}
+
+            {/* Card 2: Alteração de Senha Segura */}
+            <div className="painel-card">
+              <header className="painel-card-topo">
+                <h3>Alterar Senha de Acesso</h3>
+                <p>Defina uma nova senha para proteger seu acesso ao sistema</p>
+              </header>
+
+              <div className="formulario-corpo">
+                <div className="form-dupla">
+                  <label className="campo-form">
+                    <span className="label-texto">Nova Senha</span>
+                    <input
+                      type="password"
+                      className="input-texto"
+                      value={novaSenha}
+                      onChange={(e) => setNovaSenha(e.target.value)}
+                      placeholder="Mínimo 4 caracteres (opcional)"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label className="campo-form">
+                    <span className="label-texto">Confirmar Nova Senha</span>
+                    <input
+                      type="password"
+                      className="input-texto"
+                      value={confirmarSenha}
+                      onChange={(e) => setConfirmarSenha(e.target.value)}
+                      placeholder="Repita a nova senha digitada"
+                      autoComplete="new-password"
+                    />
+                  </label>
+                </div>
+                {novaSenha && novaSenha !== confirmarSenha ? (
+                  <span className="aviso-senha-invalida" style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}>
+                    ⚠ A confirmação de senha não coincide com a nova senha digitada.
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Card 3: Credenciais e Nível de Acesso */}
+            <div className="painel-card">
+              <header className="painel-card-topo">
+                <h3>Credenciais de Autenticação</h3>
+                <p>Informações técnicas e proteção criptográfica da sua conta</p>
+              </header>
+
+              <div className="formulario-corpo">
+                <div className="info-bloco-seguranca">
+                  <div className="seguranca-item">
+                    <span className="seguranca-rotulo">Nome de Usuário (Login)</span>
+                    <span className="seguranca-dado">@{usuario.username}</span>
+                  </div>
+                  <div className="seguranca-item">
+                    <span className="seguranca-rotulo">Privilégio da Conta</span>
+                    <span className="seguranca-dado">
+                      {ehSuperAdm ? "Super Administrador (Acesso Total)" : "Estudante SESI"}
+                    </span>
+                  </div>
+                  <div className="seguranca-item">
+                    <span className="seguranca-rotulo">E-mail Vinculado</span>
+                    <span className="seguranca-dado">{email}</span>
+                  </div>
+                  <div className="seguranca-item">
+                    <span className="seguranca-rotulo">ID do Registro</span>
+                    <span className="seguranca-dado" style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
+                      {usuario.id}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="aviso-seguranca-box">
+                  <IconeEscudo tamanho={20} />
+                  <p>
+                    Sua conta possui acesso protegido por hash criptográfico seguro (PBKDF2/SHA-256) e
+                    sessão com cookie HttpOnly de integridade estrita.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* ── BARRA FIXA DE SALVAMENTO ──────────────────────────────────── */}
           <div className="perfil-barra-salvar">

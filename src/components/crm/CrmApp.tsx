@@ -198,6 +198,9 @@ export function CrmApp({
     if (ocupado) return;
     setOcupado(alunoId);
 
+    const meusAnteriores = meus;
+    const listaAnterior = lista;
+
     const eraEstrelado = meus.includes(alunoId);
     const proximaListaMeus = eraEstrelado
       ? meus.filter((id) => id !== alunoId)
@@ -226,12 +229,12 @@ export function CrmApp({
         body: JSON.stringify({ alunoId }),
       });
       if (!resp.ok) {
-        setMeus(meus);
-        setLista(alunosIniciais);
+        setMeus(meusAnteriores);
+        setLista(listaAnterior);
       }
     } catch {
-      setMeus(meus);
-      setLista(alunosIniciais);
+      setMeus(meusAnteriores);
+      setLista(listaAnterior);
     } finally {
       setOcupado(null);
     }
@@ -684,7 +687,13 @@ export function CrmApp({
                   onClick={() => setAlunoBreveSelecionado(p.alunoObjeto)}
                 >
                   {p.imagem ? (
-                    <img src={p.imagem} alt={p.titulo} className="criacao-mural-capa" />
+                    <img
+                      src={p.imagem}
+                      alt={p.titulo}
+                      className="criacao-mural-capa"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   ) : (
                     <div className="criacao-mural-capa-placeholder">
                       <IconeProjetos tamanho={24} />

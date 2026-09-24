@@ -131,6 +131,12 @@ export async function autenticarUsuario(
     const aluno = await alunoPorId(usuarioDb.aluno_id);
     if (aluno) {
       nome = aluno.nome;
+      if (aluno.sala_id) {
+        const { data: s } = await db.from("salas").select("nome").eq("id", aluno.sala_id).maybeSingle();
+        if (s?.nome) {
+          sala = s.nome;
+        }
+      }
     }
   }
 
@@ -269,6 +275,7 @@ export async function registrarUsuario(dados: {
     alunoId: novoUsuario.aluno_id,
     nome,
     sala: salaNome,
+    email: `${username}@aluno.sesisp.org.br`,
   };
 
   const jar = await cookies();

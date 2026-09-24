@@ -69,8 +69,8 @@ export async function salvarPerfilAction(
 
   let alunoId = sessao.alunoId;
   if (!alunoId && sessao.role === "super_adm") {
-    const telor = await alunoPorSlug("telor-de-espadilha");
-    if (telor) alunoId = telor.id;
+    const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
+    if (theo) alunoId = theo.id;
   }
 
   if (!alunoId) {
