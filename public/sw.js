@@ -1,10 +1,10 @@
 // Service Worker para PWA do Ecossistema SESI SC - Joinville
 // Garante funcionamento offline do crachá, catálogo e perfis escolares
 
-const CACHE_NAME = "sesi-joinville-v1";
+const CACHE_NAME = "sesi-joinville-v2";
 const RECURSOS_ESTATICOS = [
   "/",
-  "/manifest.json",
+  "/manifest.webmanifest",
   "/favicon.ico",
   "/logo-sesi.png",
   "/logo-sesi-branco.png",
@@ -71,7 +71,7 @@ self.addEventListener("fetch", (event) => {
           if (respostaRaiz) return respostaRaiz;
 
           return new Response(
-            `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"/><title>Modo Offline · SESI Joinville</title><style>body{background:#0B0F17;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}h1{color:#E30613}.card{background:#161E2E;padding:2rem;border-radius:12px;border:1px solid #233149;max-width:400px}</style></head><body><div class="card"><h1>SESI SC · Offline</h1><p>Você está sem conexão com a internet. O seu crachá e páginas salvas continuam disponíveis quando sincronizados.</p></div></body></html>`,
+            `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"/><title>Modo Offline · SESI Joinville</title><style>body{background:#090d12;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}h1{color:#38c7bd}.card{background:#10161f;padding:2rem;border-radius:12px;border:1px solid #1e2a38;max-width:400px}</style></head><body><div class="card"><h1>SESI SC · Offline</h1><p>Você está sem conexão com a internet. O seu crachá e páginas salvas continuam disponíveis quando sincronizados.</p></div></body></html>`,
             { headers: { "Content-Type": "text/html; charset=utf-8" } }
           );
         })

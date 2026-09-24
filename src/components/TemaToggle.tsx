@@ -2,37 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { IconeLua, IconeSol } from "@/components/Icones";
-
-const CHAVE = "sesi.tema";
+import { aplicarTema, ehTema, lerTemaSalvo, salvarTema, type Tema } from "@/lib/tema";
 
 /** Alternador minimalista de tema (somente botão de ícone SVG, sem emoji nem texto) */
 export function TemaToggle({ compacto = true }: { compacto?: boolean }) {
-  const [tema, setTema] = useState<"dark" | "light">("dark");
+  const [tema, setTema] = useState<Tema>("dark");
 
   useEffect(() => {
-    try {
-      const salvo = localStorage.getItem(CHAVE);
-      if (salvo === "light" || salvo === "dark") {
-        setTema(salvo);
-        document.documentElement.dataset.theme = salvo;
-        return;
-      }
-    } catch {}
-    const atual = document.documentElement.dataset.theme;
-    if (atual === "light" || atual === "dark") {
-      setTema(atual);
+    const salvo = lerTemaSalvo();
+    if (salvo) {
+      setTema(salvo);
+      aplicarTema(salvo);
+      return;
     }
+    const atual = document.documentElement.dataset.theme;
+    if (ehTema(atual)) setTema(atual);
   }, []);
 
   function alternar() {
-    const proximo = tema === "dark" ? "light" : "dark";
+    const proximo: Tema = tema === "dark" ? "light" : "dark";
     setTema(proximo);
-    document.documentElement.dataset.theme = proximo;
-    try {
-      localStorage.setItem(CHAVE, proximo);
-    } catch {
-      // modo privado sem storage: o tema vale só nesta navegação
-    }
+    aplicarTema(proximo);
+    salvarTema(proximo);
   }
 
   return (

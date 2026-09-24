@@ -13,6 +13,7 @@ import {
   IconeSolLua,
   IconeUsuario,
 } from "@/components/Icones";
+import { aplicarTema, salvarTema, type Tema } from "@/lib/tema";
 import type { AlunoNaTela, Sala } from "@/lib/tipos";
 
 type Props = {
@@ -106,11 +107,9 @@ export function CommandBar({
         icone: <IconeSolLua tamanho={16} />,
         executar: () => {
           const atual = document.documentElement.getAttribute("data-theme") ?? "dark";
-          const proximo = atual === "dark" ? "light" : "dark";
-          document.documentElement.setAttribute("data-theme", proximo);
-          try {
-            localStorage.setItem("sesi.tema", proximo);
-          } catch {}
+          const proximo: Tema = atual === "dark" ? "light" : "dark";
+          aplicarTema(proximo);
+          salvarTema(proximo);
           onFechar();
         },
       },
