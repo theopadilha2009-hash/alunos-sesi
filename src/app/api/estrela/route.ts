@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/debug";
-import { verificarRateLimit } from "@/lib/seguranca";
+import { limitar } from "@/lib/rate-limit";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
 
@@ -18,7 +18,7 @@ const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 async function visitanteAtual(): Promise<string | null> {
   const jar = await cookies();
-  return abrirAssinado(jar.get(COOKIE_VISITANTE)?.value);
+  return abrirAssinado(jar.get(COOKIE_VISITANTE)?.value, "visitante");
 }
 
 async function lerAlunoId(request: Request): Promise<string | null> {
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   // Rate limit: máx 30 ações de voto por minuto por visitante
-  const limit = verificarRateLimit(`voto:${visitante}`, 30, 60 * 1000);
+  const limit = await limitar(`voto:${visitante}`, 30, 60 * 1000);
   if (!limit.permitido) {
     return NextResponse.json(
       { erro: "Muitos votos em pouco tempo. Aguarde alguns instantes." },
@@ -90,7 +90,7 @@ export async function DELETE(request: Request) {
   }
 
   // Rate limit: máx 30 ações de voto por minuto por visitante
-  const limit = verificarRateLimit(`voto:${visitante}`, 30, 60 * 1000);
+  const limit = await limitar(`voto:${visitante}`, 30, 60 * 1000);
   if (!limit.permitido) {
     return NextResponse.json(
       { erro: "Muitos votos em pouco tempo. Aguarde alguns instantes." },

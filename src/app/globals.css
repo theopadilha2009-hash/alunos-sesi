@@ -2541,31 +2541,6 @@ body::before {
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
 }
 
-.login-dica-adm {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.8rem;
-  border-radius: var(--raio-p);
-  background: color-mix(in srgb, var(--amarelo) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--amarelo) 35%, transparent);
-  font-size: 0.78rem;
-  color: var(--amarelo);
-  margin-bottom: 1.25rem;
-}
-
-.btn-preencher-dica {
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid currentColor;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .login-form {
   display: flex;
   flex-direction: column;
@@ -4946,6 +4921,38 @@ body::before {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--glow);
+}
+
+/* Sala do aluno: dado, não formulário. Quem move de turma é o ADM, então o
+   campo só mostra o valor — sem cor de campo editável, que convidaria ao
+   clique que não faz nada. */
+.input-somente-leitura {
+  background: var(--surface-2);
+  color: var(--text);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.dica-campo {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--dim);
+}
+
+/* Painel do ADM: trocar a turma de um aluno na própria linha da tabela. O input
+   é estreito porque a coluna é apertada e nome de turma é curto. */
+.adm-form-sala {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.adm-input-sala {
+  width: 7.5rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.78rem;
 }
 
 /* Habilidades Chips Editor */

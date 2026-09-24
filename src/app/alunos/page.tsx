@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default async function AlunosPage() {
   const jar = await cookies();
-  const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value);
+  const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value, "visitante");
 
   try {
     const [alunos, salas, retrato] = await Promise.all([

@@ -129,11 +129,33 @@ export async function atualizarPerfilAluno(
 }
 
 /** Apoia uma competência técnica específica de um colega (Endorsement) */
+/**
+ * Registra um endosso de habilidade.
+ *
+ * O contador em `alunos.habilidades_votos` é cache mantido por trigger — quem
+ * manda é a linha em `public.endossos`, que tem PK `(aluno_id, habilidade,
+ * endossante)`. Isso é o mesmo desenho de `votos`: o `on conflict do nothing`
+ * garante 1 endosso por navegador por habilidade, e como nenhuma linha entra,
+ * o trigger não dispara e o contador não anda duas vezes.
+ */
 export async function apoiarHabilidade(
   alunoId: string,
   habilidade: string,
+  endossante: string,
 ): Promise<{ ok: boolean; votos: Record<string, number> }> {
   const db = clienteAdmin();
+
+  const { error: errInsert } = await db
+    .from("endossos")
+    .upsert(
+      { aluno_id: alunoId, habilidade, endossante },
+      { onConflict: "aluno_id,habilidade,endossante", ignoreDuplicates: true },
+    );
+
+  if (errInsert) {
+    throw new Error(`Erro ao registrar apoio: ${errInsert.message}`);
+  }
+
   const { data: aluno, error: errLeitura } = await db
     .from("alunos")
     .select("habilidades_votos")
@@ -144,21 +166,30 @@ export async function apoiarHabilidade(
     throw new Error("Aluno não encontrado para apoio de habilidade.");
   }
 
-  const mapaAtual: Record<string, number> = (aluno.habilidades_votos as Record<string, number>) || {};
-  const total = (mapaAtual[habilidade] || 0) + 1;
-  const novoMapa = { ...mapaAtual, [habilidade]: total };
-
-  const { error: errUpdate } = await db
-    .from("alunos")
-    .update({ habilidades_votos: novoMapa })
-    .eq("id", alunoId);
-
-  if (errUpdate) {
-    throw new Error(`Erro ao registrar apoio: ${errUpdate.message}`);
-  }
-
   limparCacheDados();
-  return { ok: true, votos: novoMapa };
+  return { ok: true, votos: (aluno.habilidades_votos ?? {}) as Record<string, number> };
+}
+
+/** Diz se o desafio existe e está ativo — usado antes de aceitar uma submissão. */
+export async function desafioAtivo(
+  id: string,
+): Promise<{ id: string; titulo: string } | null> {
+  if (!id) return null;
+  // Cliente público de propósito: quem valida é a RLS de `desafios`. Se a
+  // policy estiver errada, isso aparece na hora em vez de ficar escondido
+  // atrás da service_role.
+  const { data, error } = await clientePublico()
+    .from("desafios")
+    .select("id,titulo")
+    .eq("id", id)
+    .eq("ativo", true)
+    .maybeSingle();
+
+  if (error) {
+    logger.error("DADOS", "Erro ao consultar desafio", error);
+    return null;
+  }
+  return data ? { id: data.id, titulo: data.titulo } : null;
 }
 
 /** Lista todos os desafios e hackathons ativos do SESI Joinville */
@@ -216,13 +247,8 @@ export async function submeterDesafio(dados: {
     throw new Error(`Erro ao submeter desafio: ${error?.message}`);
   }
 
-  // Incrementa contagem de submissões no desafio
-  try {
-    const { data: d } = await db.from("desafios").select("submissoes_count").eq("id", dados.desafioId).single();
-    if (d) {
-      await db.from("desafios").update({ submissoes_count: (d.submissoes_count || 0) + 1 }).eq("id", dados.desafioId);
-    }
-  } catch {}
+  // `desafios.submissoes_count` é mantido por trigger (sync_submissoes_count).
+  // Incrementar aqui também dobraria a contagem.
 
   limparCacheDados();
   return {

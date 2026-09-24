@@ -36,3 +36,4 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: anon-de-mentira
           SUPABASE_SERVICE_ROLE_KEY: service-de-mentira
           ADM_CHAVE: chave-de-mentira
+          SESSAO_SEGREDO: segredo-de-mentira

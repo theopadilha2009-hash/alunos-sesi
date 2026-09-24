@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
-import { alternar, criarAluno, importarLista, removerAluno } from "@/app/adm/acoes";
+import { alternar, criarAluno, importarLista, mudarSalaDoAluno, removerAluno } from "@/app/adm/acoes";
 import { ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
 import {
   IconeCheck,
@@ -239,15 +239,31 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                         </div>
                       </td>
 
+                      {/* Sala: o pill diz a turma, o form é quem troca. O aluno
+                          não move a si mesmo — quem manda aqui é o ADM. */}
                       <td>
-                        {a.sala ? (
-                          <span className="cracha-sala-pill" style={{ borderColor: a.cor }}>
-                            <span className="ponto" style={{ background: a.cor }} />
-                            {a.sala}
-                          </span>
-                        ) : (
-                          <span className="tabela-sem-dado">—</span>
-                        )}
+                        <form action={mudarSalaDoAluno} className="adm-form-sala">
+                          {a.sala ? (
+                            <span className="cracha-sala-pill" style={{ borderColor: a.cor }}>
+                              <span className="ponto" style={{ background: a.cor }} />
+                              {a.sala}
+                            </span>
+                          ) : (
+                            <span className="tabela-sem-dado">—</span>
+                          )}
+                          <input type="hidden" name="alunoId" value={a.id} />
+                          <input
+                            type="text"
+                            name="sala"
+                            className="input-texto adm-input-sala"
+                            placeholder="Nova turma"
+                            maxLength={30}
+                            aria-label={`Trocar a turma de ${a.nome}`}
+                          />
+                          <button type="submit" className="btn-acao-tabela" title="Mover de turma">
+                            <span>Mover</span>
+                          </button>
+                        </form>
                       </td>
 
                       <td>

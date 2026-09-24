@@ -17,15 +17,6 @@ export function LoginTela() {
     { ok: false },
   );
 
-  function preencherSuperAdm() {
-    const userInp = document.getElementById("login-user") as HTMLInputElement;
-    const passInp = document.getElementById("login-pass") as HTMLInputElement;
-    if (userInp && passInp) {
-      userInp.value = "theo1234";
-      passInp.value = "theo1234";
-    }
-  }
-
   return (
     <div className="login-tela-container">
       <div className="login-mesh-glow" aria-hidden="true" />
@@ -71,21 +62,6 @@ export function LoginTela() {
           </button>
         </div>
 
-        {/* Atalho Super ADM theo1234 */}
-        <div className="login-dica-adm">
-          <span>⚡ Acesso Super ADM configurado: <b>theo1234</b></span>
-          <button
-            type="button"
-            className="btn-preencher-dica"
-            onClick={() => {
-              setModo("login");
-              setTimeout(preencherSuperAdm, 50);
-            }}
-          >
-            Preencher
-          </button>
-        </div>
-
         {modo === "login" ? (
           <form action={formActionLogin} className="login-form">
             {estadoLogin.mensagem ? (
@@ -100,8 +76,7 @@ export function LoginTela() {
                 id="login-user"
                 name="username"
                 type="text"
-                placeholder="Ex.: theo1234"
-                defaultValue="theo1234"
+                placeholder="Seu usuário"
                 required
                 autoComplete="username"
               />
@@ -114,7 +89,6 @@ export function LoginTela() {
                 name="senha"
                 type="password"
                 placeholder="Sua senha"
-                defaultValue="theo1234"
                 required
                 autoComplete="current-password"
               />
@@ -153,10 +127,13 @@ export function LoginTela() {
                 id="cad-sala"
                 name="sala"
                 type="text"
-                placeholder="Ex.: DSM3, 3ºB Robótica, 1ºA Eletro"
+                placeholder="Ex.: DSM3"
                 defaultValue="DSM3"
                 required
               />
+              {/* Só turma que já existe: sala nova quem cria é o ADM, pelo
+                  painel. Antes o cadastro inseria em `salas` com nome livre. */}
+              <span className="dica-campo">Use o nome de uma turma já cadastrada.</span>
             </div>
 
             <div className="linha-campos">

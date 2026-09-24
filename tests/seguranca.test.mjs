@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  LIMITES_STICKERS,
   compararTempoConstante,
   resetarRateLimit,
   sanitizarMidias,
   sanitizarProjetos,
+  sanitizarStickers,
   sanitizarTexto,
   urlImagemSegura,
   urlSegura,
@@ -104,4 +106,192 @@ test("sanitizarProjetos e sanitizarMidias filtram e normalizam estruturas", () =
   const resultadoMidias = sanitizarMidias(midias);
   assert.equal(resultadoMidias.length, 1);
   assert.equal(resultadoMidias[0].legenda, "Legenda segura");
+});
+
+// ── Stickers do Estudio ──────────────────────────────────────────────────
+
+const URL_STICKER = "https://images.unsplash.com/sticker.png";
+
+// data URL de imagem com tamanho exato em chars (22 = "data:image/png;base64,")
+const dataUrlDe = (chars) => "data:image/png;base64," + "A".repeat(chars - 22);
+
+test("sanitizarStickers corta no teto de 12 stickers", () => {
+  // sem teto o aluno gravava centenas de entradas no JSONB do perfil
+  const bruto = Array.from({ length: 20 }, (_, i) => ({
+    url: URL_STICKER,
+    rotulo: `s${i}`,
+  }));
+  assert.equal(sanitizarStickers(bruto).length, LIMITES_STICKERS.max);
+});
+
+test("x e y sao clampados em 0-100 e valor invalido cai no padrao 50", () => {
+  const [fora, invalido, naoNumerico] = sanitizarStickers([
+    { url: URL_STICKER, x: -10, y: 150 },
+    { url: URL_STICKER, x: NaN, y: "50" },
+    { url: URL_STICKER, x: Infinity, y: undefined },
+  ]);
+  assert.equal(fora.x, 0);
+  assert.equal(fora.y, 100);
+  assert.equal(invalido.x, 50);
+  assert.equal(invalido.y, 50);
+  assert.equal(naoNumerico.x, 50);
+  assert.equal(naoNumerico.y, 50);
+});
+
+test("tamanho e clampado em 16..320", () => {
+  const [pequeno, grande, padrao] = sanitizarStickers([
+    { url: URL_STICKER, tamanho: 4 },
+    { url: URL_STICKER, tamanho: 9999 },
+    { url: URL_STICKER },
+  ]);
+  assert.equal(pequeno.tamanho, LIMITES_STICKERS.tamanhoMin);
+  assert.equal(grande.tamanho, LIMITES_STICKERS.tamanhoMax);
+  assert.equal(padrao.tamanho, LIMITES_STICKERS.tamanhoPadrao);
+});
+
+test("rotacao e normalizada para -180..180", () => {
+  const [volta, acima, abaixo, invalida] = sanitizarStickers([
+    { url: URL_STICKER, rotacao: 720 },
+    { url: URL_STICKER, rotacao: 200 },
+    { url: URL_STICKER, rotacao: -200 },
+    { url: URL_STICKER, rotacao: "90" },
+  ]);
+  assert.equal(volta.rotacao, 0, "720 graus e a mesma pose de 0");
+  assert.equal(acima.rotacao, -160);
+  assert.equal(abaixo.rotacao, 160);
+  assert.equal(invalida.rotacao, 0);
+});
+
+test("sticker com url invalida e descartado", () => {
+  const r = sanitizarStickers([
+    { url: "javascript:alert(1)" },
+    { url: "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==" },
+    { url: "" },
+    { url: "   " },
+    { url: undefined },
+    { url: URL_STICKER, rotulo: "unico sobrevivente" },
+  ]);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].rotulo, "unico sobrevivente");
+});
+
+test("sticker de projeto fora da allowlist e descartado, nao vira banner", () => {
+  const dentro = sanitizarStickers(
+    [{ url: URL_STICKER, alvo: "projeto", projetoId: "p1" }],
+    ["p1"],
+  );
+  assert.equal(dentro.length, 1);
+  assert.equal(dentro[0].alvo, "projeto");
+  assert.equal(dentro[0].projetoId, "p1");
+
+  // projeto de outro aluno nao entra no perfil nem escorrega para o banner:
+  // mudar de lugar o que o aluno posicionou e pior que sumir
+  const fora = sanitizarStickers(
+    [{ url: URL_STICKER, alvo: "projeto", projetoId: "p9" }],
+    ["p1"],
+  );
+  assert.deepEqual(fora, []);
+
+  // sem allowlist nada de projeto passa
+  assert.deepEqual(
+    sanitizarStickers([{ url: URL_STICKER, alvo: "projeto", projetoId: "p1" }]),
+    [],
+  );
+  // alvo projeto sem id utilizavel tambem cai fora
+  assert.deepEqual(
+    sanitizarStickers([{ url: URL_STICKER, alvo: "projeto" }], ["p1"]),
+    [],
+  );
+  assert.deepEqual(
+    sanitizarStickers([{ url: URL_STICKER, alvo: "projeto", projetoId: 42 }], ["p1"]),
+    [],
+  );
+});
+
+test("alvo diferente de projeto cai em banner", () => {
+  const r = sanitizarStickers([
+    { url: URL_STICKER, alvo: "banner" },
+    { url: URL_STICKER, alvo: "PROJETO" },
+    { url: URL_STICKER },
+  ]);
+  assert.deepEqual(
+    r.map((s) => s.alvo),
+    ["banner", "banner", "banner"],
+  );
+  assert.deepEqual(
+    r.map((s) => s.projetoId),
+    [undefined, undefined, undefined],
+  );
+});
+
+test("tipo so e gif quando for exatamente gif", () => {
+  const r = sanitizarStickers([
+    { url: URL_STICKER, tipo: "gif" },
+    { url: URL_STICKER, tipo: "GIF" },
+    { url: URL_STICKER, tipo: "imagem" },
+    { url: URL_STICKER },
+  ]);
+  assert.deepEqual(
+    r.map((s) => s.tipo),
+    ["gif", "sticker", "sticker", "sticker"],
+  );
+});
+
+test("rotulo perde tag HTML e respeita maxRotulo", () => {
+  const [comTag, longo] = sanitizarStickers([
+    { url: URL_STICKER, rotulo: "Meu <b>time</b> <script>alert(1)</script>top" },
+    { url: URL_STICKER, rotulo: "a".repeat(60) },
+  ]);
+  assert.equal(comTag.rotulo, "Meu time top");
+  assert.equal(longo.rotulo.length, LIMITES_STICKERS.maxRotulo);
+});
+
+test("data URL acima do teto por sticker e descartado", () => {
+  const noLimite = dataUrlDe(LIMITES_STICKERS.maxDataUrlBytes);
+  const acima = dataUrlDe(LIMITES_STICKERS.maxDataUrlBytes + 1);
+  assert.equal(noLimite.length, LIMITES_STICKERS.maxDataUrlBytes);
+  assert.equal(sanitizarStickers([{ url: noLimite }]).length, 1);
+  assert.deepEqual(sanitizarStickers([{ url: acima }]), []);
+});
+
+test("soma dos data URLs estourando maxTotalBytes interrompe a coleta", () => {
+  const noLimite = dataUrlDe(LIMITES_STICKERS.maxDataUrlBytes);
+  const quantosCabem = Math.floor(
+    LIMITES_STICKERS.maxTotalBytes / LIMITES_STICKERS.maxDataUrlBytes,
+  );
+  const bruto = Array.from({ length: quantosCabem + 3 }, () => ({ url: noLimite }));
+  assert.equal(sanitizarStickers(bruto).length, quantosCabem);
+});
+
+test("entrada que nao e array devolve lista vazia", () => {
+  assert.deepEqual(sanitizarStickers(null), []);
+  assert.deepEqual(sanitizarStickers(undefined), []);
+  assert.deepEqual(sanitizarStickers("[]"), []);
+  assert.deepEqual(sanitizarStickers({ 0: { url: URL_STICKER }, length: 1 }), []);
+});
+
+test("item que nao e objeto dentro do array e ignorado", () => {
+  const r = sanitizarStickers([null, "sticker", 42, { url: URL_STICKER }]);
+  assert.equal(r.length, 1);
+});
+
+test("sticker sem id utilizavel ganha st-N deterministico", () => {
+  const bruto = [
+    { url: URL_STICKER, id: "" },
+    { url: URL_STICKER },
+    { url: URL_STICKER, id: 42 },
+  ];
+  const primeira = sanitizarStickers(bruto).map((s) => s.id);
+  assert.deepEqual(primeira, ["st-1", "st-2", "st-3"]);
+  // a mesma entrada tem que gerar os mesmos ids, senao o React remonta o sticker
+  assert.deepEqual(sanitizarStickers(bruto).map((s) => s.id), primeira);
+});
+
+test("id do sticker e preservado e cortado em 50 chars", () => {
+  const [curto, longo] = sanitizarStickers([
+    { url: URL_STICKER, id: "sticker-abc" },
+    { url: URL_STICKER, id: "x".repeat(80) },
+  ]);
+  assert.equal(curto.id, "sticker-abc");
+  assert.equal(longo.id.length, 50);
 });
