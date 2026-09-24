@@ -15,7 +15,7 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#E30613",
+  themeColor: "#090d12",
   width: "device-width",
   initialScale: 1,
 };
@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   title: "Alunos SESI SC · Joinville",
   description:
     "Diretório oficial de talentos, crachás digitais e ecossistema escolar do SESI SENAI Joinville - SC.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
