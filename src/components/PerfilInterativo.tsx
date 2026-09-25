@@ -15,11 +15,13 @@ import {
   IconeLinkExterno,
   IconePlus,
   IconeProjetos,
+  IconeSom,
+  IconeSomMudo,
 } from "@/components/Icones";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
 import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
-import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
+import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -35,6 +37,11 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
   const [estrelas, setEstrelas] = useState(aluno.estrelas);
   const [estrelado, setEstrelado] = useState(false);
   const [carregandoVoto, setCarregandoVoto] = useState(false);
+  // Som e confetes são opcionais e nascem ligados. `somLigado()` lê o
+  // localStorage, que não existe no servidor — daí o valor entrar por efeito em
+  // vez do inicializador do useState, que faria o HTML do servidor divergir do
+  // primeiro render do cliente.
+  const [comSom, setComSom] = useState(true);
 
   // Apoio de Competências (+1 estilo LinkedIn)
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
@@ -75,6 +82,19 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
       vivo = false;
     };
   }, [urlAtual]);
+
+  useEffect(() => {
+    setComSom(somLigado());
+  }, []);
+
+  function alternarSom() {
+    const proximo = !comSom;
+    definirSom(proximo);
+    setComSom(proximo);
+    // Toca o próprio efeito ao ligar: é o som que a pessoa acabou de reativar,
+    // e sem ele o clique não dá retorno nenhum.
+    if (proximo) tocarSomEstrela();
+  }
 
   async function copiarLink() {
     try {
@@ -332,6 +352,19 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
             >
               <IconeEstrela preenchida={estrelado} tamanho={16} />
               <span>{estrelas} estrelas</span>
+            </button>
+
+            {/* O rótulo já diz o estado, então não leva aria-pressed: um botão
+                que anuncia "pressionado" e ainda troca o texto vira ruído no
+                leitor de tela. O title diz o que o clique faz. */}
+            <button
+              type="button"
+              className="botao botao-fraco botao-som"
+              onClick={alternarSom}
+              title={comSom ? "Desligar som e confetes" : "Ligar som e confetes"}
+            >
+              {comSom ? <IconeSom tamanho={15} /> : <IconeSomMudo tamanho={15} />}
+              <span>{comSom ? "Som ligado" : "Som desligado"}</span>
             </button>
           </div>
 
