@@ -9,6 +9,11 @@ Verificado em 2026-09-17, depois do primeiro deploy de produção:
 
 - **Produção**: https://alunos-sesi.vercel.app (projeto `alunos-sesi`, escopo
   pessoal `theopadilha2009-5085`; o `orgId` é `team_NZSAr4PoQtmbTxc2MxkMpKUu`).
+- **A função roda em `gru1`** (São Paulo), fixado em `vercel.json`. Verificado
+  em 2026-09-25: sem esse arquivo o projeto fica no `iad1` e cada query
+  atravessa o Atlântico até o Supabase em `sa-east-1`. Corrigir levou o TTFB de
+  `/alunos` de 0,536s para 0,167s (−69%, n=3×30). O `x-vercel-id` diz onde a
+  função está: `gru1::iad1` é longe do banco, `gru1::gru1` é perto.
 - **O projeto está ligado ao GitHub**: todo merge na `main` publica sozinho em
   produção (~30s) e toda branch ganha preview. O alias
   `alunos-sesi-git-main-…` é o deploy automático; `alunos-sesi.vercel.app` pode

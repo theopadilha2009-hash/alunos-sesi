@@ -220,6 +220,23 @@ vazia: o `catch` mostra "Não conseguimos carregar a turma agora" em vez de
 "Ninguém aqui", para ninguém recadastrar a turma por causa de um banco fora do
 ar.
 
+## A função roda em `gru1`, junto do banco
+
+`vercel.json` fixa `"regions": ["gru1"]`. **Não é config órfã — não apague.**
+
+O Supabase está em `sa-east-1` e o default da Vercel para projeto novo é `iad1`
+(Washington): sem esse arquivo, cada query atravessa o Atlântico, ~110 ms por
+ida e volta, num app que faz várias por página.
+
+O sintoma é medível pelo header, sem instrumentar nada: `x-vercel-id` responde
+`gru1::iad1` quando a função está longe do banco, e `gru1::gru1` quando está
+perto. Esse header foi o diagnóstico inteiro.
+
+O `gru1` também é a região mais perto de quem usa (a escola é em
+Joinville/SC), então ganha nos dois lados — por isso até `/`, que não faz query
+nenhuma, ficou mais rápida. O plano Hobby permite uma região; o limite é a
+quantidade, não qual.
+
 ## O `proxy.ts`
 
 `src/proxy.ts` é o antigo `middleware.ts` — no Next 16 o arquivo mudou de nome e
