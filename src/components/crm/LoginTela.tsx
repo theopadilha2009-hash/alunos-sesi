@@ -4,20 +4,7 @@ import { useActionState, useState } from "react";
 import { cadastroAction, loginAction, type EstadoAcaoCrm } from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
 import { TemaToggle } from "@/components/TemaToggle";
-
-// Setas horizontais movem o foco e ativam a aba vizinha (roving tabindex).
-function aoSetasDasAbas(e: React.KeyboardEvent<HTMLButtonElement>) {
-  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-  const barra = e.currentTarget.closest('[role="tablist"]');
-  if (!barra) return;
-  const abas = Array.from(barra.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-  const atual = abas.indexOf(e.currentTarget);
-  if (atual < 0) return;
-  e.preventDefault();
-  const proxima = abas[(atual + (e.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
-  proxima.focus();
-  proxima.click();
-}
+import { aoSetasDasAbas } from "@/lib/abas";
 
 export function LoginTela() {
   const [modo, setModo] = useState<"login" | "cadastro">("login");

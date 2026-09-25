@@ -25,6 +25,7 @@ import {
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
+import { aoSetasDasAbas } from "@/lib/abas";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
@@ -35,20 +36,6 @@ type Props = {
   salas: { id: string; nome: string }[];
   onPerfilSalvo?: () => void;
 };
-
-// Setas horizontais movem o foco e ativam a aba vizinha (roving tabindex).
-function aoSetasDasAbas(e: React.KeyboardEvent<HTMLButtonElement>) {
-  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-  const barra = e.currentTarget.closest('[role="tablist"]');
-  if (!barra) return;
-  const abas = Array.from(barra.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-  const atual = abas.indexOf(e.currentTarget);
-  if (atual < 0) return;
-  e.preventDefault();
-  const proxima = abas[(atual + (e.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
-  proxima.focus();
-  proxima.click();
-}
 
 export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });

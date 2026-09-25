@@ -254,7 +254,7 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
         ) : null}
 
         {recado ? (
-          <p className="recado recado-erro" role="status">
+          <p className="recado recado-erro" role="alert">
             {recado}
           </p>
         ) : null}

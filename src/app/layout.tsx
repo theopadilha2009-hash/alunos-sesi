@@ -70,9 +70,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body>
         {children}
-        {/* Web Vitals e uso anônimo. O script é servido de /_vercel/insights
-            (mesma origem), então passa no `script-src 'self'` da CSP sem
-            precisar de nonce. Fora da Vercel ele não é injetado. */}
+        {/* Web Vitals e uso anônimo. Em produção o script é servido de
+            /_vercel/insights (mesma origem), então passa no `script-src 'self'`
+            da CSP sem precisar de nonce. Em `next dev` o pacote troca para o
+            script de debug em va.vercel-scripts.com — quem libera aquele host
+            é o ramo `dev` de `montarCsp`. */}
         <Analytics />
       </body>
     </html>

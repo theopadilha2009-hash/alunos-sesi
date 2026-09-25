@@ -38,6 +38,29 @@ test("unsafe-eval so em dev", () => {
   assert.equal(PROD.includes("unsafe-eval"), false);
 });
 
+test("o host de debug do Analytics so aparece em dev", () => {
+  // @vercel/analytics usa /_vercel/insights (same-origin) quando
+  // NODE_ENV=production, então `'self'` cobre. Em dev o próprio pacote troca
+  // para o script de debug em va.vercel-scripts.com — sem esta exceção o
+  // Analytics nasce bloqueado e o ruído aparece no console de quem desenvolve.
+  assert.equal(diretiva(DEV, "script-src").includes("va.vercel-scripts.com"), true);
+  assert.equal(diretiva(DEV, "connect-src").includes("va.vercel-scripts.com"), true);
+
+  // O host não pode vazar para produção: lá ele só afrouxaria a política sem
+  // nenhum script que o use.
+  assert.equal(PROD.includes("va.vercel-scripts.com"), false);
+});
+
+test("a politica de dev nao tem espaco duplo", () => {
+  // A exceção do Analytics é concatenada com espaço à esquerda; em produção
+  // ela é string vazia. Este teste tranca o caso que o teste de produção não
+  // cobre — espaço duplo faz o navegador ignorar a diretiva inteira.
+  const bruto = montarCsp(NONCE, true);
+  assert.equal(bruto.includes("\n"), false);
+  assert.equal(/ {2,}/.test(bruto), false);
+  assert.equal(bruto.endsWith(";"), false);
+});
+
 test("upgrade-insecure-requests so em producao", () => {
   // Em dev o app roda em http no localhost: forçar https ali quebra tudo.
   assert.equal(PROD.includes("upgrade-insecure-requests"), true);

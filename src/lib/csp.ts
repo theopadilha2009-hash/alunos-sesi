@@ -33,11 +33,17 @@ export const NONCE_HEADER = "x-nonce";
 export const HOSTS_IMAGEM = ["https:"] as const;
 
 export function montarCsp(nonce: string, dev: boolean): string {
+  // `@vercel/analytics` só usa o script same-origin (`/_vercel/insights`) com
+  // `NODE_ENV=production`. Em dev ele troca para o script de debug em
+  // va.vercel-scripts.com, que a política fecharia — daí o host extra existir
+  // apenas no ramo de dev, junto do `'unsafe-eval'`.
+  const HOST_ANALYTICS_DEV = dev ? " https://va.vercel-scripts.com" : "";
+
   const diretivas = [
     "default-src 'self'",
     // `'unsafe-eval'` só em dev: o React usa eval para reconstruir stack de
     // erro do servidor no browser. Em produção ninguém usa eval.
-    `script-src 'self' 'nonce-${nonce}'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}'${dev ? " 'unsafe-eval'" : ""}${HOST_ANALYTICS_DEV}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${HOSTS_IMAGEM.join(" ")}`,
     `media-src 'self' blob: ${HOSTS_IMAGEM.join(" ")}`,
@@ -45,7 +51,7 @@ export function montarCsp(nonce: string, dev: boolean): string {
     // não precisa liberar fonts.googleapis.com.
     "font-src 'self'",
     // O Supabase é falado só pelo servidor; o browser usa same-origin.
-    "connect-src 'self'",
+    `connect-src 'self'${HOST_ANALYTICS_DEV}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "frame-src 'none'",

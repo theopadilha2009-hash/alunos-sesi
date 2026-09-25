@@ -19,6 +19,7 @@ import {
   IconeUsuario,
 } from "@/components/Icones";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
+import { aoSetasDasAbas } from "@/lib/abas";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -28,20 +29,6 @@ type Props = {
   onAbrirCracha: (aluno: AlunoNaTela) => void;
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
 };
-
-// Setas horizontais movem o foco e ativam a aba vizinha (roving tabindex).
-function aoSetasDasAbas(e: React.KeyboardEvent<HTMLButtonElement>) {
-  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-  const barra = e.currentTarget.closest('[role="tablist"]');
-  if (!barra) return;
-  const abas = Array.from(barra.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-  const atual = abas.indexOf(e.currentTarget);
-  if (atual < 0) return;
-  e.preventDefault();
-  const proxima = abas[(atual + (e.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
-  proxima.focus();
-  proxima.click();
-}
 
 export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarAluno }: Props) {
   const [subAba, setSubAba] = useState<"alunos" | "importar" | "novo" | "salas">("alunos");
