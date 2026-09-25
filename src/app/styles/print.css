@@ -1,0 +1,78 @@
+/* ── Estilos de Impressão e Exportação em PDF ────────────────────────────── */
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 11pt;
+  }
+
+  /* Ocultar elementos desnecessários na versão impressa */
+  .crm-sidebar,
+  .crm-header,
+  .controles,
+  .trilho,
+  .trilho-habilidades,
+  .top-projetos-secao,
+  .portfolio-barra-visualizacao,
+  .tabela-acoes,
+  .tabela-acoes-botoes,
+  .modal-fundo,
+  .btn-modo,
+  .btn-cracha-acao,
+  .topo,
+  .rodape {
+    display: none !important;
+  }
+
+  .crm-container {
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  .crm-main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .portfolio-salas-container {
+    margin: 0 !important;
+  }
+
+  .secao-sala-bloco {
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    margin-bottom: 2cm !important;
+    page-break-inside: avoid;
+  }
+
+  .cabecalho-sala-bloco {
+    background: #f4f4f4 !important;
+    border-bottom: 2px solid #ccc !important;
+    color: #000 !important;
+  }
+
+  .tabela-alunos {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  .tabela-alunos th,
+  .tabela-alunos td {
+    border: 1px solid #e0e0e0 !important;
+    color: #111 !important;
+    padding: 6pt 8pt !important;
+    font-size: 9.5pt !important;
+  }
+
+  .tabela-linha {
+    page-break-inside: avoid !important;
+  }
+}
+

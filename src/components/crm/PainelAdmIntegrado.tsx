@@ -29,6 +29,20 @@ type Props = {
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
 };
 
+// Setas horizontais movem o foco e ativam a aba vizinha (roving tabindex).
+function aoSetasDasAbas(e: React.KeyboardEvent<HTMLButtonElement>) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const barra = e.currentTarget.closest('[role="tablist"]');
+  if (!barra) return;
+  const abas = Array.from(barra.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const atual = abas.indexOf(e.currentTarget);
+  if (atual < 0) return;
+  e.preventDefault();
+  const proxima = abas[(atual + (e.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
+  proxima.focus();
+  proxima.click();
+}
+
 export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarAluno }: Props) {
   const [subAba, setSubAba] = useState<"alunos" | "importar" | "novo" | "salas">("alunos");
   const [busca, setBusca] = useState("");
@@ -118,10 +132,14 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
       <div className="adm-tabs-nav" role="tablist">
         <button
           type="button"
+          id="adm-tab-alunos"
           className={`adm-tab-item ${subAba === "alunos" ? "adm-tab-item-ativo" : ""}`}
           onClick={() => setSubAba("alunos")}
+          onKeyDown={aoSetasDasAbas}
           role="tab"
           aria-selected={subAba === "alunos"}
+          aria-controls="adm-painel-alunos"
+          tabIndex={subAba === "alunos" ? 0 : -1}
         >
           <IconeTabela tamanho={15} />
           <span>Gestão de Alunos & Destaques ({alunos.length})</span>
@@ -129,10 +147,14 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
 
         <button
           type="button"
+          id="adm-tab-importar"
           className={`adm-tab-item ${subAba === "importar" ? "adm-tab-item-ativo" : ""}`}
           onClick={() => setSubAba("importar")}
+          onKeyDown={aoSetasDasAbas}
           role="tab"
           aria-selected={subAba === "importar"}
+          aria-controls="adm-painel-importar"
+          tabIndex={subAba === "importar" ? 0 : -1}
         >
           <IconeUpload tamanho={15} />
           <span>Importar em Massa (Planilha)</span>
@@ -140,10 +162,14 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
 
         <button
           type="button"
+          id="adm-tab-novo"
           className={`adm-tab-item ${subAba === "novo" ? "adm-tab-item-ativo" : ""}`}
           onClick={() => setSubAba("novo")}
+          onKeyDown={aoSetasDasAbas}
           role="tab"
           aria-selected={subAba === "novo"}
+          aria-controls="adm-painel-novo"
+          tabIndex={subAba === "novo" ? 0 : -1}
         >
           <IconePlus tamanho={15} />
           <span>Cadastrar Aluno Individual</span>
@@ -151,10 +177,14 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
 
         <button
           type="button"
+          id="adm-tab-salas"
           className={`adm-tab-item ${subAba === "salas" ? "adm-tab-item-ativo" : ""}`}
           onClick={() => setSubAba("salas")}
+          onKeyDown={aoSetasDasAbas}
           role="tab"
           aria-selected={subAba === "salas"}
+          aria-controls="adm-painel-salas"
+          tabIndex={subAba === "salas" ? 0 : -1}
         >
           <IconeSala tamanho={15} />
           <span>Salas & Turmas ({salas.length})</span>
@@ -164,7 +194,12 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
       {/* ── CONTEÚDO DAS SUB-ABAS ─────────────────────────────────────────── */}
 
       {/* Sub-Aba 1: Lista e Gestão de Alunos */}
-      {subAba === "alunos" ? (
+      <div
+        id="adm-painel-alunos"
+        role="tabpanel"
+        aria-labelledby="adm-tab-alunos"
+        style={{ display: subAba === "alunos" ? "block" : "none" }}
+      >
         <section className="adm-secao-conteudo">
           {/* Controles de Busca e Filtro de Sala */}
           <div className="adm-filtros-linha">
@@ -344,10 +379,15 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
             </table>
           </div>
         </section>
-      ) : null}
+      </div>
 
       {/* Sub-Aba 2: Importação em Massa de Planilha */}
-      {subAba === "importar" ? (
+      <div
+        id="adm-painel-importar"
+        role="tabpanel"
+        aria-labelledby="adm-tab-importar"
+        style={{ display: subAba === "importar" ? "block" : "none" }}
+      >
         <section className="adm-secao-conteudo">
           <div className="painel-card">
             <header className="painel-card-topo">
@@ -403,10 +443,15 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
             </form>
           </div>
         </section>
-      ) : null}
+      </div>
 
       {/* Sub-Aba 3: Cadastrar Aluno Individual */}
-      {subAba === "novo" ? (
+      <div
+        id="adm-painel-novo"
+        role="tabpanel"
+        aria-labelledby="adm-tab-novo"
+        style={{ display: subAba === "novo" ? "block" : "none" }}
+      >
         <section className="adm-secao-conteudo">
           <div className="painel-card">
             <header className="painel-card-topo">
@@ -500,10 +545,15 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
             </form>
           </div>
         </section>
-      ) : null}
+      </div>
 
       {/* Sub-Aba 4: Salas & Turmas */}
-      {subAba === "salas" ? (
+      <div
+        id="adm-painel-salas"
+        role="tabpanel"
+        aria-labelledby="adm-tab-salas"
+        style={{ display: subAba === "salas" ? "block" : "none" }}
+      >
         <section className="adm-secao-conteudo">
           <div className="painel-card">
             <header className="painel-card-topo">
@@ -534,7 +584,7 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
             </div>
           </div>
         </section>
-      ) : null}
+      </div>
     </div>
   );
 }

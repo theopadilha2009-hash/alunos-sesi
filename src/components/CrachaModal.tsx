@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import QRCode from "qrcode";
 import { Roseta } from "@/components/Roseta";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
@@ -28,16 +27,29 @@ export function CrachaModal({ aluno, onClose }: Props) {
       : `https://alunos-sesi.vercel.app/alunos/${aluno.slug}`;
 
   useEffect(() => {
-    QRCode.toDataURL(urlPerfil, {
-      width: 240,
-      margin: 1,
-      color: {
-        dark: "#0b1418",
-        light: "#ffffff",
-      },
-    })
-      .then(setQrCodeDataUrl)
-      .catch((err) => console.error("Falha ao gerar QR code:", err));
+    let vivo = true;
+
+    (async () => {
+      try {
+        // qrcode só entra no bundle quando o crachá abre de fato
+        const { toDataURL } = await import("qrcode");
+        const dataUrl = await toDataURL(urlPerfil, {
+          width: 240,
+          margin: 1,
+          color: {
+            dark: "#0b1418",
+            light: "#ffffff",
+          },
+        });
+        if (vivo) setQrCodeDataUrl(dataUrl);
+      } catch (err) {
+        console.error("Falha ao gerar QR code:", err);
+      }
+    })();
+
+    return () => {
+      vivo = false;
+    };
   }, [urlPerfil]);
 
   useEffect(() => {

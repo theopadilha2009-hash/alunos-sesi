@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Bricolage_Grotesque, Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { NONCE_HEADER } from "@/lib/csp";
+import { URL_BASE } from "@/lib/links";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -23,6 +25,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(URL_BASE),
   title: "Alunos SESI SC · Joinville",
   description:
     "Diretório oficial de talentos, crachás digitais e ecossistema escolar do SESI SENAI Joinville - SC.",
@@ -35,7 +38,11 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/logo-sesi-icone.png",
   },
-  robots: { index: false, follow: false },
+  // Sem `robots` aqui de propósito. Um noindex no layout raiz vale para o site
+  // inteiro e contradizia o sitemap, que anuncia a vitrine e um URL por aluno —
+  // o Google recebia um mapa de páginas que o HTML mandava não indexar. Cada
+  // rota agora declara o seu: a vitrine e os perfis são indexáveis, e as telas
+  // de CRM, identidade e validação se marcam sozinhas.
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -61,7 +68,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Web Vitals e uso anônimo. O script é servido de /_vercel/insights
+            (mesma origem), então passa no `script-src 'self'` da CSP sem
+            precisar de nonce. Fora da Vercel ele não é injetado. */}
+        <Analytics />
+      </body>
     </html>
   );
 }

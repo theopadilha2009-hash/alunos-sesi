@@ -36,6 +36,20 @@ type Props = {
   onPerfilSalvo?: () => void;
 };
 
+// Setas horizontais movem o foco e ativam a aba vizinha (roving tabindex).
+function aoSetasDasAbas(e: React.KeyboardEvent<HTMLButtonElement>) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const barra = e.currentTarget.closest('[role="tablist"]');
+  if (!barra) return;
+  const abas = Array.from(barra.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const atual = abas.indexOf(e.currentTarget);
+  if (atual < 0) return;
+  e.preventDefault();
+  const proxima = abas[(atual + (e.key === "ArrowRight" ? 1 : -1) + abas.length) % abas.length];
+  proxima.focus();
+  proxima.click();
+}
+
 export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
   const [estadoSeguranca, acaoSeguranca, alterandoSenha] = useActionState(alterarSegurancaAction, {
@@ -337,7 +351,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
               {alunoAtual?.destaque ? <span className="selo selo-adm">Destaque</span> : null}
             </div>
 
-            <h1 className="hero-banner-nome">{nome}</h1>
+            <h2 className="hero-banner-nome">{nome}</h2>
 
             <div className="hero-banner-meta-linha">
               <span className="meta-item">
@@ -535,10 +549,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           <div className="perfil-tabs-barra" role="tablist">
             <button
               type="button"
+              id="perfil-tab-dados"
               className={`perfil-tab-btn ${abaAtiva === "dados" ? "perfil-tab-ativo" : ""}`}
               onClick={() => setAbaAtiva("dados")}
+              onKeyDown={aoSetasDasAbas}
               role="tab"
               aria-selected={abaAtiva === "dados"}
+              aria-controls="perfil-painel-dados"
+              tabIndex={abaAtiva === "dados" ? 0 : -1}
             >
               <IconeUsuario tamanho={15} />
               <span>Dados & Bio</span>
@@ -546,10 +564,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
             <button
               type="button"
+              id="perfil-tab-projetos"
               className={`perfil-tab-btn ${abaAtiva === "projetos" ? "perfil-tab-ativo" : ""}`}
               onClick={() => setAbaAtiva("projetos")}
+              onKeyDown={aoSetasDasAbas}
               role="tab"
               aria-selected={abaAtiva === "projetos"}
+              aria-controls="perfil-painel-projetos"
+              tabIndex={abaAtiva === "projetos" ? 0 : -1}
             >
               <IconeProjetos tamanho={15} />
               <span>Projetos & Criações</span>
@@ -558,10 +580,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
             <button
               type="button"
+              id="perfil-tab-estudio"
               className={`perfil-tab-btn ${abaAtiva === "estudio" ? "perfil-tab-ativo" : ""}`}
               onClick={() => setAbaAtiva("estudio")}
+              onKeyDown={aoSetasDasAbas}
               role="tab"
               aria-selected={abaAtiva === "estudio"}
+              aria-controls="perfil-painel-estudio"
+              tabIndex={abaAtiva === "estudio" ? 0 : -1}
             >
               <IconeSparkles tamanho={15} />
               <span>Estúdio Canva & GIFs</span>
@@ -570,10 +596,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
             <button
               type="button"
+              id="perfil-tab-midias"
               className={`perfil-tab-btn ${abaAtiva === "midias" ? "perfil-tab-ativo" : ""}`}
               onClick={() => setAbaAtiva("midias")}
+              onKeyDown={aoSetasDasAbas}
               role="tab"
               aria-selected={abaAtiva === "midias"}
+              aria-controls="perfil-painel-midias"
+              tabIndex={abaAtiva === "midias" ? 0 : -1}
             >
               <IconeGaleria tamanho={15} />
               <span>Galeria de Imagens</span>
@@ -582,10 +612,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
             <button
               type="button"
+              id="perfil-tab-conta"
               className={`perfil-tab-btn ${abaAtiva === "conta" ? "perfil-tab-ativo" : ""}`}
               onClick={() => setAbaAtiva("conta")}
+              onKeyDown={aoSetasDasAbas}
               role="tab"
               aria-selected={abaAtiva === "conta"}
+              aria-controls="perfil-painel-conta"
+              tabIndex={abaAtiva === "conta" ? 0 : -1}
             >
               <IconeEscudo tamanho={15} />
               <span>Segurança & Conta</span>
@@ -593,7 +627,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           </div>
 
           {/* ── ABA 1: DADOS & BIO ─────────────────────────────────────────── */}
-          <div className="perfil-tab-painel" style={{ display: abaAtiva === "dados" ? "block" : "none" }}>
+          <div
+            className="perfil-tab-painel"
+            id="perfil-painel-dados"
+            role="tabpanel"
+            aria-labelledby="perfil-tab-dados"
+            style={{ display: abaAtiva === "dados" ? "block" : "none" }}
+          >
             <div className="painel-card">
               <header className="painel-card-topo">
                 <h3>Dados Cadastrais do Aluno</h3>
@@ -700,7 +740,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
 
           {/* ── ABA 2: PROJETOS & CRIAÇÕES ─────────────────────────────────── */}
-          <div className="perfil-tab-painel" style={{ display: abaAtiva === "projetos" ? "block" : "none" }}>
+          <div
+            className="perfil-tab-painel"
+            id="perfil-painel-projetos"
+            role="tabpanel"
+            aria-labelledby="perfil-tab-projetos"
+            style={{ display: abaAtiva === "projetos" ? "block" : "none" }}
+          >
               {/* Projetos Existentes */}
               <div className="painel-card">
                 <header className="painel-card-topo">
@@ -846,7 +892,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
 
           {/* ── ABA ESTÚDIO VISUAL (CANVA) ────────────────────────── */}
-          <div className="perfil-tab-painel" style={{ display: abaAtiva === "estudio" ? "block" : "none" }}>
+          <div
+            className="perfil-tab-painel"
+            id="perfil-painel-estudio"
+            role="tabpanel"
+            aria-labelledby="perfil-tab-estudio"
+            style={{ display: abaAtiva === "estudio" ? "block" : "none" }}
+          >
             <StickerCanvas
               nomeAluno={nome}
               salaAluno={sala}
@@ -857,7 +909,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           </div>
 
           {/* ── ABA 3: GALERIA DE MÍDIAS (Sem bugs de layout da Imagem 3) ──── */}
-          <div className="perfil-tab-painel" style={{ display: abaAtiva === "midias" ? "block" : "none" }}>
+          <div
+            className="perfil-tab-painel"
+            id="perfil-painel-midias"
+            role="tabpanel"
+            aria-labelledby="perfil-tab-midias"
+            style={{ display: abaAtiva === "midias" ? "block" : "none" }}
+          >
               <div className="painel-card">
                 <header className="painel-card-topo">
                   <h3>Galeria de Fotos & Demonstrações ({midias.length})</h3>
@@ -964,7 +1022,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
 
           {/* ── ABA 4: CONTA & SEGURANÇA ────────────────────────────────────── */}
-          <div className="perfil-tab-painel" style={{ display: abaAtiva === "conta" ? "block" : "none" }}>
+          <div
+            className="perfil-tab-painel"
+            id="perfil-painel-conta"
+            role="tabpanel"
+            aria-labelledby="perfil-tab-conta"
+            style={{ display: abaAtiva === "conta" ? "block" : "none" }}
+          >
             {/* Card 1: Identidade, Nome Visual e E-mail */}
             <div className="painel-card">
               <header className="painel-card-topo">

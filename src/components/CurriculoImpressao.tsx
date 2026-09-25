@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { Roseta } from "@/components/Roseta";
 import {
   IconeCracha,
@@ -28,14 +27,35 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
       : `https://alunos-sesi.vercel.app/validar/${aluno.slug}`;
 
   useEffect(() => {
-    QRCode.toDataURL(urlValidacao, {
-      width: 140,
-      margin: 1,
-      color: { dark: "#0B0F17", light: "#ffffff" },
-    })
-      .then(setQrValidador)
-      .catch(() => {});
+    let vivo = true;
+
+    (async () => {
+      try {
+        // qrcode só entra no bundle quando o currículo abre de fato
+        const { toDataURL } = await import("qrcode");
+        const dataUrl = await toDataURL(urlValidacao, {
+          width: 140,
+          margin: 1,
+          color: { dark: "#0B0F17", light: "#ffffff" },
+        });
+        if (vivo) setQrValidador(dataUrl);
+      } catch {
+        // sem QR: o rodapé mostra a URL de validação mesmo assim
+      }
+    })();
+
+    return () => {
+      vivo = false;
+    };
   }, [urlValidacao]);
+
+  useEffect(() => {
+    function aoTeclar(e: KeyboardEvent) {
+      if (e.key === "Escape") onFechar();
+    }
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, [onFechar]);
 
   const votos = aluno.habilidades_votos || {};
   const matricula = `SESI-SC-JVE-${aluno.slug.toUpperCase().slice(0, 8)}-${(aluno.estrelas + 26).toString().padStart(4, "0")}`;
@@ -45,13 +65,21 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
   }
 
   return (
-    <div className="modal-backdrop curriculo-modal-backdrop" onClick={onFechar} role="dialog" aria-modal="true">
-      <div className="curriculo-dialog-wrap" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop curriculo-modal-backdrop" onClick={onFechar}>
+      <div
+        className="curriculo-dialog-wrap"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="curriculo-titulo"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Barra de Ações Superior (Não sai na impressão) */}
         <div className="curriculo-top-bar nao-imprimir">
           <div className="curriculo-top-info">
             <span className="badge-curriculo-formato">FORMATO OFICIAL A4</span>
-            <span className="curriculo-top-titulo">Mini-Currículo Acadêmico & Profissional</span>
+            <span className="curriculo-top-titulo" id="curriculo-titulo">
+              Mini-Currículo Acadêmico & Profissional
+            </span>
           </div>
           <div className="curriculo-top-botoes">
             <button

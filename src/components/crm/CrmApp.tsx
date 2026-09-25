@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
@@ -61,6 +61,9 @@ export function CrmApp({
   const [query, setQuery] = useState("");
   const [salaSelecionada, setSalaSelecionada] = useState<string>(TODAS);
   const [habilidadeFiltro, setHabilidadeFiltro] = useState<string>("Todas");
+  // Filtro roda sobre o valor adiado: o input responde na hora e a lista pesada
+  // é recalculada depois, com o mesmo resultado final.
+  const queryAdiada = useDeferredValue(query);
 
   const [lista, setLista] = useState<Aluno[]>(alunosIniciais);
   const [meus, setMeus] = useState<string[]>(meusVotos);
@@ -116,10 +119,10 @@ export function CrmApp({
   const visiveis = useMemo(() => {
     const filtrados = filtrarAlunos(
       naTela.map((a) => ({ ...a, salaId: a.sala_id })),
-      { sala: salaSelecionada, query, estrelados: meus, habilidade: habilidadeFiltro },
+      { sala: salaSelecionada, query: queryAdiada, estrelados: meus, habilidade: habilidadeFiltro },
     );
     return ordenarAlunos(filtrados);
-  }, [naTela, salaSelecionada, query, meus, habilidadeFiltro]);
+  }, [naTela, salaSelecionada, queryAdiada, meus, habilidadeFiltro]);
 
   // Top 10 competências técnicas mais frequentes para o filtro interativo
   const todasHabilidadesUnicas = useMemo(() => {
@@ -366,8 +369,6 @@ export function CrmApp({
           <div
             className="card-usuario-logado"
             onClick={() => setAba("perfil")}
-            role="button"
-            tabIndex={0}
             title="Acessar meu perfil e editor completo"
           >
             <div className="user-avatar-wrap">
@@ -383,9 +384,25 @@ export function CrmApp({
               </span>
             </div>
 
-            <span className="user-editar-btn" aria-hidden="true" title="Editar Perfil">
+            <button
+              type="button"
+              className="user-editar-btn"
+              title="Editar Perfil"
+              aria-label="Editar Perfil"
+              style={{
+                background: "none",
+                border: 0,
+                padding: 0,
+                color: "inherit",
+                cursor: "pointer",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setAba("perfil");
+              }}
+            >
               <IconeEditar tamanho={14} />
-            </span>
+            </button>
           </div>
 
           <div className="sidebar-rodape-acoes">
@@ -605,7 +622,7 @@ export function CrmApp({
                     <header className="secao-sala-cabecalho">
                       <div className="secao-sala-titulo-wrap">
                         <span className="ponto-grande" style={{ background: grupo.cor }} />
-                        <h4 className="secao-sala-nome">{grupo.nome}</h4>
+                        <h3 className="secao-sala-nome">{grupo.nome}</h3>
                         <span className="secao-sala-badge" style={{ borderColor: grupo.cor }}>
                           {grupo.alunos.length} {grupo.alunos.length === 1 ? "aluno" : "alunos"}
                         </span>
@@ -683,7 +700,24 @@ export function CrmApp({
                               </div>
 
                               <footer className="card-port-rodape">
-                                <span className="ver-perfil-texto">Ver perfil completo & criações →</span>
+                                <button
+                                  type="button"
+                                  className="ver-perfil-texto"
+                                  style={{
+                                    background: "none",
+                                    border: 0,
+                                    padding: 0,
+                                    fontFamily: "inherit",
+                                    cursor: "pointer",
+                                    textAlign: "inherit",
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAlunoBreveSelecionado(aluno);
+                                  }}
+                                >
+                                  Ver perfil completo & criações →
+                                </button>
                               </footer>
                             </article>
                           );

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import type { Metadata } from "next";
 import { CrmApp } from "@/components/crm/CrmApp";
 import { LoginTela } from "@/components/crm/LoginTela";
 import { obterSessao } from "@/lib/auth";
@@ -10,6 +11,12 @@ import {
   votosDoVisitante,
 } from "@/lib/dados";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
+
+// A raiz é a tela de login/CRM: não tem nada para o Google indexar. Quem é
+// público e indexável é a vitrine, em /alunos.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 

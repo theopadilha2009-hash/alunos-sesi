@@ -1,0 +1,70 @@
+/* ==========================================================================
+   alunos-sesi — design system
+   Paleta tirada da logo do SESI. Sem framework de CSS: os tokens abaixo são
+   a única fonte de verdade das cores, e o tema troca por [data-theme].
+   ========================================================================== */
+
+:root {
+  /* as quatro cores do símbolo + os azuis institucionais */
+  --ciano: #3fc2bc;
+  --verde: #38b95d;
+  --amarelo: #f3b544;
+  --vermelho: #d74d42;
+  --azul: #02609e;
+  --azul-claro: #4881ae;
+  --petroleo: #2d929e;
+  --creme: #f9e7cf;
+
+  --section-x: clamp(1.25rem, 5vw, 4rem);
+  --raio: 16px;
+  --raio-p: 10px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --fonte-titulo: var(--fonte-bricolage), system-ui, sans-serif;
+  --fonte-texto: var(--fonte-manrope), system-ui, sans-serif;
+}
+
+/* tema escuro — estética refinada, limpa, moderna e profunda */
+:root,
+:root[data-theme="dark"] {
+  --bg: #090d12;
+  --surface: #10161f;
+  --surface-2: #16202c;
+  --surface-3: #1e2a38;
+  --text: #f8fafc;
+  --dim: #94a3b8;
+  --faint: #64748b;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.04);
+  /* --fg e --border nasceram sendo usados e nunca definidos: as 15 bordas e as
+     15 cores que os pedem caíam para o valor inicial do CSS (borda nenhuma, cor
+     herdada). São apelidos dos tokens que já existem, não valores novos. */
+  --fg: var(--text);
+  --border: var(--line);
+  --accent: #38c7bd;
+  --on-accent: #04211f;
+  --glow: rgba(56, 199, 189, 0.16);
+  --sombra: 0 20px 45px -20px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* tema claro — estética cristalina, espaçosa e moderna */
+:root[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --text: #0f172a;
+  --dim: #475569;
+  /* Era #94a3b8, que era o --dim do tema escuro copiado sem reajuste: 2,45:1
+     sobre --bg, reprovando AA em texto de 11-13px. #64748b dá 4,55:1. */
+  --faint: #64748b;
+  --line: rgba(15, 23, 42, 0.08);
+  --line-soft: rgba(15, 23, 42, 0.04);
+  --fg: var(--text);
+  --border: var(--line);
+  --accent: #02609e;
+  --on-accent: #ffffff;
+  --glow: rgba(2, 96, 158, 0.12);
+  --sombra: 0 12px 35px -12px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+

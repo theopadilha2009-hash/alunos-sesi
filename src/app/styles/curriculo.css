@@ -1,0 +1,386 @@
+/* ── 6. GERADOR DE MINI-CURRÍCULO ONE-PAGER EM PDF (A4) ──────────────────── */
+.curriculo-modal-backdrop {
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.curriculo-dialog-wrap {
+  max-width: 860px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.curriculo-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.85rem 1.25rem;
+  border-radius: 12px;
+}
+
+.curriculo-top-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.badge-curriculo-formato {
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: rgba(227, 6, 19, 0.2);
+  color: #ff6666;
+  border: 1px solid rgba(227, 6, 19, 0.4);
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  letter-spacing: 0.06em;
+}
+
+.curriculo-top-titulo {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.curriculo-top-botoes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Folha A4 Padrão (210mm x 297mm) */
+.curriculo-folha-a4 {
+  background: #ffffff;
+  color: #111827;
+  padding: 3.5rem 3.5rem 3rem;
+  border-radius: 10px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  font-family: var(--fonte-manrope), system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.curriculo-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.curriculo-marcas {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.curriculo-instituicao-textos {
+  display: flex;
+  flex-direction: column;
+}
+
+.instituicao-nome {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #E30613;
+  text-transform: uppercase;
+}
+
+.instituicao-unidade {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.curriculo-carimbo-oficial {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+
+.carimbo-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.carimbo-ano {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.curriculo-divisor-topo {
+  border: 0;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 0 1.75rem;
+}
+
+.curriculo-secao-identidade {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
+}
+
+.curriculo-avatar {
+  width: 72px;
+  height: 72px;
+  font-size: 1.5rem;
+  background: #E30613;
+  color: #ffffff;
+  border-radius: 12px;
+}
+
+.curriculo-dados-col {
+  flex: 1;
+}
+
+.curriculo-nome {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.curriculo-subtitulo {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 0.85rem;
+}
+
+.curriculo-contatos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem 1.5rem;
+  font-size: 0.8rem;
+}
+
+.curriculo-contato-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.contato-rotulo {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.contato-valor {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.contato-valor.mono {
+  font-family: monospace;
+  font-size: 0.78rem;
+}
+
+.contato-valor.verde {
+  color: #059669;
+}
+
+.contato-link {
+  color: #0284c7;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.curriculo-bloco {
+  margin-bottom: 1.6rem;
+}
+
+.curriculo-secao-titulo {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 0.4rem;
+  border-bottom: 1.5px solid #cbd5e1;
+  margin: 0 0 0.75rem;
+}
+
+.curriculo-bio-texto {
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.curriculo-habilidades-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.curriculo-hab-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.hab-apoios {
+  font-size: 0.7rem;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.curriculo-projetos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.curriculo-projeto-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid #e2e8f0;
+}
+
+.curriculo-proj-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.curriculo-proj-titulo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #0f172a;
+}
+
+.curriculo-proj-titulo {
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.curriculo-proj-url {
+  font-size: 0.72rem;
+  color: #0284c7;
+  font-family: monospace;
+}
+
+.curriculo-proj-desc {
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.curriculo-rodape {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.curriculo-qrcode-bloco {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.curriculo-qrcode-img {
+  width: 68px;
+  height: 68px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.curriculo-validacao-textos {
+  display: flex;
+  flex-direction: column;
+}
+
+.val-titulo {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.val-desc {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.val-url {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0284c7;
+  font-family: monospace;
+}
+
+.curriculo-selo-emissao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.selo-emissao-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+}
+
+.selo-emissao-data {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+/* Impressão específica da folha A4 */
+@media print {
+  .nao-imprimir,
+  .curriculo-top-bar,
+  .modal-backdrop.curriculo-modal-backdrop {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .curriculo-folha-a4 {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+}
+
