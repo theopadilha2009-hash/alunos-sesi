@@ -13,6 +13,7 @@ import {
 import { apoiarHabilidade, atualizarPerfilAluno, alunoPorSlug, desafioAtivo, submeterDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
 import { habilidadePermitida } from "@/lib/habilidades";
+import { descreverDescartes, type Descarte } from "@/lib/limites";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { limitar, limparLimite } from "@/lib/rate-limit";
 import { hashSenha, verificarSenha } from "@/lib/senha";
@@ -135,12 +136,16 @@ export async function salvarPerfilAction(
     stickersBrutos = [];
   }
 
-  // Sanitização estrita e validação de URLs / esquemas
-  const projetos = sanitizarProjetos(projetosBrutos);
-  const midias = sanitizarMidias(midiasBrutas);
+  // Sanitização estrita e validação de URLs / esquemas. O coletor registra o
+  // que ficou de fora: antes o item era descartado em silêncio, e o aluno
+  // salvava o perfil achando que a foto tinha entrado.
+  const descartes: Descarte[] = [];
+  const projetos = sanitizarProjetos(projetosBrutos, descartes);
+  const midias = sanitizarMidias(midiasBrutas, descartes);
   const stickers = sanitizarStickers(
     stickersBrutos,
     projetos.map((p) => p.id),
+    descartes,
   );
 
   // Moderação preventiva para ambiente escolar
@@ -201,7 +206,11 @@ export async function salvarPerfilAction(
 
     revalidatePath("/");
     revalidatePath("/alunos");
-    return { ok: true, mensagem: "Perfil atualizado com sucesso!" };
+    const aviso = descreverDescartes(descartes);
+    return {
+      ok: true,
+      mensagem: aviso ? `Perfil atualizado. ${aviso}` : "Perfil atualizado com sucesso!",
+    };
   } catch (err) {
     logger.error("CRM", "Erro ao salvar perfil do aluno", err);
     return {

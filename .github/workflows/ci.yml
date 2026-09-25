@@ -5,9 +5,15 @@ on:
     branches: [main]
   pull_request:
 
-# Só o que não depende de rede. Os testes aqui são de funções puras
-# (busca, parser da colagem, ranking) e não falam com o Supabase — o que
-# precisa de banco é verificado na mão, contra o projeto de verdade.
+# Dois jobs independentes:
+#
+# - `verificar`: tipos, testes e build. Os testes são de funções puras (busca,
+#   parser da colagem, ranking) e não falam com nenhum banco.
+#
+# - `migrations`: aplica src/sql/001..N num Postgres limpo. É a única prova de
+#   que o repositório reproduz o banco — e a falta dela foi o que deixou o
+#   schema driftar: `stickers`, `habilidades_votos` e `insignias` nasceram
+#   direto no Studio, e um banco limpo morria no 005_integridade.sql.
 jobs:
   verificar:
     runs-on: ubuntu-latest
@@ -37,3 +43,39 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: service-de-mentira
           ADM_CHAVE: chave-de-mentira
           SESSAO_SEGREDO: segredo-de-mentira
+
+  migrations:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: sesi
+          POSTGRES_DB: sesi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # O script vê PGHOST e usa este banco, em vez de subir o container dele.
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: sesi
+      PGDATABASE: sesi
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # O runner já traz o client do Postgres, mas isso não é contrato dele:
+      # instalar aqui evita um CI que quebra porque a imagem do runner mudou.
+      - name: psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Migrations num banco limpo
+        run: ./scripts/checar-migrations.sh

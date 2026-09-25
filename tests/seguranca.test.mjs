@@ -12,6 +12,7 @@ import {
   urlSegura,
   verificarRateLimit,
 } from "../src/lib/seguranca.ts";
+import { MAX_DATA_URL_IMAGEM, MAX_MIDIAS } from "../src/lib/limites.ts";
 
 test("compararTempoConstante valida igualdade e rejeita desigualdade", () => {
   assert.equal(compararTempoConstante("senha123", "senha123"), true);
@@ -294,4 +295,138 @@ test("id do sticker e preservado e cortado em 50 chars", () => {
   ]);
   assert.equal(curto.id, "sticker-abc");
   assert.equal(longo.id.length, 50);
+});
+
+// ── Coletor de descartes ─────────────────────────────────────────────────
+// Antes o item recusado era largado em silencio: o aluno salvava o perfil, o
+// resto entrava, e a foto sumia sem uma palavra. Estes testes garantem que
+// cada ponto de recusa registra o motivo — e que nada entra sem motivo.
+
+test("nada e registrado quando tudo passa", () => {
+  const descartes = [];
+  sanitizarMidias([{ url: "https://exemplo.com/foto.png" }], descartes);
+  sanitizarProjetos([{ titulo: "Robo", imagem: "https://exemplo.com/capa.png" }], descartes);
+  sanitizarStickers([{ url: URL_STICKER }], [], descartes);
+
+  assert.deepEqual(descartes, []);
+});
+
+test("midia com data URL acima do teto vira grande-demais", () => {
+  const descartes = [];
+  const resultado = sanitizarMidias([{ url: dataUrlDe(MAX_DATA_URL_IMAGEM + 1) }], descartes);
+
+  assert.equal(resultado.length, 0);
+  assert.deepEqual(descartes, [{ motivo: "grande-demais", campo: "midias" }]);
+});
+
+test("midia com endereco invalido vira url-invalida", () => {
+  const descartes = [];
+  sanitizarMidias([{ url: "javascript:alert(1)" }], descartes);
+
+  assert.deepEqual(descartes, [{ motivo: "url-invalida", campo: "midias" }]);
+});
+
+test("o excedente do slice vira acima-do-limite, um por item", () => {
+  const descartes = [];
+  const bruto = Array.from({ length: MAX_MIDIAS + 3 }, () => ({ url: "https://exemplo.com/f.png" }));
+
+  assert.equal(sanitizarMidias(bruto, descartes).length, MAX_MIDIAS);
+  assert.equal(descartes.length, 3);
+  assert.ok(descartes.every((d) => d.motivo === "acima-do-limite" && d.campo === "midias"));
+});
+
+test("projeto sem titulo e capa grande sao registrados separadamente", () => {
+  const descartes = [];
+  const resultado = sanitizarProjetos(
+    [{ titulo: "" }, { titulo: "Robo", imagem: dataUrlDe(MAX_DATA_URL_IMAGEM + 1) }],
+    descartes,
+  );
+
+  // a capa ruim nao derruba o projeto: ele entra sem imagem
+  assert.equal(resultado.length, 1);
+  assert.equal(resultado[0].titulo, "Robo");
+  assert.deepEqual(descartes, [
+    { motivo: "sem-titulo", campo: "projetos" },
+    { motivo: "grande-demais", campo: "projetos" },
+  ]);
+});
+
+test("o link invalido do projeto e registrado, e o valido nao", () => {
+  const descartes = [];
+  sanitizarProjetos([{ titulo: "Ok", link: "https://github.com/joao/robo" }], descartes);
+  assert.deepEqual(descartes, []);
+
+  const resultado = sanitizarProjetos(
+    [{ titulo: "Robo", link: "github.com/joao/robo" }],
+    descartes,
+  );
+
+  // o projeto entra sem o link — antes o link sumia calado
+  assert.equal(resultado.length, 1);
+  assert.equal(resultado[0].link, undefined);
+  assert.deepEqual(descartes, [{ motivo: "link-invalido", campo: "projetos" }]);
+});
+
+test("sticker de projeto que nao existe vira projeto-inexistente", () => {
+  const descartes = [];
+  const resultado = sanitizarStickers(
+    [{ url: URL_STICKER, alvo: "projeto", projetoId: "proj-x" }],
+    ["proj-1"],
+    descartes,
+  );
+
+  assert.equal(resultado.length, 0);
+  assert.deepEqual(descartes, [{ motivo: "projeto-inexistente", campo: "stickers" }]);
+});
+
+test("sticker repetido vira duplicado e o primeiro fica", () => {
+  const descartes = [];
+  const resultado = sanitizarStickers(
+    [
+      { url: URL_STICKER, id: "st-1" },
+      { url: URL_STICKER, id: "st-1" },
+    ],
+    [],
+    descartes,
+  );
+
+  assert.equal(resultado.length, 1);
+  assert.deepEqual(descartes, [{ motivo: "duplicado", campo: "stickers" }]);
+});
+
+test("o corte no teto de stickers registra um descarte por item largado", () => {
+  const descartes = [];
+  const bruto = Array.from({ length: LIMITES_STICKERS.max + 3 }, () => ({ url: URL_STICKER }));
+
+  assert.equal(sanitizarStickers(bruto, [], descartes).length, LIMITES_STICKERS.max);
+  assert.equal(descartes.length, 3);
+  assert.ok(descartes.every((d) => d.motivo === "acima-do-limite" && d.campo === "stickers"));
+});
+
+test("estourar o orcamento de bytes corta o resto dos stickers", () => {
+  const descartes = [];
+  // 4 x 512 KB fecham os 2 MB do orcamento; o quinto estoura e leva o resto
+  const grande = dataUrlDe(LIMITES_STICKERS.maxDataUrlBytes);
+  const bruto = Array.from({ length: 5 }, () => ({ url: grande }));
+
+  assert.equal(sanitizarStickers(bruto, [], descartes).length, 4);
+  assert.deepEqual(descartes, [{ motivo: "grande-demais", campo: "stickers" }]);
+});
+
+test("o corte por orcamento separa quem estourou de quem veio depois", () => {
+  const descartes = [];
+  const grande = dataUrlDe(LIMITES_STICKERS.maxDataUrlBytes);
+  const bruto = [
+    ...Array.from({ length: 4 }, () => ({ url: grande })),
+    { url: grande }, // este estoura o orcamento
+    { url: URL_STICKER }, // estes nem chegaram a ser medidos
+    { url: URL_STICKER },
+  ];
+
+  assert.equal(sanitizarStickers(bruto, [], descartes).length, 4);
+  assert.deepEqual(descartes, [
+    { motivo: "grande-demais", campo: "stickers" },
+    { motivo: "acima-do-limite", campo: "stickers" },
+    { motivo: "acima-do-limite", campo: "stickers" },
+  ]);
 });

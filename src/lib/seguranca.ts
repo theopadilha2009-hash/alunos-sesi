@@ -1,5 +1,22 @@
 import { timingSafeEqual } from "node:crypto";
-import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos";
+// A extensão `.ts` é obrigatória aqui: este módulo é carregado cru pelo
+// `node --experimental-strip-types` dos testes (tests/seguranca.test.mjs), e o
+// resolvedor do Node não completa caminho relativo sem extensão. O resto de
+// `src/` fica sem extensão porque só o bundler lê — este arquivo é a exceção.
+import {
+  LIMITES_STICKERS,
+  MAX_DATA_URL_IMAGEM,
+  MAX_MIDIAS,
+  MAX_PROJETOS,
+  type Descarte,
+  type MotivoDescarte,
+} from "./limites.ts";
+import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos.ts";
+
+// Os tetos agora moram em limites.ts, que não importa `node:crypto` e por isso
+// pode ser lido pelo client component que barra o arquivo grande antes de subir.
+// Segue reexportado daqui porque é API pública deste módulo.
+export { LIMITES_STICKERS };
 
 /**
  * Utilitários de Segurança e Sanitização.
@@ -50,7 +67,7 @@ export function urlSegura(url: unknown): string | null {
  * `maxDataUrl` deixa quem chama apertar o teto do data URL — sticker tem
  * limite bem menor que mídia de perfil.
  */
-export function urlImagemSegura(url: unknown, maxDataUrl = 2 * 1024 * 1024): string | null {
+export function urlImagemSegura(url: unknown, maxDataUrl = MAX_DATA_URL_IMAGEM): string | null {
   if (typeof url !== "string") return null;
   const limpa = url.trim();
   if (!limpa) return null;
@@ -67,6 +84,16 @@ export function urlImagemSegura(url: unknown, maxDataUrl = 2 * 1024 * 1024): str
   }
 
   return null;
+}
+
+/**
+ * Por que `urlImagemSegura` recusou. Data URL de imagem que passou do teto é
+ * "grande-demais" — o caso que o aluno resolve trocando o arquivo; o resto é
+ * endereço inválido.
+ */
+function motivoDaImagem(bruta: unknown, teto: number): Descarte["motivo"] {
+  const s = typeof bruta === "string" ? bruta.trim() : "";
+  return s.startsWith("data:image/") && s.length > teto ? "grande-demais" : "url-invalida";
 }
 
 // ── 3. Sanitização de Textos ────────────────────────────────────────────────
@@ -171,22 +198,39 @@ export function resetarRateLimit(chave: string): void {
 
 // ── 5. Validação de Estruturas JSON (Projetos & Mídias) ──────────────────────
 
-export function sanitizarProjetos(bruto: unknown[]): ProjetoAluno[] {
+/**
+ * `descartes` é opcional e recebe o que foi rejeitado, para quem chama poder
+ * avisar o aluno em vez de sumir com o item calado. Item que não é objeto
+ * segue silencioso de propósito: formulário legítimo não manda isso, só POST
+ * montado à mão — e não há o que dizer a quem fez isso.
+ */
+export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): ProjetoAluno[] {
   if (!Array.isArray(bruto)) return [];
 
   const sanitizados: ProjetoAluno[] = [];
-  const maxProjetos = 10;
 
-  for (const item of bruto.slice(0, maxProjetos)) {
+  for (const item of bruto.slice(0, MAX_PROJETOS)) {
     if (!item || typeof item !== "object") continue;
     const p = item as Record<string, unknown>;
 
     const titulo = sanitizarTexto(p.titulo, 80);
-    if (!titulo) continue;
+    if (!titulo) {
+      descartes?.push({ motivo: "sem-titulo", campo: "projetos" });
+      continue;
+    }
 
     const descricao = sanitizarTexto(p.descricao, 200);
     const link = urlSegura(p.link);
     const imagem = urlImagemSegura(p.imagem);
+
+    // Nem o link nem a capa derrubam o projeto: ele entra sem um, sem outro, ou
+    // sem os dois. Nos dois casos o aluno precisa saber — antes sumiam calados.
+    if (p.link && !link) {
+      descartes?.push({ motivo: "link-invalido", campo: "projetos" });
+    }
+    if (p.imagem && !imagem) {
+      descartes?.push({ motivo: motivoDaImagem(p.imagem, MAX_DATA_URL_IMAGEM), campo: "projetos" });
+    }
 
     sanitizados.push({
       id: typeof p.id === "string" && p.id ? p.id.slice(0, 50) : `proj-${sanitizados.length + 1}`,
@@ -197,21 +241,28 @@ export function sanitizarProjetos(bruto: unknown[]): ProjetoAluno[] {
     });
   }
 
+  // O `slice` acima corta o excedente sem avisar; aqui ele vira descarte.
+  for (let i = MAX_PROJETOS; i < bruto.length; i++) {
+    descartes?.push({ motivo: "acima-do-limite", campo: "projetos" });
+  }
+
   return sanitizados;
 }
 
-export function sanitizarMidias(bruto: unknown[]): MidiaAluno[] {
+export function sanitizarMidias(bruto: unknown[], descartes?: Descarte[]): MidiaAluno[] {
   if (!Array.isArray(bruto)) return [];
 
   const sanitizadas: MidiaAluno[] = [];
-  const maxMidias = 12;
 
-  for (const item of bruto.slice(0, maxMidias)) {
+  for (const item of bruto.slice(0, MAX_MIDIAS)) {
     if (!item || typeof item !== "object") continue;
     const m = item as Record<string, unknown>;
 
     const url = urlImagemSegura(m.url);
-    if (!url) continue;
+    if (!url) {
+      descartes?.push({ motivo: motivoDaImagem(m.url, MAX_DATA_URL_IMAGEM), campo: "midias" });
+      continue;
+    }
 
     const tipo = m.tipo === "gif" ? "gif" : "imagem";
     const legenda = m.legenda ? sanitizarTexto(m.legenda, 100) : undefined;
@@ -223,22 +274,15 @@ export function sanitizarMidias(bruto: unknown[]): MidiaAluno[] {
     });
   }
 
+  for (let i = MAX_MIDIAS; i < bruto.length; i++) {
+    descartes?.push({ motivo: "acima-do-limite", campo: "midias" });
+  }
+
   return sanitizadas;
 }
 
 // ── 6. Stickers do perfil (Estúdio) ─────────────────────────────────────────
-
-export const LIMITES_STICKERS = {
-  max: 12,
-  tamanhoMin: 16,
-  tamanhoMax: 320,
-  tamanhoPadrao: 64,
-  maxRotulo: 40,
-  /** Por sticker: 12 × 4 MB estouraria o bodySizeLimit de 4mb do app. */
-  maxDataUrlBytes: 512 * 1024,
-  /** Soma dos data URLs de um mesmo perfil. */
-  maxTotalBytes: 2 * 1024 * 1024,
-} as const;
+// LIMITES_STICKERS vem de ./limites (reexportado no topo deste arquivo).
 
 function numeroLimitado(valor: unknown, min: number, max: number, padrao: number): number {
   if (typeof valor !== "number" || !Number.isFinite(valor)) return padrao;
@@ -265,6 +309,7 @@ function rotacaoNormalizada(valor: unknown): number {
 export function sanitizarStickers(
   bruto: unknown[],
   projetoIdsPermitidos: readonly string[] = [],
+  descartes?: Descarte[],
 ): StickerPerfil[] {
   if (!Array.isArray(bruto)) return [];
 
@@ -272,19 +317,41 @@ export function sanitizarStickers(
   const idsUsados = new Set<string>();
   let bytesAcumulados = 0;
 
-  for (const item of bruto) {
-    if (sanitizados.length >= LIMITES_STICKERS.max) break;
+  // Os dois `break` abaixo largam o item atual E tudo que vem depois; sem isto
+  // o corte no teto sumia calado, igual ao descarte item a item.
+  const registrarCorte = (aPartirDe: number, motivo: MotivoDescarte) => {
+    if (!descartes) return;
+    for (let j = aPartirDe; j < bruto.length; j++) {
+      descartes.push({ motivo, campo: "stickers" });
+    }
+  };
+
+  for (let i = 0; i < bruto.length; i++) {
+    if (sanitizados.length >= LIMITES_STICKERS.max) {
+      registrarCorte(i, "acima-do-limite");
+      break;
+    }
+    const item = bruto[i];
     if (!item || typeof item !== "object") continue;
     const s = item as Record<string, unknown>;
 
     const url = urlImagemSegura(s.url, LIMITES_STICKERS.maxDataUrlBytes);
-    if (!url) continue;
+    if (!url) {
+      descartes?.push({
+        motivo: motivoDaImagem(s.url, LIMITES_STICKERS.maxDataUrlBytes),
+        campo: "stickers",
+      });
+      continue;
+    }
 
     const alvo: StickerPerfil["alvo"] = s.alvo === "projeto" ? "projeto" : "banner";
     let projetoId: string | undefined;
     if (alvo === "projeto") {
       const candidato = typeof s.projetoId === "string" ? s.projetoId : "";
-      if (!candidato || !projetoIdsPermitidos.includes(candidato)) continue;
+      if (!candidato || !projetoIdsPermitidos.includes(candidato)) {
+        descartes?.push({ motivo: "projeto-inexistente", campo: "stickers" });
+        continue;
+      }
       projetoId = candidato;
     }
 
@@ -293,12 +360,22 @@ export function sanitizarStickers(
     // inválido derrubar os stickers de banner válidos que vêm depois.
     if (url.startsWith("data:")) {
       bytesAcumulados += url.length;
-      if (bytesAcumulados > LIMITES_STICKERS.maxTotalBytes) break;
+      if (bytesAcumulados > LIMITES_STICKERS.maxTotalBytes) {
+        // Só este estourou o orçamento. Os seguintes nem chegaram a ser
+        // medidos, então acusá-los de "grande demais" seria falso — eles caem
+        // por limite, não por tamanho.
+        descartes?.push({ motivo: "grande-demais", campo: "stickers" });
+        registrarCorte(i + 1, "acima-do-limite");
+        break;
+      }
     }
 
     // O id vem do cliente e vira `key` do React: repetido, duplica a chave.
     const id = typeof s.id === "string" && s.id ? s.id.slice(0, 50) : `st-${sanitizados.length + 1}`;
-    if (idsUsados.has(id)) continue;
+    if (idsUsados.has(id)) {
+      descartes?.push({ motivo: "duplicado", campo: "stickers" });
+      continue;
+    }
     idsUsados.add(id);
 
     sanitizados.push({
