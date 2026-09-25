@@ -84,7 +84,17 @@ export type Aluno = {
   projetos?: ProjetoAluno[];
   midias?: MidiaAluno[];
   stickers?: StickerPerfil[];
+  /** Cache mantido por trigger: nome da habilidade → nº de endossos. */
   habilidades_votos?: Record<string, number>;
+  /**
+   * Competências que o próprio aluno declarou (coluna `alunos.habilidades`).
+   *
+   * Já vem resolvida da camada de dados: `habilidades ?? extrairHabilidades(bio)`.
+   * `null` no banco quer dizer "nunca editou" — e nesse caso o regex da bio
+   * continua sendo a resposta, para o aluno antigo não aparecer vazio. Array
+   * vazio é diferente de ausente: significa "escolheu não ter nenhuma".
+   */
+  habilidades?: string[];
   insignias?: string[];
 };
 
@@ -92,7 +102,6 @@ export type Aluno = {
 export type AlunoNaTela = Aluno & {
   sala: string | null;
   cor: string;
-  habilidades?: string[];
 };
 
 export type UsuarioSessao = {

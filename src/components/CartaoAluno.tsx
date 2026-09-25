@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 export function CartaoAluno({
@@ -27,9 +27,7 @@ export function CartaoAluno({
       style={{ ["--sala" as string]: aluno.cor }}
     >
       <div className="aluno-cabeca">
-        <span className="avatar" aria-hidden="true">
-          {iniciais(aluno.nome)}
-        </span>
+        <Avatar nome={aluno.nome} foto={aluno.foto_url} />
         <div>
           <h3 className="aluno-nome">
             <Link href={`/alunos/${aluno.slug}`}>{aluno.nome}</Link>

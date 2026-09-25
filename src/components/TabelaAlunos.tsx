@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
 import { GrupoRedes } from "@/components/RedesBadges";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -67,16 +67,15 @@ export function TabelaAlunos({
               >
                 <td>
                   <div className="tabela-aluno-celula">
-                    <span
-                      className="avatar mini-avatar"
+                    <Avatar
+                      nome={aluno.nome}
+                      foto={aluno.foto_url}
+                      className="mini-avatar"
                       style={{
                         background: `color-mix(in srgb, ${aluno.cor} 25%, var(--surface-2))`,
                         border: `1.5px solid ${aluno.cor}`,
                       }}
-                      aria-hidden="true"
-                    >
-                      {iniciais(aluno.nome)}
-                    </span>
+                    />
                     <div>
                       <div className="tabela-nome-wrap">
                         {onSelecionarAluno ? (

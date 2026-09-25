@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Roseta } from "@/components/Roseta";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
+import { Avatar } from "@/components/Avatar";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { useTravaDeFoco } from "@/lib/foco";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -146,9 +146,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
 
           <div className="cracha-corpo">
             <div className="cracha-foto-wrapper">
-              <span className="cracha-avatar" aria-hidden="true">
-                {iniciais(aluno.nome)}
-              </span>
+              <Avatar nome={aluno.nome} foto={aluno.foto_url} className="cracha-avatar" />
               {aluno.estrelas > 0 ? (
                 <span className="cracha-estrela-badge" title="Estrelas recebidas">
                   <IconeEstrela preenchida tamanho={11} /> {aluno.estrelas}

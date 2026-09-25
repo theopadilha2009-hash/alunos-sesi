@@ -18,6 +18,8 @@ import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { limitar, limparLimite } from "@/lib/rate-limit";
 import { hashSenha, verificarSenha } from "@/lib/senha";
 import {
+  sanitizarFoto,
+  sanitizarHabilidades,
   sanitizarMidias,
   sanitizarProjetos,
   sanitizarStickers,
@@ -148,6 +150,13 @@ export async function salvarPerfilAction(
     descartes,
   );
 
+  let habilidadesBrutas: unknown[] = [];
+  try {
+    habilidadesBrutas = JSON.parse(String(formData.get("habilidades") ?? "[]"));
+  } catch {
+    habilidadesBrutas = [];
+  }
+
   // Moderação preventiva para ambiente escolar
   const termosProibidos = /\b(porn|xxx|nsfw|sex|nude|violencia|arma|droga|aposta|bet)\b/i;
   for (const m of midias) {
@@ -190,6 +199,19 @@ export async function salvarPerfilAction(
     midias,
     stickers,
   };
+
+  // Foto e competências são campos de presença, não de valor: o editor manda um
+  // input escondido com o que está na tela, e é o `has` que decide se a coluna é
+  // tocada. Sem esse guard, um POST parcial (ou um cliente de antes deste
+  // editor) apagaria a foto e zeraria competências que o aluno nunca editou —
+  // e zerar `habilidades` mata junto o fallback do regex da bio, porque `[]` e
+  // `null` querem dizer coisas diferentes (`null` = nunca editou).
+  if (formData.has("foto")) {
+    dadosAtualizacao.foto_url = sanitizarFoto(formData.get("foto"), descartes);
+  }
+  if (formData.has("habilidades")) {
+    dadosAtualizacao.habilidades = sanitizarHabilidades(habilidadesBrutas);
+  }
 
   try {
     await atualizarPerfilAluno(alunoId, dadosAtualizacao);

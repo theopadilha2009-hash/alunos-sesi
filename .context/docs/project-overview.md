@@ -74,8 +74,9 @@ Pronto e em uso:
   por competência, atalho "meus estrelados", tabela, retrato com os números da
   turma e ranking das salas (`src/components/Vitrine.tsx`).
 - Perfil individual em `src/app/alunos/[slug]/page.tsx` (`PerfilInterativo`):
-  selos de fixado e destaque, bio, links, QR code do próprio URL, crachá em PNG
-  e o mini-currículo A4.
+  selos de fixado e destaque, bio, links, QR code do próprio URL, crachá em PNG,
+  o mini-currículo A4, a galeria de mídias do aluno, as competências que ele
+  declarou e as insígnias derivadas de estrelas e endossos.
 - Cartão NFC / link na bio em `src/app/u/[slug]/page.tsx`, com stickers
   posicionados por porcentagem e contagem de apoios por competência.
 - Validação pública de matrícula em `src/app/validar/[slug]/page.tsx`.
@@ -83,13 +84,16 @@ Pronto e em uso:
   atualização otimista na tela e rollback se o servidor recusar.
 - Endosso de competência ("+1" estilo LinkedIn) em `public.endossos`, também 1
   por navegador por habilidade, com o contador mantido por trigger.
+- Seis insígnias derivadas de conquista real (`src/lib/insignias.ts`): o aluno
+  vê a que falta com a barra de progresso, e nenhuma delas se escolhe — todas
+  saem de estrelas recebidas e endossos de colegas.
 - CRM escolar (`/`) com login, cadastro, edição de perfil, upload de mídias,
   Estúdio Canva de stickers/GIFs, mural de desafios e submissão de projetos.
 - Painel do ADM (`/adm`): importação em massa com prévia feita no navegador,
   cadastro de um aluno por vez, fixar, destacar, mudar de sala e remover.
 - PWA instalável: `src/app/manifest.ts` e `public/sw.js` (cache
   `sesi-joinville-v3`), com atalhos `/?aba=desafios` e `/?aba=cracha`.
-- Schema versionado em `src/sql/`, em 8 migrations (001 a 008).
+- Schema versionado em `src/sql/`, em 9 migrations (001 a 009).
 - CI em `.github/workflows/ci.yml` (typecheck + testes + build) e deploy na
   Vercel, ligada ao GitHub.
 
@@ -98,11 +102,17 @@ Ficou para depois (o que o repositório mostra hoje):
 - **O "segundo app" continua sem resposta.** O que existe são os três produtos
   acima, e nada no repositório descreve um quarto. Qualquer decisão sobre ele
   segue em aberto.
-- `alunos.foto_url` existe na tabela (`src/sql/001_schema.sql`), no tipo `Aluno`
-  (`src/lib/tipos.ts`), no select de `src/lib/dados.ts` e nos parâmetros de
-  `atualizarPerfilAluno`, mas nenhuma tela escreve nem lê esse campo: os
-  avatares são iniciais geradas por `iniciais()` em `src/lib/links.ts`. Não há
-  upload nem Storage configurado.
+- `alunos.foto_url` deixou de ser coluna morta: o editor do CRM recorta a imagem
+  no cliente em `FOTO_LADO` (256×256) e grava o data URL, com teto de 120 KB, e
+  `src/components/Avatar.tsx` passou a desenhar a foto nas telas que antes
+  escreviam as iniciais na mão. Continua sem Storage — a imagem mora dentro da
+  própria linha, o que serve para avatar e não serve para mídia (ver abaixo).
+- As mídias e as capas de projeto são data URLs dentro de `alunos.midias` e
+  `alunos.projetos` (JSONB): até 12 × 2 MB e 10 × 2 MB por aluno. O teto é por
+  item, não por formulário, e o `bodySizeLimit` do Server Action é 4 MB — então
+  um perfil que junte várias imagens no teto salva e depois não consegue salvar
+  de novo. Mover para Vercel Blob resolve os dois lados (peso do payload e teto
+  do POST) e é a onda seguinte, já mapeada antes desta mudança.
 - `?curriculo=1` é oferecido pelo `/u/[slug]` como "Mini-Currículo A4"
   (`src/app/u/[slug]/page.tsx`), mas nenhuma página lê `searchParams`: o
   parâmetro chega e morre. O único leitor de `location.search` é o `CrmApp`

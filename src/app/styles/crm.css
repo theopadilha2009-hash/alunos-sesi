@@ -2522,50 +2522,11 @@
   font-size: 0.78rem;
 }
 
-/* Habilidades Chips Editor */
-.habilidades-chips-editor {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.chip-hab-editavel {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.btn-remover-chip {
-  background: transparent;
-  border: none;
-  color: var(--faint);
-  cursor: pointer;
-  padding: 0;
-  font-size: 0.8rem;
-  transition: color 0.15s var(--ease);
-}
-
-.btn-remover-chip:hover {
-  color: var(--vermelho);
-}
-
-.adicionar-habilidade-linha {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.input-hab {
-  max-width: 20rem;
-}
+/* Os chips de competência do editor saíram daqui: viraram botões de escolha
+   sobre a lista fechada e o estilo mora em editor-perfil.css. As classes
+   antigas (.habilidades-chips-editor, .chip-hab-editavel, .btn-remover-chip,
+   .adicionar-habilidade-linha, .input-hab) ficaram sem consumidor na mesma
+   mudança. `.ponto-hab`, acima, continua vivo em CrmApp.tsx. */
 
 /* Grade de Projetos Editor */
 .grade-projetos-editor {
@@ -2847,5 +2808,33 @@
   padding: 0.85rem 1.75rem;
   font-size: 0.95rem;
   font-weight: 800;
+}
+
+/* ── Top 3 projetos: estados sem imagem real ─────────────────────────────── */
+
+/* Capa não cadastrada. Preenche a mesma altura do banner para o cartão não
+   encolher, e é neutro de propósito: foto de banco de imagens se passa pelo
+   projeto do aluno. */
+.top-proj-capa-vazia {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--text) 30%, transparent);
+}
+
+.top-projetos-vazio {
+  margin: 0;
+  padding: 1.5rem 1.75rem;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  background: var(--surface);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--dim);
+}
+
+.top-projetos-vazio strong {
+  color: var(--text);
 }
 

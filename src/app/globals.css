@@ -21,3 +21,11 @@
 @import "./styles/estudio.css";
 @import "./styles/desafios.css";
 @import "./styles/curriculo.css";
+
+/* Não são fatias do globals.css antigo: nasceram com as telas novas (insígnias,
+   portfólio público e editor de perfil) e por isso entram no FIM da cascata.
+   Arquivo novo aqui só pode conter seletor novo — mover regra para cá mudaria
+   o pixel, pelo mesmo motivo do aviso acima. */
+@import "./styles/insignias.css";
+@import "./styles/perfil-publico.css";
+@import "./styles/editor-perfil.css";

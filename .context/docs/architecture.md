@@ -71,12 +71,16 @@ antes do `notFound()` e engolia o 404 real das rotas dinâmicas.
   habilidade, atalho "meus estrelados", tabela, retrato da turma e ranking das
   salas. Falha de leitura vira mensagem de erro, nunca lista vazia.
 - **`/alunos/[slug]`** — o crachá digital e o portfólio do aluno
-  (`PerfilInterativo`): QR code do próprio URL, download do crachá em PNG, apoio
-  de competências (+1), projetos, mídias e o mini-currículo A4.
+  (`PerfilInterativo`): a foto do aluno, QR code do próprio URL, download do
+  crachá em PNG, apoio de competências (+1), as competências que ele declarou,
+  projetos, a galeria de mídias e as insígnias derivadas, além do mini-currículo
+  A4.
 - **`/u/[slug]`** — o cartão NFC / link na bio: stickers posicionados por
-  porcentagem, competências com contagem de apoios, e a lista de botões (crachá,
-  validação, LinkedIn, GitHub, Instagram, mini-currículo). Sem indexação —
-  expõe contato do aluno e é alcançada por aproximação, não por busca.
+  porcentagem — os pregados num projeto ficam sobre o cartão **daquele** projeto,
+  nunca soltos no hero, porque mudar de lugar o que o aluno posicionou é pior que
+  não mostrar —, competências com contagem de apoios, e a lista de botões
+  (crachá, validação, LinkedIn, GitHub, Instagram, mini-currículo). Sem indexação
+  — expõe contato do aluno e é alcançada por aproximação, não por busca.
 - **`/validar/[slug]`** — a página de conferência: quem recebe o documento
   apresentado abre aqui e vê o selo verde de matrícula ativa. Sem indexação, pelo
   mesmo motivo do `/u/[slug]`.
@@ -95,7 +99,7 @@ autenticar nada.
 | `src/app/` | rotas, Server Actions (`acoes-crm.ts`, `adm/acoes.ts`) e Route Handlers | orquestra; não guarda regra de domínio |
 | `src/lib/` | domínio e acesso a dados | nada de JSX; nenhum componente importa o Supabase direto |
 | `src/components/` | UI | recebe props prontas; não fala com o banco |
-| `src/sql/` | schema versionado, em 8 migrations | numeradas na ordem de aplicação |
+| `src/sql/` | schema versionado, em 9 migrations | numeradas na ordem de aplicação |
 | `tests/` | testes das funções puras | roda no `node --test`, sem banco |
 
 A regra que sustenta a divisão: **tela não conhece Supabase**. Quem lê e escreve
@@ -107,15 +111,17 @@ no banco é `src/lib/dados.ts` e `src/lib/auth.ts`, e só eles importam
 | Módulo | LOC | Em uma linha |
 |---|---|---|
 | `auth.ts` | 319 | Sessão do usuário: token assinado com `iat`/`exp`, login com argon2id + rate limit duplo (conta e IP), cadastro, logout |
-| `dados.ts` | 277 | A única ponte entre tela e Supabase: leituras públicas, perfil, endosso, submissão de desafio, votos do visitante |
-| `seguranca.ts` | 324 | Sanitização (XSS, URL, data URL, JSONB de projetos/mídias/stickers), comparação em tempo constante e o rate limit em memória |
-| `exportar-cracha.ts` | 241 | Gera o crachá em PNG 2x via Canvas nativo, no cliente |
+| `dados.ts` | 295 | A única ponte entre tela e Supabase: leituras públicas, perfil, endosso, submissão de desafio, votos do visitante. Resolve `alunos.habilidades` (`null` = nunca editou → regex da bio) para nenhuma tela precisar saber |
+| `seguranca.ts` | 456 | Sanitização (XSS, URL, data URL, JSONB de projetos/mídias/stickers/competências, foto), comparação em tempo constante e o rate limit em memória |
+| `exportar-cracha.ts` | 281 | Gera o crachá em PNG 2x via Canvas nativo, no cliente. Desenha a foto do aluno recortada no círculo e cai nas iniciais quando não há foto |
+| `limites.ts` | 227 | Os tetos do perfil num módulo folha: mídias, projetos, stickers, competências e foto. Fica fora de `seguranca.ts` para o client component ler os mesmos números sem arrastar `node:crypto` |
+| `insignias.ts` | 166 | As seis insígnias derivadas de `estrelas` + `habilidades_votos`, com progresso. Puro e folha: mesmas entradas, mesma saída |
 | `importar.ts` | 149 | Parser tolerante da lista colada no ADM (tab, vírgula ou ponto e vírgula) |
 | `som.ts` | 129 | Som de estrela e confetes, com gate de mute persistido e `prefers-reduced-motion` |
 | `sessao.ts` | 120 | Os três cookies assinados (`visitante`, `adm`, `usuario`), cada um com sua subchave HKDF |
 | `senha.ts` | 112 | Hash e verificação argon2id, SHA-256 legado com rehash no login, `HASH_FANTASMA` e `SENHA_BLOQUEADA` |
-| `tipos.ts` | 107 | Os tipos do domínio: `Aluno`, `AlunoNaTela`, `Sala`, `RetratoSala`, `DesafioHackathon`, `StickerPerfil`, `UsuarioSessao` |
-| `habilidades.ts` | 96 | Taxonomia de competências (`LISTA_HABILIDADES`) e extração por regex a partir da bio |
+| `tipos.ts` | 116 | Os tipos do domínio: `Aluno`, `AlunoNaTela`, `Sala`, `RetratoSala`, `DesafioHackathon`, `StickerPerfil`, `UsuarioSessao` |
+| `habilidades.ts` | 96 | Taxonomia de competências (`LISTA_HABILIDADES`, allowlist de endosso por igualdade exata) e a extração por regex da bio — hoje só o fallback de quem nunca editou o perfil |
 | `rate-limit.ts` | 96 | Limitador que sobrevive ao cold start (tabela `tentativas`) e `ipDoCliente()` |
 | `debug.ts` | 95 | `logger` estruturado com máscara automática de segredos e `medirOperacao` |
 | `busca.ts` | 91 | Busca sem acento (`fold`, `matches`, `filtrarAlunos`) e os sentinelas `TODAS` / `ESTRELADOS` |
@@ -146,9 +152,11 @@ boundaries:
 `@node-rs/argon2` não tem nada com isso.
 
 São de servidor, entre outros, `ds.tsx` (`Topo`/`Rodape`/`Vazio`), `Icones.tsx`,
-`Roseta.tsx` e `adm/PainelAlunos.tsx`: cada botão do painel é um
-`<form action={alternar}>` / `<form action={removerAluno}>`, então ele funciona
-sem JavaScript no cliente.
+`Roseta.tsx`, `Avatar.tsx` e `Insignias.tsx`. O `adm/PainelAlunos.tsx` também:
+cada botão dele é um `<form action={alternar}>` / `<form action={removerAluno}>`,
+então funciona sem JavaScript no cliente. `Avatar` e `Insignias` não têm estado —
+são desenho puro, e por isso não carregam `"use client"` mesmo sendo usados dentro
+de componentes que carregam.
 
 Dentro de `src/lib/`, três módulos são **exclusivamente de servidor**:
 `auth.ts` e `sessao.ts` (usam `node:crypto`) e `supabase/admin.ts` (usa a
@@ -297,15 +305,18 @@ como 192 e 512, e trocá-los por ícones quadrados é peça de design.
 ## Por que não tem Tailwind
 
 O design system vive em CSS puro, com os tokens como única fonte de verdade.
-`src/app/globals.css` hoje é só um ponto de entrada: os 22 linhas dele são 12
-`@import` para `src/app/styles/`, um arquivo por domínio — `tokens`, `base`,
-`vitrine`, `cracha`, `vitrine-moderno`, `crm`, `adm`, `print`, `cracha-digital`,
-`estudio`, `desafios`, `curriculo`, totalizando ~7.500 linhas.
+`src/app/globals.css` hoje é só um ponto de entrada: são 15 linhas de `@import`
+para `src/app/styles/`, um arquivo por domínio — `tokens`, `base`, `vitrine`,
+`cracha`, `vitrine-moderno`, `crm`, `adm`, `print`, `cracha-digital`, `estudio`,
+`desafios`, `curriculo`, e depois os três que não vieram da divisão: `insignias`,
+`perfil-publico` e `editor-perfil`, totalizando ~7.800 linhas.
 
-**A ordem dos `@import` é a cascata.** Cada arquivo é uma fatia contígua do
+**A ordem dos `@import` é a cascata.** Os doze primeiros são fatias contíguas do
 antigo `globals.css`, então reordenar, mover uma regra de arquivo ou "limpar" um
 arquivo muda o pixel. Para conferir que a divisão é fiel ao original, concatene
-na ordem em que estão no `globals.css`.
+na ordem em que estão no `globals.css`. Os três últimos nasceram com telas novas
+e por isso vêm no fim: **arquivo novo só pode conter seletor novo**, senão
+sobrescreve regra antiga só por estar depois.
 
 As decisões que sustentam a escolha:
 
@@ -329,28 +340,37 @@ dinâmicas) num app de oito dependências. Não há `tailwind.config.*` nem
 ## Invariante dos módulos folha
 
 `src/lib/busca.ts`, `cores.ts`, `csp.ts`, `habilidades.ts`, `importar.ts`,
-`links.ts`, `ranking.ts` e `slug.ts` **não têm nenhum import**. Isso é exigência
-do runner de teste: `node --experimental-strip-types` não resolve import sem
-extensão, e os testes importam esses arquivos direto
-(`import { fold } from "../src/lib/busca.ts"`). Se um deles precisar de outro, o
-caminho é duplicar a regra pequena ou mover a dependência para quem chama — não
-criar o import.
+`insignias.ts`, `limites.ts`, `links.ts`, `ranking.ts` e `slug.ts` **não têm
+nenhum import**. Isso é exigência do runner de teste: `node
+--experimental-strip-types` não resolve import sem extensão, e os testes importam
+esses arquivos direto (`import { fold } from "../src/lib/busca.ts"`). Se um deles
+precisar de outro, o caminho é duplicar a regra pequena ou mover a dependência
+para quem chama — não criar o import.
 
 Quase-folhas, que também são testados direto porque só importam de fora do
 projeto ou só tipos: `sessao.ts` (só `node:crypto`), `senha.ts` (só
 `node:crypto` e `@node-rs/argon2`) e `seguranca.ts`.
 
-`seguranca.ts` é a exceção que confirma a regra, e ela é estreita: o único
-import de runtime que ele tem é `./limites.ts`, e **com a extensão escrita**, com
-`allowImportingTsExtensions` ligado no `tsconfig.json`. É o único arquivo de
-`src/` que escreve a extensão — o resto fica sem, porque só o bundler lê, e o
-bundler resolve dos dois jeitos. Mantenha o `.ts` ali: sem ele o
-`tests/seguranca.test.mjs` deixa de carregar, e o `npm run typecheck` **não**
-avisa, porque `tsc` com `moduleResolution: "bundler"` aceita os dois.
+`seguranca.ts` é a exceção que confirma a regra, e ela é estreita: os dois
+imports de runtime que ele tem são `./limites.ts` e `./habilidades.ts`, ambos
+**com a extensão escrita**, com `allowImportingTsExtensions` ligado no
+`tsconfig.json`. É o único arquivo de `src/` que escreve a extensão — o resto
+fica sem, porque só o bundler lê, e o bundler resolve dos dois jeitos. Mantenha o
+`.ts` ali: sem ele o `tests/seguranca.test.mjs` deixa de carregar, e o `npm run
+typecheck` **não** avisa, porque `tsc` com `moduleResolution: "bundler"` aceita os
+dois.
 
 `limites.ts` é folha e existe justamente por isso: o formulário do Estúdio
 (componente de cliente) precisa dos mesmos tetos, e não pode importar
-`seguranca.ts`, que puxa `node:crypto`.
+`seguranca.ts`, que puxa `node:crypto`. `insignias.ts` segue a mesma ideia pelo
+outro lado — o portfólio público deriva as insígnias no cliente, então a regra
+tem que estar num módulo sem `import` nenhum.
+
+`seguranca.ts` importar `habilidades.ts` é o que mantém uma verdade só sobre o
+vocabulário de competências: `sanitizarHabilidades` compara com a mesma
+igualdade exata da allowlist de endosso. Duplicar a lista de dez nomes ali dentro
+faria o formulário aceitar uma competência que o contador de endossos não
+reconhece.
 
 Os módulos que dependem de ambiente (`dados.ts`, `auth.ts`, `rate-limit.ts`,
 `exportar-cracha.ts`, `supabase/*`) ficam fora desse conjunto e não são testados

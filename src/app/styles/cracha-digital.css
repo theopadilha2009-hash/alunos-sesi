@@ -603,6 +603,16 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 0.9rem 1rem;
+  /* Contêiner de referência do sticker preso a este projeto. O corte espelha
+     o `overflow: hidden` do canvas do Estúdio, onde o aluno posicionou. */
+  position: relative;
+  overflow: hidden;
+}
+
+.nfc-projeto-sticker {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .nfc-proj-header {

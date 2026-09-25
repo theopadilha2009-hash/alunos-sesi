@@ -31,7 +31,7 @@ import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
-import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
+import { corHabilidade } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -83,7 +83,10 @@ export function CrmApp({
         ...a,
         sala: nomeSala,
         cor: corDaSala(nomeSala ?? ""),
-        habilidades: extrairHabilidades(a.bio),
+        // `a.habilidades` já vem resolvida de `listarAlunos`. Redeclarar com o
+        // regex da bio aqui desfazia a resolução no único lugar em que a lista
+        // inteira é montada — e era isso que chegava em tags e chips.
+        habilidades: a.habilidades ?? [],
       };
     });
   }, [lista, salas]);

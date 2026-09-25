@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Avatar } from "@/components/Avatar";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
-import { LISTA_HABILIDADES, corHabilidade, extrairHabilidades } from "@/lib/habilidades";
-import { iniciais } from "@/lib/links";
+import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
 import type { Aluno, AlunoNaTela, RetratoSala, Sala } from "@/lib/tipos";
@@ -59,7 +59,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
         ...a,
         sala: nome,
         cor: corDaSala(nome ?? ""),
-        habilidades: extrairHabilidades(a.bio),
+        habilidades: a.habilidades ?? [],
       };
     });
   }, [lista, salas]);
@@ -256,7 +256,11 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
                 >
                   <span className="hall-medalha">{medalha}</span>
                   <div className="hall-avatar-wrap">
-                    <span className="avatar hall-avatar">{iniciais(aluno.nome)}</span>
+                    <Avatar
+                      nome={aluno.nome}
+                      foto={aluno.foto_url}
+                      className="hall-avatar"
+                    />
                   </div>
                   <h3 className="hall-nome">{aluno.nome}</h3>
                   {aluno.sala ? (

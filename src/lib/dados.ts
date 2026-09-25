@@ -1,4 +1,5 @@
 import { logger } from "./debug";
+import { extrairHabilidades } from "./habilidades";
 import { clienteAdmin } from "./supabase/admin";
 import { clientePublico } from "./supabase/publico";
 import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } from "./tipos";
@@ -13,7 +14,23 @@ import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } fro
  */
 
 const CAMPOS_ALUNO =
-  "id,nome,slug,sala_id,linkedin,github,instagram,bio,foto_url,fixado,destaque,estrelas,projetos,midias,stickers,habilidades_votos,insignias";
+  "id,nome,slug,sala_id,linkedin,github,instagram,bio,foto_url,fixado,destaque,estrelas,projetos,midias,stickers,habilidades,habilidades_votos,insignias";
+
+/**
+ * Resolve o que a coluna deixa em aberto, para nenhuma tela precisar saber.
+ *
+ * `habilidades` é nullable sem default de propósito: `null` quer dizer "nunca
+ * editou o perfil", e aí a resposta continua sendo o regex da bio — senão todo
+ * aluno antigo acordaria sem competência nenhuma no dia do deploy. Array vazio é
+ * outra coisa: o aluno abriu o editor e escolheu não ter nenhuma. A diferença só
+ * existe aqui; daqui para cima é sempre um array.
+ */
+function resolverAluno(aluno: Aluno): Aluno {
+  return {
+    ...aluno,
+    habilidades: aluno.habilidades ?? extrairHabilidades(aluno.bio),
+  };
+}
 
 const TTL_CACHE_MS = 15 * 1000; // 15 segundos para acelerar navegação sem perder atualizações
 let cacheSalas: { expira: number; dados: Sala[] } | null = null;
@@ -54,7 +71,7 @@ export async function listarAlunos(): Promise<Aluno[]> {
     logger.error("DADOS", "Erro em listarAlunos", error);
     throw new Error(`listarAlunos: ${error.message}`);
   }
-  return (data ?? []) as Aluno[];
+  return ((data ?? []) as Aluno[]).map(resolverAluno);
 }
 
 export async function listarRetrato(): Promise<RetratoSala[]> {
@@ -83,7 +100,7 @@ export async function alunoPorSlug(slug: string): Promise<Aluno | null> {
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw new Error(`alunoPorSlug: ${error.message}`);
-  return (data as Aluno) ?? null;
+  return data ? resolverAluno(data as Aluno) : null;
 }
 
 export async function alunoPorId(id: string): Promise<Aluno | null> {
@@ -93,7 +110,7 @@ export async function alunoPorId(id: string): Promise<Aluno | null> {
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(`alunoPorId: ${error.message}`);
-  return (data as Aluno) ?? null;
+  return data ? resolverAluno(data as Aluno) : null;
 }
 
 /** Atualiza dados do perfil de um aluno autenticado */
@@ -109,6 +126,7 @@ export async function atualizarPerfilAluno(
     projetos?: unknown[];
     midias?: unknown[];
     stickers?: unknown[];
+    habilidades?: string[];
     habilidades_votos?: Record<string, number>;
     insignias?: string[];
   },
@@ -125,7 +143,7 @@ export async function atualizarPerfilAluno(
     throw new Error(`atualizarPerfilAluno: ${error.message}`);
   }
   limparCacheDados();
-  return data as Aluno;
+  return resolverAluno(data as Aluno);
 }
 
 /** Apoia uma competência técnica específica de um colega (Endorsement) */

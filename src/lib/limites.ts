@@ -10,8 +10,35 @@
 export const MAX_MIDIAS = 12;
 export const MAX_PROJETOS = 10;
 
+/**
+ * Competências que o aluno pode declarar.
+ *
+ * Menor que a lista fechada de 10 de `LISTA_HABILIDADES` de propósito. O regex
+ * da bio corta em 4 porque é heurística; aqui o aluno escolhe a dedo, então
+ * cabe mais — mas um perfil com as 10 tags não distingue ninguém, e o perfil
+ * existe para distinguir.
+ */
+export const MAX_HABILIDADES = 6;
+
 /** Teto do data URL de imagem de perfil/capa — o default de `urlImagemSegura`. */
 export const MAX_DATA_URL_IMAGEM = 2 * 1024 * 1024;
+
+/**
+ * Lado do avatar depois do corte no cliente. O maior consumidor é o PNG do
+ * crachá, que desenha um círculo de 140px (`exportar-cracha.ts`); 256 dá folga
+ * para tela retina sem virar peso morto no banco.
+ */
+export const FOTO_LADO = 256;
+
+/**
+ * Teto do data URL do avatar.
+ *
+ * 120 KB é teto, não tamanho esperado: um JPEG 256×256 sai tipicamente entre 15
+ * e 25 KB. O teto existe para um arquivo patológico não entrar — e é bem menor
+ * que o de mídia porque avatar aparece em lista, em cartão e em tabela, não só
+ * na página do dono.
+ */
+export const MAX_DATA_URL_FOTO = 120 * 1024;
 
 export const LIMITES_STICKERS = {
   max: 12,
@@ -25,7 +52,7 @@ export const LIMITES_STICKERS = {
   maxTotalBytes: 2 * 1024 * 1024,
 } as const;
 
-export type CampoPerfil = "midias" | "projetos" | "stickers";
+export type CampoPerfil = "midias" | "projetos" | "stickers" | "foto";
 
 /** Por que um item enviado não entrou no perfil. */
 export type MotivoDescarte =
@@ -56,6 +83,20 @@ const TETO: Record<CampoPerfil, string> = {
   midias: "2 MB por imagem",
   projetos: "2 MB por imagem",
   stickers: "512 KB por sticker",
+  foto: "120 KB por foto",
+};
+
+/**
+ * Substantivo do que ficou de fora, quando o motivo não é mais específico que o
+ * campo. Um `Record` e não um ternário encadeado: com quatro campos o encadeado
+ * vira uma linha que ninguém lê, e o compilador deixa de cobrar o campo novo —
+ * que é como um `foto` recém-criado acaba rotulado "sticker" no aviso.
+ */
+const ALVO_PADRAO: Record<CampoPerfil, string> = {
+  midias: "imagem",
+  projetos: "capa de projeto",
+  stickers: "sticker",
+  foto: "foto",
 };
 
 /**
@@ -76,7 +117,7 @@ function alvoDe({ motivo, campo }: Descarte): string {
     case "projeto-inexistente":
       return "sticker";
     default:
-      return campo === "midias" ? "imagem" : campo === "projetos" ? "capa de projeto" : "sticker";
+      return ALVO_PADRAO[campo];
   }
 }
 
@@ -113,8 +154,15 @@ export function descreverDescartes(descartes: readonly Descarte[]): string | nul
 }
 
 /** Teto de bytes de um único item, por campo. */
+const TETO_BYTES: Record<CampoPerfil, number> = {
+  midias: MAX_DATA_URL_IMAGEM,
+  projetos: MAX_DATA_URL_IMAGEM,
+  stickers: LIMITES_STICKERS.maxDataUrlBytes,
+  foto: MAX_DATA_URL_FOTO,
+};
+
 export function tetoDoCampo(campo: CampoPerfil): number {
-  return campo === "stickers" ? LIMITES_STICKERS.maxDataUrlBytes : MAX_DATA_URL_IMAGEM;
+  return TETO_BYTES[campo];
 }
 
 // ── Pré-checagem no cliente ─────────────────────────────────────────────────
@@ -143,9 +191,10 @@ function tetoEmBytesDeImagem(campo: CampoPerfil): number {
  *
  * `paraCima` separa os dois usos. O tamanho real sobe e o teto desce, senão um
  * arquivo que passa do limite por poucos bytes imprimiria "tem cerca de 1,5 MB
- * e o perfil aceita até 1,5 MB". Como os tetos são potências de 2 exatas (2 MB
- * de data URL = 1,5 MB de imagem; 512 KB = 384 KB), descer o teto não mente
- * sobre ele, e subir o tamanho garante que os dois números nunca coincidam.
+ * e o perfil aceita até 1,5 MB". Como os tetos fecham em KB inteiro depois do
+ * fator base64 (2 MB de data URL = 1,5 MB de imagem; 512 KB = 384 KB; 120 KB de
+ * foto = 90 KB), descer o teto não mente sobre ele, e subir o tamanho garante
+ * que os dois números nunca coincidam.
  */
 function emTamanho(bytes: number, paraCima: boolean): string {
   const arredondar = paraCima ? Math.ceil : Math.floor;
@@ -170,7 +219,7 @@ export function conferirTamanhoDaImagem(url: string, campo: CampoPerfil): string
   if (!url.startsWith("data:image/")) return null;
   if (url.length <= tetoDoCampo(campo)) return null;
 
-  const alvo = campo === "stickers" ? "sticker" : "imagem";
+  const alvo = ALVO_PADRAO[campo];
   return (
     `Essa ${alvo} tem cerca de ${emTamanho(bytesDaImagem(url), true)} e o perfil aceita ` +
     `até ${emTamanho(tetoEmBytesDeImagem(campo), false)}. Escolha um arquivo menor.`
