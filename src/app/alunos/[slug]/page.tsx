@@ -20,6 +20,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: titulo,
     description: descricao,
+    // Perfil de aluno menor de idade: nome, bio livre e redes fora do índice de
+    // busca. A página continua acessível por link direto — o que sai é a
+    // descoberta por nome no Google. Alinha as três portas do mesmo aluno, já
+    // que /u/ e /validar/ são noindex. `follow` fica ligado para o perfil
+    // continuar levando crawler à vitrine.
+    robots: { index: false, follow: true },
     openGraph: {
       title: titulo,
       description: descricao,
