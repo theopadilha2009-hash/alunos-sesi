@@ -131,6 +131,10 @@ levava junto as constraints de `projetos` e `midias`. As três colunas foram par
 o `003_crm_auth.sql`, que já adiciona colunas de perfil em `alunos` e roda antes
 do 005.
 
+A lição pegou: `alunos.habilidades`, que entrou depois disso, nasceu como
+`009_habilidades_do_aluno.sql` — com a coluna e a constraint de forma no mesmo
+arquivo, e o guard rodando em CI a cada PR.
+
 O guard foi validado contra esse caso: com as três colunas removidas de uma
 cópia de `src/sql/`, ele falha no 005 e aponta o erro exato
 (`SQL_DIR=/tmp/x ./scripts/checar-migrations.sh`).

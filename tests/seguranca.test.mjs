@@ -4,6 +4,8 @@ import {
   LIMITES_STICKERS,
   compararTempoConstante,
   resetarRateLimit,
+  sanitizarFoto,
+  sanitizarHabilidades,
   sanitizarMidias,
   sanitizarProjetos,
   sanitizarStickers,
@@ -12,7 +14,7 @@ import {
   urlSegura,
   verificarRateLimit,
 } from "../src/lib/seguranca.ts";
-import { MAX_DATA_URL_IMAGEM, MAX_MIDIAS } from "../src/lib/limites.ts";
+import { MAX_DATA_URL_FOTO, MAX_DATA_URL_IMAGEM, MAX_HABILIDADES, MAX_MIDIAS } from "../src/lib/limites.ts";
 
 test("compararTempoConstante valida igualdade e rejeita desigualdade", () => {
   assert.equal(compararTempoConstante("senha123", "senha123"), true);
@@ -429,4 +431,81 @@ test("o corte por orcamento separa quem estourou de quem veio depois", () => {
     { motivo: "acima-do-limite", campo: "stickers" },
     { motivo: "acima-do-limite", campo: "stickers" },
   ]);
+});
+
+// ── Competencias declaradas pelo aluno ───────────────────────────────────
+
+test("sanitizarHabilidades mantem a ordem escolhida e a lista fechada", () => {
+  assert.deepEqual(
+    sanitizarHabilidades(["Mobile", "Python", "Robótica"]),
+    ["Mobile", "Python", "Robótica"],
+  );
+});
+
+test("sanitizarHabilidades recusa o que nao esta na lista, inclusive por caixa", () => {
+  // Comparacao exata de proposito: a PK de `endossos` trata `Python` e `python`
+  // como habilidades distintas, entao aceitar a caixa errada criaria um chip que
+  // nunca recebe endosso nenhum.
+  assert.deepEqual(sanitizarHabilidades(["python", "Javascript", "Python", ""]), ["Python"]);
+  assert.deepEqual(sanitizarHabilidades(["<script>alert(1)</script>"]), []);
+});
+
+test("sanitizarHabilidades deduplica", () => {
+  assert.deepEqual(sanitizarHabilidades(["Python", "Python", "Python"]), ["Python"]);
+});
+
+test("sanitizarHabilidades corta no teto, sem repetir o que ja entrou", () => {
+  const todas = [
+    "Robótica",
+    "Python",
+    "Web Frontend",
+    "Backend & SQL",
+    "Hardware & IoT",
+    "Design & UI/UX",
+    "IA & Dados",
+    "C++ & Embarcados",
+    "Modelagem 3D",
+    "Mobile",
+  ];
+  assert.equal(todas.length, 10);
+  assert.equal(sanitizarHabilidades(todas).length, MAX_HABILIDADES);
+  assert.deepEqual(sanitizarHabilidades(todas), todas.slice(0, MAX_HABILIDADES));
+});
+
+test("sanitizarHabilidades ignora o que nao e array nem string", () => {
+  assert.deepEqual(sanitizarHabilidades(null), []);
+  assert.deepEqual(sanitizarHabilidades("Python"), []);
+  assert.deepEqual(sanitizarHabilidades([null, 42, { nome: "Python" }, "Python"]), ["Python"]);
+});
+
+// ── Foto do perfil ───────────────────────────────────────────────────────
+
+const FOTO_OK = "https://images.unsplash.com/rosto.jpg";
+
+test("sanitizarFoto aceita link e data URL dentro do teto", () => {
+  assert.equal(sanitizarFoto(FOTO_OK), FOTO_OK);
+  const noLimite = dataUrlDe(MAX_DATA_URL_FOTO);
+  assert.equal(noLimite.length, MAX_DATA_URL_FOTO);
+  assert.equal(sanitizarFoto(noLimite), noLimite);
+});
+
+test("sanitizarFoto recusa data URL acima do teto e diz por que", () => {
+  const descartes = [];
+  assert.equal(sanitizarFoto(dataUrlDe(MAX_DATA_URL_FOTO + 1), descartes), null);
+  assert.deepEqual(descartes, [{ motivo: "grande-demais", campo: "foto" }]);
+});
+
+test("foto vazia e remocao deliberada, nao descarte", () => {
+  // O aluno que apaga a propria foto nao perdeu nada: avisar seria ruido.
+  for (const vazio of ["", "   ", null, undefined]) {
+    const descartes = [];
+    assert.equal(sanitizarFoto(vazio, descartes), null);
+    assert.deepEqual(descartes, [], `entrada ${JSON.stringify(vazio)}`);
+  }
+});
+
+test("foto com esquema perigoso vira url-invalida", () => {
+  const descartes = [];
+  assert.equal(sanitizarFoto("javascript:alert(1)", descartes), null);
+  assert.deepEqual(descartes, [{ motivo: "url-invalida", campo: "foto" }]);
 });

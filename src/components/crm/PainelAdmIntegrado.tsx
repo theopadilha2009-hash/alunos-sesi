@@ -19,8 +19,8 @@ import {
   IconeUsuario,
 } from "@/components/Icones";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
+import { Avatar } from "@/components/Avatar";
 import { aoSetasDasAbas } from "@/lib/abas";
-import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -243,15 +243,15 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                     <tr key={a.id} className="tabela-linha" style={{ ["--sala-cor" as string]: a.cor }}>
                       <td>
                         <div className="tabela-aluno-celula">
-                          <span
-                            className="avatar mini-avatar"
+                          <Avatar
+                            nome={a.nome}
+                            foto={a.foto_url}
+                            className="mini-avatar"
                             style={{
                               background: `color-mix(in srgb, ${a.cor} 25%, var(--surface-2))`,
                               border: `1.5px solid ${a.cor}`,
                             }}
-                          >
-                            {iniciais(a.nome)}
-                          </span>
+                          />
                           <div>
                             <span className="tabela-aluno-nome-btn" style={{ cursor: "default" }}>
                               {a.nome}

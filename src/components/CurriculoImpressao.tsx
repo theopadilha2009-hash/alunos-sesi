@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
 import {
   IconeCracha,
@@ -12,7 +13,6 @@ import {
 } from "@/components/Icones";
 import { useTravaDeFoco } from "@/lib/foco";
 import type { AlunoNaTela } from "@/lib/tipos";
-import { iniciais } from "@/lib/links";
 
 type Props = {
   aluno: AlunoNaTela;
@@ -137,7 +137,7 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
           {/* Dados do Estudante & Contatos Rápidos */}
           <section className="curriculo-secao-identidade">
             <div className="curriculo-avatar-col">
-              <span className="avatar curriculo-avatar">{iniciais(aluno.nome)}</span>
+              <Avatar nome={aluno.nome} foto={aluno.foto_url} className="curriculo-avatar" />
             </div>
 
             <div className="curriculo-dados-col">

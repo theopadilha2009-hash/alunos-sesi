@@ -1,0 +1,79 @@
+/* ==========================================================================
+   Portfólio público do aluno (/alunos/[slug]) — galeria de mídias, avatar,
+   competências e insígnias. Arquivo novo: as regras entram no fim da cascata
+   e só podem usar seletor novo (ver aviso em globals.css).
+   ========================================================================== */
+
+/* ── Insígnias ───────────────────────────────────────────────────────────── */
+
+.port-insignias {
+  margin-top: 2rem;
+}
+
+/* Diz de onde a insígnia vem antes de a pessoa ver as fechadas: sem isso a
+   caixa bloqueada se lê como funcionalidade quebrada. */
+.port-secao-sub {
+  display: block;
+  margin: -0.15rem 0 0.9rem;
+  font-size: 0.74rem;
+  color: var(--dim);
+}
+
+/* ── Mídias do portfólio ─────────────────────────────────────────────────── */
+
+.port-midias {
+  margin-top: 2rem;
+}
+
+.port-midias-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+.port-midia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.port-midia-link {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--raio-p);
+  overflow: hidden;
+  background: var(--surface-2);
+  transition: border-color 0.16s var(--ease), transform 0.16s var(--ease);
+}
+
+/* Só o `<a>` reage ao mouse: a mídia enviada pelo Estúdio é data URL e não vira
+   link, então o mesmo quadro é `<span>` — e um quadro que levanta o voo sem ser
+   clicável seria promessa vazia. */
+a.port-midia-link:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  transform: translateY(-2px);
+}
+
+a.port-midia-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* `cover` e não `contain`: a mídia vem em proporções soltas (print de tela,
+   GIF de demo, foto de protótipo) e, num mosaico, a proporção livre de cada
+   arquivo vira uma escada de alturas. O corte fica nas bordas e o arquivo
+   inteiro continua a um clique, no `<a>` que o envolve. */
+.port-midia-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.port-midia-legenda {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--dim);
+}

@@ -4,6 +4,28 @@ import { iniciais } from "./links";
 import type { AlunoNaTela } from "./tipos";
 
 /**
+ * Carrega a foto do aluno para o canvas; `null` se ela não vier.
+ *
+ * O crachá não pode deixar de baixar por causa de um anexo: sem foto ele sai com
+ * as iniciais, que é o que ele desenhava antes de existir upload.
+ *
+ * `crossOrigin` é obrigatório, e não enfeite: `sanitizarFoto` aceita `https://`,
+ * não só data URL. Imagem de outro domínio sem CORS contamina o canvas, e aí o
+ * `toDataURL()` do fim lança `SecurityError` — o botão de baixar ficaria mudo.
+ * Com o atributo, ou o host responde com CORS e a foto entra, ou o load falha
+ * (`onerror` → iniciais). O crachá nunca fica pior do que era antes da foto.
+ */
+function carregarImagem(url: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+/**
  * Gera um PNG em alta resolução (2x Retina) do crachá do aluno usando Canvas nativo.
  * Sem dependências externas pesadas, 100% rápido e confiável no cliente.
  */
@@ -94,6 +116,9 @@ export async function baixarCrachaPng(
   const avatarRaio = 70;
   const avatarX = largura / 2;
   const avatarY = 275;
+  // 140px de diâmetro no PNG, que sai em 2x: é para cá que o `FOTO_LADO` de
+  // 256px de limites.ts existe.
+  const foto = aluno.foto_url ? await carregarImagem(aluno.foto_url) : null;
 
   ctx.save();
   ctx.beginPath();
@@ -104,12 +129,34 @@ export async function baixarCrachaPng(
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Iniciais
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 46px system-ui, -apple-system, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(iniciais(aluno.nome), avatarX, avatarY);
+  if (foto) {
+    ctx.save();
+    // Recorte circular: o mesmo desenho do `Avatar` na tela, onde o CSS usa
+    // `object-fit: cover` dentro de um círculo. Aqui o clip faz o papel do CSS.
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, avatarRaio, 0, Math.PI * 2);
+    ctx.clip();
+    const lado = Math.min(foto.width, foto.height);
+    ctx.drawImage(
+      foto,
+      (foto.width - lado) / 2,
+      (foto.height - lado) / 2,
+      lado,
+      lado,
+      avatarX - avatarRaio,
+      avatarY - avatarRaio,
+      avatarRaio * 2,
+      avatarRaio * 2,
+    );
+    ctx.restore();
+  } else {
+    // Iniciais
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 46px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(iniciais(aluno.nome), avatarX, avatarY);
+  }
   ctx.restore();
 
   // Estrelas

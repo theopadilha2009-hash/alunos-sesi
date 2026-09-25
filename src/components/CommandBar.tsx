@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { fold } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
 import { useTravaDeFoco } from "@/lib/foco";
-import { iniciais } from "@/lib/links";
+import { Avatar } from "@/components/Avatar";
 import {
   IconeBusca,
   IconeEscudo,
@@ -307,14 +307,14 @@ export function CommandBar({
                 >
                   {item.tipo === "aluno" ? (
                     <>
-                      <span
-                        className="avatar mini-avatar"
+                      <Avatar
+                        nome={item.titulo}
+                        foto={item.objeto.foto_url}
+                        className="mini-avatar"
                         style={{
                           background: `color-mix(in srgb, ${item.cor ?? "var(--accent)"} 25%, var(--surface-2))`,
                         }}
-                      >
-                        {iniciais(item.titulo)}
-                      </span>
+                      />
                       <div className="cmd-info">
                         <span className="cmd-titulo">{item.titulo}</span>
                         <span className="cmd-sub">{item.subtitulo}</span>

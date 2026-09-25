@@ -11,10 +11,11 @@ import {
   IconeUsuario,
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";
-import { iniciais } from "@/lib/links";
+import { Avatar } from "@/components/Avatar";
 
 type Props = {
   nomeAluno: string;
+  fotoAluno?: string | null;
   salaAluno: string;
   projetos: ProjetoAluno[];
   stickers: StickerPerfil[];
@@ -57,6 +58,7 @@ const PRESETS_STICKERS: { rotulo: string; url: string; tipo: "gif" | "sticker" }
 
 export function StickerCanvas({
   nomeAluno,
+  fotoAluno,
   salaAluno,
   projetos,
   stickers,
@@ -385,7 +387,7 @@ export function StickerCanvas({
               })}
 
               <div className="preview-hero-inner">
-                <span className="avatar avatar-canvas">{iniciais(nomeAluno)}</span>
+                <Avatar nome={nomeAluno} foto={fotoAluno} className="avatar-canvas" />
                 <div className="preview-hero-textos">
                   <span className="preview-tag-cargo">ESTUDANTE SESI · {salaAluno}</span>
                   <h3 className="preview-hero-nome">{nomeAluno}</h3>

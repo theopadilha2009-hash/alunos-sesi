@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
+import { Avatar } from "@/components/Avatar";
 import { CrachaModal } from "@/components/CrachaModal";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
+import { Insignias } from "@/components/Insignias";
 import {
   IconeCheck,
   IconeCopiar,
@@ -19,8 +21,7 @@ import {
   IconeSomMudo,
 } from "@/components/Icones";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
-import { corHabilidade, extrairHabilidades } from "@/lib/habilidades";
-import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
+import { handleLinkedin, urlGithub } from "@/lib/links";
 import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -50,7 +51,14 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
 
   const github = urlGithub(aluno.github);
   const linkedinHandle = handleLinkedin(aluno.linkedin);
-  const habilidades = aluno.habilidades && aluno.habilidades.length > 0 ? aluno.habilidades : extrairHabilidades(aluno.bio);
+  // A lista já vem resolvida da camada de dados (coluna `habilidades` ?? regex da
+  // bio). O `?? []` cobre aluno antigo, e array vazio aqui é escolha do aluno —
+  // "não quero nenhuma" —, então não pode voltar para o regex da bio.
+  const habilidades = aluno.habilidades ?? [];
+  // Teto do editor; o slice aqui é defesa contra payload antigo ou maior. O
+  // filtro descarta item sem url: a coluna é JSON cru e `<img src="">` faz o
+  // navegador buscar a própria página.
+  const midias = (aluno.midias ?? []).filter((m) => m.url).slice(0, 12);
 
   const urlAtual =
     typeof window !== "undefined"
@@ -193,9 +201,7 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
 
         <div className="perfil-topo">
           <div className="perfil-avatar-wrap">
-            <span className="avatar perfil-avatar" aria-hidden="true">
-              {iniciais(aluno.nome)}
-            </span>
+            <Avatar nome={aluno.nome} foto={aluno.foto_url} className="perfil-avatar" />
             <button
               type="button"
               className="botao-cracha-flutuante"
@@ -279,6 +285,21 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
           </p>
         ) : null}
 
+        {/* Insígnias vêm logo abaixo das competências porque são o extrato delas:
+            estrelas e endossos. O placar usa o estado, não `aluno.estrelas` e
+            `aluno.habilidades_votos`, porque o visitante pode estrelar e apoiar
+            nesta mesma tela — com o valor do servidor a insígnia só acenderia
+            no próximo carregamento. */}
+        <section className="port-insignias" aria-labelledby="port-insignias-titulo">
+          <span className="perfil-label-secao" id="port-insignias-titulo">
+            Insígnias & Conquistas:
+          </span>
+          <span className="port-secao-sub">
+            Elas vêm das estrelas e dos endossos dos colegas — não se escolhe ter.
+          </span>
+          <Insignias placar={{ estrelas, habilidades_votos: votos }} />
+        </section>
+
         {/* Grade de Criações e Projetos */}
         {aluno.projetos && aluno.projetos.length > 0 ? (
           <div className="perfil-projetos-secao">
@@ -334,6 +355,56 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
               })}
             </div>
           </div>
+        ) : null}
+
+        {/* Galeria do portfólio. A seção inteira desaparece quando não há mídia:
+            um bloco fixo dizendo "ainda não há nada" marcaria a ausência em toda
+            visita e o visitante não tem como resolver isso — quem sobe mídia é o
+            aluno, no Estúdio. Sem biblioteca de lightbox: o `<img>` já é a prévia
+            e o `<a>` abre o arquivo inteiro em outra aba. */}
+        {midias.length > 0 ? (
+          <section className="port-midias" aria-labelledby="port-midias-titulo">
+            <span className="perfil-label-secao" id="port-midias-titulo">
+              Portfólio de Mídias:
+            </span>
+            <div className="port-midias-grade">
+              {midias.map((m, i) => {
+                const legenda = m.legenda?.trim();
+                const imagem = (
+                  <img
+                    className="port-midia-img"
+                    src={m.url}
+                    alt={legenda || `Mídia do portfólio de ${aluno.nome}`}
+                    loading="lazy"
+                  />
+                );
+                return (
+                  <figure className="port-midia" key={`${m.url}-${i}`}>
+                    {/* O link só existe quando leva a algum lugar: navegador
+                        bloqueia abrir `data:` em aba nova, então para upload do
+                        próprio Estúdio (que é data URL) o `<a>` seria um clique
+                        que não faz nada — exatamente o tipo de promessa vazia que
+                        esta rodada foi desfazer. */}
+                    {m.url.startsWith("http") ? (
+                      <a
+                        className="port-midia-link"
+                        href={m.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {imagem}
+                      </a>
+                    ) : (
+                      <span className="port-midia-link">{imagem}</span>
+                    )}
+                    {legenda ? (
+                      <figcaption className="port-midia-legenda">{legenda}</figcaption>
+                    ) : null}
+                  </figure>
+                );
+              })}
+            </div>
+          </section>
         ) : null}
 
         <div className="perfil-grade-acoes">

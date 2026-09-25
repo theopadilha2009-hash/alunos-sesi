@@ -299,6 +299,7 @@
   width: 2.6rem;
   height: 2.6rem;
   flex: none;
+  overflow: hidden;
   border-radius: 50%;
   background: color-mix(in srgb, var(--sala, var(--accent)) 22%, var(--surface-2));
   color: var(--text);
@@ -306,6 +307,17 @@
   font-weight: 800;
   font-size: 0.9rem;
   letter-spacing: 0.02em;
+}
+
+/* A foto é quadrada e o avatar é redondo em toda tela; `cover` recorta o
+   excedente em vez de esticar o rosto. `border-radius: inherit` porque quem
+   define o raio é a classe de tamanho (.nfc-avatar, .cracha-avatar...), e o
+   crachá exporta em PNG: sem isso, o círculo do print sairia com canto reto. */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .aluno-nome {

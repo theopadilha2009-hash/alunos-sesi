@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   LIMITES_STICKERS,
+  MAX_DATA_URL_FOTO,
   MAX_DATA_URL_IMAGEM,
   MAX_MIDIAS,
   MAX_PROJETOS,
@@ -67,12 +68,26 @@ test("descreverDescartes usa o teto do campo certo em grande-demais", () => {
   assert.match(msg, /1× sticker: arquivo grande demais \(512 KB por sticker\)/);
 });
 
+test("descreverDescartes chama a foto de foto, e nao de sticker", () => {
+  // O rotulo cai no default do campo. Com um ternario encadeado, um campo novo
+  // ganha o substantivo do ultimo ramo — "1× sticker" para uma foto recusada.
+  const msg = descreverDescartes([{ motivo: "grande-demais", campo: "foto" }]);
+  assert.match(msg, /1× foto: arquivo grande demais \(120 KB por foto\)/);
+  // A frase final lista os tres tetos de colecao e cita "12 stickers" — o que
+  // nao pode aparecer e uma FOTO rotulada de sticker.
+  assert.doesNotMatch(msg, /1× sticker/);
+});
+
 // ── tetoDoCampo ─────────────────────────────────────────────────────────────
 
 test("tetoDoCampo da o teto menor para sticker", () => {
   assert.equal(tetoDoCampo("midias"), MAX_DATA_URL_IMAGEM);
   assert.equal(tetoDoCampo("projetos"), MAX_DATA_URL_IMAGEM);
   assert.equal(tetoDoCampo("stickers"), LIMITES_STICKERS.maxDataUrlBytes);
+  // O avatar aparece em lista, em cartao e no cracha exportado: teto bem mais
+  // apertado que a midia, que so aparece na pagina do dono.
+  assert.equal(tetoDoCampo("foto"), MAX_DATA_URL_FOTO);
+  assert.ok(MAX_DATA_URL_FOTO < MAX_DATA_URL_IMAGEM);
 });
 
 // ── conferirTamanhoDaImagem ─────────────────────────────────────────────────
@@ -98,6 +113,13 @@ test("conferirTamanhoDaImagem explica o arquivo grande demais", () => {
   assert.match(msg, /e o perfil aceita até 1,5 MB\. Escolha um arquivo menor\.$/);
 });
 
+test("conferirTamanhoDaImagem explica a foto grande demais em KB", () => {
+  // A foto tem teto abaixo de 1 MB: a mensagem tem que sair em KB, nao em "0,1 MB".
+  const msg = conferirTamanhoDaImagem(dataUrl(300 * 1024), "foto");
+  assert.match(msg, /^Essa foto tem cerca de 3\d\d KB/);
+  assert.match(msg, /o perfil aceita até 90 KB/);
+});
+
 test("conferirTamanhoDaImagem usa o teto menor no sticker", () => {
   const kb500 = dataUrl(500 * 1024);
   assert.equal(conferirTamanhoDaImagem(kb500, "midias"), null);
@@ -110,7 +132,7 @@ test("conferirTamanhoDaImagem usa o teto menor no sticker", () => {
 test("tamanho e teto nunca imprimem o mesmo numero", () => {
   // Passa do teto por um unico caractere: o caso em que o arredondamento comum
   // virava "tem cerca de 1,5 MB ... aceita até 1,5 MB".
-  for (const campo of ["midias", "projetos", "stickers"]) {
+  for (const campo of ["midias", "projetos", "stickers", "foto"]) {
     const msg = conferirTamanhoDaImagem(dataUrl(tetoDoCampo(campo)), campo);
     const [, tamanho, teto] = msg.match(/cerca de ([\d,]+ [KM]B).+até ([\d,]+ [KM]B)/);
     assert.notEqual(tamanho, teto, `campo ${campo}: "${tamanho}" nos dois lados`);

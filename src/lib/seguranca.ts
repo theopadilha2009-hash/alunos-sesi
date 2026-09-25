@@ -5,12 +5,15 @@ import { timingSafeEqual } from "node:crypto";
 // `src/` fica sem extensão porque só o bundler lê — este arquivo é a exceção.
 import {
   LIMITES_STICKERS,
+  MAX_DATA_URL_FOTO,
   MAX_DATA_URL_IMAGEM,
+  MAX_HABILIDADES,
   MAX_MIDIAS,
   MAX_PROJETOS,
   type Descarte,
   type MotivoDescarte,
 } from "./limites.ts";
+import { habilidadePermitida } from "./habilidades.ts";
 import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos.ts";
 
 // Os tetos agora moram em limites.ts, que não importa `node:crypto` e por isso
@@ -398,4 +401,56 @@ export function sanitizarStickers(
   }
 
   return sanitizados;
+}
+
+// ── 7. Competências declaradas e foto do perfil ─────────────────────────────
+
+/**
+ * As competências que o aluno escolheu, na ordem em que escolheu.
+ *
+ * Compara por igualdade exata, via `habilidadePermitida`. Não é preciosismo:
+ * `endossos` tem a habilidade na chave primária, e o Postgres trata `Python` e
+ * `python` como habilidades distintas — o perfil anuncia uma competência que o
+ * contador de endossos não reconhece, e o chip fica sem número para sempre.
+ *
+ * Deduplica porque para quem lê a lista é um conjunto. Não devolve descarte: o
+ * excedente só chegaria por POST montado à mão (o editor trava no teto), e a
+ * partir de seis chips o aviso vira ruído — mesmo critério do item que não é
+ * objeto em `sanitizarStickers`.
+ */
+export function sanitizarHabilidades(bruto: unknown[]): string[] {
+  if (!Array.isArray(bruto)) return [];
+
+  const escolhidas: string[] = [];
+  const vistas = new Set<string>();
+
+  for (const item of bruto) {
+    if (typeof item !== "string" || !habilidadePermitida(item)) continue;
+    if (vistas.has(item)) continue;
+    if (escolhidas.length >= MAX_HABILIDADES) break;
+    vistas.add(item);
+    escolhidas.push(item);
+  }
+
+  return escolhidas;
+}
+
+/**
+ * A foto de perfil — ou `null`, que significa "sem foto".
+ *
+ * `null` não distingue "não mandou o campo" de "mandou vazio" de propósito: o
+ * editor tem um input só, e esvaziá-lo é a única forma de tirar a foto. Quem
+ * decide se a coluna sequer é tocada é o formulário, não esta função.
+ *
+ * Vazio não gera descarte: apagar a foto é uma escolha, não uma perda — avisar
+ * seria ruído. Foto que passou do teto, sim: aí o aluno perdeu algo sem querer.
+ */
+export function sanitizarFoto(bruto: unknown, descartes?: Descarte[]): string | null {
+  const url = urlImagemSegura(bruto, MAX_DATA_URL_FOTO);
+  if (url) return url;
+
+  if (typeof bruto === "string" && bruto.trim()) {
+    descartes?.push({ motivo: motivoDaImagem(bruto, MAX_DATA_URL_FOTO), campo: "foto" });
+  }
+  return null;
 }

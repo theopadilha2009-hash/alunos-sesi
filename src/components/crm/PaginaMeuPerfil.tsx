@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
+import { Avatar } from "@/components/Avatar";
 import { CrachaModal } from "@/components/CrachaModal";
 import {
   IconeCheck,
@@ -23,12 +24,12 @@ import {
   IconeUsuario,
 } from "@/components/Icones";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
+import { Insignias } from "@/components/Insignias";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
-import { corHabilidade } from "@/lib/habilidades";
-import { conferirTamanhoDaImagem } from "@/lib/limites";
-import { iniciais } from "@/lib/links";
+import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
+import { FOTO_LADO, MAX_HABILIDADES, conferirTamanhoDaImagem } from "@/lib/limites";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
@@ -74,9 +75,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   const [github, setGithub] = useState(alunoAtual?.github ?? "");
   const [instagram, setInstagram] = useState(alunoAtual?.instagram ?? "");
 
-  // Habilidades / Competências Técnicas
-  const [habilidades, setHabilidades] = useState<string[]>(alunoAtual?.habilidades ?? ["Next.js", "TypeScript", "UI/UX"]);
-  const [novaHabilidade, setNovaHabilidade] = useState("");
+  // Competências: o estado inicial é o que `aluno.habilidades` já traz resolvido
+  // da camada de dados (o regex da bio, quando o aluno nunca editou). É de
+  // propósito — o aluno vê o que o perfil já afirma sobre ele e confirma ou tira.
+  const [habilidades, setHabilidades] = useState<string[]>(alunoAtual?.habilidades ?? []);
+  const [foto, setFoto] = useState(alunoAtual?.foto_url ?? "");
+  const [avisoFoto, setAvisoFoto] = useState<string | null>(null);
 
   // Lista de projetos / criações
   const [projetos, setProjetos] = useState<ProjetoAluno[]>(
@@ -113,15 +117,16 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     } catch {}
   }
 
-  function adicionarHabilidade() {
-    const val = novaHabilidade.trim();
-    if (!val || habilidades.includes(val)) return;
-    setHabilidades([...habilidades, val]);
-    setNovaHabilidade("");
-  }
-
-  function removerHabilidade(hab: string) {
-    setHabilidades(habilidades.filter((h) => h !== hab));
+  // Os chips são a única porta de entrada de competência, e todos saem de
+  // `LISTA_HABILIDADES` por `hab.nome`: a comparação no banco é case-sensitive
+  // (`endossos` guarda a habilidade na chave primária), então texto digitado à
+  // mão criaria uma competência que nenhum endosso alcança.
+  function alternarHabilidade(nome: string) {
+    setHabilidades((escolhidas) => {
+      if (escolhidas.includes(nome)) return escolhidas.filter((h) => h !== nome);
+      if (escolhidas.length >= MAX_HABILIDADES) return escolhidas;
+      return [...escolhidas, nome];
+    });
   }
 
   function adicionarProjeto() {
@@ -221,6 +226,59 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     });
   }
 
+  /**
+   * Recorta o centro em quadrado e reduz para `lado`.
+   *
+   * Caminho próprio, e não `comprimirImagemArquivo`: aquele escala preservando
+   * a proporção (uma foto 4:3 sairia 256×192) e devolve GIF cru sem passar pelo
+   * canvas. O avatar é redondo em toda tela e a foto é quadrada, então o corte
+   * acontece aqui — enquadrar pelo centro é o que recorta o excesso das bordas
+   * em vez de espremer o rosto.
+   */
+  async function recortarFotoQuadrada(
+    file: File,
+    lado = FOTO_LADO,
+    qualidade = 0.82,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const urlObj = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(urlObj);
+        // O try existe para a promise nunca ficar pendurada: um SVG sem dimensão
+        // ou um arquivo truncado decodifica e só explode no `drawImage`. Pendurada
+        // ela não rejeita, o `finally` do chamador não roda e o input nunca zera.
+        try {
+          const menorLado = Math.min(img.width, img.height);
+          const sobraX = (img.width - menorLado) / 2;
+          const sobraY = (img.height - menorLado) / 2;
+          const canvas = document.createElement("canvas");
+          canvas.width = lado;
+          canvas.height = lado;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+            return;
+          }
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, sobraX, sobraY, menorLado, menorLado, 0, 0, lado, lado);
+          resolve(canvas.toDataURL("image/jpeg", qualidade));
+        } catch {
+          reject(new Error("Erro ao processar imagem"));
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(urlObj);
+        reject(new Error("Erro ao carregar imagem"));
+      };
+      img.src = urlObj;
+    });
+  }
+
   /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
   function aceitarMidia(dataUrl: string) {
     const aviso = conferirTamanhoDaImagem(dataUrl, "midias");
@@ -268,7 +326,31 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     }
   }
 
+  async function handleUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await recortarFotoQuadrada(file);
+      // O teto é rede de proteção, não o caminho comum: 256×256 em JPEG sai
+      // tipicamente entre 15 e 25 KB, e é JPEG mesmo quando a entrada é GIF ou
+      // PNG, porque o canvas reencoda. O aviso existe para o arquivo patológico.
+      const aviso = conferirTamanhoDaImagem(dataUrl, "foto");
+      setAvisoFoto(aviso);
+      // Recusou: a foto que já estava no perfil continua onde está. Apagá-la por
+      // causa de um arquivo grande seria perder a foto duas vezes.
+      if (!aviso) setFoto(dataUrl);
+    } catch {
+      setAvisoFoto("Não foi possível ler esse arquivo. Tente uma imagem JPG ou PNG.");
+    } finally {
+      // O input guarda o último arquivo escolhido: sem zerar, escolher o MESMO
+      // arquivo de novo não dispara onChange e o botão parece quebrado.
+      input.value = "";
+    }
+  }
+
   const ehSuperAdm = usuario.role === "super_adm";
+  const noTetoDeHabilidades = habilidades.length >= MAX_HABILIDADES;
 
   return (
     <div className="pagina-perfil-container">
@@ -362,7 +444,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
         <div className="hero-banner-conteudo">
           <div className="hero-banner-avatar-wrap">
-            <span className="hero-banner-avatar">{iniciais(nome)}</span>
+            <Avatar nome={nome} foto={foto} className="hero-banner-avatar" />
             <span className="hero-banner-status-dot" title="Online" />
           </div>
 
@@ -427,6 +509,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
         <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
         <input type="hidden" name="midias" value={JSON.stringify(midias)} />
         <input type="hidden" name="stickers" value={JSON.stringify(stickers)} />
+        {/* Foto e competências são campos de presença: o action só toca a coluna
+            se o campo existir no form. Por isso os dois inputs ficam aqui, fora
+            de qualquer bloco condicional — esconder um deles quando vazio
+            tornaria a remoção da foto impossível. */}
+        <input type="hidden" name="foto" value={foto} />
+        <input type="hidden" name="habilidades" value={JSON.stringify(habilidades)} />
 
         {/* ── COLUNA ESQUERDA: RESUMO, AÇÕES E CONTATOS ─────────────────── */}
         <aside className="perfil-coluna-esquerda">
@@ -437,12 +525,47 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
 
             <div className="perfil-card-identidade">
-              <span className="avatar perfil-card-avatar">{iniciais(nome)}</span>
+              <Avatar nome={nome} foto={foto} className="perfil-card-avatar" />
               <div className="perfil-card-identidade-info">
                 <h3>{nome}</h3>
                 <span className="perfil-card-sala-pill">{sala}</span>
               </div>
             </div>
+
+            <div className="edit-foto-controles">
+              <label className="edit-foto-botao">
+                <IconeUpload tamanho={15} />
+                <span>{foto ? "Trocar foto" : "Escolher foto"}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleUploadFoto}
+                />
+              </label>
+              {foto ? (
+                <button
+                  type="button"
+                  className="edit-foto-remover"
+                  onClick={() => {
+                    setFoto("");
+                    setAvisoFoto(null);
+                  }}
+                >
+                  <IconeLixeira tamanho={15} />
+                  <span>Remover foto</span>
+                </button>
+              ) : null}
+            </div>
+            <span className="dica-campo">
+              A imagem é recortada em quadrado pelo centro e reduzida para {FOTO_LADO}×
+              {FOTO_LADO} pixels. Vale para a vitrine, a tabela, o cartão e o crachá.
+            </span>
+            {avisoFoto ? (
+              <span className="edit-foto-aviso" role="alert">
+                {avisoFoto}
+              </span>
+            ) : null}
 
             <div className="perfil-acoes-rapidas">
               <button
@@ -713,59 +836,69 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                   />
                 </label>
 
-                  {/* Gerenciamento Interativo de Competências Técnicas */}
+                  {/* Competências: chips da lista fechada, clicáveis. O teto trava
+                      em vez de só contar — o aluno descobre o limite aqui, e não
+                      depois de salvar. */}
                   <div className="campo-form">
-                    <span className="label-texto">Competências Técnicas & Tecnologias</span>
-                    <div className="habilidades-chips-editor">
-                      {habilidades.map((hab) => (
-                        <span
-                          key={hab}
-                          className="chip-hab-editavel"
-                          style={{ ["--cor-hab" as string]: corHabilidade(hab) }}
-                        >
-                          <span className="ponto-hab" style={{ background: corHabilidade(hab) }} />
-                          {hab}
-                          {/* idem MuralDesafios: o "✕" vira o nome acessível e
-                              engole o title, então o rótulo precisa ser explícito */}
-                          <button
-                            type="button"
-                            className="btn-remover-chip"
-                            onClick={() => removerHabilidade(hab)}
-                            aria-label={`Remover ${hab}`}
-                            title={`Remover ${hab}`}
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="adicionar-habilidade-linha">
-                      <input
-                        type="text"
-                        className="input-texto input-hab"
-                        value={novaHabilidade}
-                        onChange={(e) => setNovaHabilidade(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            adicionarHabilidade();
-                          }
-                        }}
-                        placeholder="Ex: React, Python, Robótica, Figma..."
-                      />
-                      <button
-                        type="button"
-                        className="botao botao-secundario"
-                        onClick={adicionarHabilidade}
+                    <div className="edit-hab-cabecalho">
+                      <span className="label-texto">Competências Técnicas</span>
+                      <span
+                        className={`edit-hab-contador ${
+                          noTetoDeHabilidades ? "edit-hab-contador-cheio" : ""
+                        }`}
                       >
-                        <IconePlus tamanho={15} /> Adicionar
-                      </button>
+                        {habilidades.length}/{MAX_HABILIDADES}
+                      </span>
                     </div>
+                    <div className="edit-hab-chips">
+                      {LISTA_HABILIDADES.map((hab) => {
+                        const escolhida = habilidades.includes(hab.nome);
+                        const bloqueada = !escolhida && noTetoDeHabilidades;
+                        return (
+                          <button
+                            key={hab.nome}
+                            type="button"
+                            className={`edit-hab-chip ${escolhida ? "edit-hab-chip-ativa" : ""}`}
+                            style={{ ["--cor-hab" as string]: corHabilidade(hab.nome) }}
+                            onClick={() => alternarHabilidade(hab.nome)}
+                            disabled={bloqueada}
+                            aria-pressed={escolhida}
+                            title={
+                              bloqueada
+                                ? `Você já escolheu ${MAX_HABILIDADES}. Tire uma para trocar.`
+                                : undefined
+                            }
+                          >
+                            <span className="edit-hab-ponto" />
+                            {hab.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="dica-campo">
+                      Escolha até {MAX_HABILIDADES} do que você domina de verdade. O nome tem que
+                      ser um destes: é por ele que a turma endossa, e endosso de competência com
+                      outro nome não conta.
+                    </span>
                   </div>
                 </div>
               </div>
+
+            {/* Grade completa, e não a faixa compacta: aqui o ponto é o aluno
+                ver o quanto falta em cada insígnia, não só o que já conquistou. */}
+            <div className="painel-card">
+              <header className="painel-card-topo">
+                <h3>Insígnias & Conquistas</h3>
+                <p>Elas vêm das estrelas e dos endossos dos colegas — não se escolhe ter.</p>
+              </header>
+              <Insignias
+                placar={{
+                  estrelas: alunoAtual?.estrelas ?? 0,
+                  habilidades_votos: alunoAtual?.habilidades_votos,
+                }}
+              />
             </div>
+          </div>
 
           {/* ── ABA 2: PROJETOS & CRIAÇÕES ─────────────────────────────────── */}
           <div
@@ -940,6 +1073,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           >
             <StickerCanvas
               nomeAluno={nome}
+              fotoAluno={foto}
               salaAluno={sala}
               projetos={projetos}
               stickers={stickers}

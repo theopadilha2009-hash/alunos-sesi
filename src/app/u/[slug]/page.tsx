@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
 import {
   IconeCracha,
@@ -12,8 +13,7 @@ import {
 } from "@/components/Icones";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
-import { extrairHabilidades } from "@/lib/habilidades";
-import { iniciais } from "@/lib/links";
+import { LIMITES_STICKERS } from "@/lib/limites";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -50,10 +50,25 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
   const salas = await listarSalas();
   const sala = salas.find((s) => s.id === aluno.sala_id)?.nome ?? "SESI Joinville";
 
-  // Stickers posicionados no banner ou perfil
+  // O aluno escolhe onde cada sticker fica: no banner (o hero abaixo) ou preso
+  // a um projeto específico. Mostrar os dois no hero movia de lugar o que ele
+  // posicionou no Estúdio.
   const stickers = Array.isArray(aluno.stickers) ? aluno.stickers : [];
+  // A vitrine de projetos desta página corta em três. O sticker preso ao quarto
+  // não tem onde aparecer, e sumir calado seria pior que o desvio antigo: ele cai
+  // no banner, que é onde estava antes de o aluno prendê-lo a um projeto.
+  const projetosNaTela = new Set((aluno.projetos ?? []).slice(0, 3).map((p) => p.id));
+  const stickersDoBanner = stickers.filter(
+    (st) => st.alvo !== "projeto" || !projetosNaTela.has(st.projetoId ?? ""),
+  );
+  const stickersDoProjeto = (projetoId: string) =>
+    stickers.filter((st) => st.alvo === "projeto" && st.projetoId === projetoId);
+
   const votos = aluno.habilidades_votos || {};
-  const habilidades = extrairHabilidades(aluno.bio);
+  // Já resolvida pela camada de dados — re-derivar aqui com o regex da bio
+  // mostraria competência que o aluno tirou do perfil, ou esconderia a que ele
+  // declarou e nunca escreveu na bio.
+  const habilidades = aluno.habilidades ?? [];
 
   return (
     <main className="nfc-bio-layout">
@@ -76,24 +91,25 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
         {/* Hero Card do Estudante com Stickers / GIFs Flutuantes */}
         <section className="nfc-hero-card">
           {/* Stickers / GIFs decorativos posicionados estilo Canva */}
-          {stickers.map((st) => (
+          {stickersDoBanner.map((st) => (
             <div
               key={st.id}
               className="nfc-sticker-item"
               style={{
                 left: `${st.x}%`,
                 top: `${st.y}%`,
-                width: `${st.tamanho || 54}px`,
+                width: `${st.tamanho || LIMITES_STICKERS.tamanhoPadrao}px`,
                 transform: `rotate(${st.rotacao || 0}deg)`,
               }}
-              title={st.rotulo || "Sticker"}
+              title={st.rotulo || undefined}
             >
-              <img src={st.url} alt={st.rotulo || "Elemento visual"} className="nfc-sticker-img" />
+              {/* Sem rótulo é decoração pura: `alt` vazio evita um "Sticker" repetido. */}
+              <img src={st.url} alt={st.rotulo || ""} className="nfc-sticker-img" />
             </div>
           ))}
 
           <div className="nfc-avatar-wrapper">
-            <span className="avatar nfc-avatar">{iniciais(aluno.nome)}</span>
+            <Avatar nome={aluno.nome} foto={aluno.foto_url} className="nfc-avatar" />
             <div className="nfc-pulse-ring" />
           </div>
 
@@ -238,6 +254,24 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
             <div className="nfc-projetos-grid">
               {aluno.projetos.slice(0, 3).map((p, idx) => (
                 <div key={idx} className="nfc-projeto-card">
+                  {/* O sticker fica preso ao cartão deste projeto, na posição
+                      escolhida no Estúdio — não no hero do perfil. */}
+                  {stickersDoProjeto(p.id).map((st) => (
+                    <div
+                      key={st.id}
+                      className="nfc-projeto-sticker"
+                      style={{
+                        left: `${st.x}%`,
+                        top: `${st.y}%`,
+                        width: `${st.tamanho || LIMITES_STICKERS.tamanhoPadrao}px`,
+                        transform: `rotate(${st.rotacao || 0}deg)`,
+                      }}
+                      title={st.rotulo || undefined}
+                    >
+                      <img src={st.url} alt={st.rotulo || ""} className="nfc-sticker-img" />
+                    </div>
+                  ))}
+
                   <div className="nfc-proj-header">
                     <IconeProjetos tamanho={14} />
                     <strong>{p.titulo}</strong>
