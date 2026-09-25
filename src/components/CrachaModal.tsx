@@ -17,6 +17,7 @@ type Props = {
 
 export function CrachaModal({ aluno, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const dialogoRef = useRef<HTMLDivElement>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState(false);
@@ -60,6 +61,15 @@ export function CrachaModal({ aluno, onClose }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // O diálogo se declara `aria-modal`, então o foco tem que entrar nele ao
+  // abrir e voltar para quem abriu ao fechar. Sem isso o Tab segue percorrendo
+  // a página atrás do overlay e o leitor de tela nunca anuncia que abriu algo.
+  useEffect(() => {
+    const anterior = document.activeElement as HTMLElement | null;
+    dialogoRef.current?.focus();
+    return () => anterior?.focus();
+  }, []);
+
   async function copiarLink() {
     try {
       await navigator.clipboard.writeText(urlPerfil);
@@ -84,11 +94,13 @@ export function CrachaModal({ aluno, onClose }: Props) {
 
   return (
     <div
+      ref={dialogoRef}
       className="modal-backdrop"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`Crachá Digital de ${aluno.nome}`}
+      tabIndex={-1}
     >
       <div className="cracha-container" onClick={(e) => e.stopPropagation()}>
         <button

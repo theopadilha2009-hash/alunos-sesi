@@ -687,10 +687,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                         >
                           <span className="ponto-hab" style={{ background: corHabilidade(hab) }} />
                           {hab}
+                          {/* idem MuralDesafios: o "✕" vira o nome acessível e
+                              engole o title, então o rótulo precisa ser explícito */}
                           <button
                             type="button"
                             className="btn-remover-chip"
                             onClick={() => removerHabilidade(hab)}
+                            aria-label={`Remover ${hab}`}
                             title={`Remover ${hab}`}
                           >
                             ✕

@@ -449,6 +449,13 @@
   border-color: var(--amarelo);
 }
 
+/* Mesmo tamanho do botão de estrela, para os dois alinharem na fileira. A cor
+   fica neutra de propósito: o amarelo é o que marca a estrela. */
+.botao-som {
+  padding: 0.75rem 1.2rem;
+  font-size: 0.95rem;
+}
+
 .perfil-compartilhar-box {
   display: flex;
   gap: 1rem;

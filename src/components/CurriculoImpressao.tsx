@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Roseta } from "@/components/Roseta";
 import {
   IconeCracha,
@@ -20,6 +20,7 @@ type Props = {
 
 export function CurriculoImpressao({ aluno, onFechar }: Props) {
   const [qrValidador, setQrValidador] = useState<string>("");
+  const dialogoRef = useRef<HTMLDivElement>(null);
 
   const urlValidacao =
     typeof window !== "undefined"
@@ -57,6 +58,14 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
     return () => window.removeEventListener("keydown", aoTeclar);
   }, [onFechar]);
 
+  // Mesmo caso do CrachaModal: `aria-modal` sem levar o foco para dentro do
+  // diálogo (e sem devolvê-lo ao fechar) deixa o teclado preso na página atrás.
+  useEffect(() => {
+    const anterior = document.activeElement as HTMLElement | null;
+    dialogoRef.current?.focus();
+    return () => anterior?.focus();
+  }, []);
+
   const votos = aluno.habilidades_votos || {};
   const matricula = `SESI-SC-JVE-${aluno.slug.toUpperCase().slice(0, 8)}-${(aluno.estrelas + 26).toString().padStart(4, "0")}`;
 
@@ -67,10 +76,12 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
   return (
     <div className="modal-backdrop curriculo-modal-backdrop" onClick={onFechar}>
       <div
+        ref={dialogoRef}
         className="curriculo-dialog-wrap"
         role="dialog"
         aria-modal="true"
         aria-labelledby="curriculo-titulo"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Barra de Ações Superior (Não sai na impressão) */}

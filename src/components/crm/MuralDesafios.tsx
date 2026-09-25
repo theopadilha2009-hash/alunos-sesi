@@ -168,10 +168,14 @@ export function MuralDesafios({ desafios, usuario }: Props) {
                 <span className="submissao-tag">SUBMISSÃO DE PROJETO TÉCNICO</span>
                 <h3 id="modal-submissao-titulo">{desafioSelecionado.titulo}</h3>
               </div>
+              {/* Sem aria-label o nome acessível deste botão é o próprio "✕",
+                  que vence o title no cálculo — o leitor de tela anuncia
+                  "sinal de multiplicação" no único botão que fecha o modal. */}
               <button
                 type="button"
                 className="drawer-fechar"
                 onClick={() => setDesafioSelecionado(null)}
+                aria-label="Fechar formulário"
                 title="Fechar formulário"
               >
                 ✕
