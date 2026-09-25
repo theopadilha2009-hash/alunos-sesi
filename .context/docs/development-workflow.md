@@ -109,6 +109,32 @@ Regra prática: migration nova é um arquivo novo em `src/sql/`, aplicado com
 para `anon`; tabela que não deve ser lida pelo cliente (como `votos`) fica sem
 policy nenhuma.
 
+### Provar que o repo reproduz o banco
+
+`./scripts/checar-migrations.sh` aplica `src/sql/001..N` num Postgres limpo, em
+ordem, e para no primeiro erro. Sem argumentos ele sobe um container
+descartável e derruba no fim; com `PGHOST` no ambiente usa esse banco em vez de
+subir container — é assim que o job `migrations` do CI roda, contra o
+`services: postgres` do workflow.
+
+Antes do 001 o script cria um shim com os papéis `anon`, `authenticated` e
+`service_role`, que só existem no Supabase e são citados pelas policies de RLS.
+O shim mora dentro do próprio script de propósito: em `src/sql/` ele viraria
+migration de produção, e no Supabase esses papéis já existem e têm dono.
+
+Isto existe porque o banco driftou sem ninguém notar. `alunos.stickers`,
+`alunos.habilidades_votos` e `alunos.insignias` nasceram direto no Studio e
+ficaram fora do repo; o `005_integridade.sql` cria constraint em cima de
+`stickers`, então um banco limpo morria ali com `column "stickers" does not
+exist` — e, como o `DO $$` do 005 é um statement só, sem bloco de exceção, ele
+levava junto as constraints de `projetos` e `midias`. As três colunas foram para
+o `003_crm_auth.sql`, que já adiciona colunas de perfil em `alunos` e roda antes
+do 005.
+
+O guard foi validado contra esse caso: com as três colunas removidas de uma
+cópia de `src/sql/`, ele falha no 005 e aponta o erro exato
+(`SQL_DIR=/tmp/x ./scripts/checar-migrations.sh`).
+
 ## Deploy
 
 Na Vercel, por CLI. As variáveis de ambiente precisam existir na Vercel **antes**

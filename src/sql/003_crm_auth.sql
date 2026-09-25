@@ -17,6 +17,20 @@ ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS instagram text;
 ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS projetos jsonb NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS midias jsonb NOT NULL DEFAULT '[]'::jsonb;
 
+-- stickers, habilidades_votos e insignias nasceram direto no banco (Studio) e
+-- ficaram fora do repo. Não era cosmético: o 005_integridade.sql cria constraint
+-- em cima de `stickers` e o 006_endossos.sql escreve em `habilidades_votos`, então
+-- um banco limpo morria no 005 com "column stickers does not exist" — e como o
+-- `do $$` do 005 é um statement só, sem bloco de exceção, ele levava junto as
+-- constraints de projetos e midias. Aqui é o lugar certo: é este o arquivo que
+-- adiciona colunas de perfil em alunos, e ele roda ANTES do 005.
+--
+-- Nullable de propósito: o 005:95 explica que a constraint dos stickers precisa
+-- deixar NULL passar, senão quem nunca abriu o Estúdio fica inválido.
+ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS stickers jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS habilidades_votos jsonb DEFAULT '{}'::jsonb;
+ALTER TABLE public.alunos ADD COLUMN IF NOT EXISTS insignias jsonb DEFAULT '[]'::jsonb;
+
 -- 2. Tabela de usuários para autenticação
 CREATE TABLE IF NOT EXISTS public.usuarios (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

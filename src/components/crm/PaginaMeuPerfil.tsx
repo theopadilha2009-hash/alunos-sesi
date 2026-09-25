@@ -27,6 +27,7 @@ import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { corHabilidade } from "@/lib/habilidades";
+import { conferirTamanhoDaImagem } from "@/lib/limites";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
 
@@ -93,6 +94,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   const [novaMidiaUrl, setNovaMidiaUrl] = useState("");
   const [novaMidiaTipo, setNovaMidiaTipo] = useState<"imagem" | "gif">("imagem");
   const [novaMidiaLegenda, setNovaMidiaLegenda] = useState("");
+  // Aviso de arquivo grande demais, colado onde o aluno está olhando. O GIF
+  // entra cru (não passa pelo canvas que redimensiona), então sem isto o
+  // arquivo viajava inteiro até o servidor para ser recusado lá.
+  const [avisoMidia, setAvisoMidia] = useState<string | null>(null);
+  const [avisoProjeto, setAvisoProjeto] = useState<string | null>(null);
 
   const urlPerfil =
     typeof window !== "undefined"
@@ -120,6 +126,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
   function adicionarProjeto() {
     if (!novoProjTitulo.trim()) return;
+    // Mesma porta que a mídia. Aqui pesa mais: uma capa gigante na lista vai
+    // junta no POST, e com o bodySizeLimit de 4mb o servidor recusa a action
+    // inteira — o aluno perderia a edição toda, não só a capa.
+    const aviso = conferirTamanhoDaImagem(novoProjImg.trim(), "projetos");
+    if (aviso) {
+      setAvisoProjeto(aviso);
+      return;
+    }
     const novo: ProjetoAluno = {
       id: `proj_${Date.now()}`,
       titulo: novoProjTitulo.trim(),
@@ -132,6 +146,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     setNovoProjDesc("");
     setNovoProjLink("");
     setNovoProjImg("");
+    setAvisoProjeto(null);
   }
 
   function removerProjeto(id: string) {
@@ -141,10 +156,18 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   function adicionarMidia() {
     const url = novaMidiaUrl.trim();
     if (!url) return;
+    // Segunda porta de entrada de imagem gigante: data URL colado à mão no
+    // campo de texto. A primeira é o upload de GIF, logo abaixo.
+    const aviso = conferirTamanhoDaImagem(url, "midias");
+    if (aviso) {
+      setAvisoMidia(aviso);
+      return;
+    }
     const tipo = url.toLowerCase().includes(".gif") ? "gif" : novaMidiaTipo;
     setMidias([...midias, { url, tipo, legenda: novaMidiaLegenda.trim() || undefined }]);
     setNovaMidiaUrl("");
     setNovaMidiaLegenda("");
+    setAvisoMidia(null);
   }
 
   function removerMidia(index: number) {
@@ -198,17 +221,32 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     });
   }
 
+  /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
+  function aceitarMidia(dataUrl: string) {
+    const aviso = conferirTamanhoDaImagem(dataUrl, "midias");
+    setAvisoMidia(aviso);
+    setNovaMidiaUrl(aviso ? "" : dataUrl);
+  }
+
+  function aceitarCapaProjeto(dataUrl: string) {
+    const aviso = conferirTamanhoDaImagem(dataUrl, "projetos");
+    setAvisoProjeto(aviso);
+    setNovoProjImg(aviso ? "" : dataUrl);
+  }
+
   async function handleUploadArquivoMidia(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      // O GIF sai daqui cru, sem passar pelo canvas: é o caminho que mais
+      // estoura o teto, e o `aceitarMidia` é quem barra.
       const dataUrl = await comprimirImagemArquivo(file, 1280, 0.85);
-      setNovaMidiaUrl(dataUrl);
+      aceitarMidia(dataUrl);
     } catch {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        if (result) setNovaMidiaUrl(result);
+        if (result) aceitarMidia(result);
       };
       reader.readAsDataURL(file);
     }
@@ -219,12 +257,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     if (!file) return;
     try {
       const dataUrl = await comprimirImagemArquivo(file, 1000, 0.82);
-      setNovoProjImg(dataUrl);
+      aceitarCapaProjeto(dataUrl);
     } catch {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
-        if (result) setNovoProjImg(result);
+        if (result) aceitarCapaProjeto(result);
       };
       reader.readAsDataURL(file);
     }
@@ -839,7 +877,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                         type="text"
                         className="input-texto"
                         value={novoProjImg}
-                        onChange={(e) => setNovoProjImg(e.target.value)}
+                        onChange={(e) => {
+                          setNovoProjImg(e.target.value);
+                          setAvisoProjeto(conferirTamanhoDaImagem(e.target.value.trim(), "projetos"));
+                        }}
                         placeholder="Cole a URL ou selecione uma imagem do dispositivo"
                       />
                       <label className="botao botao-secundario btn-upload-label">
@@ -864,6 +905,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                           ✕ Remover imagem
                         </button>
                       </div>
+                    ) : null}
+                    {avisoProjeto ? (
+                      <span
+                        role="alert"
+                        style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}
+                      >
+                        ⚠ {avisoProjeto}
+                      </span>
                     ) : null}
                   </div>
 
@@ -957,7 +1006,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                         type="text"
                         className="input-texto"
                         value={novaMidiaUrl}
-                        onChange={(e) => setNovaMidiaUrl(e.target.value)}
+                        onChange={(e) => {
+                          setNovaMidiaUrl(e.target.value);
+                          setAvisoMidia(conferirTamanhoDaImagem(e.target.value.trim(), "midias"));
+                        }}
                         placeholder="Cole o link direto da imagem ou GIF..."
                       />
                       <label className="botao botao-secundario btn-upload-label">
@@ -995,6 +1047,15 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                         ✕ Cancelar
                       </button>
                     </div>
+                  ) : null}
+
+                  {avisoMidia ? (
+                    <span
+                      role="alert"
+                      style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}
+                    >
+                      ⚠ {avisoMidia}
+                    </span>
                   ) : null}
 
                   <div className="form-acoes-fim">

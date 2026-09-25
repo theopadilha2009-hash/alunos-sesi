@@ -338,8 +338,19 @@ criar o import.
 
 Quase-folhas, que também são testados direto porque só importam de fora do
 projeto ou só tipos: `sessao.ts` (só `node:crypto`), `senha.ts` (só
-`node:crypto` e `@node-rs/argon2`) e `seguranca.ts` (só `node:crypto` e um import
-**de tipo** de `tipos.ts`, que o strip apaga em runtime).
+`node:crypto` e `@node-rs/argon2`) e `seguranca.ts`.
+
+`seguranca.ts` é a exceção que confirma a regra, e ela é estreita: o único
+import de runtime que ele tem é `./limites.ts`, e **com a extensão escrita**, com
+`allowImportingTsExtensions` ligado no `tsconfig.json`. É o único arquivo de
+`src/` que escreve a extensão — o resto fica sem, porque só o bundler lê, e o
+bundler resolve dos dois jeitos. Mantenha o `.ts` ali: sem ele o
+`tests/seguranca.test.mjs` deixa de carregar, e o `npm run typecheck` **não**
+avisa, porque `tsc` com `moduleResolution: "bundler"` aceita os dois.
+
+`limites.ts` é folha e existe justamente por isso: o formulário do Estúdio
+(componente de cliente) precisa dos mesmos tetos, e não pode importar
+`seguranca.ts`, que puxa `node:crypto`.
 
 Os módulos que dependem de ambiente (`dados.ts`, `auth.ts`, `rate-limit.ts`,
 `exportar-cracha.ts`, `supabase/*`) ficam fora desse conjunto e não são testados
