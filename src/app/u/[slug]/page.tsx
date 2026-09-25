@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
 import {
   IconeCracha,
@@ -13,7 +14,6 @@ import {
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
 import { LIMITES_STICKERS } from "@/lib/limites";
-import { iniciais } from "@/lib/links";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -54,7 +54,13 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
   // a um projeto específico. Mostrar os dois no hero movia de lugar o que ele
   // posicionou no Estúdio.
   const stickers = Array.isArray(aluno.stickers) ? aluno.stickers : [];
-  const stickersDoBanner = stickers.filter((st) => st.alvo !== "projeto");
+  // A vitrine de projetos desta página corta em três. O sticker preso ao quarto
+  // não tem onde aparecer, e sumir calado seria pior que o desvio antigo: ele cai
+  // no banner, que é onde estava antes de o aluno prendê-lo a um projeto.
+  const projetosNaTela = new Set((aluno.projetos ?? []).slice(0, 3).map((p) => p.id));
+  const stickersDoBanner = stickers.filter(
+    (st) => st.alvo !== "projeto" || !projetosNaTela.has(st.projetoId ?? ""),
+  );
   const stickersDoProjeto = (projetoId: string) =>
     stickers.filter((st) => st.alvo === "projeto" && st.projetoId === projetoId);
 
@@ -103,7 +109,7 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
           ))}
 
           <div className="nfc-avatar-wrapper">
-            <span className="avatar nfc-avatar">{iniciais(aluno.nome)}</span>
+            <Avatar nome={aluno.nome} foto={aluno.foto_url} className="nfc-avatar" />
             <div className="nfc-pulse-ring" />
           </div>
 

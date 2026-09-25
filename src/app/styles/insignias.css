@@ -1,10 +1,10 @@
 /* ==========================================================================
    Insígnias — selo derivado de conquista (src/components/Insignias.tsx).
 
-   Duas formas: a grade completa, com barra de progresso nas que faltam, e a
-   faixa compacta, só com as conquistadas. As duas vivem aqui porque o mesmo
-   selo aparece no portfólio público e dentro do editor de perfil, e um arquivo
-   por tela duplicaria o desenho do selo.
+   Uma forma só, a grade, porque o mesmo selo aparece no portfólio público e
+   dentro do editor de perfil, e um arquivo por tela duplicaria o desenho do
+   selo. A caixa fechada com a barra andando é o que faz alguém voltar ao
+   perfil, então ela existe nas duas telas.
 
    A diferença entre conquistada e bloqueada é cor e opacidade, nunca forma:
    mudar o traço faria a caixa fechada parecer outro selo.
@@ -104,41 +104,6 @@
   bottom: -0.15rem;
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
-  color: var(--faint);
-}
-
-/* ── Faixa compacta: só as conquistadas ───────────────────────────────────── */
-
-.insignias-faixa {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.insignia-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.6rem 0.3rem 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
-  color: var(--text);
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.insignia-chip svg {
-  color: var(--accent);
-}
-
-.insignias-vazio {
-  margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.45;
   color: var(--faint);
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
+import { Avatar } from "@/components/Avatar";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import {
@@ -17,7 +18,7 @@ import {
   IconeProjetos,
 } from "@/components/Icones";
 import { useTravaDeFoco } from "@/lib/foco";
-import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
+import { handleLinkedin, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -155,7 +156,7 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
             </button>
 
             <div className="breve-avatar-wrap">
-              <span className="avatar breve-avatar">{iniciais(aluno.nome)}</span>
+              <Avatar nome={aluno.nome} foto={aluno.foto_url} className="breve-avatar" />
               {onAbrirCracha ? (
                 <button
                   type="button"

@@ -8,10 +8,17 @@ import type { AlunoNaTela } from "./tipos";
  *
  * O crachá não pode deixar de baixar por causa de um anexo: sem foto ele sai com
  * as iniciais, que é o que ele desenhava antes de existir upload.
+ *
+ * `crossOrigin` é obrigatório, e não enfeite: `sanitizarFoto` aceita `https://`,
+ * não só data URL. Imagem de outro domínio sem CORS contamina o canvas, e aí o
+ * `toDataURL()` do fim lança `SecurityError` — o botão de baixar ficaria mudo.
+ * Com o atributo, ou o host responde com CORS e a foto entra, ou o load falha
+ * (`onerror` → iniciais). O crachá nunca fica pior do que era antes da foto.
  */
 function carregarImagem(url: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = url;

@@ -13,6 +13,10 @@ import { insigniasDe, type IconeInsignia, type PlacarDoAluno } from "@/lib/insig
  * parte que o aluno mostra: seis conquistas diferentes precisam de seis caras
  * diferentes. Reusar um ícone de interface em duas deixaria "Polivalente" e
  * "Referência Técnica" idênticas.
+ *
+ * Sem variante compacta: ela existiu por uma rodada e não teve consumidor — o
+ * editor também quer a grade, e lá o ponto é justamente ver o quanto falta.
+ * Faixa de chips conquistados é fácil de reescrever quando alguém precisar dela.
  */
 
 type PropsSvg = { children: ReactNode };
@@ -79,37 +83,8 @@ const DESENHO: Record<IconeInsignia, ReactNode> = {
   ),
 };
 
-export function Insignias({
-  placar,
-  compacto = false,
-}: {
-  placar: PlacarDoAluno;
-  /** Só as conquistadas, em faixa: para dentro do editor e de cartão. */
-  compacto?: boolean;
-}) {
+export function Insignias({ placar }: { placar: PlacarDoAluno }) {
   const lista = insigniasDe(placar);
-
-  if (compacto) {
-    const ganhas = lista.filter((i) => i.conquistada);
-    if (ganhas.length === 0) {
-      return (
-        <p className="insignias-vazio">
-          Nenhuma insígnia ainda. Elas vêm das estrelas e dos endossos dos colegas — não se
-          escolhe ter.
-        </p>
-      );
-    }
-    return (
-      <ul className="insignias-faixa">
-        {ganhas.map((i) => (
-          <li key={i.id} className="insignia-chip" title={i.descricao}>
-            {DESENHO[i.icone]}
-            <span>{i.nome}</span>
-          </li>
-        ))}
-      </ul>
-    );
-  }
 
   return (
     <ul className="insignias-grade">

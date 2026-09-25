@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
 import { IconeCracha, IconeEscudo, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
-import { iniciais } from "@/lib/links";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -85,7 +85,7 @@ export default async function PaginaValidarCracha({ params }: Props) {
         {/* Ficha Cadastral e Dados do Estudante */}
         <div className="validar-ficha-card">
           <div className="validar-aluno-hero">
-            <span className="avatar validar-avatar">{iniciais(aluno.nome)}</span>
+            <Avatar nome={aluno.nome} foto={aluno.foto_url} className="validar-avatar" />
             <div className="validar-aluno-titulos">
               <h2>{aluno.nome}</h2>
               <div className="validar-pills-linha">

@@ -333,7 +333,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     try {
       const dataUrl = await recortarFotoQuadrada(file);
       // O teto é rede de proteção, não o caminho comum: 256×256 em JPEG sai
-      // bem abaixo dos 120 KB. Quem estoura é o GIF, que não passa pelo canvas.
+      // tipicamente entre 15 e 25 KB, e é JPEG mesmo quando a entrada é GIF ou
+      // PNG, porque o canvas reencoda. O aviso existe para o arquivo patológico.
       const aviso = conferirTamanhoDaImagem(dataUrl, "foto");
       setAvisoFoto(aviso);
       // Recusou: a foto que já estava no perfil continua onde está. Apagá-la por
@@ -558,7 +559,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
             <span className="dica-campo">
               A imagem é recortada em quadrado pelo centro e reduzida para {FOTO_LADO}×
-              {FOTO_LADO} pixels. Vale para a vitrine, a tabela e o crachá.
+              {FOTO_LADO} pixels. Vale para a vitrine, a tabela, o cartão e o crachá.
             </span>
             {avisoFoto ? (
               <span className="edit-foto-aviso" role="alert">
@@ -1072,6 +1073,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           >
             <StickerCanvas
               nomeAluno={nome}
+              fotoAluno={foto}
               salaAluno={sala}
               projetos={projetos}
               stickers={stickers}

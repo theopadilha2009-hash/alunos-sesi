@@ -2,6 +2,7 @@
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
+import { Avatar } from "@/components/Avatar";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
@@ -32,7 +33,6 @@ import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
 import { corHabilidade } from "@/lib/habilidades";
-import { iniciais } from "@/lib/links";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
 import type { Aluno, AlunoNaTela, DesafioHackathon, RetratoSala, Sala, UsuarioSessao } from "@/lib/tipos";
@@ -190,7 +190,7 @@ export function CrmApp({
       imagem?: string;
       alunoNome: string;
       alunoSala: string | null;
-      alunoAvatar: string;
+      alunoFoto: string | null;
       alunoSlug: string;
       alunoObjeto: AlunoNaTela;
     }> = [];
@@ -206,7 +206,7 @@ export function CrmApp({
             imagem: p.imagem,
             alunoNome: a.nome,
             alunoSala: a.sala,
-            alunoAvatar: iniciais(a.nome),
+            alunoFoto: a.foto_url ?? null,
             alunoSlug: a.slug,
             alunoObjeto: a,
           });
@@ -375,7 +375,11 @@ export function CrmApp({
             title="Acessar meu perfil e editor completo"
           >
             <div className="user-avatar-wrap">
-              <span className="avatar user-avatar">{iniciais(nomeExibicao)}</span>
+              <Avatar
+                nome={nomeExibicao}
+                foto={meuAlunoNaTela?.foto_url}
+                className="user-avatar"
+              />
               <span className="user-online-dot" />
             </div>
 
@@ -659,9 +663,11 @@ export function CrmApp({
                               onClick={() => setAlunoBreveSelecionado(aluno)}
                             >
                               <header className="card-port-topo">
-                                <span className="avatar card-port-avatar">
-                                  {iniciais(aluno.nome)}
-                                </span>
+                                <Avatar
+                                  nome={aluno.nome}
+                                  foto={aluno.foto_url}
+                                  className="card-port-avatar"
+                                />
                                 <div className="card-port-titulos">
                                   <h3>{aluno.nome}</h3>
                                   <span className="card-port-sala" style={{ color: aluno.cor }}>
@@ -769,7 +775,7 @@ export function CrmApp({
 
                   <div className="criacao-mural-corpo">
                     <div className="criacao-autor">
-                      <span className="avatar mini-avatar">{p.alunoAvatar}</span>
+                      <Avatar nome={p.alunoNome} foto={p.alunoFoto} className="mini-avatar" />
                       <div>
                         <b>{p.alunoNome}</b>
                         <small>{p.alunoSala ?? "SESI"}</small>

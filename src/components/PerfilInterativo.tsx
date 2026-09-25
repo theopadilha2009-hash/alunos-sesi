@@ -360,8 +360,8 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
         {/* Galeria do portfólio. A seção inteira desaparece quando não há mídia:
             um bloco fixo dizendo "ainda não há nada" marcaria a ausência em toda
             visita e o visitante não tem como resolver isso — quem sobe mídia é o
-            aluno, no Estúdio. Sem biblioteca de lightbox: o `<a>` abre o arquivo
-            original em outra aba e o `<img>` já mostra a prévia. */}
+            aluno, no Estúdio. Sem biblioteca de lightbox: o `<img>` já é a prévia
+            e o `<a>` abre o arquivo inteiro em outra aba. */}
         {midias.length > 0 ? (
           <section className="port-midias" aria-labelledby="port-midias-titulo">
             <span className="perfil-label-secao" id="port-midias-titulo">
@@ -370,21 +370,33 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
             <div className="port-midias-grade">
               {midias.map((m, i) => {
                 const legenda = m.legenda?.trim();
+                const imagem = (
+                  <img
+                    className="port-midia-img"
+                    src={m.url}
+                    alt={legenda || `Mídia do portfólio de ${aluno.nome}`}
+                    loading="lazy"
+                  />
+                );
                 return (
                   <figure className="port-midia" key={`${m.url}-${i}`}>
-                    <a
-                      className="port-midia-link"
-                      href={m.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        className="port-midia-img"
-                        src={m.url}
-                        alt={legenda || `Mídia do portfólio de ${aluno.nome}`}
-                        loading="lazy"
-                      />
-                    </a>
+                    {/* O link só existe quando leva a algum lugar: navegador
+                        bloqueia abrir `data:` em aba nova, então para upload do
+                        próprio Estúdio (que é data URL) o `<a>` seria um clique
+                        que não faz nada — exatamente o tipo de promessa vazia que
+                        esta rodada foi desfazer. */}
+                    {m.url.startsWith("http") ? (
+                      <a
+                        className="port-midia-link"
+                        href={m.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {imagem}
+                      </a>
+                    ) : (
+                      <span className="port-midia-link">{imagem}</span>
+                    )}
                     {legenda ? (
                       <figcaption className="port-midia-legenda">{legenda}</figcaption>
                     ) : null}
