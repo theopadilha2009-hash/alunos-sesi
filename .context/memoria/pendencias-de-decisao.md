@@ -1,41 +1,50 @@
 ---
 name: pendencias-de-decisao
-description: O que ficou pendente por ser decisão (design/produto), não por falta de trabalho — com o fix já calculado em cada caso
+description: O que continua pendente por ser decisão (design/produto) e o que ficou decidido nesta rodada — pra ninguém "consertar" de volta o que foi decidido
 metadata:
   type: project
 ---
 
-Levantado em 2026-09-25, ao fechar a onda 3/4. Nenhum destes é oversight: cada um
-foi identificado, medido, e parado de propósito esperando decisão. Não "conserte"
-nenhum deles como se fosse bug esquecido.
+Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
+identificado e medido. Os que sobraram esperam decisão; os que fecharam estão aqui
+pelo motivo inverso — parecem bug pra quem lê o código depois.
 
-- **Focus trap ausente nos 5 diálogos.** `CrachaModal`, `CurriculoImpressao`,
-  `CommandBar`, `ModalPerfilBreve` e `MuralDesafios` declaram `aria-modal="true"`
-  mas o Tab escapa para o conteúdo atrás. O foco já entra e volta desde o PR #10
-  (**4af04f8**), o que falta é *circular* dentro do diálogo. Fix: um hook
-  compartilhado entre os 5 — julgamento de design porque muda o comportamento de
-  teclado em toda a app.
-- **`--faint` do tema escuro em 4,09:1** sobre `--bg` e **3,8:1** sobre
-  `--surface` (AA pede 4,5:1 para texto normal; o token é usado em texto de
-  11-13px). O tema claro foi corrigido e está em 4,55:1, documentado em
-  `src/app/styles/tokens.css:58`. Cálculo pronto: `#6b7c93` dá 4,57:1 sobre o
-  `--bg`, mas para passar também sobre o `--surface` precisa de algo como
-  `#74849b` (4,77:1). Decisão de design porque mexe em 39 usos e achata a
-  hierarquia entre `--faint` e `--dim`.
-- **`PainelAdmIntegrado` deixou de desmontar a aba inativa** no PR #7. Antes,
-  trocar de aba descartava o formulário; agora o estado e o `useActionState`
-  persistem. Mudança de comportamento visível que ninguém pediu — falta decidir
-  se é o desejado.
-- **Ícones 192 e 512 são wordmarks** (165x64 e 264x64) rotulados como quadrados
-  no manifest. Peça de design, para o Daniel.
-- **`/alunos/[slug]` é indexável** (`src/app/sitemap.ts` lista um URL por aluno;
-  `/u/[slug]` é `noindex`). O perfil expõe nome, bio e badges sociais. Escolha de
-  privacidade/produto, não técnica.
+**Já resolvido, não reabra sem falar com o Ruan:**
 
-**Why:** os três primeiros parecem bugs para quem lê o código depois — `aria-modal`
-sem trap, token abaixo de AA, estado que persiste sem querer. Sem esta nota, a
-próxima sessão gasta tempo redescobrindo que já eram conhecidos, ou pior, "corrige"
-uma decisão pendente sem o Ruan.
+- **Trava de foco nos 5 diálogos** — implementada em `src/lib/foco.ts` (o núcleo
+  `proximoFoco` é puro e tem teste; o resto é o efeito). O listener fica no
+  `document`, não no container: o caso que importa é o foco *já ter* escapado.
+- **`--faint` do tema escuro** — está em `#8291a8`, o menor clareamento que passa
+  AA nos quatro fundos escuros. A conta está no comentário do token, em
+  `src/app/styles/tokens.css`.
+- **`/alunos/[slug]`** — virou `noindex, follow` e o sitemap ficou só com
+  `/alunos`. Era contradição: o mesmo aluno já era noindex em `/u/[slug]` e
+  `/validar/[slug]`, e o sitemap convidava justamente a porta que o HTML mandava
+  não indexar. Reverter é uma linha, se a decisão de produto mudar.
+- **`PainelAdmIntegrado` deixou de desmontar a aba inativa** (PR #7). Foi decidido
+  **manter**: o `aria-controls="adm-painel-alunos"` só funciona se o elemento
+  existir no DOM, então voltar a renderizar condicionalmente quebraria a ligação
+  ARIA que a auditoria tinha acabado de confirmar inteira. Se alguém for
+  "consertar" isso, é aqui que para.
 
-**How to apply:** ao tocar em qualquer um destes, leve o fix calculado e peça a
-decisão — não aplique. Ver [[infra-deploy]] para o fluxo de PR/deploy.
+**Continua aberto:**
+
+- **Hierarquia entre `--faint` e `--dim` no tema escuro.** Efeito colateral de
+  fazer o `--faint` passar AA: a distância entre os dois caiu de 1,85:1 para
+  1,24:1 e, no mesmo corpo de fonte, os dois se leem como um. Onde dói:
+  os chips de filtro de `/alunos` (contador de 13,6px em `--faint` ao lado do
+  rótulo em `--dim` do mesmo tamanho) — o número perdeu o ar de badge. **Medido:
+  o teto dessa distância respeitando AA é 1,43:1**, então não existe valor de
+  token que resolva; quem precisa se destacar precisa de tratamento próprio
+  (pill, fundo). Peça de design, para o Daniel.
+- **Ícones 192 e 512 são wordmarks** (165x64 e 264x64) rotulados como quadrados no
+  manifest. Peça de design, para o Daniel.
+
+**Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
+trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
+que sumiu do Google. Sem esta nota, a próxima sessão "corrige" de volta uma decisão
+tomada. E a pendência do `--faint` parece fácil de resolver mexendo no token: não é,
+a conta já foi feita e o teto é 1,43:1.
+
+**How to apply:** ao tocar em qualquer um destes, leve isto e peça a decisão — não
+aplique por conta. Ver [[infra-deploy]] para o fluxo de PR/deploy.
