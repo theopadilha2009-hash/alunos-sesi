@@ -1,34 +1,18 @@
 import type { MetadataRoute } from "next";
-import { listarAlunos } from "@/lib/dados";
 import { URL_BASE } from "@/lib/links";
 
-export const dynamic = "force-dynamic";
-
 /**
- * Anuncia só o que é público de verdade: a vitrine e um URL por aluno.
+ * A única rota que vale anunciar é a vitrine.
  *
- * A raiz ficou de fora porque é a tela de login do CRM — anunciá-la fazia o
- * Google receber um mapa de páginas que o próprio HTML marcava como noindex,
- * que é o pior dos dois mundos (a instrução se anula e a URL entra no índice
- * pela porta do sitemap). Também ficam de fora /u/[slug] e /validar/[slug]:
- * são páginas de identidade e conferência, marcadas noindex na origem.
+ * Um URL por aluno ficou de fora: o perfil traz nome, bio livre e redes de
+ * menor de idade, e as outras duas portas do mesmo aluno (/u/ e /validar/) já
+ * são noindex. Anunciar aqui era a contradição que o próprio #7 corrigiu uma vez
+ * — sitemap convidando o que o HTML manda não indexar se anula, e o Google acaba
+ * entrando pela porta do sitemap.
+ *
+ * A raiz fica de fora porque é a tela de login do CRM.
  */
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let alunos: { slug: string; atualizado_em?: string }[] = [];
-
-  try {
-    alunos = await listarAlunos();
-  } catch {
-    alunos = [];
-  }
-
-  const rotasAlunos: MetadataRoute.Sitemap = alunos.map((a) => ({
-    url: `${URL_BASE}/alunos/${a.slug}`,
-    lastModified: a.atualizado_em ? new Date(a.atualizado_em) : new Date(),
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
-
+export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: `${URL_BASE}/alunos`,
@@ -36,6 +20,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1.0,
     },
-    ...rotasAlunos,
   ];
 }

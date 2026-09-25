@@ -6,6 +6,7 @@ import { Roseta } from "@/components/Roseta";
 import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
+import { useTravaDeFoco } from "@/lib/foco";
 import { corHabilidade } from "@/lib/habilidades";
 import { iniciais } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -18,6 +19,7 @@ type Props = {
 export function CrachaModal({ aluno, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogoRef = useRef<HTMLDivElement>(null);
+  useTravaDeFoco(dialogoRef);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState(false);

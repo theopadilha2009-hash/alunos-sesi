@@ -10,6 +10,7 @@ import {
   IconeLinkExterno,
   IconeProjetos,
 } from "@/components/Icones";
+import { useTravaDeFoco } from "@/lib/foco";
 import type { AlunoNaTela } from "@/lib/tipos";
 import { iniciais } from "@/lib/links";
 
@@ -21,6 +22,7 @@ type Props = {
 export function CurriculoImpressao({ aluno, onFechar }: Props) {
   const [qrValidador, setQrValidador] = useState<string>("");
   const dialogoRef = useRef<HTMLDivElement>(null);
+  useTravaDeFoco(dialogoRef);
 
   const urlValidacao =
     typeof window !== "undefined"

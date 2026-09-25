@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fold } from "@/lib/busca";
 import { corDaSala } from "@/lib/cores";
+import { useTravaDeFoco } from "@/lib/foco";
 import { iniciais } from "@/lib/links";
 import {
   IconeBusca,
@@ -66,6 +67,8 @@ export function CommandBar({
   const [indiceFoco, setIndiceFoco] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
+  const dialogoRef = useRef<HTMLDivElement>(null);
+  useTravaDeFoco(dialogoRef);
   // onFechar chega inline do pai (identidade nova a cada render): em ref para o efeito
   // não re-executar e devolver o foco no meio da interação
   const fecharRef = useRef(onFechar);
@@ -260,6 +263,7 @@ export function CommandBar({
   return (
     <div className="modal-backdrop" onClick={onFechar}>
       <div
+        ref={dialogoRef}
         className="cmd-container"
         role="dialog"
         aria-modal="true"

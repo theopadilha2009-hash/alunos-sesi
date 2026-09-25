@@ -33,7 +33,24 @@
   --surface-3: #1e2a38;
   --text: #f8fafc;
   --dim: #94a3b8;
-  --faint: #64748b;
+  /* Era #64748b, que dava 4,09:1 sobre o --bg e só 3,06:1 sobre o --surface-3.
+     AA pede 4,5:1 para texto normal, e este token veste legenda e rótulo de
+     11-13px. #8291a8 é o MENOR clareamento que passa nos quatro fundos escuros:
+     6,09 / 5,68 / 5,14 / 4,55 (--bg, --surface, --surface-2, --surface-3).
+     Um passo abaixo — #74849b — ainda reprovava em 4,32 e 3,82.
+
+     O --surface-3 é o que aperta, e nas duas rotas publicas ele NAO aparece
+     atras deste token (medido no browser: so --bg, --surface e --surface-2).
+     Ele fica no calculo porque o crm.css usa --surface-3 como fundo em quatro
+     regras e essas telas sao atras de login — sem poder medir, o piso vale.
+
+     O custo e a distancia contra o --dim: 1,85:1 virou 1,24:1, e num rotulo de
+     13,6px ao lado de outro --dim do mesmo corpo os dois se leem como um so. O
+     teto dessa distancia com AA respeitado e 1,43:1 (o piso do AA em
+     --surface-2), entao nenhum valor de token resolve — quem precisa se
+     destacar (o contador dos chips) precisa de tratamento proprio, nao de um
+     degrau de cor. Registrado em .context/memoria. */
+  --faint: #8291a8;
   --line: rgba(255, 255, 255, 0.08);
   --line-soft: rgba(255, 255, 255, 0.04);
   /* --fg e --border nasceram sendo usados e nunca definidos: as 15 bordas e as

@@ -16,6 +16,7 @@ import {
   IconePlus,
   IconeProjetos,
 } from "@/components/Icones";
+import { useTravaDeFoco } from "@/lib/foco";
 import { handleLinkedin, iniciais, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -32,6 +33,7 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
 
   const dialogoRef = useRef<HTMLDivElement>(null);
+  useTravaDeFoco(dialogoRef);
   // Callbacks e estado lidos de dentro do listener: em ref para o efeito não depender deles
   const fecharRef = useRef(onFechar);
   const curriculoAbertoRef = useRef(curriculoAberto);

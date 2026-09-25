@@ -11,6 +11,7 @@ import {
   IconePlus,
   IconeProjetos,
 } from "@/components/Icones";
+import { useTravaDeFoco } from "@/lib/foco";
 import type { DesafioHackathon, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
@@ -26,6 +27,7 @@ export function MuralDesafios({ desafios, usuario }: Props) {
   });
 
   const dialogoRef = useRef<HTMLDivElement>(null);
+  useTravaDeFoco(dialogoRef);
 
   // ESC fecha com o foco em qualquer lugar da página (o backdrop não recebe foco)
   useEffect(() => {
