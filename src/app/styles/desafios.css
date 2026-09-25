@@ -1,0 +1,314 @@
+/* ── 5. MURAL DE DESAFIOS & HACKATHONS SESI ───────────────────────────────── */
+.mural-desafios-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.mural-topo-banner {
+  background: radial-gradient(circle at 80% 20%, rgba(227, 6, 19, 0.18) 0%, rgba(16, 24, 38, 0.95) 70%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 2.25rem;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+}
+
+.mural-badge-linha {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.mural-tag-sesi {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #E30613;
+  text-transform: uppercase;
+}
+
+.mural-tag-hackathon {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.65rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.mural-titulo {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.6rem;
+  line-height: 1.25;
+}
+
+.mural-subtitulo {
+  font-size: 0.94rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 800px;
+}
+
+.mural-filtros-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.filtros-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+.filtros-botoes-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn-filtro-cat {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-filtro-cat:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+.btn-filtro-ativo {
+  background: #E30613 !important;
+  color: #ffffff !important;
+  border-color: #E30613 !important;
+}
+
+.mural-desafios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.card-desafio-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.card-desafio-item:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3);
+}
+
+.desafio-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.desafio-categoria-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.25rem 0.65rem;
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+
+.desafio-prazo-tag {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.desafio-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.desafio-titulo {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--fg);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.desafio-subtitulo-texto {
+  font-size: 0.84rem;
+  color: var(--dim);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.desafio-descricao {
+  font-size: 0.86rem;
+  color: var(--fg);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.desafio-criterios-bloco {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.criterios-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+.criterios-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.criterios-lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--fg);
+}
+
+.desafio-recompensa-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.recompensa-icone-wrap {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.recompensa-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.recompensa-rotulo {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.recompensa-nome {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.desafio-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.desafio-contagem-submissoes {
+  font-size: 0.76rem;
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.btn-submeter-desafio {
+  white-space: nowrap;
+}
+
+.modal-submissao-desafio {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  max-width: 560px;
+  width: 90%;
+  padding: 2rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.modal-submissao-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.submissao-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #E30613;
+  text-transform: uppercase;
+}
+
+.modal-submissao-topo h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0.25rem 0 0;
+  color: var(--fg);
+}
+
+.formulario-submissao-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-submissao-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+

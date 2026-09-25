@@ -19,6 +19,8 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+// Sem indexação: esta página é alcançada pelo cartão NFC, não por busca, e
+// expõe contato e redes do aluno. Fica fora do sitemap também.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
@@ -26,12 +28,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!aluno) {
     return {
       title: "Cartão Estudantil NFC | SESI SC Joinville",
+      robots: { index: false, follow: false },
     };
   }
 
   return {
     title: `${aluno.nome} · Cartão Digital & Bio | SESI SC Joinville`,
     description: `${aluno.nome} · Portfólio, conexões e projetos no SESI SENAI Joinville.`,
+    robots: { index: false, follow: false },
   };
 }
 

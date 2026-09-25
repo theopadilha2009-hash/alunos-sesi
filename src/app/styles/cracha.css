@@ -1,0 +1,487 @@
+/* ── Crachá Holográfico 3D (SESI Pass) ─────────────────────────────────── */
+
+.cracha-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 28rem;
+  width: 100%;
+  contain: layout style;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  animation: scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.cracha-fechar {
+  position: absolute;
+  top: -1.2rem;
+  right: -0.6rem;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #111a22;
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.5);
+  transition: all 0.15s ease;
+}
+
+.cracha-fechar:hover {
+  background: var(--vermelho);
+  color: #fff;
+  border-color: var(--vermelho);
+}
+
+.cracha-cordao-presilha {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: -10px;
+  z-index: 2;
+}
+
+.cracha-fita {
+  width: 44px;
+  height: 24px;
+  background: linear-gradient(90deg, #38c7bd, #3b82f6, #38c7bd);
+  border-radius: 4px 4px 0 0;
+  border: 1px solid rgb(255 255 255 / 0.3);
+}
+
+.cracha-gancho {
+  width: 26px;
+  height: 12px;
+  background: #cbd5e1;
+  border-radius: 2px 2px 6px 6px;
+  border: 1px solid #64748b;
+}
+
+.cracha-card,
+.cracha-card-leve {
+  --text: #ffffff !important;
+  --dim: #e2e8f0 !important;
+  --faint: #94a3b8 !important;
+  color: #ffffff !important;
+  position: relative;
+  width: 100%;
+  border-radius: 24px;
+  border: 2px solid color-mix(in srgb, var(--sala-cor, #38c7bd) 85%, rgba(255, 255, 255, 0.2));
+  background: linear-gradient(165deg, #101923 0%, #080d12 100%);
+  padding: 1.85rem 1.65rem;
+  box-shadow:
+    0 30px 70px -15px rgb(0 0 0 / 0.98),
+    0 0 40px -10px color-mix(in srgb, var(--sala-cor, #38c7bd) 40%, transparent);
+  overflow: hidden;
+  contain: layout style;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.cracha-card .cracha-nome {
+  color: #ffffff !important;
+  font-size: 1.35rem !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cracha-card .cracha-logo-texto {
+  color: #ffffff !important;
+  font-weight: 800;
+}
+
+.cracha-card .cracha-sub {
+  color: #38c7bd !important;
+  font-weight: 800;
+}
+
+.cracha-card .cracha-bio {
+  color: #e2e8f0 !important;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.cracha-card .cracha-sala-pill {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  font-weight: 700;
+}
+
+.cracha-card .tag-habilidade {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.cracha-card .cracha-estrela-badge {
+  background: #f59e0b !important;
+  color: #0b1418 !important;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.cracha-card .cracha-qr-dica {
+  color: #94a3b8 !important;
+}
+
+.cracha-card .cracha-matricula-texto {
+  color: #cbd5e1 !important;
+  font-family: monospace;
+}
+
+.cracha-card .cracha-codigo-barras .barra {
+  background: #e2e8f0 !important;
+}
+
+.cracha-furo {
+  width: 40px;
+  height: 9px;
+  background: #06090c;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  margin: 0 auto 1.2rem;
+}
+
+.cracha-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.cracha-marca {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cracha-logo-texto {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+.cracha-sub {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+
+.cracha-chip {
+  width: 32px;
+  height: 24px;
+  background: linear-gradient(135deg, #d4af37, #f3e5ab, #aa771c);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 3px;
+  border: 1px solid #5a450c;
+}
+
+.chip-linha {
+  height: 1px;
+  background: #5a450c;
+  width: 100%;
+}
+
+.cracha-corpo {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.cracha-foto-wrapper {
+  position: relative;
+  flex: none;
+}
+
+.cracha-avatar {
+  display: grid;
+  place-items: center;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: 18px;
+  border: 2px solid var(--sala-cor, var(--accent));
+  background: color-mix(in srgb, var(--sala-cor, var(--accent)) 25%, var(--surface-2));
+  font-family: var(--fonte-titulo);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 0 20px -5px var(--sala-cor, var(--accent));
+}
+
+.cracha-estrela-badge {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f3b544;
+  color: #0b1418;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+.cracha-dados {
+  flex: 1;
+  min-width: 0;
+}
+
+.cracha-nome {
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.4rem;
+}
+
+.cracha-linha-sala {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.cracha-sala-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.badge-sala-tabela {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.26rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--sala-cor, var(--accent)) 30%, var(--line));
+  background: color-mix(in srgb, var(--sala-cor, var(--accent)) 8%, var(--surface-2));
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.ponto-sala {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--sala-cor, var(--accent));
+}
+
+.tabela-habilidades-clean {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.cracha-bio {
+  font-size: 0.8rem;
+  color: var(--dim);
+  line-height: 1.4;
+  margin: 0 0 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cracha-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 0.9rem;
+}
+
+.cracha-qrcode-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cracha-qrcode {
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+  border: 2px solid #fff;
+  background: #fff;
+  padding: 2px;
+}
+
+.cracha-qrcode-placeholder {
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.cracha-qr-dica {
+  font-size: 0.62rem;
+  color: var(--faint);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cracha-matricula-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.cracha-codigo-barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 28px;
+  margin-bottom: 0.4rem;
+}
+
+.barra {
+  width: 2px;
+  height: 100%;
+  background: var(--text);
+}
+
+.barra.grossa {
+  width: 4px;
+}
+
+.barra.fina {
+  width: 1px;
+}
+
+.cracha-matricula-texto {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.cracha-acoes-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 1.25rem;
+}
+
+.cracha-acoes-principais {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.btn-cracha-acao {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+  white-space: nowrap;
+}
+
+.btn-cracha-download {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  flex: 1.4;
+  box-shadow: 0 4px 14px -4px var(--glow);
+}
+
+.btn-cracha-download:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-cracha-copiar {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.btn-cracha-copiar:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-cracha-link {
+  background: var(--surface-2);
+  color: var(--dim);
+  border: 1px solid var(--line);
+  flex: 0.9;
+}
+
+.btn-cracha-link:hover {
+  color: var(--text);
+  border-color: var(--line-soft);
+  transform: translateY(-1px);
+}
+
+.cracha-acoes-redes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.botao-primario {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+

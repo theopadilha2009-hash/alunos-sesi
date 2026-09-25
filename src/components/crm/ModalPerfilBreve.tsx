@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
@@ -30,6 +30,36 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
+
+  const dialogoRef = useRef<HTMLDivElement>(null);
+  // Callbacks e estado lidos de dentro do listener: em ref para o efeito não depender deles
+  const fecharRef = useRef(onFechar);
+  const curriculoAbertoRef = useRef(curriculoAberto);
+
+  useEffect(() => {
+    fecharRef.current = onFechar;
+    curriculoAbertoRef.current = curriculoAberto;
+  });
+
+  // ESC fecha com o foco em qualquer lugar da página (o backdrop não recebe foco)
+  useEffect(() => {
+    const focoAnterior = document.activeElement as HTMLElement | null;
+
+    function aoTeclar(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      // O mini-currículo abre por cima e trata o próprio ESC
+      if (curriculoAbertoRef.current) return;
+      fecharRef.current();
+    }
+
+    document.addEventListener("keydown", aoTeclar);
+    dialogoRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("keydown", aoTeclar);
+      focoAnterior?.focus();
+    };
+  }, []);
 
   const urlPerfil =
     typeof window !== "undefined"
@@ -74,8 +104,16 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
 
   return (
     <>
-      <div className="modal-backdrop" onClick={onFechar} role="dialog" aria-modal="true">
-        <div className="modal-perfil-breve" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-backdrop" onClick={onFechar}>
+        <div
+          className="modal-perfil-breve"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="perfil-breve-titulo"
+          tabIndex={-1}
+          ref={dialogoRef}
+          onClick={(e) => e.stopPropagation()}
+        >
           <header
             className="breve-topo"
             style={{ ["--sala-cor" as string]: aluno.cor, position: "relative", overflow: "hidden" }}
@@ -131,7 +169,7 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
 
             <div className="breve-identificacao">
               <div className="breve-nome-linha">
-                <h2>{aluno.nome}</h2>
+                <h2 id="perfil-breve-titulo">{aluno.nome}</h2>
                 {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
                 {aluno.destaque ? (
                   <span className="selo selo-adm">

@@ -11,6 +11,9 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+// Sem indexação: a página existe para validar um documento apresentado a
+// alguém, não para ser encontrada por busca. Indexar aqui publicaria nome e
+// matrícula de aluno.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
@@ -18,12 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!aluno) {
     return {
       title: "Verificação de Documento Estudantil | SESI SC Joinville",
+      robots: { index: false, follow: false },
     };
   }
 
   return {
     title: `Verificação Oficial: ${aluno.nome} | SESI SENAI Joinville`,
     description: `Validação criptográfica de matrícula ativa de ${aluno.nome} na Escola SESI SENAI Joinville - SC.`,
+    robots: { index: false, follow: false },
   };
 }
 

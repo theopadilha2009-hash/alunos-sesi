@@ -66,6 +66,13 @@ export function CommandBar({
   const [indiceFoco, setIndiceFoco] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
+  // onFechar chega inline do pai (identidade nova a cada render): em ref para o efeito
+  // não re-executar e devolver o foco no meio da interação
+  const fecharRef = useRef(onFechar);
+
+  useEffect(() => {
+    fecharRef.current = onFechar;
+  });
 
   useEffect(() => {
     if (aberto) {
@@ -73,6 +80,23 @@ export function CommandBar({
       setIndiceFoco(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
+  }, [aberto]);
+
+  // ESC fecha com o foco em qualquer lugar da página (o backdrop não recebe foco)
+  useEffect(() => {
+    if (!aberto) return;
+    const focoAnterior = document.activeElement as HTMLElement | null;
+
+    function aoTeclar(e: KeyboardEvent) {
+      if (e.key === "Escape") fecharRef.current();
+    }
+
+    document.addEventListener("keydown", aoTeclar);
+
+    return () => {
+      document.removeEventListener("keydown", aoTeclar);
+      focoAnterior?.focus();
+    };
   }, [aberto]);
 
   const acoesFixas: ItemResultado[] = useMemo(
@@ -216,9 +240,8 @@ export function CommandBar({
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Escape") {
-      onFechar();
-    } else if (e.key === "ArrowDown") {
+    // ESC é tratado pelo listener global no document (fecha uma única vez)
+    if (e.key === "ArrowDown") {
       e.preventDefault();
       setIndiceFoco((i) => (i + 1) % Math.max(1, resultados.length));
     } else if (e.key === "ArrowUp") {
@@ -235,8 +258,17 @@ export function CommandBar({
   if (!aberto) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onFechar} role="dialog" aria-modal="true">
-      <div className="cmd-container" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onFechar}>
+      <div
+        className="cmd-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cmd-titulo"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="cmd-titulo" className="sr-only">
+          Busca rápida e comandos
+        </h2>
         <div className="cmd-campo">
           <span className="cmd-icone" aria-hidden="true">
             <IconeBusca tamanho={16} />

@@ -1,4 +1,45 @@
-import confetti from "canvas-confetti";
+/**
+ * Efeitos festivos: som de estrela e confetes.
+ *
+ * Os dois são opcionais. O gate mora aqui — mute persistido (`sesi.som`, mesmo
+ * padrão de `tema.ts`) e `prefers-reduced-motion` — e o `canvas-confetti` só é
+ * baixado quando o efeito realmente vai tocar. Quem quiser oferecer um botão
+ * de ligar/desligar chama `definirSom`; UI não mora neste módulo.
+ */
+
+/** Chave do mute no localStorage. Ausente = ligado. */
+export const CHAVE_SOM = "sesi.som";
+
+/**
+ * O usuário deixou som e confetes ligados? Padrão é ligado; storage bloqueado
+ * (modo privado) também cai no padrão.
+ */
+export function somLigado(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_SOM) !== "desligado";
+  } catch {
+    return true;
+  }
+}
+
+/** Liga/desliga som e confetes. Persiste para as próximas visitas. */
+export function definirSom(ligado: boolean): void {
+  try {
+    localStorage.setItem(CHAVE_SOM, ligado ? "ligado" : "desligado");
+  } catch {
+    // idem tema: a escolha vale só nesta navegação
+  }
+}
+
+/** O sistema pediu menos animação? `matchMedia` pode não existir em teste. */
+function movimentoReduzido(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Síntese de áudio cristalino usando Web Audio API.
@@ -25,6 +66,8 @@ function getAudioContext(): AudioContext | null {
 
 /** Toca um acorde pentatônico suave e cristalino ao votar/estrelar */
 export function tocarSomEstrela() {
+  if (!somLigado()) return;
+
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -58,6 +101,9 @@ export function tocarSomEstrela() {
 /** Dispara uma explosão festiva de confetes com as cores oficiais do SESI */
 export function dispararConfetes(x?: number, y?: number) {
   if (typeof window === "undefined") return;
+  if (!somLigado()) return;
+  // Reduzir movimento desliga o confete antes de baixar o chunk da lib
+  if (movimentoReduzido()) return;
 
   const coresSesi = ["#3fc2bc", "#38b95d", "#f3b544", "#d74d42", "#02609e"];
 
@@ -65,14 +111,20 @@ export function dispararConfetes(x?: number, y?: number) {
   const origemX = x !== undefined ? x / window.innerWidth : 0.5;
   const origemY = y !== undefined ? y / window.innerHeight : 0.5;
 
-  confetti({
-    particleCount: 35,
-    spread: 60,
-    origin: { x: origemX, y: origemY },
-    colors: coresSesi,
-    ticks: 160,
-    gravity: 1.1,
-    scalar: 0.85,
-    disableForReducedMotion: true,
-  });
+  void import("canvas-confetti")
+    .then(({ default: confetti }) => {
+      confetti({
+        particleCount: 35,
+        spread: 60,
+        origin: { x: origemX, y: origemY },
+        colors: coresSesi,
+        ticks: 160,
+        gravity: 1.1,
+        scalar: 0.85,
+        disableForReducedMotion: true,
+      });
+    })
+    .catch(() => {
+      // sem o chunk o efeito não acontece; nada quebra por isso
+    });
 }

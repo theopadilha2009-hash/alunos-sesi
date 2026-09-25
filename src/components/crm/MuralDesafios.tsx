@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { submeterDesafioAction } from "@/app/acoes-crm";
 import {
   IconeCheck,
@@ -24,6 +24,26 @@ export function MuralDesafios({ desafios, usuario }: Props) {
   const [estadoSubmissao, formAction, enviando] = useActionState(submeterDesafioAction, {
     ok: false,
   });
+
+  const dialogoRef = useRef<HTMLDivElement>(null);
+
+  // ESC fecha com o foco em qualquer lugar da página (o backdrop não recebe foco)
+  useEffect(() => {
+    if (!desafioSelecionado) return;
+    const focoAnterior = document.activeElement as HTMLElement | null;
+
+    function aoTeclar(e: KeyboardEvent) {
+      if (e.key === "Escape") setDesafioSelecionado(null);
+    }
+
+    document.addEventListener("keydown", aoTeclar);
+    dialogoRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("keydown", aoTeclar);
+      focoAnterior?.focus();
+    };
+  }, [desafioSelecionado]);
 
   const categorias = [
     "todos",
@@ -133,17 +153,20 @@ export function MuralDesafios({ desafios, usuario }: Props) {
 
       {/* Modal de Submissão de Projeto para o Desafio */}
       {desafioSelecionado ? (
-        <div
-          className="modal-backdrop"
-          onClick={() => setDesafioSelecionado(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="modal-submissao-desafio" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop" onClick={() => setDesafioSelecionado(null)}>
+          <div
+            className="modal-submissao-desafio"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-submissao-titulo"
+            tabIndex={-1}
+            ref={dialogoRef}
+            onClick={(e) => e.stopPropagation()}
+          >
             <header className="modal-submissao-topo">
               <div>
                 <span className="submissao-tag">SUBMISSÃO DE PROJETO TÉCNICO</span>
-                <h3>{desafioSelecionado.titulo}</h3>
+                <h3 id="modal-submissao-titulo">{desafioSelecionado.titulo}</h3>
               </div>
               <button
                 type="button"

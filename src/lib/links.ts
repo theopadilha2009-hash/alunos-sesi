@@ -12,6 +12,17 @@
 /** Mesmo padrão da constraint github_handle em src/sql/001_schema.sql. */
 const RE_GITHUB = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
 
+/**
+ * Raiz absoluta do site, sem barra no fim.
+ *
+ * Vem do ambiente da Vercel em vez de ficar escrita no código: sitemap, robots
+ * e URLs canônicas acompanham um domínio próprio no dia em que ele existir, sem
+ * editar arquivo. O fallback é a produção atual, para o build local.
+ */
+export const URL_BASE = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "https://alunos-sesi.vercel.app";
+
 /** Mesmo padrão da constraint linkedin_url em src/sql/001_schema.sql. */
 const RE_LINKEDIN_HANDLE = /^[A-Za-z0-9\-_%]{1,100}$/;
 

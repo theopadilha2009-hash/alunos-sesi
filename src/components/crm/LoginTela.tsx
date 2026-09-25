@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { cadastroAction, loginAction, type EstadoAcaoCrm } from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
 import { TemaToggle } from "@/components/TemaToggle";
+import { aoSetasDasAbas } from "@/lib/abas";
 
 export function LoginTela() {
   const [modo, setModo] = useState<"login" | "cadastro">("login");
@@ -44,25 +45,38 @@ export function LoginTela() {
         <div className="login-abas" role="tablist">
           <button
             type="button"
+            id="login-tab-login"
             className={`login-aba-btn ${modo === "login" ? "login-aba-ativa" : ""}`}
             onClick={() => setModo("login")}
+            onKeyDown={aoSetasDasAbas}
             role="tab"
             aria-selected={modo === "login"}
+            aria-controls="login-painel-login"
+            tabIndex={modo === "login" ? 0 : -1}
           >
             Entrar
           </button>
           <button
             type="button"
+            id="login-tab-cadastro"
             className={`login-aba-btn ${modo === "cadastro" ? "login-aba-ativa" : ""}`}
             onClick={() => setModo("cadastro")}
+            onKeyDown={aoSetasDasAbas}
             role="tab"
             aria-selected={modo === "cadastro"}
+            aria-controls="login-painel-cadastro"
+            tabIndex={modo === "cadastro" ? 0 : -1}
           >
             Criar Conta
           </button>
         </div>
 
-        {modo === "login" ? (
+        <div
+          id="login-painel-login"
+          role="tabpanel"
+          aria-labelledby="login-tab-login"
+          style={{ display: modo === "login" ? "block" : "none" }}
+        >
           <form action={formActionLogin} className="login-form">
             {estadoLogin.mensagem ? (
               <p className="recado recado-erro" role="alert">
@@ -102,7 +116,14 @@ export function LoginTela() {
               {carregandoLogin ? "Entrando..." : "Acessar o CRM →"}
             </button>
           </form>
-        ) : (
+        </div>
+
+        <div
+          id="login-painel-cadastro"
+          role="tabpanel"
+          aria-labelledby="login-tab-cadastro"
+          style={{ display: modo === "cadastro" ? "block" : "none" }}
+        >
           <form action={formActionCadastro} className="login-form">
             {estadoCadastro.mensagem ? (
               <p className="recado recado-erro" role="alert">
@@ -168,7 +189,7 @@ export function LoginTela() {
               {carregandoCadastro ? "Criando conta..." : "Criar Conta & Personalizar Perfil →"}
             </button>
           </form>
-        )}
+        </div>
 
         <footer className="login-rodape-card">
           <span>Ambiente Escolar Seguro · Rede SESI Tech 2026</span>

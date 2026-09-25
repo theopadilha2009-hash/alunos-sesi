@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import QRCode from "qrcode";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { CrachaModal } from "@/components/CrachaModal";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
@@ -40,6 +39,7 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
   // Apoio de Competências (+1 estilo LinkedIn)
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
+  const [recado, setRecado] = useState<string | null>(null);
 
   const github = urlGithub(aluno.github);
   const linkedinHandle = handleLinkedin(aluno.linkedin);
@@ -51,16 +51,29 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
       : `https://alunos-sesi.vercel.app/alunos/${aluno.slug}`;
 
   useEffect(() => {
-    QRCode.toDataURL(urlAtual, {
-      width: 180,
-      margin: 1,
-      color: {
-        dark: "#0b1418",
-        light: "#ffffff",
-      },
-    })
-      .then(setQrCodeDataUrl)
-      .catch((err) => console.error("Falha ao gerar QR Code do perfil:", err));
+    let vivo = true;
+
+    (async () => {
+      try {
+        // qrcode só entra no bundle quando o QR do perfil precisa ser gerado
+        const { toDataURL } = await import("qrcode");
+        const dataUrl = await toDataURL(urlAtual, {
+          width: 180,
+          margin: 1,
+          color: {
+            dark: "#0b1418",
+            light: "#ffffff",
+          },
+        });
+        if (vivo) setQrCodeDataUrl(dataUrl);
+      } catch (err) {
+        console.error("Falha ao gerar QR Code do perfil:", err);
+      }
+    })();
+
+    return () => {
+      vivo = false;
+    };
   }, [urlAtual]);
 
   async function copiarLink() {
@@ -73,15 +86,20 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
 
   async function handleApoiarCompetencia(hab: string) {
     if (apoiandoHab) return;
+    const anterior = votos[hab] || 0;
     setApoiandoHab(hab);
+    setRecado(null);
     setVotos((prev) => ({ ...prev, [hab]: (prev[hab] || 0) + 1 }));
 
     try {
       const res = await apoiarHabilidadeAction(aluno.id, hab);
-      if (res.ok && res.votos) {
-        setVotos(res.votos);
-      }
-    } catch {} finally {
+      if (!res.ok) throw new Error(res.mensagem ?? "Não deu para apoiar agora.");
+      if (res.votos) setVotos(res.votos);
+    } catch (erro) {
+      // Desfaz o +1 otimista: sem isso o apoio fica na tela mesmo tendo falhado
+      setVotos((prev) => ({ ...prev, [hab]: anterior }));
+      setRecado(erro instanceof Error ? erro.message : "Não deu para apoiar agora.");
+    } finally {
       setTimeout(() => setApoiandoHab(null), 400);
     }
   }
@@ -233,6 +251,12 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
               })}
             </div>
           </div>
+        ) : null}
+
+        {recado ? (
+          <p className="recado recado-erro" role="alert">
+            {recado}
+          </p>
         ) : null}
 
         {/* Grade de Criações e Projetos */}
