@@ -150,7 +150,7 @@ oficial do SESI é marca registrada e não mora no repositório.
 ## Selo
 
 Os rótulos de estado no cartão e no perfil: `selo-fixado` ("Fixado") e
-`selo-adm` ("★ Destaque do ADM"). Estilo em `src/app/globals.css`, renderizado
+`selo-adm` ("★ Destaque do ADM"). Estilo em `src/app/styles/vitrine.css`, renderizado
 em `src/components/CartaoAluno.tsx` e `src/app/alunos/[slug]/page.tsx`.
 
 ## Bio
