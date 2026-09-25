@@ -5,3 +5,4 @@
 - [Rotacionar os tokens do transcript](rotacionar-tokens-do-transcript.md) — os tokens da Vercel e do Supabase passaram pelo chat e continuam válidos
 - [O segundo app não foi definido](segundo-app-nao-definido.md) — o Théo falou em "dois apps"; só a Vitrine foi entregue
 - [Infra e deploy](infra-deploy.md) — onde o app está publicado, onde vivem as chaves e qual URL usar no smoke test
+- [Pendências de decisão](pendencias-de-decisao.md) — focus trap, `--faint` sub-AA, aba do ADM que persiste: conhecidos e parados de propósito
