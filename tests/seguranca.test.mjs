@@ -9,6 +9,7 @@ import {
   sanitizarHabilidades,
   sanitizarMidias,
   sanitizarProjetos,
+  sanitizarReposGithub,
   sanitizarStickers,
   sanitizarTexto,
   urlImagemSegura,
@@ -551,4 +552,99 @@ test("sanitizarEmail recusa malformado e vazio sem inventar", () => {
   for (const vazio of ["", "   ", null, undefined, 42]) {
     assert.equal(sanitizarEmail(vazio), null, `entrada ${JSON.stringify(vazio)}`);
   }
+});
+
+// ── Importação do GitHub ────────────────────────────────────────────────────
+
+/** Um item no formato que a API do GitHub devolve em /users/:u/repos. */
+function repoGithub(extra = {}) {
+  return {
+    id: 123456,
+    name: "robo-seguidor-de-linha",
+    description: "Robô que segue linha com PID",
+    html_url: "https://github.com/theopadilha2009-hash/robo-seguidor-de-linha",
+    language: "TypeScript",
+    stargazers_count: 7,
+    pushed_at: "2026-03-14T10:22:31Z",
+    fork: false,
+    ...extra,
+  };
+}
+
+test("mapeia os campos que o editor usa", () => {
+  const [r] = sanitizarReposGithub([repoGithub()]);
+  assert.equal(r.id, 123456);
+  assert.equal(r.nome, "robo-seguidor-de-linha");
+  assert.equal(r.descricao, "Robô que segue linha com PID");
+  assert.equal(r.url, "https://github.com/theopadilha2009-hash/robo-seguidor-de-linha");
+  assert.equal(r.linguagem, "TypeScript");
+  assert.equal(r.estrelas, 7);
+  assert.equal(r.atualizadoEm, "2026-03-14T10:22:31Z");
+});
+
+test("fork fica de fora: o repositório é de outra pessoa", () => {
+  const repos = sanitizarReposGithub([repoGithub(), repoGithub({ id: 2, fork: true })]);
+  assert.equal(repos.length, 1);
+  assert.equal(repos[0].id, 123456);
+});
+
+test("link de host que não é github.com não entra", () => {
+  const repos = sanitizarReposGithub([
+    repoGithub({ id: 1, html_url: "https://evil.example.com/a/b" }),
+    // O caso que engana quem só procura "github.com" na string: o host é
+    // `github.com.evil.com`, e o domínio real é o do atacante.
+    repoGithub({ id: 2, html_url: "https://github.com.evil.com/a/b" }),
+    repoGithub({ id: 3, html_url: "https://github.com/a/b" }),
+  ]);
+  assert.deepEqual(
+    repos.map((r) => r.id),
+    [3],
+  );
+});
+
+test("esquema perigoso não entra nem com host do GitHub", () => {
+  const repos = sanitizarReposGithub([
+    repoGithub({ id: 1, html_url: "javascript:alert(1)//github.com/a/b" }),
+    repoGithub({ id: 2, html_url: "http://github.com/a/b" }),
+  ]);
+  assert.deepEqual(repos, []);
+});
+
+test("item estranho é descartado em silêncio, sem derrubar o resto", () => {
+  const repos = sanitizarReposGithub([
+    null,
+    "texto solto",
+    42,
+    repoGithub({ id: 7 }),
+    repoGithub({ id: 8, name: "" }),
+    repoGithub({ id: 9, name: "   " }),
+  ]);
+  assert.deepEqual(
+    repos.map((r) => r.id),
+    [7],
+  );
+});
+
+test("campos ausentes viram neutro, não undefined", () => {
+  const [r] = sanitizarReposGithub([
+    { id: 5, name: "sem-nada", html_url: "https://github.com/u/sem-nada" },
+  ]);
+  assert.equal(r.descricao, "");
+  assert.equal(r.linguagem, null);
+  assert.equal(r.estrelas, 0);
+  assert.equal(r.atualizadoEm, "");
+});
+
+test("resposta que não é lista devolve lista vazia", () => {
+  assert.deepEqual(sanitizarReposGithub(null), []);
+  assert.deepEqual(sanitizarReposGithub({ message: "Not Found" }), []);
+  assert.deepEqual(sanitizarReposGithub(undefined), []);
+});
+
+test("descrição com HTML não passa crua", () => {
+  const [r] = sanitizarReposGithub([
+    repoGithub({ description: "<script>alert('xss')</script>Projeto" }),
+  ]);
+  assert.ok(!r.descricao.includes("<"), `veio com marcação: ${r.descricao}`);
+  assert.ok(r.descricao.includes("Projeto"));
 });
