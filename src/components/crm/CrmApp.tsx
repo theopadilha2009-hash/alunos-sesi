@@ -484,6 +484,18 @@ export function CrmApp({
           </div>
         </header>
 
+        {/* Aviso de moderação. Sem isto o aluno recém-cadastrado edita o perfil,
+            salva, abre o próprio link e leva 404 — sem nada na tela dizendo por
+            quê. Aparece em todas as abas de propósito: é a primeira coisa que
+            ele precisa entender. */}
+        {usuario.aprovado === false ? (
+          <div className="crm-aviso-moderacao" role="status">
+            <strong>Seu perfil aguarda aprovação.</strong> Ele ainda não aparece
+            na vitrine, no cartão nem na validação do crachá — o ADM precisa
+            liberar. Você já pode editar e salvar tudo normalmente enquanto isso.
+          </div>
+        ) : null}
+
         {/* ── ABA 1: PORTFÓLIO (Aba Principal) ──────────────────────────── */}
         {aba === "portfolio" ? (
           <div className="crm-secao-conteudo">

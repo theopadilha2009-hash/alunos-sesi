@@ -181,6 +181,29 @@
   color: var(--amarelo);
 }
 
+/* Moderação. O botão só ganha cor quando HÁ o que despachar: aprovado é o
+   estado normal da esmagadora maioria das linhas, e pintar todas de verde
+   apagaria justamente as poucas que pedem uma decisão. */
+.toggle-pendente-ativo {
+  background: color-mix(in srgb, var(--amarelo) 18%, var(--surface-2));
+  border-color: var(--amarelo);
+  color: var(--amarelo);
+}
+
+.pill-pendente {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--amarelo) 16%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--amarelo) 45%, var(--line));
+  color: var(--amarelo);
+}
+
 .adm-linha-acoes-wrap {
   display: flex;
   align-items: center;

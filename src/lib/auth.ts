@@ -142,11 +142,13 @@ export async function autenticarUsuario(
   // nem é o domínio da escola) para todo mundo, com um caso especial chumbado
   // para o `theo1234`. O aluno via no perfil um e-mail que não existia.
   let email: string | null = null;
+  let aprovado = true;
   if (usuarioDb.aluno_id) {
     const aluno = await alunoPorId(usuarioDb.aluno_id);
     if (aluno) {
       nome = aluno.nome;
       email = aluno.email;
+      aprovado = aluno.aprovado;
       if (aluno.sala_id) {
         const { data: s } = await db.from("salas").select("nome").eq("id", aluno.sala_id).maybeSingle();
         if (s?.nome) {
@@ -164,6 +166,7 @@ export async function autenticarUsuario(
     nome,
     sala,
     email,
+    aprovado,
   };
 
   const jar = await cookies();
@@ -274,6 +277,12 @@ export async function registrarUsuario(dados: {
       bio: "Novo estudante no CRM SESI. Edite seu perfil para adicionar projetos e bio!",
       projetos: [],
       midias: [],
+      // Nasce OCULTO: o auto-cadastro é anônimo (não há convite nem
+      // confirmação de vínculo), então a vitrine não pode aceitar o que ele
+      // cria sem um humano olhar. O ADM aprova pelo painel e o perfil aparece.
+      // As criações do próprio ADM ficam de fora disto — elas usam o default
+      // da coluna, que é `true`.
+      aprovado: false,
     })
     .select("id")
     .single();
@@ -313,6 +322,7 @@ export async function registrarUsuario(dados: {
     // exibiria no perfil um endereço que não existe. Ele preenche o dele no
     // editor, e aí sim é da escola.
     email: null,
+    aprovado: false,
   };
 
   const jar = await cookies();

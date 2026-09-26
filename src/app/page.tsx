@@ -33,7 +33,9 @@ export default async function PaginaPrincipal() {
   const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value, "visitante");
 
   const [alunos, salas, retrato, desafios] = await Promise.all([
-    listarAlunos(),
+    // O ADM precisa ver a fila de moderação dentro do CRM — é ali que está o
+    // botão de aprovar. Para os outros papéis, pendente não existe.
+    listarAlunos({ incluirPendentes: sessao.role === "super_adm" }),
     listarSalas(),
     listarRetrato(),
     listarDesafios(),

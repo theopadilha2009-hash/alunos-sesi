@@ -14,7 +14,7 @@ import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } fro
  */
 
 const CAMPOS_ALUNO =
-  "id,nome,slug,sala_id,linkedin,github,instagram,email,bio,foto_url,fixado,destaque,estrelas,projetos,midias,stickers,habilidades,habilidades_votos,insignias";
+  "id,nome,slug,sala_id,linkedin,github,instagram,email,bio,foto_url,fixado,destaque,aprovado,estrelas,projetos,midias,stickers,habilidades,habilidades_votos,insignias";
 
 /**
  * Resolve o que a coluna deixa em aberto, para nenhuma tela precisar saber.
@@ -62,11 +62,27 @@ export async function listarSalas(): Promise<Sala[]> {
   return salas;
 }
 
-export async function listarAlunos(): Promise<Aluno[]> {
-  const { data, error } = await clientePublico()
+/**
+ * Lista os alunos, escondendo os pendentes de moderação por padrão.
+ *
+ * O filtro é PARÂMETRO e não uma regra fixa aqui dentro porque esta função
+ * serve a três telas com necessidades opostas: a vitrine pública `/alunos` (só
+ * aprovados), a home autenticada (a mesma lista) e o painel `/adm`, que precisa
+ * justamente ver quem está esperando aprovação. Filtrar incondicionalmente
+ * aqui esconderia do ADM a própria fila que ele tem que despachar.
+ */
+export async function listarAlunos(
+  opcoes: { incluirPendentes?: boolean } = {},
+): Promise<Aluno[]> {
+  const consulta = clientePublico()
     .from("alunos")
     .select(CAMPOS_ALUNO)
     .order("nome", { ascending: true });
+
+  const { data, error } = await (opcoes.incluirPendentes
+    ? consulta
+    : consulta.eq("aprovado", true));
+
   if (error) {
     logger.error("DADOS", "Erro em listarAlunos", error);
     throw new Error(`listarAlunos: ${error.message}`);
