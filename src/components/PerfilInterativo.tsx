@@ -20,7 +20,7 @@ import {
   IconeSom,
   IconeSomMudo,
 } from "@/components/Icones";
-import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
+import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { handleLinkedin, urlGithub } from "@/lib/links";
 import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -412,6 +412,7 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
             <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
             <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
             <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+            <BadgeEmail email={aluno.email} nomeAluno={aluno.nome} />
 
             <button
               type="button"

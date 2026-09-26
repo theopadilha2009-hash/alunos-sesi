@@ -4,6 +4,7 @@ import {
   LIMITES_STICKERS,
   compararTempoConstante,
   resetarRateLimit,
+  sanitizarEmail,
   sanitizarFoto,
   sanitizarHabilidades,
   sanitizarMidias,
@@ -508,4 +509,46 @@ test("foto com esquema perigoso vira url-invalida", () => {
   const descartes = [];
   assert.equal(sanitizarFoto("javascript:alert(1)", descartes), null);
   assert.deepEqual(descartes, [{ motivo: "url-invalida", campo: "foto" }]);
+});
+
+test("sanitizarEmail aceita so o dominio da escola", () => {
+  assert.equal(
+    sanitizarEmail("theo_padilha@estudante.sesisenai.org"),
+    "theo_padilha@estudante.sesisenai.org",
+  );
+  assert.equal(
+    sanitizarEmail("  theo_padilha@estudante.sesisenai.org  "),
+    "theo_padilha@estudante.sesisenai.org",
+  );
+  assert.equal(
+    sanitizarEmail("THEO_PADILHA@ESTUDANTE.SESISENAI.ORG"),
+    "theo_padilha@estudante.sesisenai.org",
+  );
+  assert.equal(
+    sanitizarEmail("ana.souza-1@estudante.sesisenai.org"),
+    "ana.souza-1@estudante.sesisenai.org",
+  );
+});
+
+test("sanitizarEmail recusa dominio de fora, inclusive sufixo enganoso", () => {
+  // O caso que importa: terminar com o dominio da escola nao basta — o
+  // `@` tem que separar exatamente o dominio, senao `...org.evil.com` passa.
+  assert.equal(sanitizarEmail("aluno@gmail.com"), null);
+  assert.equal(sanitizarEmail("aluno@sesisenai.org"), null);
+  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org.evil.com"), null);
+  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org.br"), null);
+  assert.equal(sanitizarEmail("aluno@sub.estudante.sesisenai.org"), null);
+  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.orgg"), null);
+  assert.equal(sanitizarEmail("aluno@outrodominio.com@estudante.sesisenai.org"), null);
+});
+
+test("sanitizarEmail recusa malformado e vazio sem inventar", () => {
+  assert.equal(sanitizarEmail("@estudante.sesisenai.org"), null);
+  assert.equal(sanitizarEmail("theo_padilha"), null);
+  assert.equal(sanitizarEmail("theo padilha@estudante.sesisenai.org"), null);
+  assert.equal(sanitizarEmail("theo@@estudante.sesisenai.org"), null);
+  assert.equal(sanitizarEmail(`${"a".repeat(90)}@estudante.sesisenai.org`), null);
+  for (const vazio of ["", "   ", null, undefined, 42]) {
+    assert.equal(sanitizarEmail(vazio), null, `entrada ${JSON.stringify(vazio)}`);
+  }
 });

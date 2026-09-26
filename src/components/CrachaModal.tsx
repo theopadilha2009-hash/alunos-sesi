@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Roseta } from "@/components/Roseta";
-import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
+import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { Avatar } from "@/components/Avatar";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
@@ -253,11 +253,12 @@ export function CrachaModal({ aluno, onClose }: Props) {
             </Link>
           </div>
 
-          {(aluno.linkedin || aluno.github || aluno.instagram) ? (
+          {(aluno.linkedin || aluno.github || aluno.instagram || aluno.email) ? (
             <div className="cracha-acoes-redes">
               <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
               <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
               <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+              <BadgeEmail email={aluno.email} nomeAluno={aluno.nome} />
             </div>
           ) : null}
         </div>

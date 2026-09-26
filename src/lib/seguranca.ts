@@ -4,9 +4,11 @@ import { timingSafeEqual } from "node:crypto";
 // resolvedor do Node não completa caminho relativo sem extensão. O resto de
 // `src/` fica sem extensão porque só o bundler lê — este arquivo é a exceção.
 import {
+  DOMINIO_EMAIL_ESCOLA,
   LIMITES_STICKERS,
   MAX_DATA_URL_FOTO,
   MAX_DATA_URL_IMAGEM,
+  MAX_EMAIL_LOCAL,
   MAX_HABILIDADES,
   MAX_MIDIAS,
   MAX_PROJETOS,
@@ -118,6 +120,42 @@ export function sanitizarTexto(texto: unknown, maxLen = 280): string {
   }
 
   return s;
+}
+
+// ── 3b. E-mail institucional ────────────────────────────────────────────────
+
+const SUFIXO_EMAIL = `@${DOMINIO_EMAIL_ESCOLA}`;
+
+/**
+ * Parte antes do `@`: começa e termina em letra ou dígito, e no meio aceita
+ * ponto, hífen e underscore — os separadores que nome de aluno de verdade usa.
+ */
+const REGEX_LOCAL_EMAIL = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
+
+/**
+ * O e-mail da escola, ou `null` se não for um.
+ *
+ * `null` aqui significa "não é e-mail da escola" — e o formulário usa isso tanto
+ * para recusar lixo quanto para reconhecer o campo vazio, que é remoção
+ * deliberada do próprio e-mail, não erro.
+ *
+ * A checagem é `endsWith` do sufixo COMPLETO, com o `@` dentro, e depois a parte
+ * local tem que passar no regex — que rejeita `@`. É o par que fecha
+ * `aluno@estudante.sesisenai.org.evil.com` (não termina com o sufixo) e
+ * `aluno@outro.com@estudante.sesisenai.org` (termina, mas a parte local tem um
+ * `@`). Só checar o final da string deixaria o segundo passar.
+ */
+export function sanitizarEmail(bruto: unknown): string | null {
+  if (typeof bruto !== "string") return null;
+
+  const limpo = bruto.trim().toLowerCase();
+  if (!limpo.endsWith(SUFIXO_EMAIL)) return null;
+
+  const local = limpo.slice(0, -SUFIXO_EMAIL.length);
+  if (local.length === 0 || local.length > MAX_EMAIL_LOCAL) return null;
+  if (!REGEX_LOCAL_EMAIL.test(local)) return null;
+
+  return limpo;
 }
 
 // ── 4. Rate Limiter em Memória ──────────────────────────────────────────────

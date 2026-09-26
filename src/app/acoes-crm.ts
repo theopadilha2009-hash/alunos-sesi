@@ -13,11 +13,12 @@ import {
 import { apoiarHabilidade, atualizarPerfilAluno, alunoPorSlug, desafioAtivo, submeterDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
 import { habilidadePermitida } from "@/lib/habilidades";
-import { descreverDescartes, type Descarte } from "@/lib/limites";
+import { DOMINIO_EMAIL_ESCOLA, descreverDescartes, type Descarte } from "@/lib/limites";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { limitar, limparLimite } from "@/lib/rate-limit";
 import { hashSenha, verificarSenha } from "@/lib/senha";
 import {
+  sanitizarEmail,
   sanitizarFoto,
   sanitizarHabilidades,
   sanitizarMidias,
@@ -177,7 +178,19 @@ export async function salvarPerfilAction(
     instagram = sanitizarTexto(`@${instagram}`, 40);
   }
 
-  const email = sanitizarTexto(formData.get("email"), 100);
+  // Só entra se for da escola: `sanitizarEmail` devolve `null` para qualquer
+  // outro domínio, e campo vazio é remoção deliberada do próprio e-mail, que
+  // também é `null` — a mesma decisão que `sanitizarFoto` toma para a foto.
+  // Antes, este valor era gravado só no cookie de sessão e evaporava em 30 dias.
+  //
+  // Campo preenchido que não passa no sanitizador é ERRO, não remoção: sem esta
+  // distinção, um caractere fora do permitido apagava o endereço que já estava
+  // lá e a tela dizia "atualizado".
+  const emailBruto = String(formData.get("email") ?? "").trim();
+  const email = sanitizarEmail(formData.get("email"));
+  if (emailBruto && !email) {
+    return { ok: false, mensagem: `O e-mail precisa terminar em @${DOMINIO_EMAIL_ESCOLA} e usar só letras, números, ponto, hífen e _ antes do @.` };
+  }
 
   const db = clienteAdmin();
 
@@ -211,6 +224,9 @@ export async function salvarPerfilAction(
   }
   if (formData.has("habilidades")) {
     dadosAtualizacao.habilidades = sanitizarHabilidades(habilidadesBrutas);
+  }
+  if (formData.has("email")) {
+    dadosAtualizacao.email = email;
   }
 
   try {
@@ -253,9 +269,16 @@ export async function alterarSegurancaAction(
   }
 
   const nome = sanitizarTexto(formData.get("nome"), 100);
-  const email = sanitizarTexto(formData.get("email"), 100);
+  const emailBruto = String(formData.get("email") ?? "").trim();
+  const email = sanitizarEmail(formData.get("email"));
   const novaSenha = String(formData.get("novaSenha") ?? "").trim();
   const confirmarSenha = String(formData.get("confirmarSenha") ?? "").trim();
+
+  // Ausente/vazio é remoção deliberada; preenchido e inválido é erro. Sem esta
+  // separação, um caractere fora do permitido apagava o endereço em silêncio.
+  if (emailBruto && !email) {
+    return { ok: false, mensagem: `O e-mail precisa terminar em @${DOMINIO_EMAIL_ESCOLA} e usar só letras, números, ponto, hífen e _ antes do @.` };
+  }
 
   const db = clienteAdmin();
   const mudancas: string[] = [];
@@ -316,17 +339,36 @@ export async function alterarSegurancaAction(
     mudancas.push("senha alterada com sucesso");
   }
 
-  // 2. Atualização de Nome Visual no Perfil
+  // 2. Atualização de Nome Visual e E-mail no Perfil
   let alunoId = sessao.alunoId;
   if (!alunoId && sessao.role === "super_adm") {
     const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
     if (theo) alunoId = theo.id;
   }
 
-  if (nome && nome.length >= 2 && alunoId) {
-    const { error: errNome } = await db.from("alunos").update({ nome }).eq("id", alunoId);
-    if (!errNome) {
-      mudancas.push("nome visual atualizado");
+  if (alunoId) {
+    const mudancaPerfil: Record<string, string | null> = {};
+    if (nome && nome.length >= 2) mudancaPerfil.nome = nome;
+    // O e-mail também vive em `alunos` — sem isto, ele continuaria sendo
+    // gravado apenas no cookie de sessão e sumiria quando o cookie expirasse.
+    // Campo vazio vira `null` de propósito: é o aluno removendo o próprio
+    // e-mail, e o `update` precisa poder escrever o vazio.
+    if (formData.has("email")) mudancaPerfil.email = email;
+
+    if (Object.keys(mudancaPerfil).length > 0) {
+      const { error: errPerfil } = await db
+        .from("alunos")
+        .update(mudancaPerfil)
+        .eq("id", alunoId);
+      if (!errPerfil) {
+        if (mudancaPerfil.nome) mudancas.push("nome visual atualizado");
+        if (mudancaPerfil.email !== undefined) mudancas.push("e-mail institucional atualizado");
+      } else {
+        return {
+          ok: false,
+          mensagem: "Não foi possível salvar: verifique se o e-mail é o da escola (@estudante.sesisenai.org).",
+        };
+      }
     }
   }
 

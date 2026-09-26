@@ -57,6 +57,27 @@ export function IconeInstagram({ tamanho = 15, className = "" }: { tamanho?: num
   );
 }
 
+export function IconeEmail({ tamanho = 15, className = "" }: { tamanho?: number; className?: string }) {
+  return (
+    <svg
+      width={tamanho}
+      height={tamanho}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+      style={{ display: "inline-block", verticalAlign: "middle", flexShrink: 0 }}
+    >
+      <rect x="2" y="4" width="20" height="16" rx="3" />
+      <path d="m3 7 8.4 5.6a1 1 0 0 0 1.2 0L21 7" />
+    </svg>
+  );
+}
+
 type BadgeProps = {
   url?: string | null;
   username?: string | null;
@@ -127,6 +148,32 @@ export function BadgeInstagram({ username, nomeAluno, className = "" }: BadgePro
         <IconeInstagram tamanho={14} />
       </span>
       <span className="badge-rede-texto">@{limpo}</span>
+    </a>
+  );
+}
+
+/**
+ * E-mail institucional (`@estudante.sesisenai.org`).
+ *
+ * Não entra no `GrupoRedes` de propósito: aquele grupo é a coluna de redes da
+ * tabela do ADM, larga por natureza, e o endereço inteiro não cabe ali sem
+ * quebrar a linha. Aqui, onde há espaço, o endereço completo É o conteúdo —
+ * quem olha precisa ver o domínio da escola, não a palavra "E-mail".
+ */
+export function BadgeEmail({ email, nomeAluno, className = "" }: { email?: string | null; nomeAluno?: string; className?: string }) {
+  if (!email) return null;
+  return (
+    <a
+      href={`mailto:${email}`}
+      className={`badge-rede badge-email ${className}`}
+      aria-label={nomeAluno ? `E-mail institucional de ${nomeAluno}` : "E-mail institucional"}
+      title={`Enviar e-mail para ${email}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span className="badge-rede-icone-wrap em-icone">
+        <IconeEmail tamanho={14} />
+      </span>
+      <span className="badge-rede-texto">{email}</span>
     </a>
   );
 }

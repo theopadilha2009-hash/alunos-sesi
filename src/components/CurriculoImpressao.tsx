@@ -157,6 +157,15 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
                   <span className="contato-valor verde">Matrícula Ativa & Regular</span>
                 </div>
 
+                {aluno.email ? (
+                  <div className="curriculo-contato-item">
+                    <span className="contato-rotulo">E-mail:</span>
+                    <a href={`mailto:${aluno.email}`} className="contato-link">
+                      {aluno.email}
+                    </a>
+                  </div>
+                ) : null}
+
                 {aluno.linkedin ? (
                   <div className="curriculo-contato-item">
                     <span className="contato-rotulo">LinkedIn:</span>

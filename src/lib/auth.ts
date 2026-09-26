@@ -137,11 +137,16 @@ export async function autenticarUsuario(
 
   let nome = usuarioDb.username;
   let sala = null;
-  let email = usuarioDb.username === "theo1234" ? "theopadilha2009@gmail.com" : `${usuarioDb.username}@aluno.sesisp.org.br`;
+  // O e-mail da sessão ECOA o que está em `alunos.email` — não é calculado.
+  // Antes esta linha fabricava um endereço (`username@aluno.sesisp.org.br`, que
+  // nem é o domínio da escola) para todo mundo, com um caso especial chumbado
+  // para o `theo1234`. O aluno via no perfil um e-mail que não existia.
+  let email: string | null = null;
   if (usuarioDb.aluno_id) {
     const aluno = await alunoPorId(usuarioDb.aluno_id);
     if (aluno) {
       nome = aluno.nome;
+      email = aluno.email;
       if (aluno.sala_id) {
         const { data: s } = await db.from("salas").select("nome").eq("id", aluno.sala_id).maybeSingle();
         if (s?.nome) {
@@ -303,7 +308,11 @@ export async function registrarUsuario(dados: {
     // Nome canônico da sala, não o que o aluno digitou: "dsm3" e "DSM3" são a
     // mesma turma, e o crachá não pode sair com a grafia de quem digitou.
     sala: salaAchada.nome as string,
-    email: `${username}@aluno.sesisp.org.br`,
+    // `null`, não um endereço derivado do username: quem acabou de se cadastrar
+    // ainda não informou e-mail nenhum, e inventar `joao.silva@aluno.sesisp...`
+    // exibiria no perfil um endereço que não existe. Ele preenche o dele no
+    // editor, e aí sim é da escola.
+    email: null,
   };
 
   const jar = await cookies();

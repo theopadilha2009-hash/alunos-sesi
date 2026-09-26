@@ -29,7 +29,12 @@ import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
-import { FOTO_LADO, MAX_HABILIDADES, conferirTamanhoDaImagem } from "@/lib/limites";
+import {
+  DOMINIO_EMAIL_ESCOLA,
+  FOTO_LADO,
+  MAX_HABILIDADES,
+  conferirTamanhoDaImagem,
+} from "@/lib/limites";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
@@ -66,7 +71,19 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   // Campos do Aluno
   const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "Theo Padilha");
   const [sala, setSala] = useState(alunoAtual?.sala ?? usuario.sala ?? "DSM3");
-  const [email, setEmail] = useState(usuario.email ?? "theopadilha2009@gmail.com");
+  // O e-mail é do domínio da escola, então o campo guarda só a parte de antes do
+  // `@` e o sufixo é desenhado ao lado, fixo. Antes o campo era um `<input
+  // type="email">` livre com o Gmail do Théo como valor inicial chumbado — quem
+  // abrisse o editor sem e-mail salvava um endereço que não era dele.
+  const emailDoAluno = alunoAtual?.email ?? "";
+  const [emailLocal, setEmailLocal] = useState(
+    emailDoAluno.endsWith(`@${DOMINIO_EMAIL_ESCOLA}`)
+      ? emailDoAluno.slice(0, -(DOMINIO_EMAIL_ESCOLA.length + 1))
+      : "",
+  );
+  const email = emailLocal.trim()
+    ? `${emailLocal.trim().toLowerCase()}@${DOMINIO_EMAIL_ESCOLA}`
+    : "";
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
@@ -1239,17 +1256,23 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                   </label>
 
                   <label className="campo-form">
-                    <span className="label-texto">E-mail Cadastrado *</span>
-                    <input
-                      type="email"
-                      className="input-texto"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="seu.email@exemplo.com"
-                      required
-                    />
+                    <span className="label-texto">E-mail da escola</span>
+                    <div className="campo-email">
+                      <input
+                        type="text"
+                        className="input-texto"
+                        value={emailLocal}
+                        onChange={(e) => setEmailLocal(e.target.value)}
+                        placeholder="theo_padilha"
+                        autoComplete="off"
+                        spellCheck={false}
+                        inputMode="email"
+                      />
+                      <span className="campo-email-sufixo">@{DOMINIO_EMAIL_ESCOLA}</span>
+                    </div>
                     <span className="campo-dica">
-                      E-mail para comunicações, credenciais e recuperação de acesso.
+                      Só o e-mail da escola — é ele que mostra que este perfil é de um
+                      estudante matriculado. Deixe vazio para não exibir.
                     </span>
                   </label>
                 </div>
@@ -1365,8 +1388,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     </span>
                   </div>
                   <div className="seguranca-item">
-                    <span className="seguranca-rotulo">E-mail Vinculado</span>
-                    <span className="seguranca-dado">{email}</span>
+                    <span className="seguranca-rotulo">E-mail da escola</span>
+                    <span className="seguranca-dado">{email || "— não informado"}</span>
                   </div>
                   <div className="seguranca-item">
                     <span className="seguranca-rotulo">ID do Registro</span>
