@@ -40,6 +40,23 @@ export const FOTO_LADO = 256;
  */
 export const MAX_DATA_URL_FOTO = 120 * 1024;
 
+/**
+ * O e-mail do aluno é o da escola, não um e-mail pessoal.
+ *
+ * O campo existe para provar vínculo institucional — é o mesmo papel do
+ * `/validar/<slug>`: quem olha de fora vê que aquele perfil pertence a um
+ * estudante matriculado. Aceitar `@gmail.com` esvaziaria isso, e é por isso que
+ * o sanitizador recusa qualquer domínio que não seja este, incluindo os que
+ * apenas TERMINAM com ele (`...sesisenai.org.evil.com`).
+ *
+ * Fica aqui, e não em `seguranca.ts`, porque o formulário precisa do valor para
+ * montar o sufixo fixo do campo — e `seguranca.ts` importa `node:crypto`.
+ */
+export const DOMINIO_EMAIL_ESCOLA = "estudante.sesisenai.org";
+
+/** Teto da parte antes do `@` (o RFC 5321 pede 64). */
+export const MAX_EMAIL_LOCAL = 64;
+
 export const LIMITES_STICKERS = {
   max: 12,
   tamanhoMin: 16,

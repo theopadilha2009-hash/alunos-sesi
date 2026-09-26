@@ -5,7 +5,7 @@ import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
-import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
+import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import {
   IconeCheck,
   IconeCopiar,
@@ -212,6 +212,7 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
               <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
               <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
               <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+              <BadgeEmail email={aluno.email} nomeAluno={aluno.nome} />
 
               <button
                 type="button"

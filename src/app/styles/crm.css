@@ -1449,6 +1449,93 @@
   border-color: transparent;
 }
 
+/* Badge do E-mail institucional.
+   Cor própria (teal) para não competir com o azul do LinkedIn — e porque o
+   significado é outro: não é "me siga aqui", é "sou estudante daqui".
+   O endereço inteiro aparece no texto de propósito: é o domínio que prova o
+   vínculo, e encurtá-lo para "E-mail" mataria o motivo do campo existir. */
+.badge-email {
+  background: color-mix(in srgb, #0f766e 14%, var(--surface-2));
+  color: #0f766e;
+  border: 1px solid color-mix(in srgb, #0f766e 40%, var(--line));
+}
+
+.badge-email .em-icone {
+  color: #0f766e;
+}
+
+.badge-email:hover {
+  background: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+  box-shadow: 0 4px 12px -2px rgba(15, 118, 110, 0.45);
+}
+
+.badge-email:hover .em-icone {
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .badge-email {
+  background: color-mix(in srgb, #14b8a6 20%, var(--surface-2));
+  color: #2dd4bf;
+  border-color: color-mix(in srgb, #2dd4bf 45%, var(--line));
+}
+:root[data-theme="dark"] .badge-email .em-icone {
+  color: #2dd4bf;
+}
+:root[data-theme="dark"] .badge-email:hover {
+  background: #0f766e;
+  color: #ffffff;
+  border-color: #0f766e;
+}
+:root[data-theme="dark"] .badge-email:hover .em-icone {
+  color: #ffffff;
+}
+
+/* Campo de e-mail com sufixo fixo da escola.
+   O sufixo mora FORA do `<input>`: por dentro ele seria editável, e o campo
+   voltaria a aceitar any domain. Assim o que o aluno digita é só a parte local
+   e o domínio é uma legenda inegociável ao lado. */
+.campo-email {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: var(--raio-p);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.campo-email:focus-within {
+  border-color: var(--accent, var(--text));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, var(--text)) 18%, transparent);
+}
+
+.campo-email .input-texto {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.campo-email .input-texto:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.campo-email-sufixo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-family: var(--fonte-texto);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text-dim, var(--text));
+  background: var(--surface-2);
+  border-left: 1px solid var(--line);
+}
+
 /* ── Top 3 Projetos da Turma ───────────────────────────────────────────── */
 
 .top-projetos-secao {

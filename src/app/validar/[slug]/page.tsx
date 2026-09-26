@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
 import { IconeCracha, IconeEscudo, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
-import { BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
+import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
 
 type Props = {
@@ -135,13 +135,14 @@ export default async function PaginaValidarCracha({ params }: Props) {
           </div>
 
           {/* Redes Profissionais Conectadas */}
-          {(aluno.linkedin || aluno.github || aluno.instagram) ? (
+          {(aluno.linkedin || aluno.github || aluno.instagram || aluno.email) ? (
             <div className="validar-redes-bloco">
               <span className="validar-secao-rotulo">Canais Oficiais do Estudante:</span>
               <div className="validar-redes-lista">
                 <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
                 <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
                 <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+                <BadgeEmail email={aluno.email} nomeAluno={aluno.nome} />
               </div>
             </div>
           ) : null}

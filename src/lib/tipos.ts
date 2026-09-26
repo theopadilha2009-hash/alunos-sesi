@@ -76,6 +76,14 @@ export type Aluno = {
   linkedin: string | null;
   github: string | null;
   instagram: string | null;
+  /**
+   * E-mail institucional (`@estudante.sesisenai.org`), coluna `alunos.email`.
+   *
+   * Diferente de LinkedIn/GitHub/Instagram, que são links, este não é um perfil
+   * público da web: é a prova de vínculo com a escola. Sanitizado por
+   * `sanitizarEmail`, que recusa domínio de fora.
+   */
+  email: string | null;
   bio: string | null;
   foto_url: string | null;
   fixado: boolean;
