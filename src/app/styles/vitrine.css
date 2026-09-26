@@ -664,6 +664,14 @@
   border-color: var(--verde);
 }
 
+/* Moderação: o aprovado já é o verde do `aria-pressed`; este só marca o que
+   ainda espera decisão do ADM. */
+.botao-aprovar {
+  color: var(--amarelo);
+  border-color: color-mix(in srgb, var(--amarelo) 45%, var(--line));
+  background: color-mix(in srgb, var(--amarelo) 12%, transparent);
+}
+
 .recado {
   padding: 0.7rem 0.9rem;
   border-radius: var(--raio-p);

@@ -23,7 +23,12 @@ export default async function AdmPage() {
   const autorizado = crachaValido(jar.get(COOKIE_ADM)?.value) || sessao?.role === "super_adm";
   if (!autorizado) notFound();
 
-  const [alunos, salas] = await Promise.all([listarAlunos(), listarSalas()]);
+  // `incluirPendentes`: este painel é onde a fila de moderação é despachada —
+  // esconder dela os pendentes deixaria o ADM sem como aprová-los.
+  const [alunos, salas] = await Promise.all([
+    listarAlunos({ incluirPendentes: true }),
+    listarSalas(),
+  ]);
   const nomePorId = new Map(salas.map((s) => [s.id, s.nome]));
 
   const naTela: AlunoNaTela[] = ordenarAlunos(

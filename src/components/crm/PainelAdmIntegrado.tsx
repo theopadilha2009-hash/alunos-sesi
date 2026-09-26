@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
-import { alternar, criarAluno, importarLista, mudarSalaDoAluno, removerAluno } from "@/app/adm/acoes";
+import { alternar, aprovarAluno, criarAluno, importarLista, mudarSalaDoAluno, removerAluno } from "@/app/adm/acoes";
 import { ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
 import {
   IconeCheck,
@@ -226,13 +226,14 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                   <th scope="col">Redes</th>
                   <th scope="col">Fixar no Topo</th>
                   <th scope="col">Destaque ADM</th>
+                  <th scope="col">Moderação</th>
                   <th scope="col" style={{ textAlign: "right" }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {alunosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: "2.5rem" }}>
+                    <td colSpan={7} style={{ textAlign: "center", padding: "2.5rem" }}>
                       <p style={{ margin: 0, color: "var(--dim)" }}>
                         Nenhum estudante encontrado para os filtros selecionados.
                       </p>
@@ -256,6 +257,9 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                             <span className="tabela-aluno-nome-btn" style={{ cursor: "default" }}>
                               {a.nome}
                             </span>
+                            {!a.aprovado ? (
+                              <span className="pill-pendente">Aguardando aprovação</span>
+                            ) : null}
                             {a.bio ? <p className="tabela-aluno-bio">{a.bio}</p> : null}
                           </div>
                         </div>
@@ -324,6 +328,26 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                           >
                             <IconeEstrela preenchida={a.destaque} tamanho={13} />
                             <span>{a.destaque ? "Destaque" : "Destacar"}</span>
+                          </button>
+                        </form>
+                      </td>
+
+                      {/* Moderação: o auto-cadastro nasce `aprovado: false` e é
+                          aqui que o ADM despacha a fila. Desaprovar é o
+                          "tirar do ar" — mais brando que remover o aluno. */}
+                      <td>
+                        <form action={aprovarAluno}>
+                          <input type="hidden" name="id" value={a.id} />
+                          <button
+                            type="submit"
+                            className={`btn-toggle-badge ${a.aprovado ? "" : "toggle-pendente-ativo"}`}
+                            title={
+                              a.aprovado
+                                ? "Tira o perfil da vitrine até aprovar de novo"
+                                : "Libera o perfil na vitrine"
+                            }
+                          >
+                            <span>{a.aprovado ? "Aprovado" : "Aprovar"}</span>
                           </button>
                         </form>
                       </td>

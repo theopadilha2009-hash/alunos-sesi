@@ -259,6 +259,39 @@ export async function removerAluno(formData: FormData): Promise<void> {
   revalidar();
 }
 
+/**
+ * Libera ou volta a ocultar um perfil na vitrine.
+ *
+ * É o outro lado de `registrarUsuario`: o auto-cadastro cria o aluno com
+ * `aprovado: false`, e é aqui que um humano decide se ele aparece. Sem isto a
+ * coluna nasceria `false` para sempre e a moderação seria só uma porta fechada.
+ *
+ * Toggle e não sentido único: desaprovar é o botão de "tirar do ar" quando
+ * alguém entra com nome inadequado — a alternativa seria `removerAluno`, que
+ * apaga o registro inteiro e não tem volta.
+ */
+export async function aprovarAluno(formData: FormData): Promise<void> {
+  await exigirAdm();
+
+  const id = texto(formData, "id");
+  if (!id) return;
+
+  const db = clienteAdmin();
+  const { data: atual } = await db
+    .from("alunos")
+    .select("aprovado")
+    .eq("id", id)
+    .maybeSingle();
+  if (!atual) return;
+
+  await db
+    .from("alunos")
+    .update({ aprovado: !atual.aprovado })
+    .eq("id", id);
+
+  revalidar();
+}
+
 export async function alternar(formData: FormData): Promise<void> {
   await exigirAdm();
 

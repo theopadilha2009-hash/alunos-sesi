@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
 
-  if (!aluno) {
+  if (!aluno || !aluno.aprovado) {
     return {
       title: "Verificação de Documento Estudantil | SESI SC Joinville",
       robots: { index: false, follow: false },
@@ -36,7 +36,9 @@ export default async function PaginaValidarCracha({ params }: Props) {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
 
-  if (!aluno) {
+  // Pendente não valida: um documento que afirma matrícula de quem ainda não
+  // passou pela moderação é exatamente o que esta página não pode emitir.
+  if (!aluno || !aluno.aprovado) {
     notFound();
   }
 

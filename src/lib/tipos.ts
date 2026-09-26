@@ -88,6 +88,15 @@ export type Aluno = {
   foto_url: string | null;
   fixado: boolean;
   destaque: boolean;
+  /**
+   * Passou pela moderação do ADM. `false` = auto-cadastro aguardando aprovação.
+   *
+   * Perfil pendente não aparece na vitrine, não abre em `/alunos/[slug]`,
+   * `/u/[slug]` nem `/validar/[slug]`, e não recebe estrela. O aluno continua
+   * logado e editando o próprio perfil enquanto espera — o que ele não pode é
+   * ser visto por quem está de fora.
+   */
+  aprovado: boolean;
   estrelas: number;
   projetos?: ProjetoAluno[];
   midias?: MidiaAluno[];
@@ -121,4 +130,14 @@ export type UsuarioSessao = {
   sala?: string | null;
   avatar?: string | null;
   email?: string | null;
+  /**
+   * Retrato do `alunos.aprovado` na hora do login, só para o aluno saber que
+   * o perfil ainda não está na vitrine.
+   *
+   * Vem no token, não de uma consulta: é aviso, não autorização. Quem decide
+   * se o perfil aparece é a coluna no banco, lida a cada render das rotas
+   * públicas — desaprovar vale na hora, mesmo que o cookie deste aluno ainda
+   * diga `true` por até 30 dias.
+   */
+  aprovado?: boolean;
 };

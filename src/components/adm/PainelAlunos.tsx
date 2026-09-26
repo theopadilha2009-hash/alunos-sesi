@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { alternar, removerAluno } from "@/app/adm/acoes";
+import { alternar, aprovarAluno, removerAluno } from "@/app/adm/acoes";
 import { corDaSala } from "@/lib/cores";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -37,9 +37,26 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
               {a.sala ?? "sem sala"} · ★ {a.estrelas}
               {a.linkedin ? " · in" : ""}
               {a.github ? " · gh" : ""}
+              {a.aprovado ? "" : " · aguardando aprovação"}
             </span>
 
             <span className="acoes">
+              <form action={aprovarAluno}>
+                <input type="hidden" name="id" value={a.id} />
+                <button
+                  type="submit"
+                  className={`mini${a.aprovado ? "" : " botao-aprovar"}`}
+                  aria-pressed={a.aprovado}
+                  title={
+                    a.aprovado
+                      ? "Tira o perfil da vitrine até aprovar de novo"
+                      : "Libera o perfil na vitrine"
+                  }
+                >
+                  {a.aprovado ? "Aprovado" : "Aprovar"}
+                </button>
+              </form>
+
               <form action={alternar}>
                 <input type="hidden" name="id" value={a.id} />
                 <input type="hidden" name="campo" value="fixado" />

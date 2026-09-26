@@ -38,6 +38,23 @@ async function contarEstrelas(alunoId: string): Promise<number> {
   return (data?.estrelas as number) ?? 0;
 }
 
+/**
+ * Só perfil aprovado recebe estrela.
+ *
+ * A página de um pendente dá 404, então o botão não está lá para ser clicado —
+ * mas esta rota aceita o `alunoId` do corpo do request, e quem já viu o id
+ * (ou o guardou de antes da moderação) votaria num perfil que ninguém deveria
+ * estar vendo. O 404 espelha o da página: para quem está de fora, não existe.
+ */
+async function alunoVisivel(alunoId: string): Promise<boolean> {
+  const { data } = await clienteAdmin()
+    .from("alunos")
+    .select("aprovado")
+    .eq("id", alunoId)
+    .maybeSingle();
+  return data?.aprovado === true;
+}
+
 export async function POST(request: Request) {
   const visitante = await visitanteAtual();
   if (!visitante) {
@@ -59,6 +76,10 @@ export async function POST(request: Request) {
   const alunoId = await lerAlunoId(request);
   if (!alunoId) {
     return NextResponse.json({ erro: "Aluno inválido." }, { status: 400 });
+  }
+
+  if (!(await alunoVisivel(alunoId))) {
+    return NextResponse.json({ erro: "Perfil não disponível." }, { status: 404 });
   }
 
   // ignoreDuplicates = `on conflict do nothing`: quem já votou não insere de

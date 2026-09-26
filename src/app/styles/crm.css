@@ -1492,6 +1492,22 @@
   color: #ffffff;
 }
 
+/* Aviso de moderação no topo do CRM. */
+.crm-aviso-moderacao {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--raio-m, 12px);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--amarelo) 12%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--amarelo) 45%, var(--line));
+  color: var(--text);
+}
+
+.crm-aviso-moderacao strong {
+  color: var(--amarelo);
+}
+
 /* Campo de e-mail com sufixo fixo da escola.
    O sufixo mora FORA do `<input>`: por dentro ele seria editável, e o campo
    voltaria a aceitar any domain. Assim o que o aluno digita é só a parte local
