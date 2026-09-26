@@ -16,6 +16,7 @@ import {
   type MotivoDescarte,
 } from "./limites.ts";
 import { habilidadePermitida } from "./habilidades.ts";
+import type { RepoGithub } from "./github.ts";
 import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos.ts";
 
 // Os tetos agora moram em limites.ts, que não importa `node:crypto` e por isso
@@ -238,6 +239,63 @@ export function resetarRateLimit(chave: string): void {
 }
 
 // ── 5. Validação de Estruturas JSON (Projetos & Mídias) ──────────────────────
+
+/**
+ * Só link do próprio GitHub entra, na forma `github.com/<user>/<repo>`.
+ *
+ * `urlSegura` valida o ESQUEMA, não o destino — ela aceita qualquer host
+ * http(s) de propósito, porque serve a links que o aluno digita. Aqui o dado
+ * vem de fora, então o host faz parte da regra: `github.com.evil.com` é do
+ * atacante, e `http://` num perfil público é downgrade gratuito.
+ */
+const RE_URL_GITHUB = /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+
+/**
+ * Converte a resposta de `/users/:u/repos` do GitHub em `RepoGithub[]`.
+ *
+ * Nunca lança e nunca confia: item estranho é descartado em silêncio e a lista
+ * pode voltar vazia. Quem chama decide o que dizer ao aluno.
+ *
+ * `name`, `description` e `language` são texto livre que qualquer pessoa escreve
+ * no próprio repositório — daí passarem por `sanitizarTexto` como qualquer outro
+ * texto que vem de fora.
+ */
+export function sanitizarReposGithub(bruto: unknown): RepoGithub[] {
+  if (!Array.isArray(bruto)) return [];
+
+  const repos: RepoGithub[] = [];
+  for (const item of bruto) {
+    if (!item || typeof item !== "object") continue;
+    const r = item as Record<string, unknown>;
+
+    // Fork não é criação do aluno — quem fez foi outra pessoa. Sem esta linha,
+    // importar o perfil de quem forka muito enche o portfólio de repositório
+    // alheio, que é justamente o que menos representa o trabalho dele.
+    if (r.fork === true) continue;
+
+    const nome = sanitizarTexto(r.name, 100);
+    if (!nome) continue;
+
+    const url = urlSegura(r.html_url);
+    if (!url || !RE_URL_GITHUB.test(url)) continue;
+
+    // `sanitizarTexto` devolve "" e nunca null: sem esta conversão, repositório
+    // sem linguagem sairia com `linguagem: ""`, contra o tipo declarado — e
+    // quem for ler o campo amanhã checando `!== null` acha que tem valor.
+    const linguagem = sanitizarTexto(r.language, 30);
+
+    repos.push({
+      id: typeof r.id === "number" ? r.id : 0,
+      nome,
+      descricao: sanitizarTexto(r.description, 200),
+      url,
+      linguagem: linguagem || null,
+      estrelas: typeof r.stargazers_count === "number" ? r.stargazers_count : 0,
+      atualizadoEm: typeof r.pushed_at === "string" ? r.pushed_at : "",
+    });
+  }
+  return repos;
+}
 
 /**
  * `descartes` é opcional e recebe o que foi rejeitado, para quem chama poder

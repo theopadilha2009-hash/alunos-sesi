@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth";
 import { apoiarHabilidade, atualizarPerfilAluno, alunoPorSlug, desafioAtivo, submeterDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
+import type { RepoGithub } from "@/lib/github";
 import { habilidadePermitida } from "@/lib/habilidades";
 import { DOMINIO_EMAIL_ESCOLA, descreverDescartes, type Descarte } from "@/lib/limites";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
@@ -23,6 +24,7 @@ import {
   sanitizarHabilidades,
   sanitizarMidias,
   sanitizarProjetos,
+  sanitizarReposGithub,
   sanitizarStickers,
   sanitizarTexto,
   urlSegura,
@@ -505,5 +507,96 @@ export async function submeterDesafioAction(
     }
     return { ok: false, mensagem: mensagem || "Falha ao enviar submissão." };
   }
+}
+
+/**
+ * Puxa os repositórios públicos de um usuário do GitHub para virar projetos.
+ *
+ * Roda no servidor por dois motivos. O prático: a API do GitHub sem token
+ * limita a 60 consultas por hora **por IP**, e o IP de saída da Vercel é
+ * compartilhado — o rate limit interno por aluno (abaixo) existe para um aluno
+ * curioso não esgotar a cota de todo mundo. O de segurança: assim o navegador
+ * nunca fala com um domínio de terceiro em nome da sessão do aluno.
+ *
+ * TUDO o que volta daqui é dado de terceiro, não instrução: `name`,
+ * `description` e `language` são texto livre que qualquer um escreve no próprio
+ * repositório. Quem lê e limpa é o `sanitizarReposGithub`, e o resultado ainda
+ * passa por `sanitizarProjetos` no `salvarPerfilAction`, que é quem grava.
+ *
+ * `GITHUB_TOKEN` é opcional: se estiver no ambiente, sobe a cota e pronto.
+ * Sem ele a função é a mesma, só com menos consultas por hora.
+ */
+export async function importarReposGithubAction(
+  handle: string,
+): Promise<{ ok: boolean; repos?: RepoGithub[]; mensagem?: string }> {
+  const sessao = await obterSessao();
+  if (!sessao) {
+    return { ok: false, mensagem: "Faça login para importar seus projetos do GitHub." };
+  }
+
+  const usuario = normalizarGithub(handle);
+  if (!usuario) {
+    return {
+      ok: false,
+      mensagem: "Informe um usuário do GitHub válido (ex.: theopadilha2009-hash).",
+    };
+  }
+
+  const limit = await limitar(`github:${sessao.id}`, 10, 60 * 60 * 1000, 60 * 60 * 1000);
+  if (!limit.permitido) {
+    return { ok: false, mensagem: "Você já importou várias vezes nesta hora. Aguarde um pouco." };
+  }
+
+  let resposta: Response;
+  try {
+    resposta = await fetch(
+      `https://api.github.com/users/${encodeURIComponent(usuario)}/repos` +
+        `?sort=pushed&per_page=30&type=owner`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          "User-Agent": "alunos-sesi-crm",
+          ...(process.env.GITHUB_TOKEN
+            ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+            : {}),
+        },
+        // Sem timeout, uma API lenta prende a Server Action até o limite da
+        // função — e o aluno fica olhando um botão girando sem saber por quê.
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      },
+    );
+  } catch {
+    return { ok: false, mensagem: "Não consegui falar com o GitHub agora. Tente de novo." };
+  }
+
+  if (resposta.status === 404) {
+    return { ok: false, mensagem: `Não encontrei o usuário "${usuario}" no GitHub.` };
+  }
+  if (resposta.status === 403 || resposta.status === 429) {
+    return {
+      ok: false,
+      mensagem: "O GitHub limitou as consultas neste momento. Tente de novo em alguns minutos.",
+    };
+  }
+  if (!resposta.ok) {
+    return { ok: false, mensagem: `O GitHub respondeu ${resposta.status}. Tente mais tarde.` };
+  }
+
+  const bruto = (await resposta.json().catch(() => null)) as unknown;
+  if (!Array.isArray(bruto)) {
+    return { ok: false, mensagem: "O GitHub devolveu uma resposta inesperada." };
+  }
+
+  const repos = sanitizarReposGithub(bruto);
+
+  if (repos.length === 0) {
+    return {
+      ok: false,
+      mensagem: `Não achei repositórios públicos em "${usuario}". Confira se o perfil e os repositórios estão públicos.`,
+    };
+  }
+
+  return { ok: true, repos };
 }
 

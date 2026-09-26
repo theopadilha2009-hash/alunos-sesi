@@ -24,6 +24,7 @@ import {
   IconeUsuario,
 } from "@/components/Icones";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
+import { ImportarGithub } from "@/components/crm/ImportarGithub";
 import { Insignias } from "@/components/Insignias";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
@@ -33,6 +34,7 @@ import {
   DOMINIO_EMAIL_ESCOLA,
   FOTO_LADO,
   MAX_HABILIDADES,
+  MAX_PROJETOS,
   conferirTamanhoDaImagem,
 } from "@/lib/limites";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
@@ -173,6 +175,21 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
   function removerProjeto(id: string) {
     setProjetos(projetos.filter((p) => p.id !== id));
+  }
+
+  /**
+   * Recebe o que veio do GitHub e devolve quantos couberam.
+   *
+   * O corte em `MAX_PROJETOS` é feito aqui, e não no `ImportarGithub`, porque a
+   * regra é a mesma que o formulário já usa ao adicionar um projeto à mão — e
+   * quem conhece a lista atual é este componente. O servidor corta de novo em
+   * `sanitizarProjetos`; se os dois discordassem, o aluno perderia projeto sem
+   * aviso no submit.
+   */
+  function importarProjetos(novos: ProjetoAluno[]) {
+    const cabem = novos.slice(0, Math.max(0, MAX_PROJETOS - projetos.length));
+    setProjetos([...projetos, ...cabem]);
+    return { adicionados: cabem.length, ignorados: novos.length - cabem.length };
   }
 
   function adicionarMidia() {
@@ -925,6 +942,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             aria-labelledby="perfil-tab-projetos"
             style={{ display: abaAtiva === "projetos" ? "block" : "none" }}
           >
+              <ImportarGithub
+                handleInicial={github}
+                projetos={projetos}
+                onImportar={importarProjetos}
+              />
+
               {/* Projetos Existentes */}
               <div className="painel-card">
                 <header className="painel-card-topo">
