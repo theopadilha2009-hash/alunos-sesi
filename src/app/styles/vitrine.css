@@ -342,7 +342,11 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--sala, var(--dim));
+  /* 55% da cor da turma misturada ao texto, e não a cor crua: das seis cores da
+     paleta, o amarelo (#F3B544) fica em ~1,9:1 sobre o fundo claro e o ciano em
+     ~2,4:1 — os dois reprovam no AA. Misturar com o `--text`, que já contrasta,
+     mantém a identidade da turma no rótulo sem apagar o texto. */
+  color: color-mix(in srgb, var(--sala-cor, var(--dim)) 55%, var(--text));
 }
 
 .aluno-bio {
@@ -766,7 +770,9 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sala, var(--dim));
+  /* Mesmo motivo do `.aluno-sala`: é o rótulo da TURMA, então lê `--sala-cor`, e
+     mistura com o `--text` para o amarelo não sumir no tema claro. */
+  color: color-mix(in srgb, var(--sala-cor, var(--dim)) 55%, var(--text));
 }
 
 .perfil-links {

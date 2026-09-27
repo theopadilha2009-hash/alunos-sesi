@@ -187,7 +187,7 @@ export async function baixarCrachaPng(
     const textoSala = aluno.sala.toUpperCase();
     ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
     const larguraPill = ctx.measureText(textoSala).width + 36;
-    ctx.strokeStyle = aluno.cor || "#3fc2bc";
+    ctx.strokeStyle = aluno.corSala || "#3fc2bc";
     ctx.lineWidth = 1.5;
     ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
     ctx.beginPath();
@@ -195,7 +195,7 @@ export async function baixarCrachaPng(
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = aluno.cor || "#3fc2bc";
+    ctx.fillStyle = aluno.corSala || "#3fc2bc";
     ctx.textAlign = "center";
     ctx.fillText(textoSala, largura / 2, 460);
     ctx.restore();

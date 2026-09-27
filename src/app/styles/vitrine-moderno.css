@@ -364,6 +364,34 @@
   max-width: 52rem;
 }
 
+/* ── Capa do perfil ────────────────────────────────────────────────────── */
+
+/* A proporção é a mesma do recorte do editor (`PROPORCAO_CAPA` em limites.ts) e
+   da prévia do Estúdio: com os três em 3:1, o que o aluno enquadrou é o que
+   aparece, sem corte. Altura fixa não serve — a caixa deste bloco tem 832px no
+   desktop e 335px no móvel, então `180px` daria 4,6:1 num e 1,9:1 no outro, e o
+   `cover` cortaria 17% da altura de um lado e 19% da largura do outro, eixos
+   diferentes que a prévia não mostra.
+
+   A margem negativa de cima cancela só o `padding-block` de `.perfil` — é o que
+   faz a capa encostar no topo do perfil em vez de flutuar depois de um vão.
+
+   atalho: os stickers de banner continuam ancorados ao `.perfil` inteiro
+   (`top: ${st.y}%` em PerfilInterativo.tsx), não a esta faixa — o `y` que o aluno
+   marcou no Estúdio, medido contra os 180px de lá, cai dezenas de pixels mais
+   abaixo aqui. Prender os dois na mesma caixa exige envolver capa e stickers num
+   contêiner próprio; revisitar se aparecer sticker fora de lugar. */
+.perfil-capa {
+  aspect-ratio: 3 / 1;
+  margin-block: calc(-1 * clamp(1.5rem, 4vw, 3rem)) 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background-color: var(--surface-2);
+  background-image: linear-gradient(135deg, var(--sala, var(--accent)) 0%, transparent 70%);
+  background-size: cover;
+  background-position: center;
+}
+
 .perfil-avatar-wrap {
   position: relative;
   flex: none;

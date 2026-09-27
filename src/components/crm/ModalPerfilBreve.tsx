@@ -183,8 +183,8 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
 
               <div className="breve-meta-linha">
                 {aluno.sala ? (
-                  <span className="badge-sala-tabela" style={{ ["--sala-cor" as string]: aluno.cor }}>
-                    <span className="ponto" style={{ background: aluno.cor }} />
+                  <span className="badge-sala-tabela" style={{ ["--sala-cor" as string]: aluno.corSala }}>
+                    <span className="ponto" style={{ background: aluno.corSala }} />
                     {aluno.sala}
                   </span>
                 ) : null}

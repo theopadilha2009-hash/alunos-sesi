@@ -6,7 +6,7 @@ import { ImportarLista } from "@/components/adm/ImportarLista";
 import { PainelAlunos } from "@/components/adm/PainelAlunos";
 import { Rodape, Topo } from "@/components/ds";
 import { listarAlunos, listarSalas } from "@/lib/dados";
-import { corDaSala } from "@/lib/cores";
+import { corDaSala, corDoAluno } from "@/lib/cores";
 import { ordenarAlunos } from "@/lib/ranking";
 import { obterSessao } from "@/lib/auth";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
@@ -34,7 +34,7 @@ export default async function AdmPage() {
   const naTela: AlunoNaTela[] = ordenarAlunos(
     alunos.map((a) => {
       const sala = a.sala_id ? (nomePorId.get(a.sala_id) ?? null) : null;
-      return { ...a, sala, cor: corDaSala(sala ?? "") };
+      return { ...a, sala, cor: corDoAluno(a.cor_perfil, sala), corSala: corDaSala(sala ?? "") };
     }),
   );
 

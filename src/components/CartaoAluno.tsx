@@ -24,7 +24,7 @@ export function CartaoAluno({
     <li
       className="aluno"
       data-fixado={aluno.fixado ? "" : undefined}
-      style={{ ["--sala" as string]: aluno.cor }}
+      style={{ ["--sala" as string]: aluno.cor, ["--sala-cor" as string]: aluno.corSala }}
     >
       <div className="aluno-cabeca">
         <Avatar nome={aluno.nome} foto={aluno.foto_url} />
@@ -34,7 +34,7 @@ export function CartaoAluno({
           </h3>
           {aluno.sala ? (
             <span className="aluno-sala">
-              <span className="ponto" style={{ background: aluno.cor }} />
+              <span className="ponto" style={{ background: aluno.corSala }} />
               {aluno.sala}
             </span>
           ) : null}

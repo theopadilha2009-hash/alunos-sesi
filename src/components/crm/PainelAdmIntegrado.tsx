@@ -270,8 +270,8 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                       <td>
                         <form action={mudarSalaDoAluno} className="adm-form-sala">
                           {a.sala ? (
-                            <span className="cracha-sala-pill" style={{ borderColor: a.cor }}>
-                              <span className="ponto" style={{ background: a.cor }} />
+                            <span className="cracha-sala-pill" style={{ borderColor: a.corSala }}>
+                              <span className="ponto" style={{ background: a.corSala }} />
                               {a.sala}
                             </span>
                           ) : (

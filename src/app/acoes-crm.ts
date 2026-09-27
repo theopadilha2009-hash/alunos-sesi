@@ -19,6 +19,8 @@ import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { limitar, limparLimite } from "@/lib/rate-limit";
 import { hashSenha, verificarSenha } from "@/lib/senha";
 import {
+  sanitizarCapa,
+  sanitizarCor,
   sanitizarEmail,
   sanitizarFoto,
   sanitizarHabilidades,
@@ -229,6 +231,16 @@ export async function salvarPerfilAction(
   }
   if (formData.has("email")) {
     dadosAtualizacao.email = email;
+  }
+  // Cor escolhida que não está na paleta vira `null`, e `null` é "usa a cor da
+  // sala" — não é erro. Diferente do e-mail: lá o valor tem dono (é o endereço
+  // do aluno) e apagar sem avisar perde dado; aqui é decoração, e a paleta é
+  // fechada de propósito, então a recusa cai no padrão visual e pronto.
+  if (formData.has("cor")) {
+    dadosAtualizacao.cor_perfil = sanitizarCor(formData.get("cor"));
+  }
+  if (formData.has("banner")) {
+    dadosAtualizacao.banner_url = sanitizarCapa(formData.get("banner"), descartes);
   }
 
   try {

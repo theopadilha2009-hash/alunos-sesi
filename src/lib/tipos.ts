@@ -86,6 +86,27 @@ export type Aluno = {
   email: string | null;
   bio: string | null;
   foto_url: string | null;
+  /**
+   * Cor de destaque escolhida pelo aluno, da paleta de `CORES_SALA`.
+   *
+   * `null` = "usa a cor da minha sala", que é o comportamento de sempre — é o
+   * que mantém o perfil de quem nunca abriu o editor exatamente como era.
+   * Quem resolve isso é `corDoAluno`, e não um `??` espalhado por cada tela.
+   *
+   * `cor_perfil` e não `cor` de propósito: `AlunoNaTela.cor` é outra coisa — a
+   * cor já resolvida, que pode ter vindo daqui ou da sala. Dois campos com o
+   * mesmo nome e significados diferentes é como um `{...aluno, cor}` apaga a
+   * escolha do aluno sem ninguém notar.
+   */
+  cor_perfil: string | null;
+  /**
+   * Capa do perfil (data URL ou URL), a faixa larga no topo da página pública.
+   *
+   * `null` = sem capa, e aí o topo desenha um gradiente da cor de destaque:
+   * ninguém fica com uma faixa quebrada, e o aluno que só quer escolher a cor
+   * não é obrigado a subir imagem para o perfil ficar apresentável.
+   */
+  banner_url: string | null;
   fixado: boolean;
   destaque: boolean;
   /**
@@ -118,7 +139,20 @@ export type Aluno = {
 /** Aluno já com o nome da sala resolvido, do jeito que a tela consome. */
 export type AlunoNaTela = Aluno & {
   sala: string | null;
+  /**
+   * A cor que identifica o ALUNO: a de destaque que ele escolheu, ou a da sala
+   * como padrão. É o que pinta o card dele, a linha dele e o crachá.
+   */
   cor: string;
+  /**
+   * A cor da TURMA, sempre — mesmo quando o aluno escolheu outra.
+   *
+   * Todo ornamento que acompanha o nome da sala (o ponto ao lado, o badge, o
+   * `--sala-cor` do `<span>` da sala) tem que usar esta, e não `cor`: senão o
+   * nome da turma passa a aparecer com uma cor que só aquele aluno tem, e a
+   * cor deixa de identificar a sala para quem está lendo a lista.
+   */
+  corSala: string;
 };
 
 export type UsuarioSessao = {

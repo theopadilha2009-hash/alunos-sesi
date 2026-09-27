@@ -119,9 +119,9 @@ export function TabelaAlunos({
                     {aluno.sala ? (
                       <span
                         className="badge-sala-tabela"
-                        style={{ ["--sala-cor" as string]: aluno.cor }}
+                        style={{ ["--sala-cor" as string]: aluno.corSala }}
                       >
-                        <span className="ponto-sala" style={{ background: aluno.cor }} />
+                        <span className="ponto-sala" style={{ background: aluno.corSala }} />
                         <span>{aluno.sala}</span>
                       </span>
                     ) : (

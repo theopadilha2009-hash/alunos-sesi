@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   LIMITES_STICKERS,
+  MAX_DATA_URL_CAPA,
   MAX_DATA_URL_FOTO,
   MAX_DATA_URL_IMAGEM,
   MAX_MIDIAS,
@@ -88,6 +89,12 @@ test("tetoDoCampo da o teto menor para sticker", () => {
   // apertado que a midia, que so aparece na pagina do dono.
   assert.equal(tetoDoCampo("foto"), MAX_DATA_URL_FOTO);
   assert.ok(MAX_DATA_URL_FOTO < MAX_DATA_URL_IMAGEM);
+  // A capa e uma faixa larga, entao o teto dela fica entre o avatar e a midia.
+  // Sem esta linha, um `capa` esquecido no Record devolvia `undefined` e o gate
+  // do cliente simplesmente nao barrava nada.
+  assert.equal(tetoDoCampo("capa"), MAX_DATA_URL_CAPA);
+  assert.ok(MAX_DATA_URL_FOTO < MAX_DATA_URL_CAPA);
+  assert.ok(MAX_DATA_URL_CAPA < MAX_DATA_URL_IMAGEM);
 });
 
 // ── conferirTamanhoDaImagem ─────────────────────────────────────────────────
@@ -129,10 +136,28 @@ test("conferirTamanhoDaImagem usa o teto menor no sticker", () => {
   assert.match(msg, /até 384 KB/);
 });
 
+test("conferirTamanhoDaImagem avisa a capa acima do teto dela", () => {
+  // 200 KB de arquivo: cabe folgado numa midia, nao cabe numa capa.
+  const kb200 = dataUrl(200 * 1024);
+  assert.equal(conferirTamanhoDaImagem(kb200, "midias"), null);
+
+  const msg = conferirTamanhoDaImagem(kb200, "capa");
+  assert.match(msg, /^Essa capa do perfil tem cerca de 2\d\d KB/);
+  // 165 KB e o teto da capa em bytes de ARQUIVO, nao os 220 KB do data URL —
+  // e a unidade que o editor mostra ao aluno na hora da escolha.
+  assert.match(msg, /até 165 KB/);
+});
+
+test("descreverDescartes rotula a capa, e nao a foto", () => {
+  const msg = descreverDescartes([{ motivo: "grande-demais", campo: "capa" }]);
+  assert.match(msg, /1× capa do perfil: arquivo grande demais \(capa até 165 KB\)/);
+  assert.doesNotMatch(msg, /1× foto/);
+});
+
 test("tamanho e teto nunca imprimem o mesmo numero", () => {
   // Passa do teto por um unico caractere: o caso em que o arredondamento comum
   // virava "tem cerca de 1,5 MB ... aceita até 1,5 MB".
-  for (const campo of ["midias", "projetos", "stickers", "foto"]) {
+  for (const campo of ["midias", "projetos", "stickers", "foto", "capa"]) {
     const msg = conferirTamanhoDaImagem(dataUrl(tetoDoCampo(campo)), campo);
     const [, tamanho, teto] = msg.match(/cerca de ([\d,]+ [KM]B).+até ([\d,]+ [KM]B)/);
     assert.notEqual(tamanho, teto, `campo ${campo}: "${tamanho}" nos dois lados`);

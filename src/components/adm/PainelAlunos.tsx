@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { alternar, aprovarAluno, removerAluno } from "@/app/adm/acoes";
-import { corDaSala } from "@/lib/cores";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 /**
@@ -28,7 +27,7 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
             key={a.id}
             className="linha-adm"
             data-fixado={a.fixado ? "" : undefined}
-            style={{ ["--sala" as string]: corDaSala(a.sala ?? "") }}
+            style={{ ["--sala" as string]: a.cor }}
           >
             <span className="nome">
               <Link href={`/alunos/${a.slug}`}>{a.nome}</Link>

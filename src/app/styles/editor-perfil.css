@@ -160,3 +160,104 @@
   line-height: 1.45;
   color: var(--vermelho);
 }
+
+/* ── Aparência do perfil: cor de destaque e capa ──────────────────────────── */
+
+.campo-aparencia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.seletor-cor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.amostra-cor {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--cor, var(--surface-3));
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.12s var(--ease),
+    box-shadow 0.12s var(--ease);
+}
+
+.amostra-cor:hover {
+  transform: scale(1.08);
+}
+
+/* O anel da escolhida é duplo de propósito: um anel só, na cor de destaque,
+   sumiria justamente na amostra de cor parecida com o fundo. */
+.amostra-cor-ativa {
+  box-shadow:
+    0 0 0 2px var(--surface-2),
+    0 0 0 4px var(--text);
+}
+
+/* O input de rádio dentro da amostra é sr-only: quem recebe o foco é ele, então
+   o anel precisa aparecer no círculo que o aluno enxerga. */
+.amostra-cor:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* A amostra "da turma" não é uma cor fixa: é a cor que o perfil já usa, então
+   ela se desenha meio cor e meio neutra — diferente das seis da paleta, que são
+   uma escolha do aluno. */
+.amostra-cor-padrao {
+  background: linear-gradient(
+    135deg,
+    var(--cor, var(--surface-3)) 50%,
+    var(--surface-3) 50%
+  );
+}
+
+/* O check cai sobre cores claras (o amarelo) e escuras (o petróleo) na mesma
+   lista, então a sombra é o que garante que ele apareça em todas. */
+.amostra-cor svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+}
+
+.capa-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--raio-p);
+  background: linear-gradient(135deg, var(--cor, var(--surface-3)), var(--surface-2));
+}
+
+.capa-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sobre o degradê da cor de destaque o texto precisa de fundo próprio: as seis
+   cores da paleta vão do amarelo claro ao petróleo escuro, e não existe uma cor
+   de texto que contraste com todas elas.
+
+   0.65 e não 0.5: sobre o amarelo (#F3B544) o branco a 50% de preto fica em
+   4,45:1 no tema claro, abaixo do 4,5 do AA — e é justamente o texto que diz ao
+   aluno o que vai aparecer no lugar da capa. */
+.capa-preview-vazia {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}

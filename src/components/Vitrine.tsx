@@ -7,7 +7,7 @@ import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
-import { corDaSala } from "@/lib/cores";
+import { corDaSala, corDoAluno } from "@/lib/cores";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -58,7 +58,8 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
       return {
         ...a,
         sala: nome,
-        cor: corDaSala(nome ?? ""),
+        cor: corDoAluno(a.cor_perfil, nome),
+        corSala: corDaSala(nome ?? ""),
         habilidades: a.habilidades ?? [],
       };
     });
@@ -264,7 +265,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
                   </div>
                   <h3 className="hall-nome">{aluno.nome}</h3>
                   {aluno.sala ? (
-                    <span className="hall-sala" style={{ color: aluno.cor }}>
+                    <span className="hall-sala" style={{ color: aluno.corSala }}>
                       {aluno.sala}
                     </span>
                   ) : null}

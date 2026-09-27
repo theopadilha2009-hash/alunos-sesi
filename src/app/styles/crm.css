@@ -525,6 +525,9 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  /* Mesma regra dos rótulos de turma da vitrine: a cor crua reprova no AA sobre
+     o tema claro, então ela entra misturada ao texto. */
+  color: color-mix(in srgb, var(--sala-cor, var(--dim)) 55%, var(--text));
 }
 
 .mini-estrela {
@@ -1767,6 +1770,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  /* Rótulo da turma: cor misturada ao texto pelo mesmo motivo do `.aluno-sala`. */
+  color: color-mix(in srgb, var(--sala-cor, var(--dim)) 55%, var(--text));
 }
 
 .top-proj-redes {

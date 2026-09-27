@@ -29,12 +29,15 @@ import { Insignias } from "@/components/Insignias";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
+import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
 import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
 import {
   DOMINIO_EMAIL_ESCOLA,
   FOTO_LADO,
+  LADO_CAPA,
   MAX_HABILIDADES,
   MAX_PROJETOS,
+  PROPORCAO_CAPA,
   conferirTamanhoDaImagem,
 } from "@/lib/limites";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
@@ -100,6 +103,22 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   const [habilidades, setHabilidades] = useState<string[]>(alunoAtual?.habilidades ?? []);
   const [foto, setFoto] = useState(alunoAtual?.foto_url ?? "");
   const [avisoFoto, setAvisoFoto] = useState<string | null>(null);
+
+  // Aparência do perfil público. `corPerfil` vazio NÃO é "sem cor": é "usa a cor
+  // da minha turma" (NULL no banco), que é o que todos os alunos têm hoje — e é
+  // para cá que o aluno volta depois de ter escolhido uma cor. `sanitizarCor("")`
+  // devolve null, então o mesmo input serve para escolher e para desescolher.
+  // `CORES_SALA.includes` e não o valor cru: um `cor_perfil` fora da paleta
+  // (escrito à mão no banco antes da CHECK `alunos_cor_perfil_paleta`) não acende
+  // amostra nenhuma, e um grupo de rádio sem nenhum marcado não envia `cor` — a
+  // guarda de presença da action pularia o campo e a cor velha nunca sairia.
+  // Tratar o órfão como "sem escolha" faz o grupo sempre ter um marcado.
+  const corSalva = alunoAtual?.cor_perfil;
+  const [corPerfil, setCorPerfil] = useState(
+    corSalva && (CORES_SALA as readonly string[]).includes(corSalva) ? corSalva : "",
+  );
+  const [capa, setCapa] = useState(alunoAtual?.banner_url ?? "");
+  const [avisoCapa, setAvisoCapa] = useState<string | null>(null);
 
   // Lista de projetos / criações
   const [projetos, setProjetos] = useState<ProjetoAluno[]>(
@@ -261,17 +280,18 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   }
 
   /**
-   * Recorta o centro em quadrado e reduz para `lado`.
+   * Recorta a maior faixa central com a proporção pedida e reduz para `largura`.
    *
    * Caminho próprio, e não `comprimirImagemArquivo`: aquele escala preservando
    * a proporção (uma foto 4:3 sairia 256×192) e devolve GIF cru sem passar pelo
-   * canvas. O avatar é redondo em toda tela e a foto é quadrada, então o corte
-   * acontece aqui — enquadrar pelo centro é o que recorta o excesso das bordas
-   * em vez de espremer o rosto.
+   * canvas. O avatar é redondo em toda tela e a capa é uma faixa larga, então o
+   * corte acontece aqui — enquadrar pelo centro é o que recorta o excesso das
+   * bordas em vez de espremer o rosto.
    */
-  async function recortarFotoQuadrada(
+  async function recortarFaixa(
     file: File,
-    lado = FOTO_LADO,
+    largura: number,
+    proporcao: number,
     qualidade = 0.82,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -283,12 +303,20 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
         // ou um arquivo truncado decodifica e só explode no `drawImage`. Pendurada
         // ela não rejeita, o `finally` do chamador não roda e o input nunca zera.
         try {
-          const menorLado = Math.min(img.width, img.height);
-          const sobraX = (img.width - menorLado) / 2;
-          const sobraY = (img.height - menorLado) / 2;
+          // A faixa de origem: a maior com a proporção pedida que cabe na
+          // imagem. Quando a imagem já é mais larga que a proporção, quem manda
+          // é a largura e sobra altura; quando é mais alta, o contrário.
+          let larguraFonte = img.width;
+          let alturaFonte = Math.round(img.width / proporcao);
+          if (alturaFonte > img.height) {
+            alturaFonte = img.height;
+            larguraFonte = Math.round(img.height * proporcao);
+          }
+          const sobraX = (img.width - larguraFonte) / 2;
+          const sobraY = (img.height - alturaFonte) / 2;
           const canvas = document.createElement("canvas");
-          canvas.width = lado;
-          canvas.height = lado;
+          canvas.width = largura;
+          canvas.height = Math.round(largura / proporcao);
           const ctx = canvas.getContext("2d");
           if (!ctx) {
             const reader = new FileReader();
@@ -299,7 +327,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           }
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(img, sobraX, sobraY, menorLado, menorLado, 0, 0, lado, lado);
+          ctx.drawImage(
+            img,
+            sobraX,
+            sobraY,
+            larguraFonte,
+            alturaFonte,
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+          );
           resolve(canvas.toDataURL("image/jpeg", qualidade));
         } catch {
           reject(new Error("Erro ao processar imagem"));
@@ -311,6 +349,32 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
       };
       img.src = urlObj;
     });
+  }
+
+  /** O avatar é redondo em toda tela: quadrado, 1:1. */
+  function recortarFotoQuadrada(file: File, lado = FOTO_LADO, qualidade = 0.82) {
+    return recortarFaixa(file, lado, 1, qualidade);
+  }
+
+  /**
+   * A capa é a faixa larga do topo do perfil, 3:1.
+   *
+   * O degrau de qualidade existe porque a saída é sempre 1280×427: sem ele, uma
+   * foto com muito detalhe (folhagem, multidão) estourava o teto e o aviso
+   * "escolha um arquivo menor" não tinha o que oferecer — reencodar o mesmo
+   * conteúdo em 0.82 dá exatamente o mesmo tamanho, então trocar de arquivo não
+   * resolvia. Cada degrau abaixo custa uma rasterização, e só acontece quando o
+   * anterior de fato não coube.
+   */
+  async function recortarCapa(file: File, largura = LADO_CAPA) {
+    let ultimo = "";
+    for (const qualidade of [0.82, 0.7, 0.6]) {
+      ultimo = await recortarFaixa(file, largura, PROPORCAO_CAPA, qualidade);
+      if (!conferirTamanhoDaImagem(ultimo, "capa")) return ultimo;
+    }
+    // Nem a 0.6 coube: devolve o último e deixa o aviso do chamador explicar o
+    // teto, em vez de a promessa ficar pendurada.
+    return ultimo;
   }
 
   /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
@@ -379,6 +443,26 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     } finally {
       // O input guarda o último arquivo escolhido: sem zerar, escolher o MESMO
       // arquivo de novo não dispara onChange e o botão parece quebrado.
+      input.value = "";
+    }
+  }
+
+  async function handleUploadCapa(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await recortarCapa(file);
+      // Mesmo teto que o servidor aplica (`MAX_DATA_URL_CAPA`), conferido aqui
+      // para o aluno ver o motivo na hora em vez de o salvamento descartar a
+      // capa em silêncio lá na frente.
+      const aviso = conferirTamanhoDaImagem(dataUrl, "capa");
+      setAvisoCapa(aviso);
+      // Recusou: a capa que já estava no perfil continua onde está.
+      if (!aviso) setCapa(dataUrl);
+    } catch {
+      setAvisoCapa("Não foi possível ler esse arquivo. Tente uma imagem JPG ou PNG.");
+    } finally {
       input.value = "";
     }
   }
@@ -549,6 +633,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             tornaria a remoção da foto impossível. */}
         <input type="hidden" name="foto" value={foto} />
         <input type="hidden" name="habilidades" value={JSON.stringify(habilidades)} />
+        {/* A capa segue a regra de presença da foto: o input existe sempre, e o
+            valor vazio é o que apaga a capa. A cor NÃO tem input escondido — o
+            grupo de rádio do card de aparência manda o valor, e um radio sempre
+            tem um marcado (o "usar a cor da turma" é uma das opções). */}
+        <input type="hidden" name="banner" value={capa} />
 
         {/* ── COLUNA ESQUERDA: RESUMO, AÇÕES E CONTATOS ─────────────────── */}
         <aside className="perfil-coluna-esquerda">
@@ -643,7 +732,118 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
           </div>
 
-          {/* Card 2: Redes Profissionais (Inputs Diretos) */}
+          {/* Card 2: Aparência do perfil público */}
+          <div className="painel-card">
+            <div className="painel-card-header">
+              <span className="painel-card-label">APARÊNCIA</span>
+            </div>
+
+            <div className="campo-aparencia">
+              <span className="label-rede" id="rotulo-cor-destaque">
+                Cor de destaque
+              </span>
+              {/* Rádio nativo, e não botões com `role="radio"`: o grupo de rádio
+                  do navegador já traz as setas do teclado e o "um marcado só",
+                  que um grupo de botões teria que reimplementar à mão. */}
+              <div className="seletor-cor" role="radiogroup" aria-labelledby="rotulo-cor-destaque">
+                {/* A amostra da turma é a primeira e a única sem cor fixa: ela
+                    desenha exatamente a cor que o perfil mostra hoje. Vazia é o
+                    valor que volta o aluno ao padrão da sala (NULL no banco). */}
+                <label
+                  className={`amostra-cor amostra-cor-padrao${corPerfil === "" ? " amostra-cor-ativa" : ""}`}
+                  style={{ ["--cor" as string]: corDoAluno(null, sala) }}
+                  title="Usar a cor da minha turma"
+                >
+                  <input
+                    type="radio"
+                    name="cor"
+                    value=""
+                    className="sr-only"
+                    checked={corPerfil === ""}
+                    onChange={() => setCorPerfil("")}
+                  />
+                  <span className="sr-only">Usar a cor da minha turma</span>
+                  {corPerfil === "" ? <IconeCheck tamanho={14} /> : null}
+                </label>
+
+                {CORES_SALA.map((c) => (
+                  <label
+                    key={c}
+                    className={`amostra-cor${corPerfil === c ? " amostra-cor-ativa" : ""}`}
+                    style={{ ["--cor" as string]: c }}
+                    title={`Usar a cor ${nomeDaCor(c)}`}
+                  >
+                    <input
+                      type="radio"
+                      name="cor"
+                      value={c}
+                      className="sr-only"
+                      checked={corPerfil === c}
+                      onChange={() => setCorPerfil(c)}
+                    />
+                    <span className="sr-only">{nomeDaCor(c)}</span>
+                    {corPerfil === c ? <IconeCheck tamanho={14} /> : null}
+                  </label>
+                ))}
+              </div>
+              <span className="dica-campo">
+                Pinta o topo do seu perfil, o seu card na vitrine e o crachá. Sem escolha, vale a
+                cor da turma.
+              </span>
+            </div>
+
+            <div className="campo-aparencia">
+              <span className="label-rede">Capa do perfil</span>
+              <div
+                className="capa-preview"
+                style={{ ["--cor" as string]: corDoAluno(corPerfil, sala) }}
+              >
+                {capa ? (
+                  <img src={capa} alt="Prévia da capa do perfil" />
+                ) : (
+                  <span className="capa-preview-vazia">
+                    Sem capa — o topo do perfil usa um degradê da cor de destaque
+                  </span>
+                )}
+              </div>
+              <div className="edit-foto-controles">
+                <label className="edit-foto-botao">
+                  <IconeUpload tamanho={15} />
+                  <span>{capa ? "Trocar capa" : "Escolher capa"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleUploadCapa}
+                  />
+                </label>
+                {capa ? (
+                  <button
+                    type="button"
+                    className="edit-foto-remover"
+                    onClick={() => {
+                      setCapa("");
+                      setAvisoCapa(null);
+                    }}
+                  >
+                    <IconeLixeira tamanho={15} />
+                    <span>Remover capa</span>
+                  </button>
+                ) : null}
+              </div>
+              <span className="dica-campo">
+                A imagem vira uma faixa de {LADO_CAPA}×{Math.round(LADO_CAPA / PROPORCAO_CAPA)}{" "}
+                pixels, recortada pelo centro — o que ficar fora dessa faixa não aparece.
+              </span>
+              {avisoCapa ? (
+                <span className="edit-foto-aviso" role="alert">
+                  {avisoCapa}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Card 3: Redes Profissionais (Inputs Diretos) */}
           <div className="painel-card">
             <div className="painel-card-header">
               <span className="painel-card-label">REDES PROFISSIONAIS</span>

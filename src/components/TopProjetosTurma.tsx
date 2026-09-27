@@ -21,6 +21,8 @@ export type ItemProjetoTop = {
     nome: string;
     sala: string | null;
     cor: string;
+    /** Cor da turma: o rótulo ao lado do nome do autor é o da SALA, não a escolha dele. */
+    corSala: string;
     foto: string | null;
     linkedin: string | null;
     github: string | null;
@@ -61,6 +63,7 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
             nome: aluno.nome,
             sala: aluno.sala,
             cor: aluno.cor,
+            corSala: aluno.corSala,
             foto: aluno.foto_url ?? null,
             linkedin: aluno.linkedin ?? null,
             github: aluno.github ?? null,
@@ -166,8 +169,11 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
                     />
                     <div className="top-autor-textos">
                       <span className="top-autor-nome">{proj.autor.nome}</span>
-                      <span className="top-autor-sala" style={{ color: proj.autor.cor }}>
-                        <span className="ponto" style={{ background: proj.autor.cor }} />
+                      <span
+                        className="top-autor-sala"
+                        style={{ ["--sala-cor" as string]: proj.autor.corSala }}
+                      >
+                        <span className="ponto" style={{ background: proj.autor.corSala }} />
                         {proj.autor.sala}
                       </span>
                     </div>
