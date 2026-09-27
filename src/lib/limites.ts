@@ -11,6 +11,16 @@ export const MAX_MIDIAS = 12;
 export const MAX_PROJETOS = 10;
 
 /**
+ * Vídeos que o aluno pode colar no perfil.
+ *
+ * Baixo de propósito. Um perfil é uma apresentação, não um canal: quatro
+ * vídeos já ocupam a página inteira, e cada um é um `<iframe>` de outra origem
+ * que custa rede e memória na visita. É teto de contagem — o de bytes não se
+ * aplica, porque o vídeo de embed não é hospedado por nós.
+ */
+export const MAX_VIDEOS = 4;
+
+/**
  * Competências que o aluno pode declarar.
  *
  * Menor que a lista fechada de 10 de `LISTA_HABILIDADES` de propósito. O regex
@@ -98,7 +108,7 @@ export const LIMITES_STICKERS = {
   maxTotalBytes: 2 * 1024 * 1024,
 } as const;
 
-export type CampoPerfil = "midias" | "projetos" | "stickers" | "foto" | "capa";
+export type CampoPerfil = "midias" | "projetos" | "stickers" | "foto" | "capa" | "videos";
 
 /** Por que um item enviado não entrou no perfil. */
 export type MotivoDescarte =
@@ -140,6 +150,9 @@ const TETO: Record<CampoPerfil, string> = {
   stickers: "512 KB por sticker",
   foto: "120 KB por foto",
   capa: "capa até 165 KB",
+  // Vídeo de embed não passa por nós e não tem teto de bytes — este texto
+  // nunca é lido por `descreverDescartes` (o motivo dele é `url-invalida`).
+  videos: "link de YouTube ou Vimeo",
 };
 
 /**
@@ -154,6 +167,7 @@ const ALVO_PADRAO: Record<CampoPerfil, string> = {
   stickers: "sticker",
   foto: "foto",
   capa: "capa do perfil",
+  videos: "vídeo",
 };
 
 /**
@@ -206,17 +220,25 @@ export function descreverDescartes(descartes: readonly Descarte[]): string | nul
 
   return (
     `Parte do que você enviou não entrou: ${partes.join("; ")}. ` +
-    `O perfil aceita ${MAX_MIDIAS} imagens, ${MAX_PROJETOS} projetos e ${LIMITES_STICKERS.max} stickers.`
+    `O perfil aceita ${MAX_MIDIAS} imagens, ${MAX_PROJETOS} projetos, ` +
+    `${LIMITES_STICKERS.max} stickers e ${MAX_VIDEOS} vídeos.`
   );
 }
 
-/** Teto de bytes de um único item, por campo. */
+/**
+ * Teto de bytes de um único item, por campo.
+ *
+ * `videos` é o teto do LINK, não de arquivo: o vídeo de embed mora no YouTube
+ * ou no Vimeo, e o que entra no banco são ~11 caracteres de id. O número é o
+ * mesmo corte de `urlSegura`/`urlImagemSegura`, para os três concordarem.
+ */
 const TETO_BYTES: Record<CampoPerfil, number> = {
   midias: MAX_DATA_URL_IMAGEM,
   projetos: MAX_DATA_URL_IMAGEM,
   stickers: LIMITES_STICKERS.maxDataUrlBytes,
   foto: MAX_DATA_URL_FOTO,
   capa: MAX_DATA_URL_CAPA,
+  videos: 2048,
 };
 
 export function tetoDoCampo(campo: CampoPerfil): number {

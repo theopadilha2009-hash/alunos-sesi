@@ -21,7 +21,9 @@ import {
   IconeSomMudo,
 } from "@/components/Icones";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
+import { VideoEmbed } from "@/components/VideoEmbed";
 import { handleLinkedin, urlGithub } from "@/lib/links";
+import { MAX_VIDEOS } from "@/lib/limites";
 import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -59,6 +61,10 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
   // filtro descarta item sem url: a coluna é JSON cru e `<img src="">` faz o
   // navegador buscar a própria página.
   const midias = (aluno.midias ?? []).filter((m) => m.url).slice(0, 12);
+  // Mesmo desenho do `slice` acima: o editor já limita, e aqui é defesa contra
+  // payload antigo. O filtro descarta item sem id — a coluna é JSON cru, e um
+  // `{ tipo: "youtube" }` sem id viraria um iframe apontando para lugar nenhum.
+  const videos = (aluno.videos ?? []).filter((v) => v.id).slice(0, MAX_VIDEOS);
 
   const urlAtual =
     typeof window !== "undefined"
@@ -419,6 +425,23 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
                   </figure>
                 );
               })}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Vídeos. Depois das mídias porque o vídeo é o fecho da apresentação:
+            quem rolou até aqui já viu a foto e o projeto, e o vídeo é o que
+            mostra o negócio funcionando. A seção some quando não há vídeo, pelo
+            mesmo motivo da galeria — um bloco vazio marcaria a ausência. */}
+        {videos.length > 0 ? (
+          <section className="port-videos" aria-labelledby="port-videos-titulo">
+            <span className="perfil-label-secao" id="port-videos-titulo">
+              Vídeos:
+            </span>
+            <div className="port-videos-grade">
+              {videos.map((v) => (
+                <VideoEmbed key={`${v.tipo}-${v.id}`} video={v} />
+              ))}
             </div>
           </section>
         ) : null}

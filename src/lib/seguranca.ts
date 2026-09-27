@@ -13,13 +13,15 @@ import {
   MAX_HABILIDADES,
   MAX_MIDIAS,
   MAX_PROJETOS,
+  MAX_VIDEOS,
   type Descarte,
   type MotivoDescarte,
 } from "./limites.ts";
 import { CORES_SALA } from "./cores.ts";
 import { habilidadePermitida } from "./habilidades.ts";
 import type { RepoGithub } from "./github.ts";
-import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos.ts";
+import { normalizarVideo } from "./video.ts";
+import type { MidiaAluno, ProjetoAluno, StickerPerfil, VideoAluno } from "./tipos.ts";
 
 // Os tetos agora moram em limites.ts, que não importa `node:crypto` e por isso
 // pode ser lido pelo client component que barra o arquivo grande antes de subir.
@@ -386,6 +388,60 @@ export function sanitizarMidias(bruto: unknown[], descartes?: Descarte[]): Midia
   }
 
   return sanitizadas;
+}
+
+/**
+ * Vídeos do perfil.
+ *
+ * O que entra é `{ id, tipo }` normalizado, nunca a URL colada. `normalizarVideo`
+ * é allowlist fechada de host — o oposto deliberado de `urlImagemSegura`, que
+ * aceita qualquer `https:`. A diferença é o que o valor vira na página: imagem
+ * é `<img>`, vídeo é `<iframe>`, e um iframe de origem arbitrária dentro do
+ * nosso documento é justamente o que o `frame-src` existe para impedir.
+ */
+export function sanitizarVideos(bruto: unknown[], descartes?: Descarte[]): VideoAluno[] {
+  if (!Array.isArray(bruto)) return [];
+
+  const sanitizados: VideoAluno[] = [];
+
+  for (const item of bruto.slice(0, MAX_VIDEOS)) {
+    if (!item || typeof item !== "object") continue;
+    const v = item as Record<string, unknown>;
+
+    // Aceita as duas formas: o que o editor manda é a URL crua que o aluno
+    // colou; o que já está no banco é `{ id, tipo }`. Sem o segundo ramo, um
+    // salvamento sem tocar nos vídeos apagaria todos eles.
+    const video = normalizarVideo(v.url) ?? normalizarVideo(urlDoGravado(v));
+
+    if (!video) {
+      descartes?.push({ motivo: "url-invalida", campo: "videos" });
+      continue;
+    }
+
+    const titulo = v.titulo ? sanitizarTexto(v.titulo, 80) : undefined;
+    sanitizados.push({ ...video, ...(titulo ? { titulo } : {}) });
+  }
+
+  for (let i = MAX_VIDEOS; i < bruto.length; i++) {
+    descartes?.push({ motivo: "acima-do-limite", campo: "videos" });
+  }
+
+  return sanitizados;
+}
+
+/**
+ * Reconstrói a URL a partir do que já está gravado, para o `normalizarVideo`.
+ *
+ * O vídeo no banco é `{ id, tipo }`; o normalizador só lê URL. Em vez de um
+ * segundo caminho de validação (que poderia divergir do primeiro), remonta-se
+ * a URL canônica e passa-se pelo MESMO validador. Se o id gravado não passar
+ * no regex dele, o vídeo cai — que é o certo para um registro corrompido.
+ */
+function urlDoGravado(v: Record<string, unknown>): unknown {
+  if (typeof v.id !== "string") return null;
+  if (v.tipo === "youtube") return `https://youtu.be/${v.id}`;
+  if (v.tipo === "vimeo") return `https://vimeo.com/${v.id}`;
+  return null;
 }
 
 // ── 6. Stickers do perfil (Estúdio) ─────────────────────────────────────────

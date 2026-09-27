@@ -14,11 +14,12 @@ import {
   sanitizarReposGithub,
   sanitizarStickers,
   sanitizarTexto,
+  sanitizarVideos,
   urlImagemSegura,
   urlSegura,
   verificarRateLimit,
 } from "../src/lib/seguranca.ts";
-import { MAX_DATA_URL_FOTO, MAX_DATA_URL_IMAGEM, MAX_HABILIDADES, MAX_MIDIAS } from "../src/lib/limites.ts";
+import { MAX_DATA_URL_FOTO, MAX_DATA_URL_IMAGEM, MAX_HABILIDADES, MAX_MIDIAS, MAX_VIDEOS } from "../src/lib/limites.ts";
 import { corDaSala, corDoAluno } from "../src/lib/cores.ts";
 
 test("compararTempoConstante valida igualdade e rejeita desigualdade", () => {
@@ -706,4 +707,99 @@ test("corDoAluno cai na cor da sala quando o aluno não escolheu", () => {
   assert.equal(corDoAluno("#F3B544", "DSM3"), "#F3B544");
   // Sala ausente não explode: cai no hash da string vazia.
   assert.equal(corDoAluno(null, null), corDaSala(""));
+});
+
+// ── Vídeos ───────────────────────────────────────────────────────────────
+// O que entra no banco é `{ id, tipo }` normalizado, nunca a URL colada. Isso é
+// o oposto deliberado de `sanitizarMidias`: lá a URL do aluno é aceita e vira
+// `<img>`; aqui ela vira `<iframe>`, e por isso passa por allowlist fechada.
+
+test("sanitizarVideos normaliza a URL colada e descarta os parametros do link", () => {
+  const videos = sanitizarVideos([
+    { url: "https://youtu.be/dQw4w9WgXcQ?si=AbCdEf12345" },
+    { url: "https://www.youtube.com/watch?v=abcdefghijk&t=42s" },
+    { url: "https://vimeo.com/76979871" },
+  ]);
+
+  assert.deepEqual(videos, [
+    { id: "dQw4w9WgXcQ", tipo: "youtube" },
+    { id: "abcdefghijk", tipo: "youtube" },
+    { id: "76979871", tipo: "vimeo" },
+  ]);
+});
+
+test("sanitizarVideos aceita de volta o que ja esta gravado", () => {
+  // O editor manda URL crua; o que volta do banco e `{ id, tipo }`. Sem este
+  // ramo, salvar o perfil sem tocar nos videos apagaria todos eles.
+  const videos = sanitizarVideos([
+    { id: "dQw4w9WgXcQ", tipo: "youtube", titulo: "Braço robótico" },
+    { id: "76979871", tipo: "vimeo" },
+  ]);
+
+  assert.deepEqual(videos, [
+    { id: "dQw4w9WgXcQ", tipo: "youtube", titulo: "Braço robótico" },
+    { id: "76979871", tipo: "vimeo" },
+  ]);
+});
+
+test("sanitizarVideos recusa host que so parece o da plataforma", () => {
+  const descartes = [];
+  const videos = sanitizarVideos(
+    [
+      { url: `https://youtube.com.evil.com/watch?v=dQw4w9WgXcQ` },
+      { url: "https://exemplo.com/video.mp4" },
+      { url: "javascript:alert(1)" },
+    ],
+    descartes,
+  );
+
+  assert.deepEqual(videos, []);
+  assert.deepEqual(descartes, [
+    { motivo: "url-invalida", campo: "videos" },
+    { motivo: "url-invalida", campo: "videos" },
+    { motivo: "url-invalida", campo: "videos" },
+  ]);
+});
+
+test("sanitizarVideos nao deixa passar registro corrompido do banco", () => {
+  // Um id gravado que nao passa no regex do normalizador cai — e o registro
+  // invalido nao vira um iframe apontando para lugar nenhum.
+  const descartes = [];
+  const videos = sanitizarVideos(
+    [
+      { id: "../../etc/passwd", tipo: "youtube" },
+      { id: "dQw4w9WgXcQ", tipo: "desconhecido" },
+      { id: "dQw4w9WgXcQ" },
+    ],
+    descartes,
+  );
+
+  assert.deepEqual(videos, []);
+  assert.equal(descartes.length, 3);
+});
+
+test("sanitizarVideos corta o titulo e respeita o teto de contagem", () => {
+  const videos = sanitizarVideos(
+    Array.from({ length: MAX_VIDEOS + 2 }, () => ({ url: "https://youtu.be/dQw4w9WgXcQ" })),
+  );
+  assert.equal(videos.length, MAX_VIDEOS);
+
+  const descartes = [];
+  sanitizarVideos(
+    Array.from({ length: MAX_VIDEOS + 2 }, () => ({ url: "https://youtu.be/dQw4w9WgXcQ" })),
+    descartes,
+  );
+  assert.equal(descartes.length, 2);
+  assert.ok(descartes.every((d) => d.motivo === "acima-do-limite" && d.campo === "videos"));
+
+  const [comTitulo] = sanitizarVideos([
+    { id: "dQw4w9WgXcQ", tipo: "youtube", titulo: "T".repeat(200) },
+  ]);
+  assert.equal(comTitulo.titulo.length, 80);
+});
+
+test("sanitizarVideos devolve lista vazia para entrada que nao e array", () => {
+  assert.deepEqual(sanitizarVideos(null), []);
+  assert.deepEqual(sanitizarVideos("nao e lista"), []);
+  assert.deepEqual(sanitizarVideos([null, 42, "texto"]), []);
 });

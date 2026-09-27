@@ -1,3 +1,5 @@
+import type { VideoAluno } from "./video.ts";
+
 export type Sala = {
   id: string;
   nome: string;
@@ -27,6 +29,15 @@ export type MidiaAluno = {
   tipo: "imagem" | "gif";
   legenda?: string;
 };
+
+/**
+ * Vídeo do perfil, hospedado no YouTube ou no Vimeo.
+ *
+ * O tipo canônico é `VideoAluno` de `lib/video.ts`, reexportado aqui porque o
+ * resto do app importa tipos deste módulo. Guarda `id` + `tipo`, nunca a URL
+ * que o aluno colou — ver o comentário de cabeçalho em `video.ts`.
+ */
+export type { TipoVideo, VideoAluno } from "./video.ts";
 
 export type StickerPerfil = {
   id: string;
@@ -122,6 +133,15 @@ export type Aluno = {
   projetos?: ProjetoAluno[];
   midias?: MidiaAluno[];
   stickers?: StickerPerfil[];
+  /**
+   * Vídeos de YouTube/Vimeo que o aluno colou no perfil (coluna `alunos.videos`).
+   *
+   * Cada item é `{ id, tipo }` — o id da plataforma, nunca a URL colada. Quem
+   * monta o endereço do `<iframe>` é `urlEmbed`, a partir de uma allowlist
+   * fechada de hosts; é por isso que este campo não pode guardar URL livre como
+   * `midias` guarda (ver o cabeçalho de `lib/video.ts`).
+   */
+  videos?: VideoAluno[];
   /** Cache mantido por trigger: nome da habilidade → nº de endossos. */
   habilidades_votos?: Record<string, number>;
   /**

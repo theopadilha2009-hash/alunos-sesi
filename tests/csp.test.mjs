@@ -74,7 +74,13 @@ test("diretivas de bloqueio estao presentes", () => {
   assert.equal(diretiva(PROD, "base-uri"), "'self'");
   assert.equal(diretiva(PROD, "frame-ancestors"), "'none'");
   assert.equal(diretiva(PROD, "form-action"), "'self'");
-  assert.equal(diretiva(PROD, "frame-src"), "'none'");
+  // `frame-src` deixou de ser 'none' quando o perfil passou a aceitar vídeo —
+  // a lista fechada de hosts e o que garante que ela não virou curinga estão em
+  // `tests/video.test.mjs`, que é quem conhece os hosts do embed.
+  assert.equal(
+    diretiva(PROD, "frame-src"),
+    "https://www.youtube-nocookie.com https://player.vimeo.com",
+  );
   assert.equal(diretiva(PROD, "connect-src"), `'self' ${HOST_BLOB_CSP}`);
   assert.equal(diretiva(PROD, "font-src"), "'self'");
   assert.equal(diretiva(PROD, "manifest-src"), "'self'");

@@ -12,8 +12,9 @@ import {
   IconeProjetos,
 } from "@/components/Icones";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
+import { VideoEmbed } from "@/components/VideoEmbed";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
-import { LIMITES_STICKERS } from "@/lib/limites";
+import { LIMITES_STICKERS, MAX_VIDEOS } from "@/lib/limites";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -69,6 +70,12 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
   // mostraria competência que o aluno tirou do perfil, ou esconderia a que ele
   // declarou e nunca escreveu na bio.
   const habilidades = aluno.habilidades ?? [];
+  // O editor do Estúdio já limita em `MAX_VIDEOS`; o slice aqui é defesa contra
+  // payload antigo ou maior. O filtro descarta item sem id — a coluna é JSON
+  // cru, e um `{ tipo: "youtube" }` sem id viraria um iframe apontando para
+  // lugar nenhum. O embed em si (`VideoEmbed`) é client component: entra nesta
+  // página de servidor como qualquer outro, sem trazer o `"use client"` para cá.
+  const videos = (aluno.videos ?? []).filter((v) => v.id).slice(0, MAX_VIDEOS);
 
   return (
     <main className="nfc-bio-layout">
@@ -289,6 +296,20 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
                     </a>
                   ) : null}
                 </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* Vídeos. Por último antes do rodapé porque o vídeo é o fecho: quem
+            rolou até aqui já viu as competências e os projetos. A seção some
+            quando não há vídeo — um bloco vazio marcaria a ausência. */}
+        {videos.length > 0 ? (
+          <section className="port-videos">
+            <span className="nfc-bloco-titulo">Vídeos do Aluno</span>
+            <div className="port-videos-grade">
+              {videos.map((v) => (
+                <VideoEmbed key={`${v.tipo}-${v.id}`} video={v} />
               ))}
             </div>
           </section>

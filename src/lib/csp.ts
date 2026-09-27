@@ -46,6 +46,22 @@ export const HOSTS_IMAGEM = ["https:"] as const;
  */
 export const HOST_BLOB_CSP = "https://*.public.blob.vercel-storage.com";
 
+/**
+ * Hosts de embed de vídeo, liberados em `frame-src`.
+ *
+ * É o mesmo literal de `HOSTS_EMBED` em `video.ts`, pela mesma razão de
+ * `HOST_BLOB_CSP` acima. A lista é fechada — `frame-src` é a única diretiva
+ * deste arquivo que restringe por host em vez de por esquema, porque o que ela
+ * governa é um `<iframe>`: navegação de outra origem dentro do nosso documento.
+ *
+ * `youtube-nocookie` no lugar de `youtube.com`: o embed comum grava cookie de
+ * rastreio no navegador de quem visita o perfil, que aqui é aluno de escola.
+ */
+export const HOSTS_EMBED_CSP = {
+  youtube: "https://www.youtube-nocookie.com",
+  vimeo: "https://player.vimeo.com",
+} as const;
+
 export function montarCsp(nonce: string, dev: boolean): string {
   // `@vercel/analytics` só usa o script same-origin (`/_vercel/insights`) com
   // `NODE_ENV=production`. Em dev ele troca para o script de debug em
@@ -70,7 +86,12 @@ export function montarCsp(nonce: string, dev: boolean): string {
     `connect-src 'self' ${HOST_BLOB_CSP}${HOST_ANALYTICS_DEV}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
-    "frame-src 'none'",
+    // `frame-src` era 'none'. Deixou de ser quando o perfil passou a aceitar
+    // vídeo: o embed é um <iframe> de outra origem, e a diretiva é o que
+    // impede que ele aponte para qualquer host. A lista é FECHADA e espelha
+    // `HOSTS_EMBED` de `video.ts` — os dois arquivos são folha e não se
+    // importam, então quem amarra os valores é `tests/video.test.mjs`.
+    `frame-src ${Object.values(HOSTS_EMBED_CSP).join(" ")}`,
     "form-action 'self'",
     "frame-ancestors 'none'",
     "object-src 'none'",

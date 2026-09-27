@@ -29,6 +29,7 @@ import {
   sanitizarReposGithub,
   sanitizarStickers,
   sanitizarTexto,
+  sanitizarVideos,
   urlSegura,
 } from "@/lib/seguranca";
 import { abrirAssinado, COOKIE_VISITANTE, opcoesCookie, TRINTA_DIAS } from "@/lib/sessao";
@@ -117,6 +118,7 @@ export async function salvarPerfilAction(
   const projetosJson = String(formData.get("projetos") ?? "[]");
   const midiasJson = String(formData.get("midias") ?? "[]");
   const stickersJson = String(formData.get("stickers") ?? "[]");
+  const videosJson = String(formData.get("videos") ?? "[]");
 
   if (nome.length < 2) {
     return { ok: false, mensagem: "O nome precisa ter pelo menos 2 caracteres." };
@@ -143,6 +145,13 @@ export async function salvarPerfilAction(
     stickersBrutos = [];
   }
 
+  let videosBrutos: unknown[] = [];
+  try {
+    videosBrutos = JSON.parse(videosJson);
+  } catch {
+    videosBrutos = [];
+  }
+
   // Sanitização estrita e validação de URLs / esquemas. O coletor registra o
   // que ficou de fora: antes o item era descartado em silêncio, e o aluno
   // salvava o perfil achando que a foto tinha entrado.
@@ -154,6 +163,7 @@ export async function salvarPerfilAction(
     projetos.map((p) => p.id),
     descartes,
   );
+  const videos = sanitizarVideos(videosBrutos, descartes);
 
   let habilidadesBrutas: unknown[] = [];
   try {
@@ -166,6 +176,18 @@ export async function salvarPerfilAction(
   const termosProibidos = /\b(porn|xxx|nsfw|sex|nude|violencia|arma|droga|aposta|bet)\b/i;
   for (const m of midias) {
     if (m.legenda && termosProibidos.test(m.legenda)) {
+      return {
+        ok: false,
+        mensagem: "Conteúdo rejeitado pela moderação escolar: utilize apenas mídias educativas e adequadas para todas as idades.",
+      };
+    }
+  }
+  // O título do vídeo aparece na página igual à legenda da mídia, e passaria
+  // batido: o embed em si é do YouTube/Vimeo, mas o rótulo em cima dele é texto
+  // que o aluno escreveu. Sem esta varredura, o único campo de texto novo do
+  // perfil seria o único sem moderação.
+  for (const v of videos) {
+    if (v.titulo && termosProibidos.test(v.titulo)) {
       return {
         ok: false,
         mensagem: "Conteúdo rejeitado pela moderação escolar: utilize apenas mídias educativas e adequadas para todas as idades.",
@@ -215,6 +237,7 @@ export async function salvarPerfilAction(
     projetos,
     midias,
     stickers,
+    videos,
   };
 
   // Foto e competências são campos de presença, não de valor: o editor manda um

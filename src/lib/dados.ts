@@ -14,7 +14,7 @@ import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } fro
  */
 
 const CAMPOS_ALUNO =
-  "id,nome,slug,sala_id,linkedin,github,instagram,email,bio,foto_url,cor_perfil,banner_url,fixado,destaque,aprovado,estrelas,projetos,midias,stickers,habilidades,habilidades_votos,insignias";
+  "id,nome,slug,sala_id,linkedin,github,instagram,email,bio,foto_url,cor_perfil,banner_url,fixado,destaque,aprovado,estrelas,projetos,midias,stickers,videos,habilidades,habilidades_votos,insignias";
 
 /**
  * Resolve o que a coluna deixa em aberto, para nenhuma tela precisar saber.
@@ -144,6 +144,7 @@ export async function atualizarPerfilAluno(
     projetos?: unknown[];
     midias?: unknown[];
     stickers?: unknown[];
+    videos?: unknown[];
     habilidades?: string[];
     habilidades_votos?: Record<string, number>;
     insignias?: string[];
