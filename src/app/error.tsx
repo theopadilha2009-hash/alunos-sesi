@@ -72,8 +72,8 @@ export default function ErrorBoundary({ error, reset }: Props) {
           >
             ↻ Tentar Novamente
           </button>
-          <Link href="/" className="botao botao-fraco">
-            ← Página Inicial
+          <Link href="/alunos" className="botao botao-fraco">
+            ← Ver a turma
           </Link>
         </div>
       </div>

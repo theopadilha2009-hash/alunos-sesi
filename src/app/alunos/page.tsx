@@ -28,7 +28,7 @@ export default async function AlunosPage() {
 
     return (
       <>
-        <Topo voltar={{ href: "/", texto: "← Início" }} />
+        <Topo />
         <main className="wrap" style={{ paddingBlock: "1.5rem" }}>
           <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", letterSpacing: "-0.04em", marginBottom: "1.25rem" }}>
             A turma
@@ -50,7 +50,7 @@ export default async function AlunosPage() {
     console.error("[alunos] falha ao ler do Supabase:", erro);
     return (
       <>
-        <Topo voltar={{ href: "/", texto: "← Início" }} />
+        <Topo />
         <main className="wrap" style={{ paddingBlock: "3rem" }}>
           <Vazio titulo="Não conseguimos carregar a turma agora.">
             O banco de dados não respondeu. Tente de novo em alguns instantes —

@@ -169,8 +169,8 @@ export default async function PaginaValidarCracha({ params }: Props) {
               <span>Cartão Rápido NFC / Link na Bio</span>
             </Link>
 
-            <Link href="/" className="botao botao-fraco">
-              Voltar ao Diretório Geral SESI
+            <Link href="/alunos" className="botao botao-fraco">
+              ← Ver a turma
             </Link>
           </div>
         </div>

@@ -287,10 +287,13 @@ export async function salvarPerfilAction(
       mensagem: aviso ? `Perfil atualizado. ${aviso}` : "Perfil atualizado com sucesso!",
     };
   } catch (err) {
+    // O log guarda o erro real; o aluno não precisa ler `JSON object requested,
+    // multiple (or no) rows returned`. O que precisa chegar ao aluno — campo
+    // recusado, mídia descartada — volta por `descartes`, no caminho de sucesso.
     logger.error("CRM", "Erro ao salvar perfil do aluno", err);
     return {
       ok: false,
-      mensagem: err instanceof Error ? err.message : "Erro ao salvar perfil.",
+      mensagem: "Não foi possível salvar o perfil agora. Tente de novo em instantes.",
     };
   }
 }

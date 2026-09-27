@@ -317,7 +317,7 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
 
         {/* Rodapé institucional com link para o sistema geral */}
         <footer className="nfc-bio-footer">
-          <Link href="/" className="nfc-footer-logo">
+          <Link href="/alunos" className="nfc-footer-logo">
             <Roseta tamanho={18} />
             <span>Alunos SESI SC · Joinville</span>
           </Link>

@@ -195,7 +195,7 @@
   color: var(--faint);
 }
 
-.busca:focus {
+.busca:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--accent);
 }
@@ -542,9 +542,9 @@
   line-height: 1.6;
 }
 
-.campo input:focus,
-.campo textarea:focus,
-.campo select:focus {
+.campo input:focus:not(:focus-visible),
+.campo textarea:focus:not(:focus-visible),
+.campo select:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--accent);
 }
@@ -1064,7 +1064,7 @@ body::before {
   cursor: pointer;
 }
 
-.select-custom:focus {
+.select-custom:focus:not(:focus-visible) {
   outline: none;
   border-color: var(--accent);
 }

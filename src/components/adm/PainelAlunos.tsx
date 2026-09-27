@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { alternar, aprovarAluno, removerAluno } from "@/app/adm/acoes";
+import { BotaoRemover } from "@/components/adm/BotaoRemover";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 /**
@@ -52,7 +53,10 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
                       : "Libera o perfil na vitrine"
                   }
                 >
-                  {a.aprovado ? "Aprovado" : "Aprovar"}
+                  {/* O rótulo diz a AÇÃO, não o estado: "Aprovado" lia-se como
+                      status e quem clicasse para "conferir se está aprovado"
+                      tirava o aluno da vitrine. O estado vai no aria-pressed. */}
+                  {a.aprovado ? "Despublicar" : "Aprovar"}
                 </button>
               </form>
 
@@ -82,16 +86,7 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
                 </button>
               </form>
 
-              <form action={removerAluno}>
-                <input type="hidden" name="id" value={a.id} />
-                <button
-                  type="submit"
-                  className="mini botao-perigo"
-                  title="Remove o aluno"
-                >
-                  Remover
-                </button>
-              </form>
+              <BotaoRemover id={a.id} nome={a.nome} acao={removerAluno} />
             </span>
           </li>
         ))}
