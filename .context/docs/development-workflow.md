@@ -34,7 +34,7 @@ Sempre nesta ordem, e sempre com o output colado antes de dizer "pronto":
 
 ```bash
 npm run typecheck   # tsc --noEmit — pega tipo errado e prop que não existe
-npm test            # node:test, 27 testes, sem rede
+npm test            # node:test, 208 testes, sem rede
 npm run build       # next build — pega erro de RSC, rota e import de servidor no cliente
 ```
 

@@ -78,13 +78,6 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   isso — não escrevi em dado de aluno de produção para testar. Verificado em
   27/09: `cor_perfil` e `banner_url` (PR #21) nascem na mesma situação, e os
   contatos do Théo (instagram, github, linkedin e e-mail) estão preenchidos.
-- **A Onda 2 (mídias → Vercel Blob) trava em duas decisões** (27/09). Nenhum
-  store está conectado ao projeto (`vercel blob list-stores` volta vazio), mas o
-  CLI **está autenticado** (`theopadilha2009-5085`): `vercel blob create-store`
-  roda sem login interativo, então o bloqueio não é técnico. Falta decidir
-  criar o recurso (tem custo por uso) e desenhar a migração das mídias que já
-  estão em base64 no JSONB. Cadastrar `BLOB_READ_WRITE_TOKEN` na Vercel é passo
-  manual no dashboard: o `scripts/vercel-env.sh` só faz `pull`/`list`/`deploy`.
 - **Hierarquia entre `--faint` e `--dim` no tema escuro.** Efeito colateral de
   fazer o `--faint` passar AA: a distância entre os dois caiu de 1,85:1 para
   1,24:1 e, no mesmo corpo de fonte, os dois se leem como um. Onde dói:
