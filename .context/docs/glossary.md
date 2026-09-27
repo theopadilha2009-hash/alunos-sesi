@@ -18,8 +18,18 @@ A unidade principal. Linha de `public.alunos` (`src/sql/001_schema.sql`), tipo
 `Aluno` em `src/lib/tipos.ts` (com `sala`, `cor` já resolvidos como
 `AlunoNaTela`), lido por `listarAlunos`/`alunoPorSlug` em `src/lib/dados.ts` e
 renderizado por `CartaoAluno` / `src/app/alunos/[slug]/page.tsx`. Tem nome,
-slug, sala, LinkedIn, GitHub, bio (até 280), foto (campo `foto_url` sem uso
-hoje), `fixado`, `destaque` e a contagem `estrelas`.
+slug, sala, LinkedIn, GitHub, Instagram, e-mail, bio (até 280), `foto_url`
+(recortada 256×256 no cliente, data URL de até 120 KB), `banner_url` (capa,
+220 KB), `cor_perfil`, `habilidades`, `midias`, `videos`, `stickers`, `fixado`,
+`destaque` e a contagem `estrelas`.
+
+## Aluno aprovado
+
+O perfil só aparece na vitrine e no crachá depois de aprovado (`alunos.aprovado`).
+Enquanto pende moderação, `/alunos/[slug]` devolve **404** — não "em análise":
+para quem está de fora um pendente não existe, e dizer que existe transformaria
+a moderação em vitrine. O `generateMetadata` também não vaza nem o nome no
+`<title>`. Ver `security.md`.
 
 ## Sala
 
@@ -33,20 +43,61 @@ como a variável `--sala`. Sempre pesquisável na forma `3ºA`/`3oA`/`3A` via
 ## Vitrine
 
 A porta pública, `/alunos`. Componente `src/components/Vitrine.tsx` (client),
-alimentado por `src/app/alunos/page.tsx` (server). Tem busca, filtro por sala,
-o atalho "Meus estrelados", o retrato com os números da turma, a grade de
-cartões e o ranking das salas.
+alimentado por `src/app/alunos/page.tsx` (server). Tem busca, filtro por sala e
+por habilidade, o atalho "Meus estrelados", o retrato com os números da turma,
+a grade de cartões e o ranking das salas.
+
+## CRM escolar
+
+A porta com login, `/`. Componente `src/components/crm/CrmApp.tsx` (client) e
+as seis abas do workspace: Portfólio, Projetos & Criações, Mural de Desafios,
+Tabelas & Alunos, Meu Perfil (com upload de mídia) e Painel ADM.
+Toda a escrita sai de Server Actions em `src/app/acoes-crm.ts`. O login é nominal
+(usuário e senha, argon2id) e a sessão é o cookie `sesi.usuario`. Ver `Usuario`.
 
 ## Painel
 
 A porta restrita, `/adm`. `src/app/adm/page.tsx` (server) e os componentes
 `src/components/adm/*`. Toda mudança sai de uma Server Action em
-`src/app/adm/acoes.ts`.
+`src/app/adm/acoes.ts`. No CRM ele aparece integrado como `PainelAdmIntegrado`.
 
 ## ADM
 
 Quem tem a chave do link secreto (`ADM_CHAVE`). Não é usuário com login:
-identidade é o cookie `sesi.adm` (HMAC da chave). Ver `security.md`.
+identidade é o cookie `sesi.adm` (HMAC da chave). Ver `security.md`. É o acesso
+cru, sem autoria por pessoa — o CRM tem usuário nominal, mas o `/adm` não olha
+para ele além de aceitar `super_adm`.
+
+## Usuário
+
+A conta nominal do CRM: `public.usuarios` (`src/sql/003_crm_auth.sql`), com
+senha em hash argon2id, tipo `Usuario` em `src/lib/tipos.ts`, login e sessão em
+`src/lib/auth.ts` e `src/lib/senha.ts`. Três papéis: `super_adm`, `adm` e
+`aluno`. O aluno só enxerga e edita o próprio perfil; o `adm` modera.
+
+## Endosso
+
+O "+1" de competência, no estilo LinkedIn: uma linha de `public.endossos` por
+`(aluno, habilidade, visitante)`, com o contador mantido por trigger. Como a
+estrela, é um por navegador por habilidade, e a identidade vem do cookie
+assinado — nunca do corpo da requisição. Migration `src/sql/006_endossos.sql`.
+
+## Habilidade / competência
+
+O que o aluno declara saber, na coluna `alunos.habilidades` (JSONB). A entrada
+passa por `habilidadePermitida` (`src/lib/habilidades.ts`), que só aceita o
+**nome exato** da lista — variação de caixa ou espaço sobrando é recusada. É
+diferente das habilidades *derivadas* da bio: enquanto `habilidades` for `NULL`
+("nunca editou o perfil"), `resolverAluno` cai em `extrairHabilidades(bio)`;
+`[]` significa "escolheu não ter nenhuma" e **não** cai no fallback. Migration
+`src/sql/009_habilidades_do_aluno.sql`.
+
+## Insígnia
+
+Conquista derivada de dado real, nunca escolhida pelo aluno:
+`src/lib/insignias.ts` define uma escada fixa de seis, que acende por estrelas
+recebidas e endossos de colegas. O aluno vê a que falta com a barra de
+progresso, e `progresso` nunca passa do alvo.
 
 ## Estrela / voto
 
@@ -94,7 +145,15 @@ Um navegador sem login. Tem uma identidade anônima assinada, o cookie
 `sesi.visitante` (16 bytes hex), gerada por `novoVisitante()` e validada por
 `abrirAssinado()` em `src/lib/sessao.ts`. É o que define "o que ESTE navegador
 já estrelou": `votosDoVisitante()` em `src/lib/dados.ts` e `visitanteAtual()`
-em `src/app/api/estrela/route.ts`.
+em `src/app/api/estrela/route.ts`. A mesma identidade responde pelos endossos.
+
+## Sessão
+
+O cookie assinado por `SESSAO_SEGREDO`, em três propósitos que **não se abrem
+entre si**: `sesi.visitante`, `sesi.usuario` e `sesi.adm`. Cada um recebe uma
+subchave HKDF diferente (`assinar`/`abrirAssinado` em `src/lib/sessao.ts`),
+então um token de um domínio não vale no outro. Trocar `SESSAO_SEGREDO` derruba
+todas as sessões ativas de uma vez.
 
 ## Crachá
 
@@ -103,6 +162,60 @@ O cookie `sesi.adm` que dá acesso ao painel. Emite em
 (`src/lib/sessao.ts`). Guarda o **HMAC** da chave (`assinar("adm-v1")`), não a
 chave — trocar `ADM_CHAVE` invalida todos os crachás. Válido por 30 dias
 (`TRINTA_DIAS`).
+
+## Crachá digital
+
+Não confundir com o crachá acima (que é o cookie do painel). É a **página** do
+aluno, `/alunos/<slug>`, renderizada por `PerfilInterativo`: selos de fixado e
+destaque, bio, links, QR code do próprio URL, botão para baixar o crachá em
+PNG, o mini-currículo A4, a galeria, as competências e as insígnias. É a rota
+que o cartão NFC abre por padrão.
+
+## Cartão
+
+O cartão de identidade do aluno, `/u/<slug>` (`src/app/u/[slug]/page.tsx`): o
+destino do NFC e do link na bio, com stickers posicionados por porcentagem e a
+contagem de apoios por competência. Traz o botão "Mini-Currículo (A4)", que
+aponta para `/alunos/<slug>?curriculo=1` — o parâmetro é o que abre o currículo
+já na chegada (`abrirCurriculo` em `PerfilInterativo`).
+
+## Validação de matrícula
+
+A conferência pública em `/validar/<slug>` (`src/app/validar/[slug]/page.tsx`),
+para quem recebe o documento antes de aceitar o crachá. O número de matrícula e
+o "hash SHA-256" exibidos são derivados na hora de `slug`, `estrelas` e `id` —
+**não há coluna nem verificação no banco**. É peça de documento impresso, não
+de autenticação.
+
+## Mini-currículo (A4)
+
+A folha de currículo para impressão do aluno, `CurriculoImpressao`
+(`src/components/CurriculoImpressao.tsx`), aberta no crachá digital — direto ou
+pelo deep-link `?curriculo=1` vindo do cartão.
+
+## Mídia
+
+As imagens da galeria do perfil, na coluna `alunos.midias` (JSONB). Cada item é
+a URL pública de um arquivo no Vercel Blob mais a legenda — o upload é direto do
+navegador para o store, e a URL (não o byte) é o que entra no formulário.
+`src/lib/blob.ts` faz a ponte e `src/app/api/upload/route.ts` assina o token
+depois de conferir sessão, caminho e ritmo. Ver `midia.md`.
+
+## Vídeo
+
+O vídeo do perfil, na coluna `alunos.videos` (JSONB), guardado como
+`{ id, tipo, titulo? }` — o id da plataforma, **nunca** a URL que o aluno colou.
+O embed é montado por `urlEmbed` (`src/lib/video.ts`) sobre uma allowlist de
+dois hosts, e o `<iframe>` só nasce ao clique, em `VideoEmbed`. Migration
+`src/sql/013_videos_do_aluno.sql`.
+
+## Cor de perfil / capa
+
+A aparência que o aluno escolhe: `alunos.cor_perfil` (uma das cores da paleta,
+validada contra o `CHECK` do banco) e `alunos.banner_url` (a capa). Resolvidas
+por `corDoAluno()` em `src/lib/cores.ts`, que prefere a escolha do aluno e cai
+na cor da sala quando ele não escolheu. Migration
+`src/sql/012_aparencia_do_aluno.sql`.
 
 ## Slug
 
@@ -121,9 +234,10 @@ mesma busca `3a`. É também o critério de igualdade da importação
 
 ## Porta
 
-Uma das duas entradas do app: a vitrine pública (`/alunos`) e o painel do ADM
-(`/adm`). Termo do `src/app/page.tsx` (capa), que apresenta as duas portas, e do
-README.
+Uma das entradas do app, todas no mesmo repositório: a vitrine pública
+(`/alunos`), o CRM com login (`/`), o painel do ADM (`/adm`) e as páginas de
+identidade (`/u/<slug>`, `/validar/<slug>`, `/alunos/<slug>`). Termo do
+`src/app/page.tsx` (capa) e do README.
 
 ## Colagem / importação
 
