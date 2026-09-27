@@ -9,6 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { useTravaDeFoco } from "@/lib/foco";
 import { corHabilidade } from "@/lib/habilidades";
+import { matriculaDe } from "@/lib/identidade";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -92,7 +93,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
     }
   }
 
-  const matricula = `SESI-${aluno.slug.toUpperCase().slice(0, 10)}-${aluno.estrelas.toString().padStart(2, "0")}`;
+  const matricula = matriculaDe(aluno);
 
   return (
     <div

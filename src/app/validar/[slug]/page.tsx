@@ -6,6 +6,8 @@ import { Roseta } from "@/components/Roseta";
 import { IconeCracha, IconeEscudo, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
+import { matriculaDe } from "@/lib/identidade";
+import { codigoDeIntegridade } from "@/lib/integridade";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -44,7 +46,7 @@ export default async function PaginaValidarCracha({ params }: Props) {
 
   const salas = await listarSalas();
   const sala = salas.find((s) => s.id === aluno.sala_id)?.nome ?? "SESI Joinville";
-  const matricula = `SESI-SC-JVE-${aluno.slug.toUpperCase().slice(0, 8)}-${(aluno.estrelas + 26).toString().padStart(4, "0")}`;
+  const matricula = matriculaDe(aluno);
   const dataHoje = new Date().toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",
@@ -153,9 +155,9 @@ export default async function PaginaValidarCracha({ params }: Props) {
         {/* Chave Criptográfica de Segurança & Selo de Integridade */}
         <div className="validar-seguranca-footer">
           <div className="seguranca-hash-wrap">
-            <span className="seguranca-hash-label">HASH CRIPTOGRÁFICO DE INTEGRIDADE (SHA-256)</span>
+            <span className="seguranca-hash-label">CÓDIGO DE INTEGRIDADE (HMAC-SHA256)</span>
             <code className="seguranca-hash-codigo">
-              SESI-SC-JVE-AUTH-{(aluno.id).replace(/-/g, "").slice(0, 32).toUpperCase()}
+              SESI-SC-JVE-AUTH-{codigoDeIntegridade(aluno)}
             </code>
           </div>
 

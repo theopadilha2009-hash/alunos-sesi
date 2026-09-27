@@ -30,8 +30,15 @@ export const COOKIE_ADM = "sesi.adm";
 
 const MARCA_ADM = "adm-v1";
 
-/** Domínios de assinatura. Um não se reproduz como outro. */
-export type Proposito = "visitante" | "adm" | "usuario";
+/**
+ * Domínios de assinatura. Um não se reproduz como outro.
+ *
+ * `documento` não guarda sessão nenhuma: é o código de integridade impresso no
+ * crachá e no currículo. Ele tem domínio próprio para que um código vazado não
+ * sirva como cookie, e vice-versa — `abrirAssinado` de um propósito nunca
+ * valida a assinatura de outro.
+ */
+export type Proposito = "visitante" | "adm" | "usuario" | "documento";
 
 const SALT_HKDF = "sesi-sessao-v1";
 

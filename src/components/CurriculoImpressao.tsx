@@ -12,6 +12,7 @@ import {
   IconeProjetos,
 } from "@/components/Icones";
 import { useTravaDeFoco } from "@/lib/foco";
+import { matriculaDe } from "@/lib/identidade";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -69,7 +70,7 @@ export function CurriculoImpressao({ aluno, onFechar }: Props) {
   }, []);
 
   const votos = aluno.habilidades_votos || {};
-  const matricula = `SESI-SC-JVE-${aluno.slug.toUpperCase().slice(0, 8)}-${(aluno.estrelas + 26).toString().padStart(4, "0")}`;
+  const matricula = matriculaDe(aluno);
 
   function handleImprimir() {
     window.print();
