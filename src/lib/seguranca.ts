@@ -316,10 +316,38 @@ export function sanitizarReposGithub(bruto: unknown): RepoGithub[] {
 export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): ProjetoAluno[] {
   if (!Array.isArray(bruto)) return [];
 
-  const sanitizados: ProjetoAluno[] = [];
-  const idsUsados = new Set<string>();
+  const lista = bruto.slice(0, MAX_PROJETOS);
 
-  for (const item of bruto.slice(0, MAX_PROJETOS)) {
+  // O id vem do cliente e é o que amarra o sticker de projeto ao projeto
+  // (`sanitizarStickers` casa por `projetoId`): repetido, o mesmo sticker
+  // aparece em dois projetos. O primeiro fica, o repetido sai avisado.
+  //
+  // Os ids do cliente são reservados ANTES de gerar qualquer um, porque o
+  // gerado não pode roubar um nome que um projeto adiante vai usar. Numa
+  // passada só, `[{sem id}, {id: "proj-1"}]` dava `proj-1` ao primeiro e
+  // descartava o segundo como duplicado — o projeto legítimo caía por causa de
+  // um nome que nós é que escolhemos.
+  //
+  // Por índice, não por referência: a mesma lista pode trazer o mesmo objeto
+  // duas vezes, e aí o `Set` de referências marcaria os dois como repetidos.
+  const reservados = new Set<string>();
+  const repetidos = new Set<number>();
+  for (let i = 0; i < lista.length; i++) {
+    const item = lista[i];
+    if (!item || typeof item !== "object") continue;
+    const brutoId = (item as Record<string, unknown>).id;
+    if (typeof brutoId !== "string" || !brutoId) continue;
+
+    const id = brutoId.slice(0, 50);
+    if (reservados.has(id)) repetidos.add(i);
+    else reservados.add(id);
+  }
+
+  const sanitizados: ProjetoAluno[] = [];
+  const idsUsados = new Set(reservados);
+
+  for (let i = 0; i < lista.length; i++) {
+    const item = lista[i];
     if (!item || typeof item !== "object") continue;
     const p = item as Record<string, unknown>;
 
@@ -342,22 +370,15 @@ export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): Pro
       descartes?.push({ motivo: motivoDaImagem(p.imagem, MAX_DATA_URL_IMAGEM), campo: "projetos" });
     }
 
-    // O id vem do cliente e é o que amarra o sticker de projeto ao projeto
-    // (`sanitizarStickers` casa por `projetoId`): repetido, o mesmo sticker
-    // aparece em dois projetos. Mesmo tratamento do id de sticker — o primeiro
-    // fica, o repetido sai avisado.
-    //
-    // A colisão só derruba id VINDO DO CLIENTE. O gerado é nosso e nunca pode
-    // custar um projeto: `sanitizados.length + 1` bate com um `proj-2` explícito
-    // assim que qualquer projeto anterior sair da lista, e o projeto legítimo
-    // seria descartado por causa de um nome que nós é que escolhemos.
-    const doCliente = typeof p.id === "string" && p.id ? p.id.slice(0, 50) : null;
-    if (doCliente && idsUsados.has(doCliente)) {
+    if (repetidos.has(i)) {
       descartes?.push({ motivo: "duplicado", campo: "projetos" });
       continue;
     }
 
-    let id = doCliente;
+    // Se veio do cliente, entra com o próprio id; se não, recebe o primeiro
+    // `proj-<n>` livre — que nunca é um nome de cliente, porque todos eles já
+    // entraram em `idsUsados` na passada de reserva.
+    let id = typeof p.id === "string" && p.id ? p.id.slice(0, 50) : null;
     if (!id) {
       let n = sanitizados.length + 1;
       while (idsUsados.has(`proj-${n}`)) n++;

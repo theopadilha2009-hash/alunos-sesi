@@ -55,11 +55,23 @@ export function caminhoDaMidia(alunoId: string, nome: string): string {
 }
 
 /**
+ * O que pode vir depois da pasta do aluno.
+ *
+ * Não é estética: `%2e%2e` é `..` para quem decodifica, e quem decodifica o
+ * caminho é o store, não nós. A checagem literal de `..` não pega essa forma, e
+ * o SDK do Blob só recusa `//`. Com o resto preso a este conjunto, não sobra
+ * caractere com significado em nenhuma camada — e o que o editor gera
+ * (`nomeDaImagem` mais o sufixo do Blob) cabe inteiro nele.
+ */
+const RESTO_SEGURO = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+/**
  * O caminho pertence à pasta deste aluno?
  *
  * O `..` tem que morrer aqui: `startsWith` sozinho aceitaria
  * `alunos/<id>/../<outro>/x`, e quem normaliza o caminho depois é o Blob, não
- * nós.
+ * nós. A checagem de `..` fica como primeira barreira; `RESTO_SEGURO` fecha as
+ * formas que ela não enxerga.
  */
 export function caminhoPertenceAoAluno(pathname: unknown, alunoId: unknown): boolean {
   if (typeof pathname !== "string" || typeof alunoId !== "string" || !alunoId) {
@@ -70,8 +82,7 @@ export function caminhoPertenceAoAluno(pathname: unknown, alunoId: unknown): boo
   const prefixo = `${RAIZ_MIDIA}/${alunoId}/`;
   if (!pathname.startsWith(prefixo)) return false;
 
-  const resto = pathname.slice(prefixo.length);
-  return resto.length > 0 && !resto.startsWith("/");
+  return RESTO_SEGURO.test(pathname.slice(prefixo.length));
 }
 
 /**

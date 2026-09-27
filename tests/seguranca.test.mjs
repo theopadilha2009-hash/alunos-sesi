@@ -413,6 +413,49 @@ test("id gerado nunca derruba um projeto, mesmo colidindo com um id do cliente",
   assert.equal(resultado[1].titulo, "Segundo, sem id");
 });
 
+test("id gerado nao rouba o nome de um projeto do cliente que vem depois", () => {
+  // A mesma armadilha do teste acima, na ordem inversa — e era a que passava
+  // batido. Numa passada so, o item sem id recebia `proj-1` (o `n` e o tamanho
+  // da lista) e o projeto seguinte, cujo id de cliente e exatamente esse,
+  // virava "duplicado" e sumia. Quem escolheu `proj-1` fomos nos.
+  const descartes = [];
+  const resultado = sanitizarProjetos(
+    [
+      { titulo: "Sem id, primeiro" },
+      { id: "proj-1", titulo: "Do cliente" },
+    ],
+    descartes,
+  );
+
+  assert.equal(resultado.length, 2);
+  assert.deepEqual(descartes, []);
+  assert.notEqual(resultado[0].id, "proj-1");
+  assert.equal(resultado[0].titulo, "Sem id, primeiro");
+  assert.equal(resultado[1].id, "proj-1");
+  assert.equal(resultado[1].titulo, "Do cliente");
+});
+
+test("id repetido do cliente ainda e descartado, mesmo com um sem id no meio", () => {
+  // A reserva nao pode afrouxar a regra que existia: dois ids de cliente
+  // iguais continuam sendo duplicata, e o primeiro fica.
+  const descartes = [];
+  const resultado = sanitizarProjetos(
+    [
+      { id: "gh_1", titulo: "Robo" },
+      { titulo: "Sem id" },
+      { id: "gh_1", titulo: "Copia" },
+    ],
+    descartes,
+  );
+
+  assert.equal(resultado.length, 2);
+  assert.deepEqual(
+    resultado.map((p) => p.titulo),
+    ["Robo", "Sem id"],
+  );
+  assert.deepEqual(descartes, [{ motivo: "duplicado", campo: "projetos" }]);
+});
+
 test("varios projetos sem id recebem ids distintos", () => {
   const descartes = [];
   const resultado = sanitizarProjetos(

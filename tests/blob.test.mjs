@@ -53,6 +53,29 @@ test("caminhoPertenceAoAluno recusa subir de pasta", () => {
   assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/../../etc/passwd`, ALUNO), false);
 });
 
+test("caminhoPertenceAoAluno recusa o .. percent-encoded", () => {
+  // `%2e%2e` é `..` para quem decodifica, e quem decodifica o caminho é o
+  // store. A checagem literal de `..` não pega esta forma, e o SDK do Blob só
+  // recusa `//` — o literal chegaria intacto ao backend.
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/%2e%2e/${OUTRO}/m.jpg`, ALUNO), false);
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/%2E%2E/${OUTRO}/m.jpg`, ALUNO), false);
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/..%2f${OUTRO}/m.jpg`, ALUNO), false);
+});
+
+test("caminhoPertenceAoAluno recusa subpasta e byte nulo no nome", () => {
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/a/b/m.jpg`, ALUNO), false);
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/m.jpg%00.png`, ALUNO), false);
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/midia.jpg `, ALUNO), false);
+});
+
+test("caminhoPertenceAoAluno aceita o formato que o editor gera", () => {
+  // `nomeDaImagem` mais o sufixo aleatório do Blob: é o que chega aqui de
+  // verdade, e precisa continuar passando depois do endurecimento.
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/midia.jpg`, ALUNO), true);
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/midia-a1b2c3d4.webp`, ALUNO), true);
+  assert.equal(caminhoPertenceAoAluno(`alunos/${ALUNO}/midia.bin`, ALUNO), true);
+});
+
 test("caminhoPertenceAoAluno recusa a pasta sem arquivo", () => {
   // `alunos/<id>/` sozinho não é arquivo: deixar passar daria um pathname que
   // o Blob recusa depois, com erro menos claro para o aluno.
