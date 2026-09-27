@@ -276,6 +276,12 @@ export function sanitizarReposGithub(bruto: unknown): RepoGithub[] {
     const nome = sanitizarTexto(r.name, 100);
     if (!nome) continue;
 
+    // O `id` é a identidade do item na tela: é a `key` do React e o que o
+    // checkbox marca e desmarca. Inventar um valor para quem não tem faria dois
+    // repositórios dividirem a mesma identidade — marcar um mexeria no outro.
+    // Resposta da API sempre traz `id`, então item sem ele é dado estranho.
+    if (typeof r.id !== "number") continue;
+
     const url = urlSegura(r.html_url);
     if (!url || !RE_URL_GITHUB.test(url)) continue;
 
@@ -285,7 +291,7 @@ export function sanitizarReposGithub(bruto: unknown): RepoGithub[] {
     const linguagem = sanitizarTexto(r.language, 30);
 
     repos.push({
-      id: typeof r.id === "number" ? r.id : 0,
+      id: r.id,
       nome,
       descricao: sanitizarTexto(r.description, 200),
       url,

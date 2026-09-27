@@ -625,6 +625,15 @@ test("item estranho é descartado em silêncio, sem derrubar o resto", () => {
   );
 });
 
+test("item sem id numérico é descartado: o id é a identidade na tela", () => {
+  const semId = { name: "sem-id", html_url: "https://github.com/u/sem-id" };
+  assert.deepEqual(sanitizarReposGithub([semId]), []);
+  assert.deepEqual(sanitizarReposGithub([{ ...semId, id: "123" }]), []);
+  // O `id` é a `key` do React e o que o checkbox marca: se dois itens sem id
+  // caíssem no mesmo valor de fallback, marcar um mexeria no outro.
+  assert.deepEqual(sanitizarReposGithub([semId, { ...semId, name: "outro" }]), []);
+});
+
 test("campos ausentes viram neutro, não undefined", () => {
   const [r] = sanitizarReposGithub([
     { id: 5, name: "sem-nada", html_url: "https://github.com/u/sem-nada" },

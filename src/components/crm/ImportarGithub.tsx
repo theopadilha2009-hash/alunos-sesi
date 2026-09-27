@@ -50,20 +50,33 @@ export function ImportarGithub({ handleInicial, projetos, onImportar }: Props) {
     setCarregando(true);
     setErro(null);
     setResumo(null);
-    const resultado = await importarReposGithubAction(handle);
-    setCarregando(false);
 
-    if (!resultado.ok || !resultado.repos) {
-      setErro(resultado.mensagem ?? "Não consegui buscar os repositórios.");
+    try {
+      const resultado = await importarReposGithubAction(handle);
+
+      if (!resultado.ok || !resultado.repos) {
+        setErro(resultado.mensagem ?? "Não consegui buscar os repositórios.");
+        setRepos([]);
+        setSelecionados([]);
+        return;
+      }
+
+      setRepos(resultado.repos);
+      // Vem tudo marcado: o aluno quer quase todos, e desmarcar um é mais rápido
+      // que marcar nove.
+      setSelecionados(resultado.repos.map((r) => r.id));
+    } catch {
+      // A promessa pode REJEITAR, não só voltar `ok: false`: a action roda no
+      // servidor, e uma action órfã (o app foi reimplantado e o id que o
+      // navegador tem não existe mais) derruba a chamada com `Failed to fetch`.
+      // Sem este catch, o `finally` não existiria e o botão ficaria em
+      // "Buscando..." para sempre, sem erro na tela.
+      setErro("Não consegui falar com o servidor. Tente de novo.");
       setRepos([]);
       setSelecionados([]);
-      return;
+    } finally {
+      setCarregando(false);
     }
-
-    setRepos(resultado.repos);
-    // Vem tudo marcado: o aluno quer quase todos, e desmarcar um é mais rápido
-    // que marcar nove.
-    setSelecionados(resultado.repos.map((r) => r.id));
   }
 
   function alternar(id: number) {
@@ -114,8 +127,9 @@ export function ImportarGithub({ handleInicial, projetos, onImportar }: Props) {
       <header className="painel-card-topo">
         <h3>Importar do GitHub</h3>
         <p>
-          Puxa os repositórios públicos do seu perfil e transforma em projetos. Você escolhe
-          quais entram — e nada é gravado até você salvar o perfil.
+          Puxa os repositórios públicos do <strong>seu</strong> perfil do GitHub e transforma
+          em projetos — só os seus, não de outra pessoa. Você escolhe quais entram, e nada é
+          gravado até você salvar o perfil.
         </p>
       </header>
 

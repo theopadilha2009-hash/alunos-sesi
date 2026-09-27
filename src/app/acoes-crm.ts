@@ -591,9 +591,19 @@ export async function importarReposGithubAction(
   const repos = sanitizarReposGithub(bruto);
 
   if (repos.length === 0) {
+    // "Sem repositório" e "tudo foi descartado" são situações diferentes, e a
+    // instrução muda: quem só tem fork tem os repositórios públicos, o que não
+    // tem é criação própria. Mandar o segundo conferir a visibilidade faria ele
+    // procurar um problema que não existe.
+    const forks = bruto.filter(
+      (i) => i && typeof i === "object" && (i as Record<string, unknown>).fork === true,
+    ).length;
+    const soForks = bruto.length > 0 && forks === bruto.length;
     return {
       ok: false,
-      mensagem: `Não achei repositórios públicos em "${usuario}". Confira se o perfil e os repositórios estão públicos.`,
+      mensagem: soForks
+        ? `Os ${bruto.length} repositórios públicos de "${usuario}" são todos forks — cópias de projetos de outras pessoas, que não representam o seu trabalho e por isso não entram no portfólio.`
+        : `Não achei repositórios públicos em "${usuario}". Confira se o perfil e os repositórios estão públicos.`,
     };
   }
 
