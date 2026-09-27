@@ -12,26 +12,35 @@ scaffoldVersion: "2.0.0"
 
 ## O que é testado
 
-Só as funções puras de `src/lib/`. Um arquivo, `tests/puros.test.mjs`, com 27
-testes em `node:test` + `node:assert/strict`, sem rede e sem banco:
+Só as funções puras de `src/lib/`. **208 testes em 13 arquivos**, todos em
+`node:test` + `node:assert/strict`, sem rede e sem banco:
 
-| Módulo | O que os testes travam |
-|---|---|
-| `src/lib/busca.ts` | `fold` ignora acento e caixa; `3ºA`/`3oA`/`3A` caem na mesma busca; `matches` acha por nome, sala e handle; `filtrarAlunos` não vaza outra sala e o atalho `ESTRELADOS` ignora o filtro de sala |
-| `src/lib/links.ts` | `normalizarGithub` aceita URL, `github.com/x`, `@handle` e handle solto, e recusa o que não é handle (hífen nas pontas, espaço, 40 chars); `normalizarLinkedin` sempre sai como `https://www.linkedin.com/in/<handle>` e recusa perfil de empresa; `urlGithub`, `handleLinkedin` e `iniciais` |
-| `src/lib/slug.ts` | `slugificar` tira acento, espaço e caixa; `slugUnico` nunca colide (`ana-silva`, `ana-silva-2`, …) e nunca sai vazio (`"!!!"` → `aluno`); o slug cabe no limite da constraint do banco (`^[a-z0-9-]{2,80}$`, até 60 chars) |
-| `src/lib/importar.ts` | `detectarSeparador` (tab, vírgula, ponto e vírgula) e `parseLista`: cabeçalho fora de ordem, ordem posicional sem cabeçalho, linha sem nome/sem sala/nome curto viram erro com o número da linha do texto colado, duplicata contada e descartada, linhas em branco não deslocam a contagem, texto vazio devolve resultado vazio |
-| `src/lib/ranking.ts` | `ordenarAlunos`: fixado > destaque > estrelas, empate cai no nome, o desempate não depende da ordem de entrada e o array original não é mutado; `rankingSalas` desempata por completude |
+| Arquivo | Módulo | O que os testes travam |
+|---|---|---|
+| `puros.test.mjs` (29) | `busca`, `links`, `slug`, `importar`, `ranking` | `fold` ignora acento e caixa; `3ºA`/`3oA`/`3A` caem na mesma busca; `filtrarAlunos` não vaza outra sala e o atalho `ESTRELADOS` ignora o filtro; `normalizarGithub`/`normalizarLinkedin`; `slugificar`/`slugUnico`; `parseLista`; `ordenarAlunos`/`rankingSalas` |
+| `seguranca.test.mjs` (69) | `seguranca` | `compararTempoConstante`; `urlSegura`/`urlImagemSegura` (esquemas e data URL); `sanitizarTexto`; `verificarRateLimit`; `sanitizarProjetos`/`sanitizarMidias` e a moderação de bio, habilidade, legenda e título de vídeo |
+| `limites.test.mjs` (16) | `limites` | os tetos por campo e `descreverDescartes`, que agrupa o descarte por motivo e campo sem confundir capa perdida com projeto perdido |
+| `blob.test.mjs` (15) | `blob` | `nomeDaImagem` pela extensão do MIME; `blobDoDataUrl` (incluindo bytes acima de 127, que o `atob` devolveria corrompidos); as recusas de `caminhoPertenceAoAluno` |
+| `video.test.mjs` (15) | `video` | `normalizarVideo`: formas do YouTube e do Vimeo, host que só *parece* o da plataforma, `http:` recusado, `youtube-nocookie` no embed e o `frame-src` fechado |
+| `csp.test.mjs` (15) | `csp` | o nonce do `script-src`, o `style-src` sem nonce, `unsafe-eval` só em dev, `upgrade-insecure-requests` só em produção, e a fonte que cobre a **forma real** do host do Blob |
+| `sessao.test.mjs` (11) | `sessao` | ida e volta por propósito, a subchave HKDF que não abre em outro, a adulteração de qualquer byte e o token que devolve `null` em vez de explodir |
+| `senha.test.mjs` (8) | `senha` | `hashSenha` sai argon2id e nunca em claro; hash malformado não derruba a verificação nem autentica |
+| `habilidades.test.mjs` (8) | `habilidades` | `habilidadePermitida` aceita só o nome exato da lista e `extrairHabilidades` respeita o teto |
+| `insignias.test.mjs` (8) | `insignias` | a escada fixa das seis, cada limiar acendendo só a sua, e progresso que nunca passa do alvo |
+| `foco.test.mjs` (6) | `foco` | o ciclo de Tab e Shift+Tab preso no diálogo, e a ponta por onde o foco entra |
+| `cores.test.mjs` (4) | `cores` | `corDaSala` estável; `corDoAluno` que prefere a escolha; a paleta do app é a mesma lista do `CHECK` no banco |
+| `github.test.mjs` (4) | `github` | `tituloDoRepo`, `descricaoDoRepo` e `quandoDoRepo` |
 
 Os testes cobrem os pontos onde o comportamento é sutil e barato de errar:
-normalização de link colado, parser de planilha, desempate estável e `fold` do
-`º` (U+00BA), que o NFD não decompõe e por isso precisa de tratamento explícito.
+normalização de link colado, parser de planilha, desempate estável, o `fold` do
+`º` (U+00BA, que o NFD não decompõe) e as fronteiras de segurança — o caminho
+do upload, a allowlist de host do vídeo e a fonte da CSP.
 
 ## Comando
 
 ```bash
 npm test        # node --experimental-strip-types --test tests/*.test.mjs
-npm run typecheck   # tsc --noEmit
+npm run typecheck   # next typegen && tsc --noEmit
 npm run build
 ```
 
@@ -39,34 +48,41 @@ Não há runner instalado (nem Vitest, nem Jest): o teste usa o `node:test` que
 já vem no Node 22 do CI. A flag `--experimental-strip-types` é o que permite
 importar os `.ts` de `src/lib/` sem compilar.
 
-## Por que as libs não têm imports cruzados
+## Por que os módulos são folha
 
-O type-stripping do Node não reescreve especificador de import: `import { fold }
-from "@/lib/busca"` (ou `from "./busca"` sem extensão) não resolve, e
-`from "./busca.ts"` resolveria mas seria inválido para o bundler. A saída
-adotada foi manter os módulos puros como **folhas**: `busca.ts`, `cores.ts`,
-`importar.ts`, `links.ts`, `ranking.ts` e `slug.ts` não importam nada.
+O type-stripping do Node **não reescreve especificador de import**: `from
+"./busca"` (sem extensão) não resolve, e o alias `@/lib/busca` também não. O
+que resolve é o que o Node acha sozinho:
 
-A regra é estrutural, não estética. Está escrita no cabeçalho de cada um deles
-("Sem imports de propósito: testado direto pelo `node --test`"), e o teste
-importa literalmente `../src/lib/busca.ts`. Se um dia um desses módulos
-precisar de outro, ou o runner muda (um bundler de teste) ou o módulo sai do
-conjunto testável.
+- `node:*` (`node:crypto`, `node:test`) e pacotes de `node_modules`
+  (`react`, `@node-rs/argon2`);
+- import relativo **com a extensão `.ts` escrita** — `from "./cores.ts"`;
+- `import type`, que o strip apaga antes de virar import em runtime.
 
-Já `src/lib/dados.ts`, `sessao.ts`, `tipos.ts` e `supabase/*` importam à
-vontade — eles não são testados direto.
+Então a regra não é "não importa nada", e sim **não importar por um
+especificador que o Node não resolva**. Uma cadeia é permitida — `seguranca.ts`
+importa `./cores.ts`, `./habilidades.ts` e `./video.ts` (todos com extensão) e
+é testado direto por `seguranca.test.mjs`, com 69 testes. O que não pode é um
+`from "@/lib/dados"` no meio da cadeia.
+
+A base continua folha por isso: `busca.ts`, `blob.ts`, `cores.ts`, `csp.ts`,
+`debug.ts`, `github.ts`, `habilidades.ts`, `importar.ts`, `insignias.ts`,
+`limites.ts`, `links.ts`, `ranking.ts`, `slug.ts`, `som.ts`, `tema.ts` e
+`video.ts` não importam nada do projeto.
+
+Já `dados.ts`, `tipos.ts` e `supabase/*` importam à vontade — eles não são
+testados direto.
 
 ## O que NÃO é testado automaticamente
 
-- **Server Actions** (`src/app/adm/acoes.ts`): `importarLista`, `criarAluno`,
-  `removerAluno`, `alternar`. Dependem de `cookies()`, de `revalidatePath` e do
-  cliente admin.
-- **Route Handlers**: `/api/estrela` (POST/DELETE) e `/adm/[chave]` (GET).
-- **`src/proxy.ts`** — a emissão do cookie do visitante.
-- **Toda a leitura do Supabase** (`src/lib/dados.ts`) e a RLS de
-  `src/sql/001_schema.sql`.
-- **Componentes de React**, incluindo o voto otimista de `Vitrine.tsx`. Não há
-  jsdom nem Testing Library instalados.
+- **Server Actions**: `src/app/adm/acoes.ts` (`importarLista`, `criarAluno`,
+  `removerAluno`, `alternar`) e `src/app/acoes-crm.ts` (login, salvar perfil,
+  projetos). Dependem de `cookies()`, de `revalidatePath` e do cliente admin.
+- **Route Handlers**: `/api/estrela`, `/api/upload` e `/adm/[chave]`.
+- **`src/proxy.ts`** — a emissão do cookie do visitante e a CSP na resposta.
+- **Toda a leitura do Supabase** (`src/lib/dados.ts`) e a RLS de `src/sql/`.
+- **Componentes de React**, incluindo o voto otimista de `Vitrine.tsx` e o
+  recorte de imagem do editor. Não há jsdom nem Testing Library instalados.
 
 O CI não tem banco: `.github/workflows/ci.yml` sobe só Node, roda typecheck,
 testes e build, este último com valores de mentira nas variáveis de ambiente
@@ -87,7 +103,10 @@ risco mora:
    de aplicar), conferir a contagem de novos/completados/ignorados, fixar e
    destacar um aluno e ver a mudança na vitrine, e reimportar a mesma lista
    para confirmar que nada é sobrescrito.
-4. **Schema**: `./scripts/db-query.sh --check -f src/sql/001_schema.sql` para o
+4. **Upload de mídia**: entrar como aluno, subir uma imagem e conferir que a
+   URL do Blob entrou no formulário e que ela **não** caiu na pasta de outro
+   aluno; tentar um arquivo acima do teto e ver a recusa antes de subir.
+5. **Schema**: `./scripts/db-query.sh --check -f src/sql/<n>_<nome>.sql` para o
    lint offline e `--dry-run --force -f` para executar de verdade dentro de uma
    transação com `ROLLBACK`, que pega erro de sintaxe, FK e constraint que
    regex não pega.
@@ -106,5 +125,5 @@ Um schema errado não aparece em teste nenhum: a RLS de `votos` e a view
 | `--dry-run` do SQL | antes de aplicar migration | sim |
 
 Não há meta de cobertura. A regra prática é: regra de negócio pura nova em
-`src/lib/` entra com teste em `tests/puros.test.mjs`; o resto se confere no
-browser e no banco.
+`src/lib/` entra com teste próprio, `tests/<modulo>.test.mjs`; o resto se
+confere no browser e no banco.

@@ -49,9 +49,9 @@ app centraliza isso numa vitrine só, dá a cada aluno um endereço legível
 por aproximação, e um lugar onde o professor mantém a turma atualizada sem
 planilha.
 
-## As três portas
+## As portas
 
-Mesmo app, três acessos:
+Mesmo app, quatro acessos:
 
 | Porta | Rota | O que faz |
 |---|---|---|
