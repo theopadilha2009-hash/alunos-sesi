@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { HOSTS_IMAGEM, NONCE_HEADER, montarCsp } from "../src/lib/csp.ts";
+import { HOSTS_IMAGEM, HOST_BLOB_CSP, NONCE_HEADER, montarCsp } from "../src/lib/csp.ts";
+import { HOST_BLOB } from "../src/lib/blob.ts";
 import { urlImagemSegura } from "../src/lib/seguranca.ts";
 
 const NONCE = "abc123DEF456-_ghi";
@@ -74,9 +75,19 @@ test("diretivas de bloqueio estao presentes", () => {
   assert.equal(diretiva(PROD, "frame-ancestors"), "'none'");
   assert.equal(diretiva(PROD, "form-action"), "'self'");
   assert.equal(diretiva(PROD, "frame-src"), "'none'");
-  assert.equal(diretiva(PROD, "connect-src"), "'self'");
+  assert.equal(diretiva(PROD, "connect-src"), `'self' ${HOST_BLOB_CSP}`);
   assert.equal(diretiva(PROD, "font-src"), "'self'");
   assert.equal(diretiva(PROD, "manifest-src"), "'self'");
+});
+
+test("o host do Blob em csp.ts e o mesmo de blob.ts", () => {
+  // csp.ts e blob.ts são folha e não podem se importar — import relativo sem
+  // extensão não passa pelo type-stripping do `node --test`. Quem garante que
+  // os dois literais não se separem é este teste: se um mudar sozinho, o PUT
+  // do upload direto passa a ser bloqueado em produção, e o sintoma é o
+  // `upload()` rejeitando no console com a imagem parada.
+  assert.equal(HOST_BLOB_CSP, HOST_BLOB);
+  assert.equal(diretiva(PROD, "connect-src").includes(HOST_BLOB), true);
 });
 
 test("worker-src libera o service worker", () => {

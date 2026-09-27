@@ -32,6 +32,16 @@ export const NONCE_HEADER = "x-nonce";
  */
 export const HOSTS_IMAGEM = ["https:"] as const;
 
+/**
+ * Host do store do Vercel Blob, liberado em `connect-src` para o upload direto.
+ *
+ * É o mesmo literal de `HOST_BLOB` em `blob.ts`. Os dois arquivos são folha e
+ * não podem se importar — o type-stripping do `node --test` não resolve import
+ * relativo sem extensão —, então quem garante que não se separem é
+ * `tests/csp.test.mjs`, que importa os dois e compara.
+ */
+export const HOST_BLOB_CSP = "https://blob.vercel-storage.com";
+
 export function montarCsp(nonce: string, dev: boolean): string {
   // `@vercel/analytics` só usa o script same-origin (`/_vercel/insights`) com
   // `NODE_ENV=production`. Em dev ele troca para o script de debug em
@@ -50,8 +60,10 @@ export function montarCsp(nonce: string, dev: boolean): string {
     // next/font baixa e auto-hospeda em /_next/static/media no build, então
     // não precisa liberar fonts.googleapis.com.
     "font-src 'self'",
-    // O Supabase é falado só pelo servidor; o browser usa same-origin.
-    `connect-src 'self'${HOST_ANALYTICS_DEV}`,
+    // O Supabase é falado só pelo servidor; o browser usa same-origin. O
+    // `HOST_BLOB_CSP` entra porque o PUT do upload direto não é same-origin —
+    // sem ele o envio é bloqueado e o erro só aparece no console.
+    `connect-src 'self' ${HOST_BLOB_CSP}${HOST_ANALYTICS_DEV}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "frame-src 'none'",

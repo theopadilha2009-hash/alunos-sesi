@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CrachaModal } from "@/components/CrachaModal";
@@ -29,6 +30,7 @@ import { Insignias } from "@/components/Insignias";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
+import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
 import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
 import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
 import {
@@ -141,6 +143,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   // arquivo viajava inteiro até o servidor para ser recusado lá.
   const [avisoMidia, setAvisoMidia] = useState<string | null>(null);
   const [avisoProjeto, setAvisoProjeto] = useState<string | null>(null);
+  // Qual campo tem arquivo subindo para o Blob agora, ou null.
+  //
+  // Existe porque a imagem só vira URL depois que o Blob responde, e até lá o
+  // campo fica vazio: sem isto o aluno clica em "Adicionar" e não acontece
+  // nada, sem saber se quebrou ou se ainda está subindo.
+  const [enviando, setEnviando] = useState<"midia" | "projeto" | null>(null);
 
   const urlPerfil =
     typeof window !== "undefined"
@@ -377,17 +385,75 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     return ultimo;
   }
 
-  /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
-  function aceitarMidia(dataUrl: string) {
-    const aviso = conferirTamanhoDaImagem(dataUrl, "midias");
-    setAvisoMidia(aviso);
-    setNovaMidiaUrl(aviso ? "" : dataUrl);
+  /**
+   * Sobe o data URL já comprimido para o Blob e devolve a URL pública.
+   *
+   * É aqui que a imagem sai do corpo do POST: o formulário passa a carregar
+   * uma URL de ~100 caracteres em vez de megabytes de base64. Era isso que
+   * fazia duas mídias no limite (2 MB cada) somarem os 4.194.304 B exatos do
+   * `bodySizeLimit` e derrubarem o salvamento inteiro — junto com a capa, que
+   * estava válida.
+   */
+  async function subirImagem(dataUrl: string, campo: "midia" | "projeto"): Promise<string> {
+    const alunoId = usuario.alunoId;
+    if (!alunoId) {
+      throw new Error("Sua conta não está ligada a um perfil de aluno.");
+    }
+
+    const arquivo = blobDoDataUrl(dataUrl);
+    const { url } = await upload(
+      caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
+      arquivo,
+      {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        clientPayload: JSON.stringify({ campo }),
+      },
+    );
+    return url;
   }
 
-  function aceitarCapaProjeto(dataUrl: string) {
+  /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
+  async function aceitarMidia(dataUrl: string) {
+    const aviso = conferirTamanhoDaImagem(dataUrl, "midias");
+    if (aviso) {
+      setAvisoMidia(aviso);
+      setNovaMidiaUrl("");
+      return;
+    }
+
+    setAvisoMidia(null);
+    setEnviando("midia");
+    try {
+      setNovaMidiaUrl(await subirImagem(dataUrl, "midia"));
+    } catch {
+      // A imagem continua no computador do aluno: o que falhou foi o envio,
+      // não a escolha. "Tente de novo" é o que ele pode fazer a respeito.
+      setAvisoMidia("Não foi possível enviar a imagem. Tente de novo.");
+      setNovaMidiaUrl("");
+    } finally {
+      setEnviando(null);
+    }
+  }
+
+  async function aceitarCapaProjeto(dataUrl: string) {
     const aviso = conferirTamanhoDaImagem(dataUrl, "projetos");
-    setAvisoProjeto(aviso);
-    setNovoProjImg(aviso ? "" : dataUrl);
+    if (aviso) {
+      setAvisoProjeto(aviso);
+      setNovoProjImg("");
+      return;
+    }
+
+    setAvisoProjeto(null);
+    setEnviando("projeto");
+    try {
+      setNovoProjImg(await subirImagem(dataUrl, "projeto"));
+    } catch {
+      setAvisoProjeto("Não foi possível enviar a imagem. Tente de novo.");
+      setNovoProjImg("");
+    } finally {
+      setEnviando(null);
+    }
   }
 
   async function handleUploadArquivoMidia(e: React.ChangeEvent<HTMLInputElement>) {
@@ -1267,6 +1333,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                         />
                       </label>
                     </div>
+                    {enviando === "projeto" ? (
+                      <span
+                        role="status"
+                        style={{ color: "var(--dim)", fontSize: "0.82rem", fontWeight: 700 }}
+                      >
+                        Enviando a imagem…
+                      </span>
+                    ) : null}
                     {novoProjImg ? (
                       <div className="preview-mini-wrap">
                         <img src={novoProjImg} alt="Pré-visualização" className="preview-mini-img" />
@@ -1409,6 +1483,15 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                       placeholder="Ex: Bancada de teste com microcontrolador ESP32"
                     />
                   </label>
+
+                  {enviando === "midia" ? (
+                    <span
+                      role="status"
+                      style={{ color: "var(--dim)", fontSize: "0.82rem", fontWeight: 700 }}
+                    >
+                      Enviando a imagem…
+                    </span>
+                  ) : null}
 
                   {novaMidiaUrl ? (
                     <div className="preview-galeria-novo">
