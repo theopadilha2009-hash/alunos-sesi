@@ -31,7 +31,7 @@ import { TemaToggle } from "@/components/TemaToggle";
 import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
-import { corDaSala } from "@/lib/cores";
+import { corDaSala, corDoAluno } from "@/lib/cores";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -82,7 +82,7 @@ export function CrmApp({
       return {
         ...a,
         sala: nomeSala,
-        cor: corDaSala(nomeSala ?? ""),
+        cor: corDoAluno(a.cor_perfil, nomeSala),
         // `a.habilidades` já vem resolvida de `listarAlunos`. Redeclarar com o
         // regex da bio aqui desfazia a resolução no único lugar em que a lista
         // inteira é montada — e era isso que chegava em tags e chips.

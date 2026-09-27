@@ -6,6 +6,7 @@ import { timingSafeEqual } from "node:crypto";
 import {
   DOMINIO_EMAIL_ESCOLA,
   LIMITES_STICKERS,
+  MAX_DATA_URL_CAPA,
   MAX_DATA_URL_FOTO,
   MAX_DATA_URL_IMAGEM,
   MAX_EMAIL_LOCAL,
@@ -15,6 +16,7 @@ import {
   type Descarte,
   type MotivoDescarte,
 } from "./limites.ts";
+import { CORES_SALA } from "./cores.ts";
 import { habilidadePermitida } from "./habilidades.ts";
 import type { RepoGithub } from "./github.ts";
 import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos.ts";
@@ -547,12 +549,44 @@ export function sanitizarHabilidades(bruto: unknown[]): string[] {
  * Vazio não gera descarte: apagar a foto é uma escolha, não uma perda — avisar
  * seria ruído. Foto que passou do teto, sim: aí o aluno perdeu algo sem querer.
  */
-export function sanitizarFoto(bruto: unknown, descartes?: Descarte[]): string | null {
-  const url = urlImagemSegura(bruto, MAX_DATA_URL_FOTO);
+function sanitizarImagemUnica(
+  bruto: unknown,
+  campo: "foto" | "capa",
+  teto: number,
+  descartes?: Descarte[],
+): string | null {
+  const url = urlImagemSegura(bruto, teto);
   if (url) return url;
 
   if (typeof bruto === "string" && bruto.trim()) {
-    descartes?.push({ motivo: motivoDaImagem(bruto, MAX_DATA_URL_FOTO), campo: "foto" });
+    descartes?.push({ motivo: motivoDaImagem(bruto, teto), campo });
   }
   return null;
+}
+
+export function sanitizarFoto(bruto: unknown, descartes?: Descarte[]): string | null {
+  return sanitizarImagemUnica(bruto, "foto", MAX_DATA_URL_FOTO, descartes);
+}
+
+/** A capa do perfil. Mesmo contrato da foto, teto e campo próprios. */
+export function sanitizarCapa(bruto: unknown, descartes?: Descarte[]): string | null {
+  return sanitizarImagemUnica(bruto, "capa", MAX_DATA_URL_CAPA, descartes);
+}
+
+/**
+ * A cor de destaque — uma da paleta, ou `null` para "usa a cor da sala".
+ *
+ * Allowlist sobre `CORES_SALA`, não regex de hex: cor livre deixaria o aluno
+ * pintar o próprio nome de amarelo claro sobre fundo claro e sumir da tela. A
+ * paleta é a mesma que a escola já usa nas turmas, então a escolha nunca sai da
+ * identidade visual — e o CHECK `alunos_cor_perfil_paleta` no banco repete a lista.
+ *
+ * Normaliza a caixa e devolve SEMPRE a forma canônica da paleta: aceitar
+ * `#3fc2bc` e gravar assim quebraria o `IN` do CHECK, que é case-sensitive.
+ */
+export function sanitizarCor(bruto: unknown): string | null {
+  if (typeof bruto !== "string") return null;
+  const s = bruto.trim().toUpperCase();
+  if (!s) return null;
+  return CORES_SALA.find((c) => c === s) ?? null;
 }

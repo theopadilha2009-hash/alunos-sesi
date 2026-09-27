@@ -4,6 +4,8 @@ import {
   LIMITES_STICKERS,
   compararTempoConstante,
   resetarRateLimit,
+  sanitizarCapa,
+  sanitizarCor,
   sanitizarEmail,
   sanitizarFoto,
   sanitizarHabilidades,
@@ -17,6 +19,7 @@ import {
   verificarRateLimit,
 } from "../src/lib/seguranca.ts";
 import { MAX_DATA_URL_FOTO, MAX_DATA_URL_IMAGEM, MAX_HABILIDADES, MAX_MIDIAS } from "../src/lib/limites.ts";
+import { corDaSala, corDoAluno } from "../src/lib/cores.ts";
 
 test("compararTempoConstante valida igualdade e rejeita desigualdade", () => {
   assert.equal(compararTempoConstante("senha123", "senha123"), true);
@@ -656,4 +659,51 @@ test("descrição com HTML não passa crua", () => {
   ]);
   assert.ok(!r.descricao.includes("<"), `veio com marcação: ${r.descricao}`);
   assert.ok(r.descricao.includes("Projeto"));
+});
+
+// ── Cor de destaque e capa do perfil ───────────────────────────────────────
+
+test("sanitizarCor aceita só a paleta e devolve a forma canônica", () => {
+  assert.equal(sanitizarCor("#3FC2BC"), "#3FC2BC");
+  // Caixa normalizada: o CHECK do banco é case-sensitive, e gravar `#3fc2bc`
+  // seria recusado lá depois de passar aqui.
+  assert.equal(sanitizarCor("#3fc2bc"), "#3FC2BC");
+  assert.equal(sanitizarCor("  #D74D42  "), "#D74D42");
+});
+
+test("sanitizarCor recusa cor de fora e o que não é cor", () => {
+  // Cor livre é o caso que a allowlist existe para barrar: amarelo claro sobre
+  // fundo claro some da tela.
+  assert.equal(sanitizarCor("#ffffff"), null);
+  assert.equal(sanitizarCor("red"), null);
+  assert.equal(sanitizarCor("#3FC2BC; background: url(x)"), null);
+  assert.equal(sanitizarCor(""), null);
+  assert.equal(sanitizarCor(null), null);
+  assert.equal(sanitizarCor(42), null);
+});
+
+test("sanitizarCapa usa o teto próprio, maior que o da foto", () => {
+  const png1x1 =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+  assert.equal(sanitizarCapa(png1x1), png1x1);
+
+  // Uma capa entre o teto da foto e o dela: cabe na capa, não na foto. Se os
+  // dois tetos fossem o mesmo, `MAX_DATA_URL_CAPA` não estaria fazendo nada.
+  const meio = `data:image/png;base64,${"A".repeat(MAX_DATA_URL_FOTO + 1000)}`;
+  assert.equal(sanitizarCapa(meio), meio);
+  assert.equal(sanitizarFoto(meio), null);
+});
+
+test("sanitizarCapa recusa esquema perigoso", () => {
+  assert.equal(sanitizarCapa("javascript:alert(1)"), null);
+});
+
+test("corDoAluno cai na cor da sala quando o aluno não escolheu", () => {
+  assert.equal(corDoAluno(null, "DSM3"), corDaSala("DSM3"));
+  assert.equal(corDoAluno(undefined, "DSM3"), corDaSala("DSM3"));
+  assert.equal(corDoAluno("", "DSM3"), corDaSala("DSM3"));
+  // Com escolha, o hash da sala não manda mais.
+  assert.equal(corDoAluno("#F3B544", "DSM3"), "#F3B544");
+  // Sala ausente não explode: cai no hash da string vazia.
+  assert.equal(corDoAluno(null, null), corDaSala(""));
 });

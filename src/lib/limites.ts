@@ -41,6 +41,34 @@ export const FOTO_LADO = 256;
 export const MAX_DATA_URL_FOTO = 120 * 1024;
 
 /**
+ * Largura da capa depois do corte, no cliente.
+ *
+ * A capa é uma faixa larga (o container do perfil tem no máximo ~60rem), então
+ * 1280 de largura cobre telas retina sem sobrar.
+ */
+export const LADO_CAPA = 1280;
+
+/**
+ * Proporção da capa: 1280×427, a mesma faixa 3:1 de um banner de perfil.
+ *
+ * A altura NÃO acompanha o original de propósito. Se acompanhasse, uma foto
+ * retrato de celular viraria uma capa retrato — e o topo do perfil, que é uma
+ * faixa, teria que cortar quase tudo ou esticar a imagem. Recortando aqui, o que
+ * o aluno enquadra é o que aparece, e o CSS só redimensiona.
+ */
+export const PROPORCAO_CAPA = 3;
+
+/**
+ * Teto do data URL da capa.
+ *
+ * Maior que o do avatar (120 KB) porque a imagem também é maior — uma faixa
+ * 1280×400 em JPEG sai tipicamente entre 60 e 140 KB. Continua bem abaixo do
+ * `bodySizeLimit` de 4 MB do app, que a capa divide com o resto do formulário:
+ * perfil inteiro (foto, mídias, stickers e projetos) vai no mesmo POST.
+ */
+export const MAX_DATA_URL_CAPA = 220 * 1024;
+
+/**
  * O e-mail do aluno é o da escola, não um e-mail pessoal.
  *
  * O campo existe para provar vínculo institucional — é o mesmo papel do
@@ -69,7 +97,7 @@ export const LIMITES_STICKERS = {
   maxTotalBytes: 2 * 1024 * 1024,
 } as const;
 
-export type CampoPerfil = "midias" | "projetos" | "stickers" | "foto";
+export type CampoPerfil = "midias" | "projetos" | "stickers" | "foto" | "capa";
 
 /** Por que um item enviado não entrou no perfil. */
 export type MotivoDescarte =
@@ -101,6 +129,7 @@ const TETO: Record<CampoPerfil, string> = {
   projetos: "2 MB por imagem",
   stickers: "512 KB por sticker",
   foto: "120 KB por foto",
+  capa: "capa até 165 KB",
 };
 
 /**
@@ -114,6 +143,7 @@ const ALVO_PADRAO: Record<CampoPerfil, string> = {
   projetos: "capa de projeto",
   stickers: "sticker",
   foto: "foto",
+  capa: "capa do perfil",
 };
 
 /**
@@ -176,6 +206,7 @@ const TETO_BYTES: Record<CampoPerfil, number> = {
   projetos: MAX_DATA_URL_IMAGEM,
   stickers: LIMITES_STICKERS.maxDataUrlBytes,
   foto: MAX_DATA_URL_FOTO,
+  capa: MAX_DATA_URL_CAPA,
 };
 
 export function tetoDoCampo(campo: CampoPerfil): number {

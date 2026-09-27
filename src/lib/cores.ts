@@ -5,6 +5,12 @@
  * então "3ºA" é sempre a mesma cor, em qualquer máquina e em qualquer
  * render, sem precisar guardar isso no banco.
  *
+ * É também a paleta de onde o aluno escolhe a cor de destaque do próprio
+ * perfil (`alunos.cor_perfil`). Ser a mesma lista não é coincidência: a cor do perfil
+ * é a mesma família visual da cor da turma, e um seletor com cores de fora da
+ * marca faria o perfil destoar da escola. Se esta lista mudar, a CHECK
+ * `alunos_cor_perfil_paleta` em `src/sql/012_aparencia_do_aluno.sql` muda junto.
+ *
  * Sem imports de propósito: testado direto pelo `node --test`.
  */
 
@@ -23,4 +29,19 @@ export function corDaSala(nome: string): string {
     h = (h * 31 + (ch.codePointAt(0) ?? 0)) >>> 0;
   }
   return CORES_SALA[h % CORES_SALA.length];
+}
+
+/**
+ * A cor que pinta o perfil: a que o aluno escolheu, ou a da sala como padrão.
+ *
+ * A queda para `corDaSala` é o que faz a coluna nova ser aditiva: sem escolha
+ * (NULL no banco, que é o caso de todos os alunos de hoje), a cor é exatamente
+ * a que o perfil já mostrava. Chamar `corDaSala` direto em cada tela passou a
+ * ser errado — é este helper que sabe que existe uma escolha.
+ */
+export function corDoAluno(
+  escolhida: string | null | undefined,
+  sala: string | null | undefined,
+): string {
+  return escolhida || corDaSala(sala ?? "");
 }

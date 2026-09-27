@@ -175,6 +175,17 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
         className="perfil perfil-moderno"
         style={{ ["--sala" as string]: aluno.cor, position: "relative", overflow: "hidden" }}
       >
+        {/* Capa do topo. Sem imagem o CSS desenha um degradê da cor de destaque,
+            então o aluno que só escolheu a cor não fica com um buraco no lugar
+            da capa. Decorativa: quem descreve o perfil é o nome logo abaixo. */}
+        <div
+          className="perfil-capa"
+          aria-hidden="true"
+          style={
+            aluno.banner_url ? { backgroundImage: `url("${aluno.banner_url}")` } : undefined
+          }
+        />
+
         {/* Stickers / GIFs Flutuantes posicionados estilo Canva no topo do perfil */}
         {stickersBanner.map((st) => (
           <div

@@ -86,6 +86,27 @@ export type Aluno = {
   email: string | null;
   bio: string | null;
   foto_url: string | null;
+  /**
+   * Cor de destaque escolhida pelo aluno, da paleta de `CORES_SALA`.
+   *
+   * `null` = "usa a cor da minha sala", que é o comportamento de sempre — é o
+   * que mantém o perfil de quem nunca abriu o editor exatamente como era.
+   * Quem resolve isso é `corDoAluno`, e não um `??` espalhado por cada tela.
+   *
+   * `cor_perfil` e não `cor` de propósito: `AlunoNaTela.cor` é outra coisa — a
+   * cor já resolvida, que pode ter vindo daqui ou da sala. Dois campos com o
+   * mesmo nome e significados diferentes é como um `{...aluno, cor}` apaga a
+   * escolha do aluno sem ninguém notar.
+   */
+  cor_perfil: string | null;
+  /**
+   * Capa do perfil (data URL ou URL), a faixa larga no topo da página pública.
+   *
+   * `null` = sem capa, e aí o topo desenha um gradiente da cor de destaque:
+   * ninguém fica com uma faixa quebrada, e o aluno que só quer escolher a cor
+   * não é obrigado a subir imagem para o perfil ficar apresentável.
+   */
+  banner_url: string | null;
   fixado: boolean;
   destaque: boolean;
   /**

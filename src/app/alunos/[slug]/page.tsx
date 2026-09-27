@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Rodape, Topo } from "@/components/ds";
 import { PerfilInterativo } from "@/components/PerfilInterativo";
-import { corDaSala } from "@/lib/cores";
+import { corDoAluno } from "@/lib/cores";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
 
 type Props = PageProps<"/alunos/[slug]">;
@@ -60,7 +60,7 @@ export default async function PerfilPage({ params }: Props) {
 
       <main className="wrap">
         <PerfilInterativo
-          aluno={{ ...aluno, sala, cor: corDaSala(sala ?? "") }}
+          aluno={{ ...aluno, sala, cor: corDoAluno(aluno.cor_perfil, sala) }}
           salaNome={sala}
         />
       </main>
