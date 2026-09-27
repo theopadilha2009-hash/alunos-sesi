@@ -29,7 +29,7 @@ import { Insignias } from "@/components/Insignias";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
-import { CORES_SALA, corDoAluno } from "@/lib/cores";
+import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
 import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
 import {
   DOMINIO_EMAIL_ESCOLA,
@@ -108,7 +108,15 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   // da minha turma" (NULL no banco), que é o que todos os alunos têm hoje — e é
   // para cá que o aluno volta depois de ter escolhido uma cor. `sanitizarCor("")`
   // devolve null, então o mesmo input serve para escolher e para desescolher.
-  const [corPerfil, setCorPerfil] = useState(alunoAtual?.cor_perfil ?? "");
+  // `CORES_SALA.includes` e não o valor cru: um `cor_perfil` fora da paleta
+  // (escrito à mão no banco antes da CHECK `alunos_cor_perfil_paleta`) não acende
+  // amostra nenhuma, e um grupo de rádio sem nenhum marcado não envia `cor` — a
+  // guarda de presença da action pularia o campo e a cor velha nunca sairia.
+  // Tratar o órfão como "sem escolha" faz o grupo sempre ter um marcado.
+  const corSalva = alunoAtual?.cor_perfil;
+  const [corPerfil, setCorPerfil] = useState(
+    corSalva && (CORES_SALA as readonly string[]).includes(corSalva) ? corSalva : "",
+  );
   const [capa, setCapa] = useState(alunoAtual?.banner_url ?? "");
   const [avisoCapa, setAvisoCapa] = useState<string | null>(null);
 
@@ -348,9 +356,25 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     return recortarFaixa(file, lado, 1, qualidade);
   }
 
-  /** A capa é a faixa larga do topo do perfil, 3:1. */
-  function recortarCapa(file: File, largura = LADO_CAPA, qualidade = 0.82) {
-    return recortarFaixa(file, largura, PROPORCAO_CAPA, qualidade);
+  /**
+   * A capa é a faixa larga do topo do perfil, 3:1.
+   *
+   * O degrau de qualidade existe porque a saída é sempre 1280×427: sem ele, uma
+   * foto com muito detalhe (folhagem, multidão) estourava o teto e o aviso
+   * "escolha um arquivo menor" não tinha o que oferecer — reencodar o mesmo
+   * conteúdo em 0.82 dá exatamente o mesmo tamanho, então trocar de arquivo não
+   * resolvia. Cada degrau abaixo custa uma rasterização, e só acontece quando o
+   * anterior de fato não coube.
+   */
+  async function recortarCapa(file: File, largura = LADO_CAPA) {
+    let ultimo = "";
+    for (const qualidade of [0.82, 0.7, 0.6]) {
+      ultimo = await recortarFaixa(file, largura, PROPORCAO_CAPA, qualidade);
+      if (!conferirTamanhoDaImagem(ultimo, "capa")) return ultimo;
+    }
+    // Nem a 0.6 coube: devolve o último e deixa o aviso do chamador explicar o
+    // teto, em vez de a promessa ficar pendurada.
+    return ultimo;
   }
 
   /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
@@ -715,11 +739,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
             </div>
 
             <div className="campo-aparencia">
-              <span className="label-rede">Cor de destaque</span>
+              <span className="label-rede" id="rotulo-cor-destaque">
+                Cor de destaque
+              </span>
               {/* Rádio nativo, e não botões com `role="radio"`: o grupo de rádio
                   do navegador já traz as setas do teclado e o "um marcado só",
                   que um grupo de botões teria que reimplementar à mão. */}
-              <div className="seletor-cor">
+              <div className="seletor-cor" role="radiogroup" aria-labelledby="rotulo-cor-destaque">
                 {/* A amostra da turma é a primeira e a única sem cor fixa: ela
                     desenha exatamente a cor que o perfil mostra hoje. Vazia é o
                     valor que volta o aluno ao padrão da sala (NULL no banco). */}
@@ -737,6 +763,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     onChange={() => setCorPerfil("")}
                   />
                   <span className="sr-only">Usar a cor da minha turma</span>
+                  {corPerfil === "" ? <IconeCheck tamanho={14} /> : null}
                 </label>
 
                 {CORES_SALA.map((c) => (
@@ -744,7 +771,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     key={c}
                     className={`amostra-cor${corPerfil === c ? " amostra-cor-ativa" : ""}`}
                     style={{ ["--cor" as string]: c }}
-                    title={`Usar a cor ${c}`}
+                    title={`Usar a cor ${nomeDaCor(c)}`}
                   >
                     <input
                       type="radio"
@@ -754,14 +781,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                       checked={corPerfil === c}
                       onChange={() => setCorPerfil(c)}
                     />
-                    <span className="sr-only">Cor {c}</span>
+                    <span className="sr-only">{nomeDaCor(c)}</span>
                     {corPerfil === c ? <IconeCheck tamanho={14} /> : null}
                   </label>
                 ))}
               </div>
               <span className="dica-campo">
-                Pinta o topo do seu perfil, o cartão e a vitrine. Sem escolha, vale a cor da
-                turma.
+                Pinta o topo do seu perfil, o seu card na vitrine e o crachá. Sem escolha, vale a
+                cor da turma.
               </span>
             </div>
 

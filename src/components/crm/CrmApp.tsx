@@ -83,6 +83,7 @@ export function CrmApp({
         ...a,
         sala: nomeSala,
         cor: corDoAluno(a.cor_perfil, nomeSala),
+        corSala: corDaSala(nomeSala ?? ""),
         // `a.habilidades` já vem resolvida de `listarAlunos`. Redeclarar com o
         // regex da bio aqui desfazia a resolução no único lugar em que a lista
         // inteira é montada — e era isso que chegava em tags e chips.
@@ -682,7 +683,14 @@ export function CrmApp({
                                 />
                                 <div className="card-port-titulos">
                                   <h3>{aluno.nome}</h3>
-                                  <span className="card-port-sala" style={{ color: aluno.cor }}>
+                                  {/* `grupo.cor`, e não a cor da sala do aluno: o
+                                      rótulo é o nome do GRUPO, que pode ser
+                                      "Meus Alunos Estrelados" — aí a cor do
+                                      aluno não teria relação com o texto. */}
+                                  <span
+                                    className="card-port-sala"
+                                    style={{ ["--sala-cor" as string]: grupo.cor }}
+                                  >
                                     {grupo.nome}
                                   </span>
                                 </div>

@@ -43,8 +43,9 @@ export const MAX_DATA_URL_FOTO = 120 * 1024;
 /**
  * Largura da capa depois do corte, no cliente.
  *
- * A capa é uma faixa larga (o container do perfil tem no máximo ~60rem), então
- * 1280 de largura cobre telas retina sem sobrar.
+ * A capa é uma faixa larga (o container do perfil tem no máximo 52rem — é o
+ * `max-width` de `.perfil-moderno`), então 1280 de largura cobre telas retina
+ * sem sobrar.
  */
 export const LADO_CAPA = 1280;
 
@@ -124,6 +125,15 @@ const ROTULO: Record<MotivoDescarte, string> = {
   "projeto-inexistente": "projeto que não existe mais",
 };
 
+/**
+ * O teto de cada campo, como ele aparece no aviso ao aluno.
+ *
+ * Os números dos irmãos são os do data URL; o da capa é o da imagem decodificada
+ * (220 KB de base64 são ~165 KB de arquivo), a mesma unidade que
+ * `conferirTamanhoDaImagem` mostra no editor na hora da escolha — e é ele que o
+ * aluno tem como referência ao trocar de arquivo. Um texto que discordasse do
+ * aviso local mandaria o aluno procurar um erro onde não há.
+ */
 const TETO: Record<CampoPerfil, string> = {
   midias: "2 MB por imagem",
   projetos: "2 MB por imagem",

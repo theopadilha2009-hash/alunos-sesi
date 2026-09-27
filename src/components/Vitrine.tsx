@@ -59,6 +59,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
         ...a,
         sala: nome,
         cor: corDoAluno(a.cor_perfil, nome),
+        corSala: corDaSala(nome ?? ""),
         habilidades: a.habilidades ?? [],
       };
     });
@@ -264,7 +265,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
                   </div>
                   <h3 className="hall-nome">{aluno.nome}</h3>
                   {aluno.sala ? (
-                    <span className="hall-sala" style={{ color: aluno.cor }}>
+                    <span className="hall-sala" style={{ color: aluno.corSala }}>
                       {aluno.sala}
                     </span>
                   ) : null}

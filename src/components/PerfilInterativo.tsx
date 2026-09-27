@@ -173,7 +173,12 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
     <>
       <article
         className="perfil perfil-moderno"
-        style={{ ["--sala" as string]: aluno.cor, position: "relative", overflow: "hidden" }}
+        style={{
+          ["--sala" as string]: aluno.cor,
+          ["--sala-cor" as string]: aluno.corSala,
+          position: "relative",
+          overflow: "hidden",
+        }}
       >
         {/* Capa do topo. Sem imagem o CSS desenha um degradê da cor de destaque,
             então o aluno que só escolheu a cor não fica com um buraco no lugar
@@ -229,7 +234,7 @@ export function PerfilInterativo({ aluno, salaNome }: Props) {
             <div className="perfil-sub-linha">
               {salaNome ? (
                 <span className="sala-tag">
-                  <span className="ponto" style={{ background: aluno.cor }} />
+                  <span className="ponto" style={{ background: aluno.corSala }} />
                   {salaNome}
                 </span>
               ) : null}

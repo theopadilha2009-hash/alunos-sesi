@@ -158,8 +158,8 @@ export function CrachaModal({ aluno, onClose }: Props) {
               <h3 className="cracha-nome">{aluno.nome}</h3>
               <div className="cracha-linha-sala">
                 {aluno.sala ? (
-                  <span className="cracha-sala-pill" style={{ borderColor: aluno.cor }}>
-                    <span className="ponto" style={{ background: aluno.cor }} />
+                  <span className="cracha-sala-pill" style={{ borderColor: aluno.corSala }}>
+                    <span className="ponto" style={{ background: aluno.corSala }} />
                     {aluno.sala}
                   </span>
                 ) : null}

@@ -139,7 +139,20 @@ export type Aluno = {
 /** Aluno já com o nome da sala resolvido, do jeito que a tela consome. */
 export type AlunoNaTela = Aluno & {
   sala: string | null;
+  /**
+   * A cor que identifica o ALUNO: a de destaque que ele escolheu, ou a da sala
+   * como padrão. É o que pinta o card dele, a linha dele e o crachá.
+   */
   cor: string;
+  /**
+   * A cor da TURMA, sempre — mesmo quando o aluno escolheu outra.
+   *
+   * Todo ornamento que acompanha o nome da sala (o ponto ao lado, o badge, o
+   * `--sala-cor` do `<span>` da sala) tem que usar esta, e não `cor`: senão o
+   * nome da turma passa a aparecer com uma cor que só aquele aluno tem, e a
+   * cor deixa de identificar a sala para quem está lendo a lista.
+   */
+  corSala: string;
 };
 
 export type UsuarioSessao = {

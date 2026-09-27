@@ -1,7 +1,7 @@
 /**
  * A cor de cada sala.
  *
- * Vem das quatro cores do símbolo do SESI, e é atribuída por hash do nome —
+ * Vem das seis cores do símbolo do SESI, e é atribuída por hash do nome —
  * então "3ºA" é sempre a mesma cor, em qualquer máquina e em qualquer
  * render, sem precisar guardar isso no banco.
  *
@@ -22,6 +22,28 @@ export const CORES_SALA = [
   "#4881AE", // azul claro
   "#2D929E", // petróleo
 ] as const;
+
+/**
+ * O nome de cada cor, para o rótulo acessível do seletor.
+ *
+ * Um hex não é nome: "Cor #3FC2BC" não diz nada a quem não vê a amostra. E não
+ * adianta pôr isso num `title` do JSX — quem usa leitor de tela não recebe
+ * `title`. A chave é o mesmo literal de `CORES_SALA`, e o teste
+ * `tests/cores.test.mjs` cobra que as duas listas não se separem.
+ */
+const NOME_DA_COR: Record<string, string> = {
+  "#3FC2BC": "ciano",
+  "#38B95D": "verde",
+  "#F3B544": "amarelo",
+  "#D74D42": "vermelho",
+  "#4881AE": "azul",
+  "#2D929E": "petróleo",
+};
+
+/** O nome da cor, ou o próprio hex se ela não estiver no mapa. */
+export function nomeDaCor(hex: string): string {
+  return NOME_DA_COR[hex] ?? hex;
+}
 
 export function corDaSala(nome: string): string {
   let h = 0;

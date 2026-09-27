@@ -169,10 +169,6 @@
   gap: 0.45rem;
 }
 
-.campo-aparencia + .campo-aparencia {
-  margin-top: 1.1rem;
-}
-
 .seletor-cor {
   display: flex;
   flex-wrap: wrap;
@@ -219,7 +215,11 @@
    ela se desenha meio cor e meio neutra — diferente das seis da paleta, que são
    uma escolha do aluno. */
 .amostra-cor-padrao {
-  background: linear-gradient(135deg, var(--cor) 50%, var(--surface-3) 50%);
+  background: linear-gradient(
+    135deg,
+    var(--cor, var(--surface-3)) 50%,
+    var(--surface-3) 50%
+  );
 }
 
 /* O check cai sobre cores claras (o amarelo) e escuras (o petróleo) na mesma
@@ -247,11 +247,15 @@
 
 /* Sobre o degradê da cor de destaque o texto precisa de fundo próprio: as seis
    cores da paleta vão do amarelo claro ao petróleo escuro, e não existe uma cor
-   de texto que contraste com todas elas. */
+   de texto que contraste com todas elas.
+
+   0.65 e não 0.5: sobre o amarelo (#F3B544) o branco a 50% de preto fica em
+   4,45:1 no tema claro, abaixo do 4,5 do AA — e é justamente o texto que diz ao
+   aluno o que vai aparecer no lugar da capa. */
 .capa-preview-vazia {
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.65);
   color: #fff;
   font-size: 0.72rem;
   font-weight: 700;
