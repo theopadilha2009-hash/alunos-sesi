@@ -205,8 +205,18 @@ Ver `csp.ts` para o resto da política (o nonce, o `style-src` sem nonce, o
 - **Migração do acervo em base64.** As mídias gravadas antes desta rodada
   continuam data URL no JSONB e continuam funcionando; não há migration que as
   mova para o Blob.
-- **Otimização de perfil: sem ganho medido.** Lighthouse 12 mobile em
-  `/alunos/theo-padilha` deu **CLS = 0.0000**, então `width`/`height` não têm o
-  que corrigir; o elemento LCP é um `<p>` de texto, então o gargalo é resposta
-  do servidor ("Reduce initial server response time", ~599 ms), não mídia. As
-  imagens do Unsplash já vêm com `?w=800`.
+- **Otimização de perfil: sem ganho medido.** Lighthouse 12.8.2 mobile simulado
+  contra o `next start` do build de produção (n=3, mediana): **Perf 96, TBT
+  28,5 ms, CLS 0.0000**. Três dados fecham a questão: o **TBT já é score 1.0**
+  (não há ponto a ganhar mexendo em bundle); o LCP tem **Load Delay e Load Time
+  em 0%**, então nenhum recurso gateia a pintura e nenhum fix de asset pode
+  movê-lo; e o elemento LCP é um `<p>` de texto. As imagens do Unsplash já vêm
+  com `?w=800`.
+
+  **Não persiga o número antigo do levantamento.** Ele registrava Perf 45 /
+  LCP 7117 ms / TBT 3254 ms e mandava atacar o tempo de resposta do servidor
+  ("~599 ms"). Não é reproduzível no build de produção: o HTML que o originou
+  referenciava `/_next/static/**immutable**/chunks/`, que é o esquema de saída
+  do **dev server**. Os 599 ms são o modelo de latência simulada do Lighthouse,
+  não trabalho do código — o TTFB medido é 66 ms local (p50, n=30) e 172 ms em
+  produção (`gru1::gru1`).
