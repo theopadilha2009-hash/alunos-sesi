@@ -1,5 +1,6 @@
 import { logger } from "./debug";
 import { extrairHabilidades } from "./habilidades";
+import { SENHA_BLOQUEADA } from "./senha";
 import { clienteAdmin } from "./supabase/admin";
 import { clientePublico } from "./supabase/publico";
 import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } from "./tipos";
@@ -88,6 +89,31 @@ export async function listarAlunos(
     throw new Error(`listarAlunos: ${error.message}`);
   }
   return ((data ?? []) as Aluno[]).map(resolverAluno);
+}
+
+/**
+ * Os `aluno_id` que já têm login utilizável — senha de verdade, não o
+ * `!bloqueado` da conta que só espera o código de ativação.
+ *
+ * Só o painel do ADM consulta: a vitrine não tem por que saber de contas. É o
+ * que deixa o botão de emitir código aparecer apenas para quem ainda não tem
+ * acesso — a ação recusaria de qualquer forma, mas o ADM não precisa clicar
+ * para descobrir.
+ *
+ * `usuarios` não tem policy nenhuma, então a leitura sai pelo cliente admin.
+ */
+export async function listarAcessos(): Promise<string[]> {
+  const { data, error } = await clienteAdmin()
+    .from("usuarios")
+    .select("aluno_id")
+    .not("aluno_id", "is", null)
+    .neq("senha_hash", SENHA_BLOQUEADA);
+
+  if (error) {
+    logger.error("DADOS", "Erro em listarAcessos", error);
+    throw new Error(`listarAcessos: ${error.message}`);
+  }
+  return (data ?? []).map((u) => u.aluno_id as string);
 }
 
 export async function listarRetrato(): Promise<RetratoSala[]> {

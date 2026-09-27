@@ -2,10 +2,19 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { alternar, aprovarAluno, criarAluno, importarLista, mudarSalaDoAluno, removerAluno } from "@/app/adm/acoes";
-import { ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
+import {
+  alternar,
+  aprovarAluno,
+  criarAluno,
+  gerarCodigoAtivacao,
+  importarLista,
+  mudarSalaDoAluno,
+  removerAluno,
+} from "@/app/adm/acoes";
+import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
 import {
   IconeCheck,
+  IconeChave,
   IconeCopiar,
   IconeCracha,
   IconeEditar,
@@ -27,11 +36,19 @@ import type { AlunoNaTela } from "@/lib/tipos";
 type Props = {
   alunos: AlunoNaTela[];
   salas: { id: string; nome: string }[];
+  /** `aluno_id` de quem já tem login — o código só é oferecido a quem não tem. */
+  comAcesso: string[];
   onAbrirCracha: (aluno: AlunoNaTela) => void;
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
 };
 
-export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarAluno }: Props) {
+export function PainelAdmIntegrado({
+  alunos,
+  salas,
+  comAcesso,
+  onAbrirCracha,
+  onSelecionarAluno,
+}: Props) {
   const [subAba, setSubAba] = useState<"alunos" | "importar" | "novo" | "salas">("alunos");
   const [busca, setBusca] = useState("");
   const [salaFiltro, setSalaFiltro] = useState<string>("todas");
@@ -40,6 +57,13 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
   // Ações de formulário com useActionState
   const [estadoImportar, formImportar, importando] = useActionState(importarLista, ESTADO_INICIAL);
   const [estadoCriar, formCriar, criando] = useActionState(criarAluno, ESTADO_INICIAL);
+  const [estadoCodigo, formCodigo, emitindoCodigo] = useActionState(
+    gerarCodigoAtivacao,
+    ESTADO_CODIGO_INICIAL,
+  );
+
+  // `alguns` alunos já têm login; o código é só para quem falta.
+  const comAcessoSet = useMemo(() => new Set(comAcesso), [comAcesso]);
 
   // Alunos filtrados no painel
   const alunosFiltrados = useMemo(() => {
@@ -261,6 +285,28 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
             </div>
           ) : null}
 
+          {/* O código aparece UMA vez: o banco guarda só o hash. Se o ADM
+              fechar a tela antes de passar para o aluno, emite outro. */}
+          {estadoCodigo.codigo ? (
+            <div className="adm-codigo-ativacao" role="status">
+              <IconeChave tamanho={18} />
+              <div>
+                <strong>Código de {estadoCodigo.paraQuem}</strong>
+                <code className="adm-codigo-valor">{estadoCodigo.codigo}</code>
+                <span className="dica-campo">
+                  Vale uma vez, por 7 dias. Anote agora e passe para o aluno — ele não
+                  aparece de novo.
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {estadoCodigo.mensagem ? (
+            <p className="recado recado-erro" role="alert">
+              {estadoCodigo.mensagem}
+            </p>
+          ) : null}
+
           {/* Tabela Administrativa de Alunos */}
           <div className="tabela-container adm-tabela-wrap">
             <table className="tabela-alunos">
@@ -408,6 +454,23 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                           >
                             <IconeCracha tamanho={14} />
                           </button>
+
+                          {/* Só para quem ainda não tem login. Emitir código de
+                              quem já tem trocaria a senha em uso por um código,
+                              deixando o aluno de fora até resgatar. */}
+                          {!comAcessoSet.has(a.id) ? (
+                            <form action={formCodigo}>
+                              <input type="hidden" name="alunoId" value={a.id} />
+                              <button
+                                type="submit"
+                                className="btn-acao-tabela"
+                                title="Gerar código de ativação para este aluno"
+                                disabled={emitindoCodigo}
+                              >
+                                <IconeChave tamanho={14} />
+                              </button>
+                            </form>
+                          ) : null}
 
                           <form
                             action={removerAluno}
