@@ -114,43 +114,47 @@ no banco é `src/lib/dados.ts` e `src/lib/auth.ts`, e só eles importam
 
 | Módulo | LOC | Em uma linha |
 |---|---|---|
-| `auth.ts` | 319 | Sessão do usuário: token assinado com `iat`/`exp`, login com argon2id + rate limit duplo (conta e IP), cadastro, logout |
-| `dados.ts` | 295 | A única ponte entre tela e Supabase: leituras públicas, perfil, endosso, submissão de desafio, votos do visitante. Resolve `alunos.habilidades` (`null` = nunca editou → regex da bio) para nenhuma tela precisar saber |
-| `seguranca.ts` | 456 | Sanitização (XSS, URL, data URL, JSONB de projetos/mídias/stickers/competências, foto), comparação em tempo constante e o rate limit em memória |
-| `exportar-cracha.ts` | 281 | Gera o crachá em PNG 2x via Canvas nativo, no cliente. Desenha a foto do aluno recortada no círculo e cai nas iniciais quando não há foto |
-| `limites.ts` | 227 | Os tetos do perfil num módulo folha: mídias, projetos, stickers, competências e foto. Fica fora de `seguranca.ts` para o client component ler os mesmos números sem arrastar `node:crypto` |
+| `seguranca.ts` | 693 | Sanitização (XSS, URL, data URL, JSONB de projetos/mídias/stickers/vídeos/competências, foto), comparação em tempo constante e o rate limit em memória |
+| `auth.ts` | 338 | Sessão do usuário: token assinado com `iat`/`exp`, login com argon2id + rate limit duplo (conta e IP), cadastro, logout |
+| `dados.ts` | 314 | A única ponte entre tela e Supabase: leituras públicas, perfil, endosso, submissão de desafio, votos do visitante. Resolve `alunos.habilidades` (`null` = nunca editou → regex da bio) para nenhuma tela precisar saber |
+| `limites.ts` | 307 | Os tetos do perfil num módulo folha: mídias, projetos, stickers, vídeos, competências e foto. Fica fora de `seguranca.ts` para o client component ler os mesmos números sem arrastar `node:crypto` |
+| `exportar-cracha.ts` | 288 | Gera o crachá em PNG 2x via Canvas nativo, no cliente. Desenha a foto do aluno recortada no círculo e cai nas iniciais quando não há foto |
+| `tipos.ts` | 197 | Os tipos do domínio: `Aluno`, `AlunoNaTela`, `Sala`, `RetratoSala`, `DesafioHackathon`, `StickerPerfil`, `UsuarioSessao`, `VideoAluno` |
 | `insignias.ts` | 166 | As seis insígnias derivadas de `estrelas` + `habilidades_votos`, com progresso. Puro e folha: mesmas entradas, mesma saída |
+| `video.ts` | 155 | O vídeo do perfil como `{ id, tipo }`, nunca a URL colada: allowlist de host por igualdade, id por regex e a URL de embed (`youtube-nocookie`). Folha, sem imports |
 | `importar.ts` | 149 | Parser tolerante da lista colada no ADM (tab, vírgula ou ponto e vírgula) |
 | `som.ts` | 129 | Som de estrela e confetes, com gate de mute persistido e `prefers-reduced-motion` |
+| `blob.ts` | 120 | A ponte com o Vercel Blob: data URL → `Blob`, o caminho escopado por aluno e a checagem que autoriza o upload. Folha de propósito — o editor no browser importa daqui |
 | `sessao.ts` | 120 | Os três cookies assinados (`visitante`, `adm`, `usuario`), cada um com sua subchave HKDF |
+| `foco.ts` | 119 | Trava de foco dos diálogos modais. O núcleo (`proximoFoco`) é puro e testável sem DOM; o resto é o efeito no `document` |
 | `senha.ts` | 112 | Hash e verificação argon2id, SHA-256 legado com rehash no login, `HASH_FANTASMA` e `SENHA_BLOQUEADA` |
-| `tipos.ts` | 116 | Os tipos do domínio: `Aluno`, `AlunoNaTela`, `Sala`, `RetratoSala`, `DesafioHackathon`, `StickerPerfil`, `UsuarioSessao` |
+| `csp.ts` | 104 | O texto da Content-Security-Policy — incluindo o `frame-src` fechado do vídeo e o host do Blob no `connect-src` — e o nome dos headers de nonce |
 | `habilidades.ts` | 96 | Taxonomia de competências (`LISTA_HABILIDADES`, allowlist de endosso por igualdade exata) e a extração por regex da bio — hoje só o fallback de quem nunca editou o perfil |
 | `rate-limit.ts` | 96 | Limitador que sobrevive ao cold start (tabela `tentativas`) e `ipDoCliente()` |
 | `debug.ts` | 95 | `logger` estruturado com máscara automática de segredos e `medirOperacao` |
 | `busca.ts` | 91 | Busca sem acento (`fold`, `matches`, `filtrarAlunos`) e os sentinelas `TODAS` / `ESTRELADOS` |
 | `links.ts` | 78 | Normaliza LinkedIn e GitHub para a forma canônica, dá `URL_BASE` e `iniciais()` |
+| `cores.ts` | 69 | A cor da sala, por hash do nome sobre as quatro cores do símbolo |
 | `tema.ts` | 59 | Aplica o `data-theme` e a cor da barra do PWA |
-| `csp.ts` | 67 | O texto da Content-Security-Policy e o nome dos headers de nonce |
 | `ranking.ts` | 54 | Ordenação da vitrine com desempate determinístico e o ranking das salas |
+| `github.ts` | 50 | Apresentação de um repositório do GitHub na tela do editor. Folha: o sanitizador da resposta mora em `seguranca.ts`, com o `node:crypto` |
 | `slug.ts` | 34 | `slugificar` e `slugUnico` — o endereço legível do perfil |
-| `cores.ts` | 26 | A cor da sala, por hash do nome sobre as quatro cores do símbolo |
 | `abas.ts` | 25 | `aoSetasDasAbas`: navegação por setas dentro de `[role="tablist"]`, usada pelo login, pelo painel do ADM e pelo perfil |
 | `supabase/publico.ts` | 22 | Client com a anon key — passa pela RLS de propósito |
 | `supabase/admin.ts` | 22 | Client com a service_role — atravessa a RLS, só no servidor e depois do crachá |
 
 ## Separação server/client
 
-Server por padrão. Dezenove componentes são `"use client"`, mais os dois error
+Server por padrão. Vinte e um componentes são `"use client"`, mais os dois error
 boundaries:
 
 - **Vitrine e crachá:** `Vitrine`, `CartaoAluno`, `TabelaAlunos`, `CommandBar`,
   `CrachaModal`, `CurriculoImpressao`, `PerfilInterativo`, `TopProjetosTurma`,
-  `RedesBadges`, `TemaToggle`.
+  `RedesBadges`, `TemaToggle`, `VideoEmbed`.
 - **ADM:** `adm/FormAluno`, `adm/ImportarLista`.
 - **CRM:** `crm/CrmApp`, `crm/LoginTela`, `crm/PaginaMeuPerfil`,
   `crm/PainelAdmIntegrado`, `crm/MuralDesafios`, `crm/ModalPerfilBreve`,
-  `crm/StickerCanvas`.
+  `crm/StickerCanvas`, `crm/ImportarGithub`.
 
 `src/lib/exportar-cracha.ts` também é `"use client"` — mexe em Canvas e
 `@node-rs/argon2` não tem nada com isso.

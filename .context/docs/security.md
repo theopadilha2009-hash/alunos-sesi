@@ -21,6 +21,7 @@ documento.
 | Visitante (anon key) | nada | `salas`, `alunos`, `retrato_salas` — policy de select `using (true)` | nada |
 | Visitante que vota | cookie `sesi.visitante` assinado | — | `votos`, e só através do Route Handler `/api/estrela`, com `service_role` |
 | ADM | cookie `sesi.adm` (HMAC da chave) | tudo | `alunos` e `salas`, via Server Actions, com `service_role` |
+| Aluno (perfil) | cookie `sesi.usuario` assinado | o próprio perfil | o próprio perfil, via Server Action; e **só a própria pasta** no Vercel Blob, via `/api/upload` |
 
 Ninguém escreve em `alunos`/`salas` com anon ou authenticated: as policies de
 select são as únicas que existem em `src/sql/001_schema.sql`, e toda escrita
@@ -112,7 +113,14 @@ Aplicados em `/:path*`:
 | `X-Content-Type-Options` | `nosniff` | impede o navegador de adivinhar tipo |
 | `Referrer-Policy` | `no-referrer` | enquanto a chave está na URL, nenhum subrecurso manda a URL inteira no `Referer` |
 | `X-Frame-Options` | `DENY` | não dá para embutir o app num iframe |
-| `Content-Security-Policy` | `frame-ancestors 'none'; object-src 'none'; base-uri 'self'` | fecha frame, plugin e `<base>` trocado |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` | força https no domínio inteiro |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), browsing-topics=()` | desliga APIs de navegador que o app não usa |
+
+A **CSP não está aí**, e é o único header que não é estático: ela carrega um nonce
+por requisição, e isso só o `proxy.ts` gera. Manter as duas faria o navegador
+aplicar a interseção das políticas — o comentário em `next.config.ts` diz
+exatamente isso. O texto e as fontes moram em `src/lib/csp.ts`; o `frame-src` do
+vídeo e o host do Blob no `connect-src` estão em `midia.md`.
 
 E em `/adm/:path*`:
 
@@ -138,6 +146,25 @@ exclui caminhos). A checagem de `src/app/adm/page.tsx` protege a renderização
 da página, não a execução das ações — quem tem o `action id` de uma Server
 Action pode chamá-la sem nunca carregar o painel.
 
+## O upload direto autoriza pelo caminho
+
+`src/app/api/upload/route.ts` não recebe bytes: ela decide se o navegador pode
+falar com o store e devolve um token de vida curta. Quem recebe o arquivo é o
+Vercel Blob. É isso que tira o `bodySizeLimit` de 4 MB do caminho da edição.
+
+A autorização inteira é `caminhoPertenceAoAluno` (`src/lib/blob.ts`), e não é
+redundância com a sessão: o `pathname` vem do browser e o `onBeforeGenerateToken`
+**não pode reescrevê-lo — só recusá-lo**. O caminho nasce escopado
+(`alunos/<alunoId>/midia.<ext>`) e o que vem depois é preso a um charset seguro,
+para que nem `..` nem `%2e%2e` — que é `..` para quem decodifica, e quem
+decodifica é o store — atravessem. Sem essa checagem, qualquer aluno com sessão
+escreveria, ou sobrescreveria, mídia na pasta de outro.
+
+Além dela: sessão de aluno obrigatória, 40 envios por minuto por aluno (tabela
+`tentativas`) e `allowedContentTypes` de quatro tipos de imagem. O teto de bytes
+é do **servidor** (`TETO_POR_CAMPO`) justamente porque a checagem boa roda no
+browser do aluno, e um `fetch` à mão não passa por ela.
+
 ## Segredos
 
 | Variável | Onde pode aparecer |
@@ -147,6 +174,8 @@ Action pode chamá-la sem nunca carregar o painel.
 | `SUPABASE_DB_URL` | só no `scripts/db-query.sh` |
 | `ADM_CHAVE` | só servidor: assina cookies e confere o link |
 | `VERCEL_TOKEN` | só CLI, nunca lido pelo app |
+| `SESSAO_SEGREDO` | **só servidor**: mestre do HMAC das sessões, com HKDF por propósito. A `ADM_CHAVE` abre `/adm/<chave>` mas não assina sessão — sem esta, **login e link do ADM quebram**, e a vitrine sobe mesmo assim |
+| `BLOB_READ_WRITE_TOKEN` | **só servidor**, em `/api/upload`, para assinar o token de curta duração. O browser do aluno recebe o token assinado, nunca este. O OIDC do projeto **não** o substitui |
 
 `.env.local` é gitignored (`.gitignore` cobre `.env*` e reabre só
 `!.env.example`). O `.env.example` leva apenas os nomes. O CI

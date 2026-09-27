@@ -107,12 +107,13 @@ Ficou para depois (o que o repositório mostra hoje):
   `src/components/Avatar.tsx` passou a desenhar a foto nas telas que antes
   escreviam as iniciais na mão. Continua sem Storage — a imagem mora dentro da
   própria linha, o que serve para avatar e não serve para mídia (ver abaixo).
-- As mídias e as capas de projeto são data URLs dentro de `alunos.midias` e
-  `alunos.projetos` (JSONB): até 12 × 2 MB e 10 × 2 MB por aluno. O teto é por
-  item, não por formulário, e o `bodySizeLimit` do Server Action é 4 MB — então
-  um perfil que junte várias imagens no teto salva e depois não consegue salvar
-  de novo. Mover para Vercel Blob resolve os dois lados (peso do payload e teto
-  do POST) e é a onda seguinte, já mapeada antes desta mudança.
+- **Mídia pesada ainda viaja em data URL no corpo do POST**: foto (120 KB), capa
+  do perfil (220 KB) e a soma dos stickers (2 MB). Galeria e capa de projeto já
+  migraram para o Vercel Blob — o navegador manda o arquivo direto para o store e
+  o formulário carrega só a URL (`src/lib/blob.ts` + `/api/upload`), e é por isso
+  que o `bodySizeLimit` de 4 MB deixou de ser o teto da edição. O que resta soma
+  ~2,4 MB, abaixo dele; migrar os stickers é o próximo passo se voltar a apertar.
+  Ver `midia.md`.
 - `?curriculo=1` é oferecido pelo `/u/[slug]` como "Mini-Currículo A4"
   (`src/app/u/[slug]/page.tsx`), mas nenhuma página lê `searchParams`: o
   parâmetro chega e morre. O único leitor de `location.search` é o `CrmApp`
