@@ -90,7 +90,7 @@ export function LoginTela() {
                 id="login-user"
                 name="username"
                 type="text"
-                placeholder="Seu usuário"
+                placeholder="Seu usuário ou e-mail"
                 required
                 autoComplete="username"
               />
@@ -163,9 +163,12 @@ export function LoginTela() {
                   id="cad-user"
                   name="username"
                   type="text"
-                  placeholder="Seu usuário"
+                  placeholder="Seu usuário ou e-mail"
                   required
                 />
+                {/* O e-mail institucional é o login natural do aluno, mas o
+                    cadastro o recusava — quem tentasse não entendia o motivo. */}
+                <span className="dica-campo">Pode ser o seu e-mail da escola.</span>
               </div>
 
               <div className="campo">

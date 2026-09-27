@@ -16,6 +16,7 @@ import {
 import { slugUnico } from "./slug";
 import { clienteAdmin } from "./supabase/admin";
 import type { UsuarioSessao } from "./tipos";
+import { validarUsername } from "./username";
 
 export const COOKIE_USUARIO = "sesi.usuario";
 
@@ -205,12 +206,12 @@ export async function registrarUsuario(dados: {
     return { ok: false, mensagem: "Muitos cadastros recentes. Aguarde alguns minutos." };
   }
 
-  // Validação de formato do username: alfanumérico com ponto, underline ou hífen
-  if (!/^[a-z0-9_.-]{3,30}$/.test(username)) {
-    return {
-      ok: false,
-      mensagem: "O nome de usuário deve ter entre 3 e 30 caracteres (letras, números, '.', '_' ou '-').",
-    };
+  // Formato do username — a regra vive em `username.ts` porque o cadastro e a
+  // troca de dados da conta precisam da mesma resposta, e porque o e-mail
+  // institucional (`nome@estudante.sesisenai.org.br`) tem que passar.
+  const problemaUsername = validarUsername(username);
+  if (problemaUsername) {
+    return { ok: false, mensagem: problemaUsername };
   }
   // 8 caracteres, o mesmo mínimo da troca de senha em alterarSegurancaAction.
   // Antes o cadastro aceitava 4 e a troca exigia 8 — quem se cadastrou com
