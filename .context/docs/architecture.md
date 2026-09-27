@@ -24,19 +24,22 @@ toda escrita passa por Server Actions e Route Handlers.
 | Tipos | TypeScript strict, `next typegen && tsc --noEmit` | `tsconfig.json` |
 | Dados | Supabase (Postgres + RLS), `@supabase/supabase-js` ^2.58 | `src/lib/supabase/`, `src/sql/` |
 | Senhas | `@node-rs/argon2` ^2.2.1 (addon nativo) | `src/lib/senha.ts` |
+| Storage | `@vercel/blob` ^2.8 (upload direto da mídia) | `src/lib/blob.ts`, `src/app/api/upload/route.ts` |
 | Extras | `qrcode`, `canvas-confetti`, `@vercel/analytics` | `package.json` |
 | Testes | `node:test` com `--experimental-strip-types` | `tests/*.test.mjs` |
 | Deploy | Vercel (ligada ao GitHub) | `.github/workflows/ci.yml` |
 
-Oito dependências de runtime: `next`, `react`, `react-dom`,
-`@supabase/supabase-js`, `@node-rs/argon2`, `qrcode`, `canvas-confetti` e
-`@vercel/analytics`. `@node-rs/argon2` precisa de
+Nove dependências de runtime: `next`, `react`, `react-dom`,
+`@supabase/supabase-js`, `@node-rs/argon2`, `@vercel/blob`, `qrcode`,
+`canvas-confetti` e `@vercel/analytics`. `@node-rs/argon2` precisa de
 `serverExternalPackages: ["@node-rs/argon2"]` no `next.config.ts` — sem isso o
 binário `.node` entra no bundle e o build quebra.
 
-As Server Actions aceitam corpo de até 4 MB (`serverActions.bodySizeLimit`),
-que é o teto do upload de mídia em base64; `urlImagemSegura` corta data URL em
-2 MB do lado do servidor.
+As Server Actions aceitam corpo de até 4 MB (`serverActions.bodySizeLimit`).
+Esse era o teto real da edição enquanto a mídia viajava em base64 no POST — hoje
+galeria e capa de projeto sobem direto para o Vercel Blob, e o que resta no
+corpo são foto (120 KB), capa (220 KB) e a soma de stickers (2 MB).
+`urlImagemSegura` corta data URL em 2 MB do lado do servidor. Ver `midia.md`.
 
 ## Mapa de rotas
 
@@ -50,6 +53,7 @@ que é o teto do upload de mídia em base64; `urlImagemSegura` corta data URL em
 | `/adm` | `src/app/adm/page.tsx` | página (server, noindex) | só com o crachá `sesi.adm` ou sessão `super_adm`; sem isso, `notFound()` |
 | `/adm/[chave]` | `src/app/adm/[chave]/route.ts` | Route Handler `GET` | quem tem a chave; emite o crachá e sai por redirect 303 |
 | `/api/estrela` | `src/app/api/estrela/route.ts` | Route Handler `POST`/`DELETE` | qualquer visitante com cookie assinado |
+| `/api/upload` | `src/app/api/upload/route.ts` | Route Handler `POST` | só aluno com sessão; assina o token do upload direto para o Blob |
 | `/api/health` | `src/app/api/health/route.ts` | Route Handler `GET` | qualquer um; `200` ou `503` conforme o banco |
 | `/robots.txt` | `src/app/robots.ts` | metadata route | bloqueia `/adm`, `/api/`, `/u/`, `/validar/` |
 | `/sitemap.xml` | `src/app/sitemap.ts` | metadata route (`force-dynamic`) | anuncia `/alunos` e um URL por aluno, e só |

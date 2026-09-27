@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
+import { upload } from "@vercel/blob/client";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CrachaModal } from "@/components/CrachaModal";
@@ -22,13 +23,16 @@ import {
   IconeSparkles,
   IconeUpload,
   IconeUsuario,
+  IconeVideo,
 } from "@/components/Icones";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { ImportarGithub } from "@/components/crm/ImportarGithub";
 import { Insignias } from "@/components/Insignias";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
+import { VideoEmbed } from "@/components/VideoEmbed";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
+import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
 import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
 import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
 import {
@@ -37,19 +41,20 @@ import {
   LADO_CAPA,
   MAX_HABILIDADES,
   MAX_PROJETOS,
+  MAX_VIDEOS,
   PROPORCAO_CAPA,
   conferirTamanhoDaImagem,
 } from "@/lib/limites";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
+import { mesmoVideo, normalizarVideo, type VideoAluno } from "@/lib/video";
 
 type Props = {
   usuario: UsuarioSessao;
   alunoAtual: AlunoNaTela | null;
   salas: { id: string; nome: string }[];
-  onPerfilSalvo?: () => void;
 };
 
-export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: Props) {
+export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
   const [estadoSeguranca, acaoSeguranca, alterandoSenha] = useActionState(alterarSegurancaAction, {
     ok: false,
@@ -63,7 +68,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
       setConfirmarSenha("");
     }
   }, [estadoSeguranca]);
-  const [abaAtiva, setAbaAtiva] = useState<"dados" | "projetos" | "estudio" | "midias" | "conta">("dados");
+  const [abaAtiva, setAbaAtiva] = useState<
+    "dados" | "projetos" | "estudio" | "midias" | "videos" | "conta"
+  >("dados");
   const [crachaAberto, setCrachaAberto] = useState(false);
   const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
@@ -142,6 +149,21 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
   const [avisoMidia, setAvisoMidia] = useState<string | null>(null);
   const [avisoProjeto, setAvisoProjeto] = useState<string | null>(null);
 
+  // Lista de vídeos (YouTube e Vimeo). O estado guarda `{ id, tipo, titulo }`:
+  // a URL que o aluno colou morre no `normalizarVideo`, e o que vai para o
+  // banco é o id — é ele que decide o host do iframe no perfil público.
+  const [videos, setVideos] = useState<VideoAluno[]>(
+    alunoAtual?.videos && Array.isArray(alunoAtual.videos) ? alunoAtual.videos : [],
+  );
+  const [novoVideoLink, setNovoVideoLink] = useState("");
+  const [avisoVideo, setAvisoVideo] = useState<string | null>(null);
+  // Qual campo tem arquivo subindo para o Blob agora, ou null.
+  //
+  // Existe porque a imagem só vira URL depois que o Blob responde, e até lá o
+  // campo fica vazio: sem isto o aluno clica em "Adicionar" e não acontece
+  // nada, sem saber se quebrou ou se ainda está subindo.
+  const [enviando, setEnviando] = useState<"midia" | "projeto" | null>(null);
+
   const urlPerfil =
     typeof window !== "undefined"
       ? `${window.location.origin}/alunos/${alunoAtual?.slug ?? "theo-padilha"}`
@@ -169,6 +191,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
   function adicionarProjeto() {
     if (!novoProjTitulo.trim()) return;
+    // Mesmo teto do `adicionarVideo`, e aqui o corte do servidor é silencioso:
+    // `sanitizarProjetos` faz `slice(0, MAX_PROJETOS)`, então o 11º projeto
+    // entraria na tela e sumiria no submit — junto com a capa, que já subiu
+    // para o Blob e não volta.
+    if (projetos.length >= MAX_PROJETOS) {
+      setAvisoProjeto(`O perfil aceita ${MAX_PROJETOS} projetos. Remova um para adicionar outro.`);
+      return;
+    }
     // Mesma porta que a mídia. Aqui pesa mais: uma capa gigante na lista vai
     // junta no POST, e com o bodySizeLimit de 4mb o servidor recusa a action
     // inteira — o aluno perderia a edição toda, não só a capa.
@@ -232,6 +262,46 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     setMidias(midias.filter((_, i) => i !== index));
   }
 
+  // O teto de vídeos é do perfil inteiro, não da edição: o aluno que já tem
+  // `MAX_VIDEOS` salvos não ganha um a mais por abrir o editor. Aqui o corte é
+  // avisado, e não silencioso como o do `importarProjetos` — o aluno digitou um
+  // link, então merece saber por que ele não entrou.
+  function adicionarVideo() {
+    const link = novoVideoLink.trim();
+    if (!link) return;
+    const video = normalizarVideo(link);
+    if (!video) {
+      setAvisoVideo("Link não reconhecido. Cole um endereço de vídeo do YouTube ou do Vimeo.");
+      return;
+    }
+    if (videos.some((v) => mesmoVideo(v, video))) {
+      setAvisoVideo("Este vídeo já está no seu perfil.");
+      return;
+    }
+    if (videos.length >= MAX_VIDEOS) {
+      setAvisoVideo(`O perfil aceita ${MAX_VIDEOS} vídeos. Remova um para adicionar outro.`);
+      return;
+    }
+    setVideos([...videos, video]);
+    setNovoVideoLink("");
+    setAvisoVideo(null);
+  }
+
+  function removerVideo(video: VideoAluno) {
+    setVideos(videos.filter((v) => !mesmoVideo(v, video)));
+  }
+
+  // O título é editado no item já na lista, e o corte em 80 aqui é o mesmo que
+  // `sanitizarVideos` aplica no servidor — sem ele o aluno digitaria 200
+  // caracteres e veria o texto encolher só depois de salvar.
+  function definirTituloVideo(video: VideoAluno, titulo: string) {
+    setVideos(
+      videos.map((v) =>
+        mesmoVideo(v, video) ? { ...v, titulo: titulo.slice(0, 80) || undefined } : v,
+      ),
+    );
+  }
+
   async function comprimirImagemArquivo(file: File, maxDim = 1280, qualidade = 0.85): Promise<string> {
     return new Promise((resolve, reject) => {
       if (file.type === "image/gif") {
@@ -259,6 +329,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
+        // Sem contexto não há compressão. Devolver o cru aqui é seguro porque
+        // quem recebe confere o teto de bytes depois (`conferirTamanhoDaImagem`
+        // no `aceitarMidia`): o arquivo grande é barrado com aviso ao aluno, e
+        // não passa adiante como se tivesse sido comprimido.
         if (!ctx) {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target?.result as string);
@@ -318,6 +392,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           canvas.width = largura;
           canvas.height = Math.round(largura / proporcao);
           const ctx = canvas.getContext("2d");
+          // Sem contexto não há recorte. O cru que sai daqui é barrado adiante
+          // pelo teto de bytes do campo (`conferirTamanhoDaImagem`), então o
+          // aluno não fica com uma imagem acima do limite sem saber.
           if (!ctx) {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target?.result as string);
@@ -377,17 +454,75 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
     return ultimo;
   }
 
-  /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
-  function aceitarMidia(dataUrl: string) {
-    const aviso = conferirTamanhoDaImagem(dataUrl, "midias");
-    setAvisoMidia(aviso);
-    setNovaMidiaUrl(aviso ? "" : dataUrl);
+  /**
+   * Sobe o data URL já comprimido para o Blob e devolve a URL pública.
+   *
+   * É aqui que a imagem sai do corpo do POST: o formulário passa a carregar
+   * uma URL de ~100 caracteres em vez de megabytes de base64. Era isso que
+   * fazia duas mídias no limite (2 MB cada) somarem os 4.194.304 B exatos do
+   * `bodySizeLimit` e derrubarem o salvamento inteiro — junto com a capa, que
+   * estava válida.
+   */
+  async function subirImagem(dataUrl: string, campo: "midia" | "projeto"): Promise<string> {
+    const alunoId = usuario.alunoId;
+    if (!alunoId) {
+      throw new Error("Sua conta não está ligada a um perfil de aluno.");
+    }
+
+    const arquivo = blobDoDataUrl(dataUrl);
+    const { url } = await upload(
+      caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
+      arquivo,
+      {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        clientPayload: JSON.stringify({ campo }),
+      },
+    );
+    return url;
   }
 
-  function aceitarCapaProjeto(dataUrl: string) {
+  /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
+  async function aceitarMidia(dataUrl: string) {
+    const aviso = conferirTamanhoDaImagem(dataUrl, "midias");
+    if (aviso) {
+      setAvisoMidia(aviso);
+      setNovaMidiaUrl("");
+      return;
+    }
+
+    setAvisoMidia(null);
+    setEnviando("midia");
+    try {
+      setNovaMidiaUrl(await subirImagem(dataUrl, "midia"));
+    } catch {
+      // A imagem continua no computador do aluno: o que falhou foi o envio,
+      // não a escolha. "Tente de novo" é o que ele pode fazer a respeito.
+      setAvisoMidia("Não foi possível enviar a imagem. Tente de novo.");
+      setNovaMidiaUrl("");
+    } finally {
+      setEnviando(null);
+    }
+  }
+
+  async function aceitarCapaProjeto(dataUrl: string) {
     const aviso = conferirTamanhoDaImagem(dataUrl, "projetos");
-    setAvisoProjeto(aviso);
-    setNovoProjImg(aviso ? "" : dataUrl);
+    if (aviso) {
+      setAvisoProjeto(aviso);
+      setNovoProjImg("");
+      return;
+    }
+
+    setAvisoProjeto(null);
+    setEnviando("projeto");
+    try {
+      setNovoProjImg(await subirImagem(dataUrl, "projeto"));
+    } catch {
+      setAvisoProjeto("Não foi possível enviar a imagem. Tente de novo.");
+      setNovoProjImg("");
+    } finally {
+      setEnviando(null);
+    }
   }
 
   async function handleUploadArquivoMidia(e: React.ChangeEvent<HTMLInputElement>) {
@@ -627,6 +762,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
         <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
         <input type="hidden" name="midias" value={JSON.stringify(midias)} />
         <input type="hidden" name="stickers" value={JSON.stringify(stickers)} />
+        {/* Vídeo não é campo de presença, ao contrário da foto: o action lê o
+            campo e grava a lista que vier (vazia inclusive), então este input
+            existe para o salvamento não zerar os vídeos do aluno. */}
+        <input type="hidden" name="videos" value={JSON.stringify(videos)} />
         {/* Foto e competências são campos de presença: o action só toca a coluna
             se o campo existir no form. Por isso os dois inputs ficam aqui, fora
             de qualquer bloco condicional — esconder um deles quando vazio
@@ -994,6 +1133,22 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
             <button
               type="button"
+              id="perfil-tab-videos"
+              className={`perfil-tab-btn ${abaAtiva === "videos" ? "perfil-tab-ativo" : ""}`}
+              onClick={() => setAbaAtiva("videos")}
+              onKeyDown={aoSetasDasAbas}
+              role="tab"
+              aria-selected={abaAtiva === "videos"}
+              aria-controls="perfil-painel-videos"
+              tabIndex={abaAtiva === "videos" ? 0 : -1}
+            >
+              <IconeVideo tamanho={15} />
+              <span>Vídeos</span>
+              {videos.length > 0 ? <span className="tab-contador">{videos.length}</span> : null}
+            </button>
+
+            <button
+              type="button"
               id="perfil-tab-conta"
               className={`perfil-tab-btn ${abaAtiva === "conta" ? "perfil-tab-ativo" : ""}`}
               onClick={() => setAbaAtiva("conta")}
@@ -1267,6 +1422,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                         />
                       </label>
                     </div>
+                    {enviando === "projeto" ? (
+                      <span
+                        role="status"
+                        style={{ color: "var(--dim)", fontSize: "0.82rem", fontWeight: 700 }}
+                      >
+                        Enviando a imagem…
+                      </span>
+                    ) : null}
                     {novoProjImg ? (
                       <div className="preview-mini-wrap">
                         <img src={novoProjImg} alt="Pré-visualização" className="preview-mini-img" />
@@ -1410,6 +1573,15 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                     />
                   </label>
 
+                  {enviando === "midia" ? (
+                    <span
+                      role="status"
+                      style={{ color: "var(--dim)", fontSize: "0.82rem", fontWeight: 700 }}
+                    >
+                      Enviando a imagem…
+                    </span>
+                  ) : null}
+
                   {novaMidiaUrl ? (
                     <div className="preview-galeria-novo">
                       <img src={novaMidiaUrl} alt="Preview" className="preview-galeria-img" />
@@ -1442,6 +1614,94 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
                       <IconePlus tamanho={15} /> Incluir na Galeria
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+
+          {/* ── ABA: VÍDEOS (YouTube e Vimeo) ──────────────────────────────── */}
+          <div
+            className="perfil-tab-painel"
+            id="perfil-painel-videos"
+            role="tabpanel"
+            aria-labelledby="perfil-tab-videos"
+            style={{ display: abaAtiva === "videos" ? "block" : "none" }}
+          >
+              <div className="painel-card">
+                <header className="painel-card-topo">
+                  <h3>Vídeos do Perfil ({videos.length})</h3>
+                  <p>Demonstrações em vídeo publicadas no YouTube ou no Vimeo</p>
+                </header>
+
+                {videos.length === 0 ? (
+                  <div className="vazio-suave">
+                    <p>Nenhum vídeo no perfil ainda. Cole abaixo o link de um vídeo do YouTube ou do Vimeo.</p>
+                  </div>
+                ) : (
+                  <div className="edit-video-lista">
+                    {videos.map((v) => (
+                      <div key={`${v.tipo}-${v.id}`} className="edit-video-item">
+                        <VideoEmbed video={v} />
+                        <div className="edit-video-controles">
+                          <input
+                            type="text"
+                            className="input-texto"
+                            value={v.titulo ?? ""}
+                            onChange={(e) => definirTituloVideo(v, e.target.value)}
+                            placeholder="Título do vídeo (opcional)"
+                            aria-label="Título do vídeo"
+                          />
+                          <button
+                            type="button"
+                            className="edit-video-remover"
+                            onClick={() => removerVideo(v)}
+                            title="Remover vídeo"
+                          >
+                            <IconeLixeira tamanho={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Adicionar Novo Vídeo */}
+              <div className="painel-card">
+                <header className="painel-card-topo">
+                  <h3>+ Adicionar Vídeo</h3>
+                  <p>Até {MAX_VIDEOS} vídeos por perfil, sempre por link do YouTube ou do Vimeo</p>
+                </header>
+
+                <div className="formulario-corpo">
+                  <div className="campo-form">
+                    <span className="label-texto">Link do Vídeo</span>
+                    <div className="edit-video-linha">
+                      <input
+                        type="text"
+                        className="input-texto"
+                        value={novoVideoLink}
+                        onChange={(e) => setNovoVideoLink(e.target.value)}
+                        placeholder="Ex: https://www.youtube.com/watch?v=..."
+                      />
+                      <button
+                        type="button"
+                        className="botao botao-primario"
+                        onClick={adicionarVideo}
+                        disabled={!novoVideoLink.trim()}
+                      >
+                        <IconePlus tamanho={15} /> Adicionar
+                      </button>
+                    </div>
+                  </div>
+
+                  {avisoVideo ? (
+                    <span
+                      role="alert"
+                      style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}
+                    >
+                      ⚠ {avisoVideo}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </div>

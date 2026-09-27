@@ -43,6 +43,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: service-de-mentira
           ADM_CHAVE: chave-de-mentira
           SESSAO_SEGREDO: segredo-de-mentira
+          BLOB_READ_WRITE_TOKEN: vercel_blob_rw_de-mentira
 
   migrations:
     runs-on: ubuntu-latest

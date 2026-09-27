@@ -17,7 +17,9 @@ import {
   IconePlus,
   IconeProjetos,
 } from "@/components/Icones";
+import { VideoEmbed } from "@/components/VideoEmbed";
 import { useTravaDeFoco } from "@/lib/foco";
+import { MAX_VIDEOS } from "@/lib/limites";
 import { handleLinkedin, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -104,6 +106,10 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   const stickersBanner = stickers.filter((s) => s.alvo !== "projeto");
   const stickersDoProjeto = (projId: string) =>
     stickers.filter((s) => s.alvo === "projeto" && s.projetoId === projId);
+  // O editor já limita em `MAX_VIDEOS`; o slice aqui é defesa contra payload
+  // antigo ou maior. O filtro descarta item sem id — a coluna é JSON cru, e um
+  // `{ tipo: "youtube" }` sem id viraria um iframe apontando para lugar nenhum.
+  const videos = (aluno.videos ?? []).filter((v) => v.id).slice(0, MAX_VIDEOS);
 
   return (
     <>
@@ -347,6 +353,21 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
                       <span className="badge-tipo-midia">{m.tipo.toUpperCase()}</span>
                       {m.legenda ? <span className="legenda-midia">{m.legenda}</span> : null}
                     </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Vídeos. Depois da galeria porque o vídeo é o fecho da
+                apresentação: quem rolou até aqui já viu as imagens e o projeto.
+                A seção some quando não há vídeo, pelo mesmo motivo da galeria —
+                um bloco vazio marcaria a ausência em toda visita. */}
+            {videos.length > 0 ? (
+              <div className="breve-secao">
+                <span className="breve-secao-titulo">Vídeos do Aluno</span>
+                <div className="port-videos-grade">
+                  {videos.map((v) => (
+                    <VideoEmbed key={`${v.tipo}-${v.id}`} video={v} />
                   ))}
                 </div>
               </div>

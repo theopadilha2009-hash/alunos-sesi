@@ -77,3 +77,101 @@ a.port-midia-link:focus-visible {
   line-height: 1.35;
   color: var(--dim);
 }
+
+/* ── Vídeo do perfil ─────────────────────────────────────────────────────────
+   O card é 16/9 sempre, com ou sem player carregado: reservar a altura certa
+   desde o primeiro paint é o que evita o salto de layout quando o iframe
+   entra no clique. Antes dele, a capa é a miniatura do YouTube (ou o fundo do
+   card, no Vimeo) — ver `VideoEmbed`. */
+.video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--raio-p);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
+.video-embed-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-embed-capa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  background-color: var(--surface-3);
+  background-size: cover;
+  background-position: center;
+  /* O véu que deixa o rótulo legível sobre a miniatura NÃO mora aqui: o
+     `background-image` da miniatura vem inline, do componente, e inline vence
+     folha de estilo — um gradiente declarado neste arquivo seria descartado no
+     card que tem imagem e só apareceria no Vimeo, que é justamente o que não
+     tem. As duas camadas são compostas no `VideoEmbed`. */
+}
+
+.video-embed-capa:hover .video-embed-play,
+.video-embed-capa:focus-visible .video-embed-play {
+  transform: scale(1.08);
+  background: var(--accent);
+}
+
+.video-embed-capa:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.video-embed-play {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  transition: transform 0.2s var(--ease), background 0.2s var(--ease);
+  position: relative;
+}
+
+/* Triângulo do "play" desenhado em borda: sem SVG, sem fonte de ícone. */
+.video-embed-play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-40%, -50%);
+  border-style: solid;
+  border-width: 10px 0 10px 17px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.video-embed-rotulo {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Grade de vídeos. Coluna mais larga que a de mídia (`port-midias-grade`, 10rem)
+   porque vídeo não é miniatura: 16/9 em 10rem fica com 5,6rem de altura, e o
+   botão de play tem 56px — sobraria quase nada de imagem em volta. Duas colunas
+   no desktop, uma no celular. */
+.port-videos {
+  margin-top: 2rem;
+}
+
+.port-videos-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+}

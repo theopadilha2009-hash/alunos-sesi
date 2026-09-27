@@ -13,13 +13,15 @@ import {
   MAX_HABILIDADES,
   MAX_MIDIAS,
   MAX_PROJETOS,
+  MAX_VIDEOS,
   type Descarte,
   type MotivoDescarte,
 } from "./limites.ts";
 import { CORES_SALA } from "./cores.ts";
 import { habilidadePermitida } from "./habilidades.ts";
 import type { RepoGithub } from "./github.ts";
-import type { MidiaAluno, ProjetoAluno, StickerPerfil } from "./tipos.ts";
+import { normalizarVideo } from "./video.ts";
+import type { MidiaAluno, ProjetoAluno, StickerPerfil, VideoAluno } from "./tipos.ts";
 
 // Os tetos agora moram em limites.ts, que não importa `node:crypto` e por isso
 // pode ser lido pelo client component que barra o arquivo grande antes de subir.
@@ -314,9 +316,38 @@ export function sanitizarReposGithub(bruto: unknown): RepoGithub[] {
 export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): ProjetoAluno[] {
   if (!Array.isArray(bruto)) return [];
 
-  const sanitizados: ProjetoAluno[] = [];
+  const lista = bruto.slice(0, MAX_PROJETOS);
 
-  for (const item of bruto.slice(0, MAX_PROJETOS)) {
+  // O id vem do cliente e é o que amarra o sticker de projeto ao projeto
+  // (`sanitizarStickers` casa por `projetoId`): repetido, o mesmo sticker
+  // aparece em dois projetos. O primeiro fica, o repetido sai avisado.
+  //
+  // Os ids do cliente são reservados ANTES de gerar qualquer um, porque o
+  // gerado não pode roubar um nome que um projeto adiante vai usar. Numa
+  // passada só, `[{sem id}, {id: "proj-1"}]` dava `proj-1` ao primeiro e
+  // descartava o segundo como duplicado — o projeto legítimo caía por causa de
+  // um nome que nós é que escolhemos.
+  //
+  // Por índice, não por referência: a mesma lista pode trazer o mesmo objeto
+  // duas vezes, e aí o `Set` de referências marcaria os dois como repetidos.
+  const reservados = new Set<string>();
+  const repetidos = new Set<number>();
+  for (let i = 0; i < lista.length; i++) {
+    const item = lista[i];
+    if (!item || typeof item !== "object") continue;
+    const brutoId = (item as Record<string, unknown>).id;
+    if (typeof brutoId !== "string" || !brutoId) continue;
+
+    const id = brutoId.slice(0, 50);
+    if (reservados.has(id)) repetidos.add(i);
+    else reservados.add(id);
+  }
+
+  const sanitizados: ProjetoAluno[] = [];
+  const idsUsados = new Set(reservados);
+
+  for (let i = 0; i < lista.length; i++) {
+    const item = lista[i];
     if (!item || typeof item !== "object") continue;
     const p = item as Record<string, unknown>;
 
@@ -339,8 +370,24 @@ export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): Pro
       descartes?.push({ motivo: motivoDaImagem(p.imagem, MAX_DATA_URL_IMAGEM), campo: "projetos" });
     }
 
+    if (repetidos.has(i)) {
+      descartes?.push({ motivo: "duplicado", campo: "projetos" });
+      continue;
+    }
+
+    // Se veio do cliente, entra com o próprio id; se não, recebe o primeiro
+    // `proj-<n>` livre — que nunca é um nome de cliente, porque todos eles já
+    // entraram em `idsUsados` na passada de reserva.
+    let id = typeof p.id === "string" && p.id ? p.id.slice(0, 50) : null;
+    if (!id) {
+      let n = sanitizados.length + 1;
+      while (idsUsados.has(`proj-${n}`)) n++;
+      id = `proj-${n}`;
+    }
+    idsUsados.add(id);
+
     sanitizados.push({
-      id: typeof p.id === "string" && p.id ? p.id.slice(0, 50) : `proj-${sanitizados.length + 1}`,
+      id,
       titulo,
       descricao,
       link: link ?? undefined,
@@ -386,6 +433,60 @@ export function sanitizarMidias(bruto: unknown[], descartes?: Descarte[]): Midia
   }
 
   return sanitizadas;
+}
+
+/**
+ * Vídeos do perfil.
+ *
+ * O que entra é `{ id, tipo }` normalizado, nunca a URL colada. `normalizarVideo`
+ * é allowlist fechada de host — o oposto deliberado de `urlImagemSegura`, que
+ * aceita qualquer `https:`. A diferença é o que o valor vira na página: imagem
+ * é `<img>`, vídeo é `<iframe>`, e um iframe de origem arbitrária dentro do
+ * nosso documento é justamente o que o `frame-src` existe para impedir.
+ */
+export function sanitizarVideos(bruto: unknown[], descartes?: Descarte[]): VideoAluno[] {
+  if (!Array.isArray(bruto)) return [];
+
+  const sanitizados: VideoAluno[] = [];
+
+  for (const item of bruto.slice(0, MAX_VIDEOS)) {
+    if (!item || typeof item !== "object") continue;
+    const v = item as Record<string, unknown>;
+
+    // Aceita as duas formas: o que o editor manda é a URL crua que o aluno
+    // colou; o que já está no banco é `{ id, tipo }`. Sem o segundo ramo, um
+    // salvamento sem tocar nos vídeos apagaria todos eles.
+    const video = normalizarVideo(v.url) ?? normalizarVideo(urlDoGravado(v));
+
+    if (!video) {
+      descartes?.push({ motivo: "url-invalida", campo: "videos" });
+      continue;
+    }
+
+    const titulo = v.titulo ? sanitizarTexto(v.titulo, 80) : undefined;
+    sanitizados.push({ ...video, ...(titulo ? { titulo } : {}) });
+  }
+
+  for (let i = MAX_VIDEOS; i < bruto.length; i++) {
+    descartes?.push({ motivo: "acima-do-limite", campo: "videos" });
+  }
+
+  return sanitizados;
+}
+
+/**
+ * Reconstrói a URL a partir do que já está gravado, para o `normalizarVideo`.
+ *
+ * O vídeo no banco é `{ id, tipo }`; o normalizador só lê URL. Em vez de um
+ * segundo caminho de validação (que poderia divergir do primeiro), remonta-se
+ * a URL canônica e passa-se pelo MESMO validador. Se o id gravado não passar
+ * no regex dele, o vídeo cai — que é o certo para um registro corrompido.
+ */
+function urlDoGravado(v: Record<string, unknown>): unknown {
+  if (typeof v.id !== "string") return null;
+  if (v.tipo === "youtube") return `https://youtu.be/${v.id}`;
+  if (v.tipo === "vimeo") return `https://vimeo.com/${v.id}`;
+  return null;
 }
 
 // ── 6. Stickers do perfil (Estúdio) ─────────────────────────────────────────

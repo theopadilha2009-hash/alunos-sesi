@@ -29,6 +29,17 @@ Verificado em 2026-09-17, depois do primeiro deploy de produção:
 - **As chaves do app** (Supabase URL, anon, service_role e `ADM_CHAVE`) estão
   cadastradas como *Sensitive* em Production na Vercel. `SUPABASE_DB_URL` e
   `VERCEL_TOKEN` **não** sobem: são só da máquina, usados pelos scripts.
+- **O store de mídia** é `alunos-sesi-midia` (`store_6IwQQvygqSqI5bLH`), região
+  `gru1`, acesso **público**, criado em 2026-09-27. O host de um arquivo é
+  `<storeId>.public.blob.vercel-storage.com` — o id do store é o subdomínio, e a
+  CSP casa host exato (ver `midia.md`). A env **`BLOB_READ_WRITE_TOKEN`** está em
+  Production, Preview e Development; **o OIDC do projeto não a substitui**:
+  `handleUpload` exige o token, e sem ele a rota `/api/upload` não assina nada.
+  No CI o valor é um literal de mentira (`vercel_blob_rw_de-mentira`), só para o
+  build não quebrar na validação do módulo. O projeto está no plano **Hobby**:
+  dentro dos limites o Blob é grátis e **não cobra excedente** — ao estourar, ele
+  para de funcionar até o próximo ciclo. Cadastrar env nova continua sendo passo
+  manual no dashboard, pelo mesmo motivo do `SESSAO_SEGREDO`.
 
   Verificado em 2026-09-24: o app passou a exigir **`SESSAO_SEGREDO`** (mestre do
   HMAC das sessões, com HKDF por propósito; a `ADM_CHAVE` só abre `/adm/<chave>`).

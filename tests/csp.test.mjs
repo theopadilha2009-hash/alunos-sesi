@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { HOSTS_IMAGEM, NONCE_HEADER, montarCsp } from "../src/lib/csp.ts";
+import { HOSTS_IMAGEM, HOST_BLOB_CSP, NONCE_HEADER, montarCsp } from "../src/lib/csp.ts";
+import { HOST_BLOB } from "../src/lib/blob.ts";
 import { urlImagemSegura } from "../src/lib/seguranca.ts";
 
 const NONCE = "abc123DEF456-_ghi";
@@ -73,10 +74,41 @@ test("diretivas de bloqueio estao presentes", () => {
   assert.equal(diretiva(PROD, "base-uri"), "'self'");
   assert.equal(diretiva(PROD, "frame-ancestors"), "'none'");
   assert.equal(diretiva(PROD, "form-action"), "'self'");
-  assert.equal(diretiva(PROD, "frame-src"), "'none'");
-  assert.equal(diretiva(PROD, "connect-src"), "'self'");
+  // `frame-src` deixou de ser 'none' quando o perfil passou a aceitar vídeo —
+  // a lista fechada de hosts e o que garante que ela não virou curinga estão em
+  // `tests/video.test.mjs`, que é quem conhece os hosts do embed.
+  assert.equal(
+    diretiva(PROD, "frame-src"),
+    "https://www.youtube-nocookie.com https://player.vimeo.com",
+  );
+  assert.equal(diretiva(PROD, "connect-src"), `'self' ${HOST_BLOB_CSP}`);
   assert.equal(diretiva(PROD, "font-src"), "'self'");
   assert.equal(diretiva(PROD, "manifest-src"), "'self'");
+});
+
+test("o host do Blob em csp.ts e o mesmo de blob.ts", () => {
+  // csp.ts e blob.ts são folha e não podem se importar — import relativo sem
+  // extensão não passa pelo type-stripping do `node --test`. Quem garante que
+  // os dois literais não se separem é este teste: se um mudar sozinho, o PUT
+  // do upload direto passa a ser bloqueado em produção, e o sintoma é o
+  // `upload()` rejeitando no console com a imagem parada.
+  assert.equal(HOST_BLOB_CSP, HOST_BLOB);
+  assert.equal(diretiva(PROD, "connect-src").includes(HOST_BLOB), true);
+});
+
+test("a fonte do Blob cobre o host real que o store devolve", () => {
+  // Este teste existe porque o de igualdade acima passou enquanto os dois
+  // literais eram o MESMO valor errado. O host de um arquivo no Blob é
+  // `<storeId>.public.blob.vercel-storage.com` — o id do store é subdomínio —,
+  // e `connect-src` casa host exato. Com `https://blob.vercel-storage.com`
+  // (sem wildcard) o PUT é bloqueado no navegador, e o único sintoma é o aluno
+  // vendo "Não foi possível enviar a imagem". Descoberto no e2e de 27/09.
+  const hostReal = "6iwqqvygqsqi5blh.public.blob.vercel-storage.com";
+  const sufixo = HOST_BLOB_CSP.replace(/^https:\/\//, "").replace(/^\*/, "");
+
+  assert.equal(HOST_BLOB_CSP.startsWith("https://*."), true, "a fonte precisa de wildcard de subdomínio");
+  assert.equal(hostReal.endsWith(sufixo), true, `${hostReal} não é coberto por ${HOST_BLOB_CSP}`);
+  assert.equal(sufixo.split(".").length >= 3, true, "o sufixo precisa ser um domínio de verdade, não um TLD");
 });
 
 test("worker-src libera o service worker", () => {

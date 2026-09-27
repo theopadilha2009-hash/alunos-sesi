@@ -41,16 +41,36 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   ARIA que a auditoria tinha acabado de confirmar inteira. Se alguém for
   "consertar" isso, é aqui que para.
 
+- **O teto de 4 MB do POST do editor foi resolvido em 2026-09-27**, não
+  contornado. Ele era o limite real da edição porque a mídia viajava em base64 no
+  corpo do Server Action; agora o navegador manda o arquivo direto para o Vercel
+  Blob (`blobDoDataUrl` e `caminhoDaMidia`, em `src/lib/blob.ts`, mais a rota
+  `/api/upload`) e o corpo carrega só a URL.
+  Só galeria e capa de projeto migraram: foto (120 KB), capa (220 KB) e stickers
+  (2 MB de soma) continuam data URL e somam ~2,4 MB, abaixo do teto. Ver
+  `midia.md`.
+- **A Onda 2 destravou porque as duas premissas eram falsas** (2026-09-27). O
+  levantamento dizia que criar o store "tem custo por uso" e que migrar o acervo
+  em base64 seria difícil. Medido: o projeto está no plano **Hobby**, onde o Blob
+  é grátis dentro dos limites e **não cobra excedente** (para de funcionar até o
+  próximo ciclo), e o banco **não tinha um único byte de base64 de imagem** — as
+  mídias eram URLs `http`, e `foto_url`/`banner_url` estavam NULL para todos os 13
+  alunos. Não houve migração a fazer.
+
 **Continua aberto:**
 
-- **O teto de corpo do POST do editor é 11,6× o que o Next aceita** (medido em
-  27/09, no review do PR #21). A soma máxima teórica dos campos é 46,3 MiB
-  contra o `bodySizeLimit` de 4 MB (`next.config.ts`), e não é preciso chegar
-  perto: **duas mídias no teto de 2 MB somam exatamente 4.194.304 B**, e com o
-  multipart já estoura. Quando estoura, o Next recusa **antes da action** — sem
-  descarte e sem mensagem: o aluno cai no error boundary ("Algo inesperado
-  aconteceu") e perde a edição inteira, inclusive a capa que estava válida. Não
-  existe guarda de soma no cliente; `conferirTamanhoDaImagem` mede item a item.
+- **A busca de GIF no Giphy continua bloqueada por insumo externo** (27/09). Não
+  é decisão de design nem trabalho de código: falta a **chave da API**
+  (`developers.giphy.com`, plano gratuito), que só o Théo pode criar. Sem ela, a
+  onda de GIF entrega só a biblioteca curada de presets do `StickerCanvas`. A
+  chave vai numa env nova — o `scripts/vercel-env.sh` do repo só faz
+  `pull`/`list`/`deploy`, então cadastrar é passo manual no dashboard.
+- **Upload de vídeo próprio (ClipeCurto): decidido NÃO fazer** (27/09). O embed
+  de YouTube/Vimeo cobre o caso de uso, e o risco é desproporcional: no plano
+  Hobby o Blob **para de funcionar** ao estourar o limite (1 GB de storage /
+  10 GB de transfer) e não cobra excedente — um vídeo pesado derrubaria o store
+  inteiro, inclusive as imagens do perfil. *(Comportamento do plano Hobby
+  registrado de memória; não medido no repo.)* Reabrir só se o plano subir.
 - **O caminho novo do perfil nunca foi exercido com dado real** (25/09): ninguém
   editou o perfil ainda, então `foto_url` e `habilidades` estão NULL para todos
   os alunos e o upload de foto / escolha de competências só foi coberto por

@@ -1,0 +1,34 @@
+-- 013_videos_do_aluno.sql — vídeo de projeto, hospedado no YouTube ou no Vimeo.
+--
+-- O perfil só mostrava imagem estática. Para um projeto de robótica ou um app,
+-- o vídeo é a apresentação que a imagem não dá — e o aluno não tinha onde pôr
+-- o link que ele já mandou no grupo da turma.
+--
+-- O que a coluna guarda NÃO é a URL que o aluno colou. É uma lista de
+-- `{ id, tipo, titulo? }`:
+--
+--   [{"id": "dQw4w9WgXcQ", "tipo": "youtube", "titulo": "Braço robótico"}]
+--
+-- A diferença não é cosmética. `youtu.be/x?si=...` e `watch?v=x&t=42` são o
+-- mesmo vídeo; guardar a URL original levaria o parâmetro de rastreio de
+-- compartilhamento para o banco e quebraria o embed no dia em que a plataforma
+-- mudasse o formato do link. Guardando só o id, o endereço do `<iframe>` é
+-- sempre montado por nós, a partir de uma allowlist fechada de dois hosts.
+--
+-- Por que allowlist fechada aqui, e `https:` aberto em `midias`: o que a mídia
+-- vira na página é `<img>`, e imagem não executa nada. O vídeo vira `<iframe>`
+-- — navegação de outra origem dentro do nosso documento —, e é exatamente o
+-- que o `frame-src` da CSP existe para restringir. Aceitar "qualquer https" ali
+-- esvaziaria a diretiva.
+--
+-- Nasce `'[]'` e NOT NULL, como `midias` e `projetos` (003): lista vazia é
+-- "nenhum vídeo", e o app não precisa tratar NULL em cada leitura. Os 13 alunos
+-- existentes acordam com zero vídeos, sem backfill.
+--
+-- Sem CHECK: o que entra já passou por `normalizarVideo` no servidor, que é
+-- allowlist de host E regex de id. Um CHECK aqui teria que reimplementar as
+-- duas — e um CHECK que discorda do app é pior que CHECK nenhum, porque recusa
+-- dado que o app aceita. Espelha a decisão de `banner_url` (012).
+
+ALTER TABLE public.alunos
+  ADD COLUMN IF NOT EXISTS videos jsonb NOT NULL DEFAULT '[]'::jsonb;
