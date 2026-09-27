@@ -103,7 +103,7 @@ autenticar nada.
 | `src/app/` | rotas, Server Actions (`acoes-crm.ts`, `adm/acoes.ts`) e Route Handlers | orquestra; não guarda regra de domínio |
 | `src/lib/` | domínio e acesso a dados | nada de JSX; nenhum componente importa o Supabase direto |
 | `src/components/` | UI | recebe props prontas; não fala com o banco |
-| `src/sql/` | schema versionado, em 9 migrations | numeradas na ordem de aplicação |
+| `src/sql/` | schema versionado, em 13 migrations | numeradas na ordem de aplicação |
 | `tests/` | testes das funções puras | roda no `node --test`, sem banco |
 
 A regra que sustenta a divisão: **tela não conhece Supabase**. Quem lê e escreve

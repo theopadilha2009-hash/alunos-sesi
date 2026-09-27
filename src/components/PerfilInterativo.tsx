@@ -30,11 +30,17 @@ import type { AlunoNaTela } from "@/lib/tipos";
 type Props = {
   aluno: AlunoNaTela;
   salaNome: string | null;
+  /**
+   * Deep-link `?curriculo=1`. O botão "Mini-Currículo (A4)" do cartão NFC mora
+   * em `/u/[slug]` e aponta para cá com esse parâmetro: sem isto, o aluno
+   * clicava e caía no perfil sem nada abrir.
+   */
+  abrirCurriculo?: boolean;
 };
 
-export function PerfilInterativo({ aluno, salaNome }: Props) {
+export function PerfilInterativo({ aluno, salaNome, abrirCurriculo = false }: Props) {
   const [crachaAberto, setCrachaAberto] = useState(false);
-  const [curriculoAberto, setCurriculoAberto] = useState(false);
+  const [curriculoAberto, setCurriculoAberto] = useState(abrirCurriculo);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
   const [estrelas, setEstrelas] = useState(aluno.estrelas);

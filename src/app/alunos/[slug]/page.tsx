@@ -42,8 +42,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PerfilPage({ params }: Props) {
+export default async function PerfilPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  // Deep-link do botão "Mini-Currículo (A4)" do cartão NFC (`/u/[slug]`). Sem
+  // isto o parâmetro chegava e morria: o aluno clicava e caía aqui sem nada
+  // abrir, com o botão prometendo um PDF.
+  const { curriculo } = await searchParams;
 
   const [aluno, salas] = await Promise.all([alunoPorSlug(slug), listarSalas()]);
   // 404, não "perfil em análise": para quem está de fora, um pendente não
@@ -67,6 +71,7 @@ export default async function PerfilPage({ params }: Props) {
             corSala: corDaSala(sala ?? ""),
           }}
           salaNome={sala}
+          abrirCurriculo={curriculo === "1"}
         />
       </main>
 
