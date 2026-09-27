@@ -146,9 +146,9 @@ const REGEX_LOCAL_EMAIL = /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
  *
  * A checagem é `endsWith` do sufixo COMPLETO, com o `@` dentro, e depois a parte
  * local tem que passar no regex — que rejeita `@`. É o par que fecha
- * `aluno@estudante.sesisenai.org.evil.com` (não termina com o sufixo) e
- * `aluno@outro.com@estudante.sesisenai.org` (termina, mas a parte local tem um
- * `@`). Só checar o final da string deixaria o segundo passar.
+ * `aluno@estudante.sesisenai.org.br.evil.com` (não termina com o sufixo) e
+ * `aluno@outro.com@estudante.sesisenai.org.br` (termina, mas a parte local tem
+ * um `@`). Só checar o final da string deixaria o segundo passar.
  */
 export function sanitizarEmail(bruto: unknown): string | null {
   if (typeof bruto !== "string") return null;

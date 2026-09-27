@@ -5,6 +5,7 @@ import { cadastroAction, loginAction, type EstadoAcaoCrm } from "@/app/acoes-crm
 import { Roseta } from "@/components/Roseta";
 import { TemaToggle } from "@/components/TemaToggle";
 import { aoSetasDasAbas } from "@/lib/abas";
+import { DOMINIO_EMAIL_ESCOLA } from "@/lib/limites";
 
 export function LoginTela() {
   const [modo, setModo] = useState<"login" | "cadastro">("login");
@@ -167,8 +168,10 @@ export function LoginTela() {
                   required
                 />
                 {/* O e-mail institucional é o login natural do aluno, mas o
-                    cadastro o recusava — quem tentasse não entendia o motivo. */}
-                <span className="dica-campo">Pode ser o seu e-mail da escola.</span>
+                    cadastro o recusava — quem tentasse não entendia o motivo.
+                    O domínio vai escrito para o aluno não digitar o errado: o
+                    `alunos.email` do perfil exige exatamente este sufixo. */}
+                <span className="dica-campo">Pode ser o seu e-mail da escola (@{DOMINIO_EMAIL_ESCOLA}).</span>
               </div>
 
               <div className="campo">
