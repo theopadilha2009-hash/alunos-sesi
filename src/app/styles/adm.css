@@ -294,3 +294,63 @@
   font-weight: 600;
 }
 
+/* As lacunas de perfil da turma, cada uma um atalho para a lista já filtrada. */
+.sala-lacunas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+.sala-lacuna-btn {
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--amarelo) 45%, var(--line));
+  background: color-mix(in srgb, var(--amarelo) 10%, transparent);
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+}
+
+.sala-lacuna-btn:hover {
+  border-color: var(--amarelo);
+  background: color-mix(in srgb, var(--amarelo) 22%, transparent);
+}
+
+.sala-lacuna-ok {
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--verde);
+}
+
+.adm-filtro-ativo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--raio-p);
+  border: 1px solid color-mix(in srgb, var(--amarelo) 40%, var(--line));
+  background: color-mix(in srgb, var(--amarelo) 8%, transparent);
+  font-size: 0.85rem;
+}
+
+.adm-filtro-ativo button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+

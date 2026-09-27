@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { alternar, aprovarAluno, criarAluno, importarLista, mudarSalaDoAluno, removerAluno } from "@/app/adm/acoes";
 import { ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
@@ -21,6 +21,7 @@ import {
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Avatar } from "@/components/Avatar";
 import { aoSetasDasAbas } from "@/lib/abas";
+import { contarLacunas, filtrarPorLacuna, ROTULO_LACUNA, type Lacuna } from "@/lib/lacunas";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -34,6 +35,7 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
   const [subAba, setSubAba] = useState<"alunos" | "importar" | "novo" | "salas">("alunos");
   const [busca, setBusca] = useState("");
   const [salaFiltro, setSalaFiltro] = useState<string>("todas");
+  const [lacuna, setLacuna] = useState<Lacuna | null>(null);
 
   // Ações de formulário com useActionState
   const [estadoImportar, formImportar, importando] = useActionState(importarLista, ESTADO_INICIAL);
@@ -41,7 +43,7 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
 
   // Alunos filtrados no painel
   const alunosFiltrados = useMemo(() => {
-    return alunos.filter((a) => {
+    const porTextoESala = alunos.filter((a) => {
       const matchBusca =
         !busca.trim() ||
         a.nome.toLowerCase().includes(busca.toLowerCase()) ||
@@ -50,7 +52,36 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
       const matchSala = salaFiltro === "todas" || a.sala_id === salaFiltro || a.sala === salaFiltro;
       return matchBusca && matchSala;
     });
-  }, [alunos, busca, salaFiltro]);
+    return filtrarPorLacuna(porTextoESala, lacuna);
+  }, [alunos, busca, salaFiltro, lacuna]);
+
+  const salaAtiva = lacuna ? salas.find((s) => s.id === salaFiltro)?.nome : null;
+  const regraAtiva = lacuna ? ROTULO_LACUNA[lacuna] : null;
+
+  /**
+   * O card de sala não cabe na tela junto da tabela, então o filtro precisa
+   * trazer o ADM de volta: sem isto a aba troca e ele fica olhando para o
+   * rodapé da seção anterior, sem ver as linhas que acabou de pedir.
+   *
+   * O scroll sai de um efeito, e não do próprio clique, porque no clique a
+   * tabela ainda está com `display: none` — o `getElementById` acharia a caixa
+   * escondida e não rolaria nada.
+   */
+  const [rolarParaLista, setRolarParaLista] = useState(0);
+
+  useEffect(() => {
+    if (rolarParaLista === 0) return;
+    document
+      .getElementById("adm-painel-alunos")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [rolarParaLista]);
+
+  function abrirLacuna(salaId: string, chave: Lacuna) {
+    setSalaFiltro(salaId);
+    setLacuna(chave);
+    setSubAba("alunos");
+    setRolarParaLista((n) => n + 1);
+  }
 
   const totalFixados = alunos.filter((a) => a.fixado).length;
   const totalDestaques = alunos.filter((a) => a.destaque).length;
@@ -215,6 +246,20 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
               </select>
             </div>
           </div>
+
+          {/* Filtro vindo do card de sala — diz o que está escondido e como sair */}
+          {regraAtiva ? (
+            <div className="adm-filtro-ativo">
+              <span>
+                Mostrando <strong>{alunosFiltrados.length}</strong>{" "}
+                {alunosFiltrados.length === 1 ? "aluno" : "alunos"} {regraAtiva}
+                {salaAtiva ? ` em ${salaAtiva}` : ""}.
+              </span>
+              <button type="button" onClick={() => setLacuna(null)}>
+                Limpar filtro
+              </button>
+            </div>
+          ) : null}
 
           {/* Tabela Administrativa de Alunos */}
           <div className="tabela-container adm-tabela-wrap">
@@ -589,6 +634,38 @@ export function PainelAdmIntegrado({ alunos, salas, onAbrirCracha, onSelecionarA
                         {alunosDaSala.filter((a) => a.linkedin || a.github).length} com redes
                       </span>
                     </div>
+
+                    {/* A lacuna só aparece quando existe: "0 sem LinkedIn" é
+                        ruído, e o que o ADM quer saber é onde falta o quê. */}
+                    {(() => {
+                      const abertas = contarLacunas(alunosDaSala).filter((l) => l.quantos > 0);
+
+                      if (abertas.length === 0) {
+                        return (
+                          <p className="sala-lacuna-ok">
+                            {alunosDaSala.length === 0
+                              ? "Turma sem alunos cadastrados."
+                              : "Turma completa: todos com LinkedIn, GitHub e bio."}
+                          </p>
+                        );
+                      }
+
+                      return (
+                        <div className="sala-lacunas">
+                          {abertas.map((l) => (
+                            <button
+                              key={l.chave}
+                              type="button"
+                              className="sala-lacuna-btn"
+                              onClick={() => abrirLacuna(s.id, l.chave)}
+                              aria-label={`Ver os ${l.quantos} alunos de ${s.nome} ${ROTULO_LACUNA[l.chave]}`}
+                            >
+                              {l.quantos} {ROTULO_LACUNA[l.chave]}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}
