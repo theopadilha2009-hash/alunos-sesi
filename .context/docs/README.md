@@ -10,6 +10,7 @@ Welcome to the repository knowledge base. Start with the project overview, then 
 - [Glossary & Domain Concepts](./glossary.md)
 - [Security & Compliance Notes](./security.md)
 - [Tooling & Productivity Guide](./tooling.md)
+- [Mídia (Blob e vídeo)](./midia.md)
 
 ## Repository Snapshot
 - `AGENTS.md/`
@@ -34,3 +35,4 @@ Welcome to the repository knowledge base. Start with the project overview, then 
 | Glossary & Domain Concepts | `glossary.md` | Business terminology, user personas, domain rules |
 | Security & Compliance Notes | `security.md` | Auth model, secrets management, compliance requirements |
 | Tooling & Productivity Guide | `tooling.md` | CLI scripts, IDE configs, automation workflows |
+| Mídia | `midia.md` | Vercel Blob, upload direto, embed de YouTube/Vimeo, `frame-src` |
