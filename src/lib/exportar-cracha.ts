@@ -1,5 +1,6 @@
 "use client";
 
+import { matriculaDe } from "./identidade";
 import { iniciais } from "./links";
 import type { AlunoNaTela } from "./tipos";
 
@@ -254,8 +255,9 @@ export async function baixarCrachaPng(
     deslocamento += b + 4;
   }
 
-  // Matrícula do Aluno
-  const matricula = `SESI-${aluno.slug.toUpperCase().slice(0, 12)}-${(aluno.estrelas || 0).toString().padStart(2, "0")}`;
+  // Matrícula do Aluno — a MESMA que o `CrachaModal` desenha na tela. Antes
+  // cada um tinha a sua fórmula, e o PNG baixado saía com outro número.
+  const matricula = matriculaDe(aluno);
   ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
   ctx.font = "bold 14px monospace";
   ctx.textAlign = "left";
