@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { hashCodigo, normalizarCodigo } from "./ativacao";
 import { fold } from "./busca";
 import { alunoPorId } from "./dados";
 import { logger } from "./debug";
@@ -59,6 +60,74 @@ export async function obterSessao(): Promise<UsuarioSessao | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * As regras de senha, num lugar só.
+ *
+ * Elas já divergiram uma vez: o cadastro aceitava 4 caracteres e a troca de
+ * senha exigia 8, então quem se cadastrou com senha curta não conseguia nem
+ * repetir o próprio padrão depois. Cadastro e ativação usam esta função.
+ */
+function problemaDaSenha(senha: string, username: string): string | null {
+  if (senha.length < 8 || senha.length > 100) {
+    return "A senha deve ter entre 8 e 100 caracteres.";
+  }
+  if (senha.toLowerCase() === username) {
+    return "A senha não pode ser igual ao nome de usuário.";
+  }
+  return null;
+}
+
+/**
+ * Monta a sessão a partir da linha de `usuarios`, já com os dados do aluno.
+ *
+ * Serve aos dois caminhos que emitem sessão para um aluno: o login e a ativação
+ * por código.
+ *
+ * O e-mail ECOA o que está em `alunos.email` — não é calculado. Antes este
+ * trecho fabricava um endereço (`username@aluno.sesisp.org.br`, que nem é o
+ * domínio da escola) para todo mundo, com um caso especial chumbado para o
+ * `theo1234`. O aluno via no perfil um e-mail que não existia.
+ */
+async function sessaoDe(usuario: {
+  id: string;
+  username: string;
+  role: string;
+  aluno_id: string | null;
+}): Promise<UsuarioSessao> {
+  let nome = usuario.username;
+  let sala: string | null = null;
+  let email: string | null = null;
+  let aprovado = true;
+
+  if (usuario.aluno_id) {
+    const aluno = await alunoPorId(usuario.aluno_id);
+    if (aluno) {
+      nome = aluno.nome;
+      email = aluno.email;
+      aprovado = aluno.aprovado;
+      if (aluno.sala_id) {
+        const { data: s } = await clienteAdmin()
+          .from("salas")
+          .select("nome")
+          .eq("id", aluno.sala_id)
+          .maybeSingle();
+        if (s?.nome) sala = s.nome;
+      }
+    }
+  }
+
+  return {
+    id: usuario.id,
+    username: usuario.username,
+    role: usuario.role as UsuarioSessao["role"],
+    alunoId: usuario.aluno_id,
+    nome,
+    sala,
+    email,
+    aprovado,
+  };
 }
 
 /** Realiza login com username e senha */
@@ -136,39 +205,7 @@ export async function autenticarUsuario(
   await limparLimite(`login:${username}`);
   logger.info("AUTH", `Usuário autenticado com sucesso: ${username} (role: ${usuarioDb.role})`);
 
-  let nome = usuarioDb.username;
-  let sala = null;
-  // O e-mail da sessão ECOA o que está em `alunos.email` — não é calculado.
-  // Antes esta linha fabricava um endereço (`username@aluno.sesisp.org.br`, que
-  // nem é o domínio da escola) para todo mundo, com um caso especial chumbado
-  // para o `theo1234`. O aluno via no perfil um e-mail que não existia.
-  let email: string | null = null;
-  let aprovado = true;
-  if (usuarioDb.aluno_id) {
-    const aluno = await alunoPorId(usuarioDb.aluno_id);
-    if (aluno) {
-      nome = aluno.nome;
-      email = aluno.email;
-      aprovado = aluno.aprovado;
-      if (aluno.sala_id) {
-        const { data: s } = await db.from("salas").select("nome").eq("id", aluno.sala_id).maybeSingle();
-        if (s?.nome) {
-          sala = s.nome;
-        }
-      }
-    }
-  }
-
-  const sessao: UsuarioSessao = {
-    id: usuarioDb.id,
-    username: usuarioDb.username,
-    role: usuarioDb.role,
-    alunoId: usuarioDb.aluno_id,
-    nome,
-    sala,
-    email,
-    aprovado,
-  };
+  const sessao = await sessaoDe(usuarioDb);
 
   const jar = await cookies();
   jar.set(COOKIE_USUARIO, criarTokenSessao(sessao), opcoesCookie(TRINTA_DIAS));
@@ -213,14 +250,9 @@ export async function registrarUsuario(dados: {
   if (problemaUsername) {
     return { ok: false, mensagem: problemaUsername };
   }
-  // 8 caracteres, o mesmo mínimo da troca de senha em alterarSegurancaAction.
-  // Antes o cadastro aceitava 4 e a troca exigia 8 — quem se cadastrou com
-  // senha curta não conseguia nem repetir o próprio padrão depois.
-  if (senha.length < 8 || senha.length > 100) {
-    return { ok: false, mensagem: "A senha deve ter entre 8 e 100 caracteres." };
-  }
-  if (senha.toLowerCase() === username) {
-    return { ok: false, mensagem: "A senha não pode ser igual ao nome de usuário." };
+  const problemaSenha = problemaDaSenha(senha, username);
+  if (problemaSenha) {
+    return { ok: false, mensagem: problemaSenha };
   }
   if (nome.length < 2) {
     return { ok: false, mensagem: "Informe o seu nome completo." };
@@ -326,6 +358,122 @@ export async function registrarUsuario(dados: {
     aprovado: false,
   };
 
+  const jar = await cookies();
+  jar.set(COOKIE_USUARIO, criarTokenSessao(sessao), opcoesCookie(TRINTA_DIAS));
+  return { ok: true, usuario: sessao };
+}
+
+/**
+ * Resgata o código de ativação: o aluno que JÁ está na planilha define a
+ * própria senha e assume o perfil que o ADM importou.
+ *
+ * É o caminho que faltava. Sem ele, o aluno importado não tem como entrar no
+ * próprio perfil, e o auto-cadastro dele cria uma SEGUNDA linha, pendente,
+ * deixando a primeira órfã — cada cadastro novo sujava mais a base.
+ *
+ * A conta já existe com `senha_hash = '!bloqueado'`, que `verificarSenha`
+ * recusa, então ela não autentica até este resgate. O código morre no primeiro
+ * uso: o UPDATE abaixo exige que o hash ainda esteja na linha.
+ */
+export async function ativarAcessoComCodigo(dados: {
+  codigo: string;
+  username: string;
+  senha: string;
+}): Promise<{ ok: boolean; mensagem?: string; usuario?: UsuarioSessao }> {
+  const codigo = normalizarCodigo(dados.codigo);
+  const username = dados.username.trim().toLowerCase();
+  const senha = dados.senha.trim();
+
+  // Antes de qualquer consulta: o código tem 40 bits sorteados, o que deixa de
+  // ser muito quando se pode tentar sem custo nenhum.
+  const ip = await ipDoCliente();
+  const balde = ip ? `ativacao:ip:${ip}` : "ativacao:global";
+  const limite = await limitar(balde, 10, 15 * 60 * 1000);
+  if (!limite.permitido) {
+    return { ok: false, mensagem: "Muitas tentativas seguidas. Aguarde alguns minutos." };
+  }
+
+  // `normalizarCodigo` devolve "" quando o que sobrou não tem 8 caracteres —
+  // é o que separa "digitou errado" de "código não existe", para a mensagem
+  // apontar o problema certo.
+  if (!codigo) {
+    return { ok: false, mensagem: "Código incompleto. Confira com o seu professor." };
+  }
+
+  const problemaUsername = validarUsername(username);
+  if (problemaUsername) {
+    return { ok: false, mensagem: problemaUsername };
+  }
+  const problemaSenha = problemaDaSenha(senha, username);
+  if (problemaSenha) {
+    return { ok: false, mensagem: problemaSenha };
+  }
+
+  const db = clienteAdmin();
+
+  const { data: pendente } = await db
+    .from("usuarios")
+    .select("id,aluno_id,codigo_expira_em")
+    .eq("codigo_hash", hashCodigo(codigo))
+    .maybeSingle();
+
+  if (!pendente) {
+    return {
+      ok: false,
+      mensagem: "Código inválido ou já usado. Peça um novo ao seu professor.",
+    };
+  }
+
+  if (
+    !pendente.codigo_expira_em ||
+    new Date(pendente.codigo_expira_em as string).getTime() <= Date.now()
+  ) {
+    return { ok: false, mensagem: "Este código expirou. Peça um novo ao seu professor." };
+  }
+
+  // O username escolhido pode já ser de outra conta.
+  const { data: emUso } = await db
+    .from("usuarios")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+  if (emUso && emUso.id !== pendente.id) {
+    return { ok: false, mensagem: "Este nome de usuário já está em uso. Escolha outro." };
+  }
+
+  const hash = await hashSenha(senha);
+
+  // O segundo `.eq("codigo_hash", …)` é o que faz o resgate ser de uso único, e
+  // sem uma janela entre ler e escrever: dois pedidos simultâneos com o mesmo
+  // código, só o primeiro encontra a linha ainda com o hash. O outro não acha
+  // nada e cai na mensagem de "já usado", em vez de sobrescrever a senha que o
+  // primeiro acabou de definir.
+  const { data: ativado } = await db
+    .from("usuarios")
+    .update({
+      senha_hash: hash,
+      username,
+      codigo_hash: null,
+      codigo_expira_em: null,
+    })
+    .eq("id", pendente.id)
+    .eq("codigo_hash", hashCodigo(codigo))
+    .select("id,username,role,aluno_id")
+    .maybeSingle();
+
+  if (!ativado) {
+    return {
+      ok: false,
+      mensagem: "Código inválido ou já usado. Peça um novo ao seu professor.",
+    };
+  }
+
+  // Deu certo: zera o balde. Diferente do login, aqui não há varredura a
+  // proteger — o código que existia deixou de existir.
+  await limparLimite(balde);
+  logger.info("AUTH", `Acesso ativado por código: ${username}`);
+
+  const sessao = await sessaoDe(ativado);
   const jar = await cookies();
   jar.set(COOKIE_USUARIO, criarTokenSessao(sessao), opcoesCookie(TRINTA_DIAS));
   return { ok: true, usuario: sessao };

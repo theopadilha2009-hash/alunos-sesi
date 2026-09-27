@@ -44,6 +44,8 @@ type Props = {
   retrato: RetratoSala[];
   meusVotos: string[];
   desafiosIniciais?: DesafioHackathon[];
+  /** `aluno_id` de quem já tem login — o painel só oferece código a quem não tem. */
+  comAcesso?: string[];
 };
 
 type AbaAtiva = "portfolio" | "projetos" | "desafios" | "tabelas" | "perfil" | "adm";
@@ -55,6 +57,7 @@ export function CrmApp({
   retrato,
   meusVotos,
   desafiosIniciais = [],
+  comAcesso = [],
 }: Props) {
   const [aba, setAba] = useState<AbaAtiva>("portfolio");
   const [desafios, setDesafios] = useState<DesafioHackathon[]>(desafiosIniciais);
@@ -884,6 +887,7 @@ export function CrmApp({
             <PainelAdmIntegrado
               alunos={naTela}
               salas={salas}
+              comAcesso={comAcesso}
               onAbrirCracha={(a) => setAlunoCracha(a)}
               onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
             />

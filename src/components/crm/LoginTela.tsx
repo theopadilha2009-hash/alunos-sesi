@@ -1,14 +1,19 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { cadastroAction, loginAction, type EstadoAcaoCrm } from "@/app/acoes-crm";
+import {
+  ativarAcessoAction,
+  cadastroAction,
+  loginAction,
+  type EstadoAcaoCrm,
+} from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
 import { TemaToggle } from "@/components/TemaToggle";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { DOMINIO_EMAIL_ESCOLA } from "@/lib/limites";
 
 export function LoginTela() {
-  const [modo, setModo] = useState<"login" | "cadastro">("login");
+  const [modo, setModo] = useState<"login" | "cadastro" | "ativar">("login");
 
   const [estadoLogin, formActionLogin, carregandoLogin] = useActionState(loginAction, {
     ok: false,
@@ -16,6 +21,11 @@ export function LoginTela() {
 
   const [estadoCadastro, formActionCadastro, carregandoCadastro] = useActionState(
     cadastroAction,
+    { ok: false },
+  );
+
+  const [estadoAtivar, formActionAtivar, carregandoAtivar] = useActionState(
+    ativarAcessoAction,
     { ok: false },
   );
 
@@ -38,7 +48,9 @@ export function LoginTela() {
           <p className="login-subtexto">
             {modo === "login"
               ? "Entre com sua conta para acessar seu portfólio, projetos e gerenciar criações."
-              : "Crie seu acesso direto para montar seu perfil personalizado no portfólio."}
+              : modo === "cadastro"
+                ? "Crie seu acesso direto para montar seu perfil personalizado no portfólio."
+                : "Você já está na lista da turma: use o código do seu professor para assumir o seu perfil."}
           </p>
         </header>
 
@@ -69,6 +81,19 @@ export function LoginTela() {
             tabIndex={modo === "cadastro" ? 0 : -1}
           >
             Criar Conta
+          </button>
+          <button
+            type="button"
+            id="login-tab-ativar"
+            className={`login-aba-btn ${modo === "ativar" ? "login-aba-ativa" : ""}`}
+            onClick={() => setModo("ativar")}
+            onKeyDown={aoSetasDasAbas}
+            role="tab"
+            aria-selected={modo === "ativar"}
+            aria-controls="login-painel-ativar"
+            tabIndex={modo === "ativar" ? 0 : -1}
+          >
+            Tenho um Código
           </button>
         </div>
 
@@ -192,6 +217,74 @@ export function LoginTela() {
               disabled={carregandoCadastro}
             >
               {carregandoCadastro ? "Criando conta..." : "Criar Conta & Personalizar Perfil →"}
+            </button>
+          </form>
+        </div>
+
+        <div
+          id="login-painel-ativar"
+          role="tabpanel"
+          aria-labelledby="login-tab-ativar"
+          style={{ display: modo === "ativar" ? "block" : "none" }}
+        >
+          <form action={formActionAtivar} className="login-form">
+            {estadoAtivar.mensagem ? (
+              <p className="recado recado-erro" role="alert">
+                {estadoAtivar.mensagem}
+              </p>
+            ) : null}
+
+            <div className="campo">
+              <label htmlFor="atv-codigo">Código de Ativação</label>
+              <input
+                id="atv-codigo"
+                name="codigo"
+                type="text"
+                placeholder="SESI-XXXX-XXXX"
+                required
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+              />
+              {/* O código é ditado pelo professor. O alfabeto não tem I, L, O
+                  nem U justamente para não haver dúvida em voz alta, e o que
+                  o aluno digitar no lugar delas é dobrado de volta. */}
+              <span className="dica-campo">
+                Peça o código ao seu professor. Ele expira em 7 dias.
+              </span>
+            </div>
+
+            <div className="campo">
+              <label htmlFor="atv-user">Usuário de Login</label>
+              <input
+                id="atv-user"
+                name="username"
+                type="text"
+                placeholder="Seu usuário ou e-mail"
+                required
+                autoComplete="username"
+              />
+              <span className="dica-campo">Pode ser o seu e-mail da escola (@{DOMINIO_EMAIL_ESCOLA}).</span>
+            </div>
+
+            <div className="campo">
+              <label htmlFor="atv-pass">Crie sua Senha</label>
+              <input
+                id="atv-pass"
+                name="senha"
+                type="password"
+                placeholder="Mínimo de 8 caracteres"
+                required
+                autoComplete="new-password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="botao botao-primario-grande w-full"
+              disabled={carregandoAtivar}
+            >
+              {carregandoAtivar ? "Ativando..." : "Ativar meu acesso →"}
             </button>
           </form>
         </div>

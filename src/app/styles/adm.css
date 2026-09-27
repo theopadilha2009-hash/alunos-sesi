@@ -354,3 +354,41 @@
   cursor: pointer;
 }
 
+
+/* O código de ativação, logo depois de ser emitido.
+   Aparece uma vez só: o banco guarda o hash, não o código. */
+.adm-codigo-ativacao {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--raio-p);
+  border: 1px solid color-mix(in srgb, var(--ciano) 45%, var(--line));
+  background: color-mix(in srgb, var(--ciano) 8%, transparent);
+  color: var(--text);
+}
+
+.adm-codigo-ativacao strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.adm-codigo-valor {
+  display: block;
+  margin: 0.3rem 0 0.45rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ciano);
+  /* O código é lido em voz alta e copiado à mão: selecionar com um clique
+     duplo evita o erro de arrastar e pegar só metade. */
+  user-select: all;
+}
+
+.adm-codigo-ativacao .dica-campo {
+  display: block;
+}

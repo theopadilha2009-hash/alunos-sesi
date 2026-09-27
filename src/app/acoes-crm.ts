@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import {
+  ativarAcessoComCodigo,
   autenticarUsuario,
   COOKIE_USUARIO,
   criarTokenSessao,
@@ -74,6 +75,26 @@ export async function cadastroAction(
     return { ok: true, usuario: res.usuario };
   }
   return { ok: false, mensagem: res.mensagem ?? "Falha ao cadastrar." };
+}
+
+/**
+ * Terceiro caminho para entrar: o aluno que já está na planilha resgata o
+ * código que o ADM emitiu e define a própria senha.
+ */
+export async function ativarAcessoAction(
+  _prev: EstadoAcaoCrm,
+  formData: FormData,
+): Promise<EstadoAcaoCrm> {
+  const codigo = String(formData.get("codigo") ?? "");
+  const username = String(formData.get("username") ?? "");
+  const senha = String(formData.get("senha") ?? "");
+
+  const res = await ativarAcessoComCodigo({ codigo, username, senha });
+  if (res.ok) {
+    revalidatePath("/");
+    return { ok: true, usuario: res.usuario };
+  }
+  return { ok: false, mensagem: res.mensagem ?? "Não foi possível ativar o acesso." };
 }
 
 export async function logoutAction(): Promise<void> {

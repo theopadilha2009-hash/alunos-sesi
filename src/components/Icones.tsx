@@ -37,6 +37,14 @@ function Base({
   );
 }
 
+export const IconeChave = ({ tamanho = 16, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <circle cx="7.5" cy="15.5" r="4.5" />
+    <path d="M10.7 12.3 20 3" />
+    <path d="m17 6 2.5 2.5" />
+  </Base>
+);
+
 export const IconeDownload = ({ tamanho = 16, className = "" }: Props) => (
   <Base tamanho={tamanho} className={className}>
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

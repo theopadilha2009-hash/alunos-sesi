@@ -4,6 +4,7 @@ import { CrmApp } from "@/components/crm/CrmApp";
 import { LoginTela } from "@/components/crm/LoginTela";
 import { obterSessao } from "@/lib/auth";
 import {
+  listarAcessos,
   listarAlunos,
   listarDesafios,
   listarRetrato,
@@ -41,6 +42,11 @@ export default async function PaginaPrincipal() {
     listarDesafios(),
   ]);
 
+  // Quem já tem login, para o painel só oferecer o código a quem precisa.
+  // Só o ADM consulta: não é dado da vitrine.
+  const comAcesso =
+    sessao.role === "super_adm" ? await listarAcessos() : [];
+
   const meusVotos = visitante ? await votosDoVisitante(visitante) : [];
 
   return (
@@ -51,6 +57,7 @@ export default async function PaginaPrincipal() {
       retrato={retrato}
       meusVotos={meusVotos}
       desafiosIniciais={desafios}
+      comAcesso={comAcesso}
     />
   );
 }

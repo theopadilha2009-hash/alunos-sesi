@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import type { Estado } from "@/app/adm/estado";
+import type { Estado, EstadoCodigo } from "@/app/adm/estado";
+import { formatarCodigo, gerarCodigo, hashCodigo, VALIDADE_CODIGO_MS } from "@/lib/ativacao";
 import { fold } from "@/lib/busca";
 import { logger } from "@/lib/debug";
 import { parseLista, type ErroLinha } from "@/lib/importar";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
+import { SENHA_BLOQUEADA } from "@/lib/senha";
 import { sanitizarTexto } from "@/lib/seguranca";
 import { obterSessao } from "@/lib/auth";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
@@ -278,6 +280,101 @@ export async function removerAluno(formData: FormData): Promise<void> {
  * alguém entra com nome inadequado — a alternativa seria `removerAluno`, que
  * apaga o registro inteiro e não tem volta.
  */
+const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Emite o código com que o aluno assume o perfil que já está na planilha.
+ *
+ * É a peça que faltava: `importarLista` e `criarAluno` gravam só em `alunos`,
+ * então o aluno importado não tinha como entrar no próprio perfil — e o
+ * auto-cadastro dele criava uma SEGUNDA linha, pendente, deixando a primeira
+ * órfã.
+ *
+ * A conta nasce aqui, com `SENHA_BLOQUEADA` no lugar da senha, que
+ * `verificarSenha` recusa. Ela existe para segurar o código e o vínculo com o
+ * aluno; quem define a senha é o resgate, em `auth.ts`.
+ *
+ * O `username` provisório é o id do aluno sem hífens, e não um contador: dois
+ * ADMs emitindo para o mesmo aluno ao mesmo tempo caem no mesmo username e o
+ * UNIQUE resolve, em vez de criar duas contas para a mesma pessoa. Ele some no
+ * resgate, quando o aluno escolhe o dele.
+ */
+export async function gerarCodigoAtivacao(
+  _estado: EstadoCodigo,
+  formData: FormData,
+): Promise<EstadoCodigo> {
+  await exigirAdm();
+
+  const alunoId = texto(formData, "alunoId");
+  if (!RE_UUID.test(alunoId)) {
+    return { ok: false, mensagem: "Aluno inválido." };
+  }
+
+  const db = clienteAdmin();
+
+  const { data: aluno } = await db
+    .from("alunos")
+    .select("id,nome")
+    .eq("id", alunoId)
+    .maybeSingle();
+  if (!aluno) {
+    return { ok: false, mensagem: "Aluno não encontrado." };
+  }
+
+  const codigo = gerarCodigo();
+  const agora = Date.now();
+  const campos = {
+    codigo_hash: hashCodigo(codigo),
+    codigo_expira_em: new Date(agora + VALIDADE_CODIGO_MS).toISOString(),
+  };
+
+  const { data: existente } = await db
+    .from("usuarios")
+    .select("id,senha_hash")
+    .eq("aluno_id", alunoId)
+    .maybeSingle();
+
+  if (existente) {
+    // Já tem senha de verdade: reemitir aqui trocaria a senha em uso por um
+    // código, deixando o aluno de fora até resgatar. Trocar senha é outra
+    // tela, com a senha atual na mão.
+    if (existente.senha_hash !== SENHA_BLOQUEADA) {
+      return { ok: false, mensagem: `${aluno.nome} já tem acesso ativo.` };
+    }
+
+    const { error } = await db
+      .from("usuarios")
+      .update(campos)
+      .eq("id", existente.id);
+    if (error) {
+      return { ok: false, mensagem: `Não deu para emitir o código: ${error.message}` };
+    }
+  } else {
+    const { error } = await db.from("usuarios").insert({
+      username: `pendente-${alunoId.replace(/-/g, "")}`,
+      senha_hash: SENHA_BLOQUEADA,
+      role: "aluno",
+      aluno_id: alunoId,
+      ...campos,
+    });
+    if (error) {
+      return { ok: false, mensagem: `Não deu para emitir o código: ${error.message}` };
+    }
+  }
+
+  logger.info("ADM", `Código de ativação emitido para ${aluno.nome}`);
+  revalidar();
+
+  // O código em claro sai daqui e não fica em lugar nenhum: o banco guarda o
+  // hash. Se o ADM fechar a tela antes de passar para o aluno, emite outro.
+  return {
+    ok: true,
+    mensagem: "",
+    codigo: formatarCodigo(codigo),
+    paraQuem: aluno.nome as string,
+  };
+}
+
 export async function aprovarAluno(formData: FormData): Promise<void> {
   await exigirAdm();
 
