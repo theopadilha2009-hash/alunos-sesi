@@ -52,10 +52,9 @@ type Props = {
   usuario: UsuarioSessao;
   alunoAtual: AlunoNaTela | null;
   salas: { id: string; nome: string }[];
-  onPerfilSalvo?: () => void;
 };
 
-export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: Props) {
+export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
   const [estadoSeguranca, acaoSeguranca, alterandoSenha] = useActionState(alterarSegurancaAction, {
     ok: false,
@@ -192,6 +191,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
 
   function adicionarProjeto() {
     if (!novoProjTitulo.trim()) return;
+    // Mesmo teto do `adicionarVideo`, e aqui o corte do servidor é silencioso:
+    // `sanitizarProjetos` faz `slice(0, MAX_PROJETOS)`, então o 11º projeto
+    // entraria na tela e sumiria no submit — junto com a capa, que já subiu
+    // para o Blob e não volta.
+    if (projetos.length >= MAX_PROJETOS) {
+      setAvisoProjeto(`O perfil aceita ${MAX_PROJETOS} projetos. Remova um para adicionar outro.`);
+      return;
+    }
     // Mesma porta que a mídia. Aqui pesa mais: uma capa gigante na lista vai
     // junta no POST, e com o bodySizeLimit de 4mb o servidor recusa a action
     // inteira — o aluno perderia a edição toda, não só a capa.
@@ -322,6 +329,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
+        // Sem contexto não há compressão. Devolver o cru aqui é seguro porque
+        // quem recebe confere o teto de bytes depois (`conferirTamanhoDaImagem`
+        // no `aceitarMidia`): o arquivo grande é barrado com aviso ao aluno, e
+        // não passa adiante como se tivesse sido comprimido.
         if (!ctx) {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target?.result as string);
@@ -381,6 +392,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onPerfilSalvo }: P
           canvas.width = largura;
           canvas.height = Math.round(largura / proporcao);
           const ctx = canvas.getContext("2d");
+          // Sem contexto não há recorte. O cru que sai daqui é barrado adiante
+          // pelo teto de bytes do campo (`conferirTamanhoDaImagem`), então o
+          // aluno não fica com uma imagem acima do limite sem saber.
           if (!ctx) {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target?.result as string);

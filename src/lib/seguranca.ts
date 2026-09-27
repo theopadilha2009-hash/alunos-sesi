@@ -317,6 +317,7 @@ export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): Pro
   if (!Array.isArray(bruto)) return [];
 
   const sanitizados: ProjetoAluno[] = [];
+  const idsUsados = new Set<string>();
 
   for (const item of bruto.slice(0, MAX_PROJETOS)) {
     if (!item || typeof item !== "object") continue;
@@ -341,8 +342,31 @@ export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): Pro
       descartes?.push({ motivo: motivoDaImagem(p.imagem, MAX_DATA_URL_IMAGEM), campo: "projetos" });
     }
 
+    // O id vem do cliente e é o que amarra o sticker de projeto ao projeto
+    // (`sanitizarStickers` casa por `projetoId`): repetido, o mesmo sticker
+    // aparece em dois projetos. Mesmo tratamento do id de sticker — o primeiro
+    // fica, o repetido sai avisado.
+    //
+    // A colisão só derruba id VINDO DO CLIENTE. O gerado é nosso e nunca pode
+    // custar um projeto: `sanitizados.length + 1` bate com um `proj-2` explícito
+    // assim que qualquer projeto anterior sair da lista, e o projeto legítimo
+    // seria descartado por causa de um nome que nós é que escolhemos.
+    const doCliente = typeof p.id === "string" && p.id ? p.id.slice(0, 50) : null;
+    if (doCliente && idsUsados.has(doCliente)) {
+      descartes?.push({ motivo: "duplicado", campo: "projetos" });
+      continue;
+    }
+
+    let id = doCliente;
+    if (!id) {
+      let n = sanitizados.length + 1;
+      while (idsUsados.has(`proj-${n}`)) n++;
+      id = `proj-${n}`;
+    }
+    idsUsados.add(id);
+
     sanitizados.push({
-      id: typeof p.id === "string" && p.id ? p.id.slice(0, 50) : `proj-${sanitizados.length + 1}`,
+      id,
       titulo,
       descricao,
       link: link ?? undefined,

@@ -375,6 +375,55 @@ test("o link invalido do projeto e registrado, e o valido nao", () => {
   assert.deepEqual(descartes, [{ motivo: "link-invalido", campo: "projetos" }]);
 });
 
+test("projeto com id repetido vira duplicado e o primeiro fica", () => {
+  const descartes = [];
+  const resultado = sanitizarProjetos(
+    [
+      { id: "gh_1", titulo: "Robo" },
+      { id: "gh_1", titulo: "Copia" },
+    ],
+    descartes,
+  );
+
+  // o id e o que amarra o sticker de projeto ao projeto: repetido, o mesmo
+  // sticker apareceria nos dois
+  assert.equal(resultado.length, 1);
+  assert.equal(resultado[0].titulo, "Robo");
+  assert.deepEqual(descartes, [{ motivo: "duplicado", campo: "projetos" }]);
+});
+
+test("id gerado nunca derruba um projeto, mesmo colidindo com um id do cliente", () => {
+  // O id gerado e `proj-<n>`, e `n` e o tamanho da lista — entao ele bate com
+  // um `proj-2` explicito assim que um projeto anterior sai. O projeto sem id
+  // e legitimo: quem escolheu aquele nome fomos nos, e ele nao pode virar
+  // descarte por causa disso.
+  const descartes = [];
+  const resultado = sanitizarProjetos(
+    [
+      { id: "proj-2", titulo: "Primeiro" },
+      { titulo: "Segundo, sem id" },
+    ],
+    descartes,
+  );
+
+  assert.equal(resultado.length, 2);
+  assert.deepEqual(descartes, []);
+  assert.equal(resultado[0].id, "proj-2");
+  assert.notEqual(resultado[1].id, resultado[0].id);
+  assert.equal(resultado[1].titulo, "Segundo, sem id");
+});
+
+test("varios projetos sem id recebem ids distintos", () => {
+  const descartes = [];
+  const resultado = sanitizarProjetos(
+    [{ titulo: "A" }, { titulo: "B" }, { titulo: "C" }],
+    descartes,
+  );
+
+  assert.equal(new Set(resultado.map((p) => p.id)).size, 3);
+  assert.deepEqual(descartes, []);
+});
+
 test("sticker de projeto que nao existe vira projeto-inexistente", () => {
   const descartes = [];
   const resultado = sanitizarStickers(
