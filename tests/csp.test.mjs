@@ -90,6 +90,21 @@ test("o host do Blob em csp.ts e o mesmo de blob.ts", () => {
   assert.equal(diretiva(PROD, "connect-src").includes(HOST_BLOB), true);
 });
 
+test("a fonte do Blob cobre o host real que o store devolve", () => {
+  // Este teste existe porque o de igualdade acima passou enquanto os dois
+  // literais eram o MESMO valor errado. O host de um arquivo no Blob é
+  // `<storeId>.public.blob.vercel-storage.com` — o id do store é subdomínio —,
+  // e `connect-src` casa host exato. Com `https://blob.vercel-storage.com`
+  // (sem wildcard) o PUT é bloqueado no navegador, e o único sintoma é o aluno
+  // vendo "Não foi possível enviar a imagem". Descoberto no e2e de 27/09.
+  const hostReal = "6iwqqvygqsqi5blh.public.blob.vercel-storage.com";
+  const sufixo = HOST_BLOB_CSP.replace(/^https:\/\//, "").replace(/^\*/, "");
+
+  assert.equal(HOST_BLOB_CSP.startsWith("https://*."), true, "a fonte precisa de wildcard de subdomínio");
+  assert.equal(hostReal.endsWith(sufixo), true, `${hostReal} não é coberto por ${HOST_BLOB_CSP}`);
+  assert.equal(sufixo.split(".").length >= 3, true, "o sufixo precisa ser um domínio de verdade, não um TLD");
+});
+
 test("worker-src libera o service worker", () => {
   const worker = diretiva(PROD, "worker-src");
   assert.equal(worker.includes("'self'"), true);

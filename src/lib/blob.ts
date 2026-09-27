@@ -11,8 +11,19 @@
  * mesma razão de `cores.ts` e `limites.ts` serem folha.
  */
 
-/** Host do store público. É o que a CSP libera em `connect-src`. */
-export const HOST_BLOB = "https://blob.vercel-storage.com";
+/**
+ * Host do store público, como fonte de CSP para o `connect-src`.
+ *
+ * O wildcard não é folga: o host real de um arquivo é
+ * `<storeId>.public.blob.vercel-storage.com` — o id do store é o subdomínio.
+ * `blob.vercel-storage.com` sozinho é o domínio base, e `connect-src` casa
+ * host exato, então o PUT do upload direto era bloqueado no navegador. O erro
+ * só aparecia no console, e o aluno via "Não foi possível enviar a imagem".
+ *
+ * Escopado em `.public.` de propósito: o store é público, e um `*.blob...`
+ * largo liberaria também o host de leitura de stores privados.
+ */
+export const HOST_BLOB = "https://*.public.blob.vercel-storage.com";
 
 /** Raiz das mídias de aluno dentro do store. */
 export const RAIZ_MIDIA = "alunos";

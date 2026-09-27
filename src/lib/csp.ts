@@ -39,8 +39,12 @@ export const HOSTS_IMAGEM = ["https:"] as const;
  * não podem se importar — o type-stripping do `node --test` não resolve import
  * relativo sem extensão —, então quem garante que não se separem é
  * `tests/csp.test.mjs`, que importa os dois e compara.
+ *
+ * O `*` é necessário: o host real é `<storeId>.public.blob.vercel-storage.com`,
+ * e `connect-src` casa host exato. Sem o wildcard o PUT é bloqueado no browser
+ * e o erro só aparece no console.
  */
-export const HOST_BLOB_CSP = "https://blob.vercel-storage.com";
+export const HOST_BLOB_CSP = "https://*.public.blob.vercel-storage.com";
 
 export function montarCsp(nonce: string, dev: boolean): string {
   // `@vercel/analytics` só usa o script same-origin (`/_vercel/insights`) com
