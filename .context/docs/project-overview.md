@@ -93,7 +93,7 @@ Pronto e em uso:
   cadastro de um aluno por vez, fixar, destacar, mudar de sala e remover.
 - PWA instalável: `src/app/manifest.ts` e `public/sw.js` (cache
   `sesi-joinville-v3`), com atalhos `/?aba=desafios` e `/?aba=cracha`.
-- Schema versionado em `src/sql/`, em 9 migrations (001 a 009).
+- Schema versionado em `src/sql/`, em 13 migrations (001 a 013).
 - CI em `.github/workflows/ci.yml` (typecheck + testes + build) e deploy na
   Vercel, ligada ao GitHub.
 
@@ -114,12 +114,6 @@ Ficou para depois (o que o repositório mostra hoje):
   que o `bodySizeLimit` de 4 MB deixou de ser o teto da edição. O que resta soma
   ~2,4 MB, abaixo dele; migrar os stickers é o próximo passo se voltar a apertar.
   Ver `midia.md`.
-- `?curriculo=1` é oferecido pelo `/u/[slug]` como "Mini-Currículo A4"
-  (`src/app/u/[slug]/page.tsx`), mas nenhuma página lê `searchParams`: o
-  parâmetro chega e morre. O único leitor de `location.search` é o `CrmApp`
-  (`src/components/crm/CrmApp.tsx`), para os atalhos do PWA `?aba=desafios` e
-  `?aba=cracha`. O mini-currículo só abre pelo botão dentro do perfil.
-  **A confirmar** se a intenção era deep-link.
 - O número de matrícula e o "hash SHA-256" do `/validar/[slug]` são derivados na
   hora de `slug`, `estrelas` e `id` — não há coluna nem verificação no banco. É
   peça de documento impresso, não de autenticação.
