@@ -43,11 +43,28 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
 
 **Continua aberto:**
 
+- **O teto de corpo do POST do editor é 11,6× o que o Next aceita** (medido em
+  27/09, no review do PR #21). A soma máxima teórica dos campos é 46,3 MiB
+  contra o `bodySizeLimit` de 4 MB (`next.config.ts`), e não é preciso chegar
+  perto: **duas mídias no teto de 2 MB somam exatamente 4.194.304 B**, e com o
+  multipart já estoura. Quando estoura, o Next recusa **antes da action** — sem
+  descarte e sem mensagem: o aluno cai no error boundary ("Algo inesperado
+  aconteceu") e perde a edição inteira, inclusive a capa que estava válida. Não
+  existe guarda de soma no cliente; `conferirTamanhoDaImagem` mede item a item.
 - **O caminho novo do perfil nunca foi exercido com dado real** (25/09): ninguém
   editou o perfil ainda, então `foto_url` e `habilidades` estão NULL para todos
   os alunos e o upload de foto / escolha de competências só foi coberto por
   typecheck e testes de unidade. O primeiro a salvar o perfil pelo CRM prova
-  isso — não escrevi em dado de aluno de produção para testar.
+  isso — não escrevi em dado de aluno de produção para testar. Verificado em
+  27/09: `cor_perfil` e `banner_url` (PR #21) nascem na mesma situação, e os
+  contatos do Théo (instagram, github, linkedin e e-mail) estão preenchidos.
+- **A Onda 2 (mídias → Vercel Blob) trava em duas decisões** (27/09). Nenhum
+  store está conectado ao projeto (`vercel blob list-stores` volta vazio), mas o
+  CLI **está autenticado** (`theopadilha2009-5085`): `vercel blob create-store`
+  roda sem login interativo, então o bloqueio não é técnico. Falta decidir
+  criar o recurso (tem custo por uso) e desenhar a migração das mídias que já
+  estão em base64 no JSONB. Cadastrar `BLOB_READ_WRITE_TOKEN` na Vercel é passo
+  manual no dashboard: o `scripts/vercel-env.sh` só faz `pull`/`list`/`deploy`.
 - **Hierarquia entre `--faint` e `--dim` no tema escuro.** Efeito colateral de
   fazer o `--faint` passar AA: a distância entre os dois caiu de 1,85:1 para
   1,24:1 e, no mesmo corpo de fonte, os dois se leem como um. Onde dói:
