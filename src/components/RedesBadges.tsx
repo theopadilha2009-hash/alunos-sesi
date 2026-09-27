@@ -153,7 +153,7 @@ export function BadgeInstagram({ username, nomeAluno, className = "" }: BadgePro
 }
 
 /**
- * E-mail institucional (`@estudante.sesisenai.org`).
+ * E-mail institucional (`@estudante.sesisenai.org.br`).
  *
  * Não entra no `GrupoRedes` de propósito: aquele grupo é a coluna de redes da
  * tabela do ADM, larga por natureza, e o endereço inteiro não cabe ali sem

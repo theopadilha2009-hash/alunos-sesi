@@ -608,43 +608,54 @@ test("foto com esquema perigoso vira url-invalida", () => {
   assert.deepEqual(descartes, [{ motivo: "url-invalida", campo: "foto" }]);
 });
 
-test("sanitizarEmail aceita so o dominio da escola", () => {
+test("sanitizarEmail aceita o dominio da escola, com o .br", () => {
+  // O sufixo tem .br: era sem ele ate 27/09/2026, e por isso o campo recusava
+  // todo endereco que a escola realmente distribui.
   assert.equal(
-    sanitizarEmail("theo_padilha@estudante.sesisenai.org"),
-    "theo_padilha@estudante.sesisenai.org",
+    sanitizarEmail("theo_padilha@estudante.sesisenai.org.br"),
+    "theo_padilha@estudante.sesisenai.org.br",
   );
   assert.equal(
-    sanitizarEmail("  theo_padilha@estudante.sesisenai.org  "),
-    "theo_padilha@estudante.sesisenai.org",
+    sanitizarEmail("  theo_padilha@estudante.sesisenai.org.br  "),
+    "theo_padilha@estudante.sesisenai.org.br",
   );
   assert.equal(
-    sanitizarEmail("THEO_PADILHA@ESTUDANTE.SESISENAI.ORG"),
-    "theo_padilha@estudante.sesisenai.org",
+    sanitizarEmail("THEO_PADILHA@ESTUDANTE.SESISENAI.ORG.BR"),
+    "theo_padilha@estudante.sesisenai.org.br",
   );
   assert.equal(
-    sanitizarEmail("ana.souza-1@estudante.sesisenai.org"),
-    "ana.souza-1@estudante.sesisenai.org",
+    sanitizarEmail("ana.souza-1@estudante.sesisenai.org.br"),
+    "ana.souza-1@estudante.sesisenai.org.br",
   );
 });
 
 test("sanitizarEmail recusa dominio de fora, inclusive sufixo enganoso", () => {
   // O caso que importa: terminar com o dominio da escola nao basta — o
-  // `@` tem que separar exatamente o dominio, senao `...org.evil.com` passa.
+  // `@` tem que separar exatamente o dominio, senao `...org.br.evil.com` passa.
   assert.equal(sanitizarEmail("aluno@gmail.com"), null);
-  assert.equal(sanitizarEmail("aluno@sesisenai.org"), null);
+  assert.equal(sanitizarEmail("aluno@sesisenai.org.br"), null);
+  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org.br.evil.com"), null);
+  assert.equal(sanitizarEmail("aluno@sub.estudante.sesisenai.org.br"), null);
+  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org.brr"), null);
+  assert.equal(sanitizarEmail("aluno@outrodominio.com@estudante.sesisenai.org.br"), null);
+});
+
+test("sanitizarEmail recusa o dominio antigo, sem o .br", () => {
+  // Espelha o CHECK da 014: o que a 010 aceitava deixou de valer. Um e-mail
+  // gravado com o sufixo velho nao passa.
+  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org"), null);
+  assert.equal(sanitizarEmail("theo_padilha@estudante.sesisenai.org"), null);
   assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org.evil.com"), null);
-  assert.equal(sanitizarEmail("aluno@estudante.sesisenai.org.br"), null);
   assert.equal(sanitizarEmail("aluno@sub.estudante.sesisenai.org"), null);
   assert.equal(sanitizarEmail("aluno@estudante.sesisenai.orgg"), null);
-  assert.equal(sanitizarEmail("aluno@outrodominio.com@estudante.sesisenai.org"), null);
 });
 
 test("sanitizarEmail recusa malformado e vazio sem inventar", () => {
-  assert.equal(sanitizarEmail("@estudante.sesisenai.org"), null);
+  assert.equal(sanitizarEmail("@estudante.sesisenai.org.br"), null);
   assert.equal(sanitizarEmail("theo_padilha"), null);
-  assert.equal(sanitizarEmail("theo padilha@estudante.sesisenai.org"), null);
-  assert.equal(sanitizarEmail("theo@@estudante.sesisenai.org"), null);
-  assert.equal(sanitizarEmail(`${"a".repeat(90)}@estudante.sesisenai.org`), null);
+  assert.equal(sanitizarEmail("theo padilha@estudante.sesisenai.org.br"), null);
+  assert.equal(sanitizarEmail("theo@@estudante.sesisenai.org.br"), null);
+  assert.equal(sanitizarEmail(`${"a".repeat(90)}@estudante.sesisenai.org.br`), null);
   for (const vazio of ["", "   ", null, undefined, 42]) {
     assert.equal(sanitizarEmail(vazio), null, `entrada ${JSON.stringify(vazio)}`);
   }

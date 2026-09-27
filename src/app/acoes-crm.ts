@@ -406,7 +406,7 @@ export async function alterarSegurancaAction(
       } else {
         return {
           ok: false,
-          mensagem: "Não foi possível salvar: verifique se o e-mail é o da escola (@estudante.sesisenai.org).",
+          mensagem: `Não foi possível salvar: verifique se o e-mail é o da escola (@${DOMINIO_EMAIL_ESCOLA}).`,
         };
       }
     }

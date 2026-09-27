@@ -86,12 +86,17 @@ export const MAX_DATA_URL_CAPA = 220 * 1024;
  * `/validar/<slug>`: quem olha de fora vê que aquele perfil pertence a um
  * estudante matriculado. Aceitar `@gmail.com` esvaziaria isso, e é por isso que
  * o sanitizador recusa qualquer domínio que não seja este, incluindo os que
- * apenas TERMINAM com ele (`...sesisenai.org.evil.com`).
+ * apenas TERMINAM com ele (`...sesisenai.org.br.evil.com`).
+ *
+ * O `.br` no fim não é enfeite: sem ele, o sufixo antigo (`estudante.sesisenai.org`)
+ * não casava com o endereço que a escola distribui, e o campo ficou impossível
+ * de preencher até 27/09/2026. Se mudar de novo, muda também o CHECK da
+ * migration mais recente de `alunos.email` — os dois espelham um ao outro.
  *
  * Fica aqui, e não em `seguranca.ts`, porque o formulário precisa do valor para
  * montar o sufixo fixo do campo — e `seguranca.ts` importa `node:crypto`.
  */
-export const DOMINIO_EMAIL_ESCOLA = "estudante.sesisenai.org";
+export const DOMINIO_EMAIL_ESCOLA = "estudante.sesisenai.org.br";
 
 /** Teto da parte antes do `@` (o RFC 5321 pede 64). */
 export const MAX_EMAIL_LOCAL = 64;
