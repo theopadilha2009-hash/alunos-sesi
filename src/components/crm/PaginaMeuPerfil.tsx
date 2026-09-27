@@ -81,8 +81,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   );
 
   // Campos do Aluno
-  const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "Theo Padilha");
-  const [sala, setSala] = useState(alunoAtual?.sala ?? usuario.sala ?? "DSM3");
+  const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "");
+  const [sala, setSala] = useState(alunoAtual?.sala ?? usuario.sala ?? "");
   // O e-mail é do domínio da escola, então o campo guarda só a parte de antes do
   // `@` e o sufixo é desenhado ao lado, fixo. Antes o campo era um `<input
   // type="email">` livre com o Gmail do Théo como valor inicial chumbado — quem
@@ -642,34 +642,42 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
             </button>
           ) : null}
 
-          <Link
-            href={`/u/${alunoAtual?.slug ?? "theo-padilha"}`}
-            target="_blank"
-            className="btn-perfil-acao"
-            title="Abrir cartão NFC / Link na Bio"
-          >
-            <span>Cartão NFC / Bio</span>
-          </Link>
+          {/* Só com perfil carregado. O `?? "theo-padilha"` que estava aqui
+              abria o perfil de OUTRO aluno quando `alunoAtual` era nulo — que é
+              o estado de quem teve o perfil removido pelo ADM com a sessão
+              ainda viva. Os dois botões acima já tinham a guarda; estes não. */}
+          {alunoAtual ? (
+            <>
+              <Link
+                href={`/u/${alunoAtual.slug}`}
+                target="_blank"
+                className="btn-perfil-acao"
+                title="Abrir cartão NFC / Link na Bio"
+              >
+                <span>Cartão NFC / Bio</span>
+              </Link>
 
-          <Link
-            href={`/validar/${alunoAtual?.slug ?? "theo-padilha"}`}
-            target="_blank"
-            className="btn-perfil-acao"
-            title="Verificar autenticidade oficial da matrícula"
-          >
-            <IconeEscudo tamanho={14} />
-            <span>Validar Matrícula</span>
-          </Link>
+              <Link
+                href={`/validar/${alunoAtual.slug}`}
+                target="_blank"
+                className="btn-perfil-acao"
+                title="Verificar autenticidade oficial da matrícula"
+              >
+                <IconeEscudo tamanho={14} />
+                <span>Validar Matrícula</span>
+              </Link>
 
-          <Link
-            href={`/alunos/${alunoAtual?.slug ?? "theo-padilha"}`}
-            target="_blank"
-            className="btn-perfil-acao"
-            title="Abrir portfólio público em nova aba"
-          >
-            <IconeLinkExterno tamanho={15} />
-            <span>Página Pública</span>
-          </Link>
+              <Link
+                href={`/alunos/${alunoAtual.slug}`}
+                target="_blank"
+                className="btn-perfil-acao"
+                title="Abrir portfólio público em nova aba"
+              >
+                <IconeLinkExterno tamanho={15} />
+                <span>Página Pública</span>
+              </Link>
+            </>
+          ) : null}
         </div>
       </div>
 

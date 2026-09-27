@@ -36,6 +36,18 @@ a {
   color: var(--on-accent);
 }
 
+/* O indicador de foco do app inteiro.
+ *
+ * As regras de componente que trocam este contorno por uma borda de 1px usam
+ * `:focus:not(:focus-visible)` de propósito — com `:focus` puro elas anulavam o
+ * contorno também para quem navega por teclado, e o único sinal virava uma
+ * borda mudando de cor. Quem for mexer num `:focus` de campo, mantenha o
+ * `:not(:focus-visible)`.
+ *
+ * Exceção: `.campo-email .input-texto` (crm.css) não repõe o contorno porque o
+ * wrapper tem `overflow: hidden` e o cortaria — lá o indicador é o
+ * `.campo-email:focus-within`.
+ */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;

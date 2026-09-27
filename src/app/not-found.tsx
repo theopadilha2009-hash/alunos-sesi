@@ -4,7 +4,7 @@ import { Topo, Rodape } from "@/components/ds";
 export default function NotFound() {
   return (
     <>
-      <Topo voltar={{ href: "/", texto: "← Início" }} />
+      <Topo voltar={{ href: "/alunos", texto: "← Ver a turma" }} />
       <main
         className="wrap"
         style={{
@@ -37,8 +37,8 @@ export default function NotFound() {
             O perfil ou recurso que você tentou acessar não existe, foi removido ou o link está incorreto.
           </p>
 
-          <Link href="/" className="botao botao-primario">
-            Explorar Alunos & Portfólios
+          <Link href="/alunos" className="botao botao-primario">
+            Explorar Alunos &amp; Portfólios
           </Link>
         </div>
       </main>

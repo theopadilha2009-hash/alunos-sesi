@@ -149,7 +149,6 @@ export function LoginTela() {
                 name="sala"
                 type="text"
                 placeholder="Ex.: DSM3"
-                defaultValue="DSM3"
                 required
               />
               {/* Só turma que já existe: sala nova quem cria é o ADM, pelo

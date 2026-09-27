@@ -31,7 +31,7 @@
   font-size: 1.05rem;
 }
 
-.cmd-input:focus {
+.cmd-input:focus:not(:focus-visible) {
   outline: none;
 }
 

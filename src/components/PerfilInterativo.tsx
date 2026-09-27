@@ -561,7 +561,7 @@ export function PerfilInterativo({ aluno, salaNome, abrirCurriculo = false }: Pr
         </div>
 
         <p style={{ marginTop: "2.5rem" }}>
-          <Link href="/" className="botao botao-fraco">
+          <Link href="/alunos" className="botao botao-fraco">
             ← Voltar para a turma
           </Link>
         </p>

@@ -11,7 +11,10 @@ export function Topo({
   return (
     <header>
       <div className="wrap topo">
-        <Link href="/" className="marca">
+        {/* A marca leva à vitrine, não a `/`: a raiz é a tela de login do CRM
+            (`src/app/page.tsx`), então quem está no app público e toca no logo
+            para "voltar ao começo" caía num formulário de usuário e senha. */}
+        <Link href="/alunos" className="marca">
           <Roseta tamanho={30} />
           <span>
             Alunos

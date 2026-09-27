@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import type { Estado } from "@/app/adm/estado";
 import { fold } from "@/lib/busca";
+import { logger } from "@/lib/debug";
 import { parseLista, type ErroLinha } from "@/lib/importar";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { sanitizarTexto } from "@/lib/seguranca";
@@ -159,10 +160,14 @@ export async function importarLista(
         github,
       });
       if (error) {
+        // O log guarda o erro do PostgREST; a linha mostra o que o ADM precisa
+        // ler. Antes o painel exibia `duplicate key value violates unique
+        // constraint "alunos_slug_key"` no lugar do motivo.
+        logger.error("ADM", `Falha ao importar ${linha.nome}`, error);
         erros.push({
           linha: linha.linha,
           texto: linha.nome,
-          motivo: error.message,
+          motivo: "não foi possível gravar (erro no banco)",
         });
         continue;
       }
@@ -242,7 +247,10 @@ export async function criarAluno(
     bio: texto(formData, "bio") || null,
   });
 
-  if (error) return { ok: false, mensagem: error.message };
+  if (error) {
+    logger.error("ADM", `Falha ao cadastrar ${nome}`, error);
+    return { ok: false, mensagem: "Não foi possível cadastrar agora. Tente de novo em instantes." };
+  }
   revalidar();
   return { ok: true, mensagem: `${nome} entrou na turma.` };
 }
