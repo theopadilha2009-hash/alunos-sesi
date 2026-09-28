@@ -974,14 +974,25 @@ export function CrmApp({
           <div className="crm-secao-conteudo">
             <div className="bloco-cabecalho-tabela">
               <h2>Tabela Geral de Estudantes SESI</h2>
+              {/* O texto antigo prometia "filtros por sala, status de fixação e
+                  redes profissionais" que esta aba nunca teve — e, pior, os da
+                  aba Portfólio continuavam valendo aqui sem aparecer. Agora a
+                  lista é a turma inteira, e a frase diz o que a tela entrega. */}
               <p>
-                Visualização tabular completa com filtros por sala, status de fixação e redes
+                Visualização tabular completa da turma: sala, estrelas, fixação e redes
                 profissionais.
               </p>
             </div>
 
+            {/* `naTela`, e não `visiveis`: os filtros da aba Portfólio (busca,
+                sala, estrelados, competência) sobrevivem à troca de aba porque
+                moram no estado do `CrmApp`, mas os controles que os produzem só
+                são desenhados na aba do Portfólio. A tabela aparecia filtrada
+                sem nada na tela explicando por quê — e o próprio cabeçalho
+                acima promete "visualização tabular completa". Um F5, que zera o
+                estado, "consertava" a tela e escondia a causa. */}
             <TabelaAlunos
-              alunos={visiveis}
+              alunos={naTela}
               meusVotos={meus}
               ocupado={ocupado}
               onEstrelar={estrelar}
@@ -1039,6 +1050,9 @@ export function CrmApp({
         onFechar={() => setCmdAberto(false)}
         alunos={naTela}
         salas={salas}
+        // O aluno comum não tem a aba ADM na sidebar (`CrmApp` já esconde), mas
+        // a paleta de comandos não era gateada: ele achava o painel por aqui.
+        ehAdm={ehSuperAdm}
         onSelecionarSala={(sId) => {
           setSalaSelecionada(sId);
           setAba("portfolio");

@@ -57,6 +57,31 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   mídias eram URLs `http`, e `foto_url`/`banner_url` estavam NULL para todos os 13
   alunos. Não houve migração a fazer.
 
+- **O pente nas abas fechou cinco buracos, nenhum deles de design** (28/09, PR
+  #45). A auditoria estática das 6 abas do CRM e das 5 sub-abas do ADM achou cinco
+  defeitos, todos com cenário concreto e todos corrigidos:
+  (1) "Ir para Painel do ADM" era oferecido a visitante anônimo e a aluno, e
+  `/adm` responde `notFound()` — a pessoa caía num 404 **afirmando que o recurso
+  não existe**, o que não era verdade; o item agora só aparece com
+  `podeAdmin(cracha, papel)`.
+  (2) "Copiar Link da Vitrine" jogava fora o retorno de `copiarTexto` (`void`) e
+  fechava no mesmo tick: com a área de transferência recusando, a pessoa colava o
+  conteúdo **antigo** achando que tinha mandado o link. Era a única das seis telas
+  que copiam a não usar o retorno.
+  (3) Reimportar uma planilha já completa devolvia `ok: false` e pintava banner
+  **vermelho de erro** ("12 já estavam completos") — não mudar nada não é falha;
+  virou o tom `atencao`, com `tomDaImportacao` em `src/lib/importacao.ts`.
+  (4) A aba Tabelas herdava em silêncio os filtros do Portfólio (busca, sala,
+  competência) e um F5 "consertava" — o CRM mostrava menos gente que a turma, sem
+  dizer por quê.
+  (5) "Mover de turma" com o campo vazio era **clique morto**: a action devolve
+  `void` quando `nomeSala.length < 2`, então não havia erro, aviso nem mudança.
+  Ganhou `required minLength={2}` (a barreira nativa é feedback, o servidor
+  continua sendo a regra).
+  O gate do CRM segue `ehSuperAdm`, e é de propósito: `CrmApp` é client component
+  e não enxerga o cookie `httpOnly` `sesi.adm` — a sub-aba do ADM na sidebar sempre
+  foi gated assim. Ver [[infra-deploy]] para o fluxo de PR.
+
 **Continua aberto:**
 
 - **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural

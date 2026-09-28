@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { obterSessao } from "@/lib/auth";
 import { logger, medirOperacao } from "@/lib/debug";
-import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
+import { COOKIE_ADM, podeAdmin } from "@/lib/sessao";
 import { clientePublico } from "@/lib/supabase/publico";
 import { cookies } from "next/headers";
 
@@ -30,10 +30,13 @@ export async function GET() {
   }
 
   const jar = await cookies();
-  const tokenAdm = jar.get(COOKIE_ADM)?.value;
-  const ehAdm = crachaValido(tokenAdm);
   const sessao = await obterSessao();
-  const ehSuperAdm = ehAdm || sessao?.role === "super_adm";
+  // `podeAdmin` e não a disjunção escrita aqui: era a terceira cópia da mesma
+  // regra (as outras duas estão em `/adm` e na vitrine), e uma quarta cópia
+  // divergiria em silêncio — abrindo ou fechando o diagnóstico para quem não
+  // devia. O que sai daqui é memória e versão do processo, então o portão é o
+  // mesmo do painel.
+  const autorizado = podeAdmin(jar.get(COOKIE_ADM)?.value, sessao?.role);
 
   const statusGeral = dbStatus === "ok" ? "ok" : "degraded";
   const statusCode = dbStatus === "ok" ? 200 : 503;
@@ -50,7 +53,7 @@ export async function GET() {
   };
 
   // Se for administrador autenticado, fornece diagnóstico aprofundado
-  if (ehSuperAdm) {
+  if (autorizado) {
     const mem = process.memoryUsage();
     return NextResponse.json(
       {

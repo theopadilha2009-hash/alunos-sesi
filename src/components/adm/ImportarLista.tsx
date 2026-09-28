@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { importarLista } from "@/app/adm/acoes";
 import { ESTADO_INICIAL } from "@/app/adm/estado";
 import { parseLista } from "@/lib/importar";
+import { classeDoRecado } from "@/lib/importacao";
 
 const EXEMPLO = `nome\tsala\tlinkedin\tgithub
 Ana Silva\t3ºA\thttps://www.linkedin.com/in/ana-silva\tanasilva
@@ -92,7 +93,12 @@ export function ImportarLista() {
           ) : null}
 
           {estado.mensagem ? (
-            <p className={`recado ${estado.ok ? "recado-ok" : "recado-erro"}`} role="status">
+            <p
+              className={`recado ${
+                estado.tom ? classeDoRecado(estado.tom) : estado.ok ? "recado-ok" : "recado-erro"
+              }`}
+              role="status"
+            >
               {estado.mensagem}
             </p>
           ) : null}

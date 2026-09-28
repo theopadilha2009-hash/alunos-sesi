@@ -9,7 +9,7 @@ import { listarAlunos, listarSalas } from "@/lib/dados";
 import { corDaSala, corDoAluno } from "@/lib/cores";
 import { ordenarAlunos } from "@/lib/ranking";
 import { obterSessao } from "@/lib/auth";
-import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
+import { COOKIE_ADM, podeAdmin } from "@/lib/sessao";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export default async function AdmPage() {
   const jar = await cookies();
   const sessao = await obterSessao();
-  const autorizado = crachaValido(jar.get(COOKIE_ADM)?.value) || sessao?.role === "super_adm";
+  const autorizado = podeAdmin(jar.get(COOKIE_ADM)?.value, sessao?.role);
   if (!autorizado) notFound();
 
   // `incluirPendentes`: este painel é onde a fila de moderação é despachada —

@@ -23,6 +23,13 @@ type Props = {
   onFechar: () => void;
   alunos: AlunoNaTela[];
   salas: Sala[];
+  /**
+   * Quem está olhando pode abrir o painel. Falso para visitante anônimo e para
+   * aluno — e é o que tira o item "Ir para Painel do ADM" da lista deles: o
+   * `/adm` responde `notFound()` para quem não é ADM, então o item levava a um
+   * 404 que ainda dizia "o recurso não existe", o que não é verdade.
+   */
+  ehAdm?: boolean;
   onSelecionarSala?: (salaId: string) => void;
   onAbrirCracha?: (aluno: AlunoNaTela) => void;
 };
@@ -60,12 +67,25 @@ export function CommandBar({
   onFechar,
   alunos,
   salas,
+  ehAdm = false,
   onSelecionarSala,
   onAbrirCracha,
 }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [indiceFoco, setIndiceFoco] = useState(0);
+  /**
+   * Resultado da última ação, no lugar do subtítulo do item que a disparou.
+   *
+   * A paleta fechava no mesmo tick da cópia, então não havia onde escrever
+   * nada — e uma recusa da área de transferência deixava a pessoa colando o
+   * conteúdo antigo achando que tinha mandado o link. Agora o aviso mora aqui e
+   * o fechamento espera quando a ação deu certo; quando falha, a paleta fica
+   * aberta para o aviso ser lido.
+   */
+  const [avisoAcao, setAvisoAcao] = useState<{ id: string; texto: string; erro: boolean } | null>(
+    null,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
   const dialogoRef = useRef<HTMLDivElement>(null);
@@ -73,6 +93,11 @@ export function CommandBar({
   // onFechar chega inline do pai (identidade nova a cada render): em ref para o efeito
   // não re-executar e devolver o foco no meio da interação
   const fecharRef = useRef(onFechar);
+  // O fechamento adiado depois de copiar com sucesso (para dar tempo de ler o
+  // "Link copiado!"). Precisa ser cancelável: sem isto, fechar a paleta e
+  // reabri-la dentro do 1,2 s deixava o timer antigo fechar a recém-aberta
+  // debaixo de quem estava usando.
+  const timerFecharRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fecharRef.current = onFechar;
@@ -82,9 +107,21 @@ export function CommandBar({
     if (aberto) {
       setQuery("");
       setIndiceFoco(0);
+      setAvisoAcao(null);
+      if (timerFecharRef.current) {
+        clearTimeout(timerFecharRef.current);
+        timerFecharRef.current = null;
+      }
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [aberto]);
+
+  useEffect(
+    () => () => {
+      if (timerFecharRef.current) clearTimeout(timerFecharRef.current);
+    },
+    [],
+  );
 
   // ESC fecha com o foco em qualquer lugar da página (o backdrop não recebe foco)
   useEffect(() => {
@@ -103,8 +140,8 @@ export function CommandBar({
     };
   }, [aberto]);
 
-  const acoesFixas: ItemResultado[] = useMemo(
-    () => [
+  const acoesFixas: ItemResultado[] = useMemo(() => {
+    const acoes: ItemResultado[] = [
       {
         tipo: "acao",
         id: "acao-estrelados",
@@ -158,21 +195,50 @@ export function CommandBar({
         titulo: "Copiar Link da Vitrine",
         subtitulo: "Compartilhe o diretório com a turma",
         icone: <IconeLink tamanho={16} />,
-        executar: () => {
-          // Sem `await` e sem `catch`, uma recusa da clipboard virava
-          // `Uncaught (in promise)` no console e o menu fechava sem sinal
-          // nenhum — o mesmo silêncio que os outros quatro copiarLink tinham.
-          void copiarTexto(
+        // Assíncrona porque o resultado da cópia decide o que acontece depois.
+        // As outras cinco telas que copiam já usam o retorno de `copiarTexto`;
+        // esta era a única que o jogava fora (`void`), e a única em que a
+        // pessoa não tinha como saber que nada foi copiado — o menu fechava no
+        // mesmo tick e ela colava o conteúdo antigo da área de transferência.
+        executar: async () => {
+          const copiou = await copiarTexto(
             typeof window !== "undefined"
               ? `${window.location.origin}/alunos`
               : "https://alunos-sesi.vercel.app/alunos",
           );
-          onFechar();
+
+          if (copiou) {
+            setAvisoAcao({ id: "acao-copiar-vitrine", texto: "Link copiado!", erro: false });
+            // Cancela antes de agendar: um segundo clique antes de o primeiro
+            // `await` resolver sobrescreveria o handle sem desligar o anterior,
+            // e o timer órfão não teria mais como ser cancelado — justo o
+            // invariante que a ref existe para garantir.
+            if (timerFecharRef.current) clearTimeout(timerFecharRef.current);
+            timerFecharRef.current = setTimeout(() => {
+              timerFecharRef.current = null;
+              fecharRef.current();
+            }, 1200);
+            return;
+          }
+
+          // Não fecha: o aviso é a única coisa que impede a pessoa de colar o
+          // conteúdo errado, e o menu é onde ele cabe.
+          setAvisoAcao({
+            id: "acao-copiar-vitrine",
+            texto: "Não deu para copiar. Abra /alunos e copie da barra de endereço.",
+            erro: true,
+          });
         },
       },
-    ],
-    [onSelecionarSala, onFechar, router],
-  );
+    ];
+
+    // O painel é a única ação daqui que o servidor pode recusar: `/adm`
+    // responde `notFound()` para quem não é ADM. Oferecê-la a visitante anônimo
+    // e a aluno era mandar a pessoa para um 404 que ainda por cima afirmava que
+    // o recurso "não existe ou foi removido" — ele existe, ela é que não tem
+    // acesso.
+    return ehAdm ? acoes : acoes.filter((a) => a.id !== "acao-adm");
+  }, [onSelecionarSala, onFechar, router, ehAdm]);
 
   const resultados: ItemResultado[] = useMemo(() => {
     const q = fold(query).trim();
@@ -298,6 +364,7 @@ export function CommandBar({
           ) : (
             resultados.map((item, idx) => {
               const selecionado = idx === indiceFoco;
+              const aviso = avisoAcao?.id === item.id ? avisoAcao : null;
               return (
                 <li
                   key={item.id}
@@ -340,9 +407,15 @@ export function CommandBar({
                       <span className="cmd-icone-acao">{item.icone}</span>
                       <div className="cmd-info">
                         <span className="cmd-titulo">{item.titulo}</span>
-                        <span className="cmd-sub">{item.subtitulo}</span>
+                        <span
+                          className={`cmd-sub ${aviso ? (aviso.erro ? "cmd-sub-erro" : "cmd-sub-ok") : ""}`}
+                        >
+                          {aviso ? aviso.texto : item.subtitulo}
+                        </span>
                       </div>
-                      <span className="cmd-badge">Executar</span>
+                      <span className="cmd-badge">
+                        {aviso ? (aviso.erro ? "Não copiou" : "Pronto") : "Executar"}
+                      </span>
                     </>
                   )}
                 </li>
@@ -350,6 +423,13 @@ export function CommandBar({
             })
           )}
         </ul>
+
+        {/* Fora do `role="listbox"` de propósito: região viva dentro de uma
+            listbox confunde o leitor de tela, e o aviso precisa ser anunciado —
+            o texto muda no item focado, que é onde quem enxerga lê. */}
+        <p className="sr-only" role="status">
+          {avisoAcao?.texto ?? ""}
+        </p>
 
         <footer className="cmd-rodape">
           <span>Use <b>↑</b> <b>↓</b> para navegar</span>

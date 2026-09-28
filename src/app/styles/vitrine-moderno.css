@@ -87,6 +87,21 @@
   text-overflow: ellipsis;
 }
 
+/* O subtítulo quando ele vira resposta de uma ação (hoje, só a cópia do link
+   da vitrine). `.cmd-sub` é de uma linha só e corta com reticências, o que
+   serve para "Sala 3ºA · @fulano" e não para uma frase que precisa ser lida
+   inteira — daí o erro poder quebrar linha. */
+.cmd-sub-ok {
+  color: var(--verde);
+}
+
+.cmd-sub-erro {
+  color: var(--vermelho);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 .cmd-badge {
   font-size: 0.72rem;
   font-weight: 600;

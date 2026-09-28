@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 ## O que é testado
 
 Só as funções puras de `src/lib/`, mais as varreduras de código-fonte que travam
-uma regra que nenhum tipo segura. **289 testes em 21 arquivos**, todos em
+uma regra que nenhum tipo segura. **297 testes em 22 arquivos**, todos em
 `node:test` + `node:assert/strict`, sem rede e sem banco:
 
 | Arquivo | Módulo | O que os testes travam |
@@ -28,22 +28,22 @@ uma regra que nenhum tipo segura. **289 testes em 21 arquivos**, todos em
 | `video.test.mjs` (15) | `video` | `normalizarVideo`: formas do YouTube e do Vimeo, host que só *parece* o da plataforma, `http:` recusado, `youtube-nocookie` no embed e o `frame-src` fechado |
 | `ativacao.test.mjs` (13) | `ativacao` | o alfabeto Crockford Base32 (sem as letras que se confundem); o código entra com ou sem o prefixo SESI, com hífen e espaço a mais; a dobra das letras ambíguas acontece **depois** de tirar o prefixo; o hash é determinístico e não deixa o código aparecer |
 | `habilidades.test.mjs` (13) | `habilidades` | `habilidadePermitida` aceita só o nome exato da lista (é a allowlist do endosso, não a do perfil); `extrairHabilidades` respeita o teto; `normalizarNomeHabilidade` |
-| `sessao.test.mjs` (11) | `sessao` | ida e volta por propósito, a subchave HKDF que não abre em outro, a adulteração de qualquer byte e o token que devolve `null` em vez de explodir |
+| `sessao.test.mjs` (14) | `sessao` | ida e volta por propósito, a subchave HKDF que não abre em outro, a adulteração de qualquer byte e o token que devolve `null` em vez de explodir; `podeAdmin`, que é `crachaValido` **ou** `super_adm` — a regra que estava copiada em três telas |
 | `username.test.mjs` (10) | `username` | `normalizarUsername` e os limites do banco, com o e-mail institucional aceito onde o cadastro antes recusava |
 | `identidade.test.mjs` (9) | `identidade` | a matrícula é estável — a mesma entrada dá o mesmo número, e ele não muda com estrelas nem com edição de perfil. Roda fora do servidor porque o crachá é desenhado no navegador |
 | `insignias.test.mjs` (8) | `insignias` | a escada fixa das seis, cada limiar acendendo só a sua, e progresso que nunca passa do alvo |
 | `senha.test.mjs` (8) | `senha` | `hashSenha` sai argon2id e nunca em claro; hash malformado não derruba a verificação nem autentica |
 | `estrela.test.mjs` (6) | `estrela` | `lerRespostaEstrela` traduz a resposta da rota — o motivo que o servidor deu, o 200 sem os campos, a mensagem própria quando ele não explica — e `motivoParaNaoEstrelar` barra o perfil pendente |
 | `foco.test.mjs` (6) | `foco` | o ciclo de Tab e Shift+Tab preso no diálogo, e a ponta por onde o foco entra |
+| `importacao.test.mjs` (5) | `importacao` | `tomDaImportacao`: a planilha que não mudou nada não é sucesso (reimportar a lista inteira pintava banner vermelho de erro), erro junto de criação é atenção, e o tom devolvido é sempre um que o CSS conhece |
 | `cores.test.mjs` (4) | `cores` | `corDaSala` estável; `corDoAluno` que prefere a escolha; a paleta do app é a mesma lista do `CHECK` no banco |
 | `datas.test.mjs` (3) | `datas` | a data no padrão brasileiro, o lixo que devolve `null` e o fuso fixo em São Paulo — não o de quem roda o código |
 | `github.test.mjs` (3) | `github` | `tituloDoRepo` (com o corte no teto de 80), `descricaoDoRepo` e `quandoDoRepo` |
 | `endosso.test.mjs` (1) | varredura | não testa módulo nenhum: lê os `.tsx` de `src/components/` e falha se algum arquivo desenhar mais botões `+1` do que chamadas a `habilidadePermitida` |
 
-`estrela`, `endosso`, `lacunas`, `desafios`, `identidade`, `ativacao`, `datas` e
-`username` são posteriores a esta tabela — ela ficou oito arquivos atrás. As
-contagens são de declarações `test(` no arquivo, não do que o `npm test` imprime:
-quem quiser o total de verdade pergunta ao runner, não a este parágrafo.
+As contagens são de declarações `test(` no arquivo, não do que o `npm test`
+imprime: quem quiser o total de verdade pergunta ao runner, não a esta tabela —
+que envelhece a cada teste novo.
 
 Os testes cobrem os pontos onde o comportamento é sutil e barato de errar:
 normalização de link colado, parser de planilha, desempate estável, o `fold` do

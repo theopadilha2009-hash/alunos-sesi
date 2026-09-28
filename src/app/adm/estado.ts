@@ -1,4 +1,5 @@
 import type { ErroLinha } from "@/lib/importar";
+import type { TomImportacao } from "@/lib/importacao";
 
 /**
  * O retorno das ações do painel.
@@ -11,6 +12,14 @@ export type Estado = {
   ok: boolean;
   mensagem: string;
   erros?: ErroLinha[];
+  /**
+   * Como pintar a mensagem, quando `ok` não basta.
+   *
+   * Opcional de propósito: as outras ações continuam com os dois estados de
+   * sempre, e quem não preenche cai no `ok`. A importação é que precisa do
+   * terceiro — "nada a fazer" não é erro nem novidade.
+   */
+  tom?: TomImportacao;
 };
 
 export const ESTADO_INICIAL: Estado = { ok: false, mensagem: "" };

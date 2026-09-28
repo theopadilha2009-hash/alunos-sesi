@@ -18,12 +18,18 @@ type Props = {
   salas: Sala[];
   retrato: RetratoSala[];
   meusVotos: string[];
+  /**
+   * Quem está olhando é o ADM. Decide se a paleta de comandos oferece "Ir para
+   * Painel do ADM" — a vitrine é pública, e para todo o resto esse item era uma
+   * porta que só dava em 404.
+   */
+  ehAdm?: boolean;
 };
 
 type TipoVisualizacao = "grade" | "tabela";
 type TipoOrdenacao = "estrelas" | "nome" | "conectados";
 
-export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
+export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Props) {
   const [query, setQuery] = useState("");
   const [sala, setSala] = useState<string>(TODAS);
   const [habilidadeFiltro, setHabilidadeFiltro] = useState<string>("Todas");
@@ -508,6 +514,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos }: Props) {
         onFechar={() => setCmdAberto(false)}
         alunos={naTela}
         salas={salas}
+        ehAdm={ehAdm}
         onSelecionarSala={(salaId) => {
           setSala(salaId);
         }}

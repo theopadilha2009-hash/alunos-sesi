@@ -90,6 +90,10 @@ export function PainelAdmIntegrado({
     ESTADO_INICIAL,
   );
 
+  // O tom do banner da importação. As ações que não preenchem `tom` continuam
+  // nos dois estados de sempre, pelo `ok`.
+  const tomImportar = estadoImportar.tom ?? (estadoImportar.ok ? "sucesso" : "erro");
+
   // A fila mostra primeiro o que espera decisão: um envio julgado some da
   // frente do ADM e vira histórico.
   //
@@ -421,12 +425,25 @@ export function PainelAdmIntegrado({
                             <span className="tabela-sem-dado">—</span>
                           )}
                           <input type="hidden" name="alunoId" value={a.id} />
+                          {/* `required` + `minLength` porque a action recusa
+                              calada: `mudarSalaDoAluno` tem
+                              `if (!alunoId || nomeSala.length < 2) return;` e
+                              devolve `void`, então o clique no "Mover" com o
+                              campo vazio não fazia NADA — sem aviso, sem erro,
+                              e quem clicou conclui que travou. Quem recusa antes
+                              do envio é o navegador, que explica o motivo.
+                              O piso é o mesmo da action (2 caracteres); ele
+                              conta a string crua, então um valor como " A" ainda
+                              passa daqui e morre no servidor — o servidor segue
+                              sendo a autoridade. */}
                           <input
                             type="text"
                             name="sala"
                             className="input-texto adm-input-sala"
                             placeholder="Nova turma"
                             maxLength={30}
+                            required
+                            minLength={2}
                             aria-label={`Trocar a turma de ${a.nome}`}
                           />
                           <button type="submit" className="btn-acao-tabela" title="Mover de turma">
@@ -579,11 +596,8 @@ export function PainelAdmIntegrado({
               </label>
 
               {estadoImportar.mensagem ? (
-                <div
-                  className={`alerta-banner ${estadoImportar.ok ? "alerta-sucesso" : "alerta-erro"}`}
-                  role="alert"
-                >
-                  {estadoImportar.ok ? <IconeCheck tamanho={16} /> : null}
+                <div className={`alerta-banner alerta-${tomImportar}`} role="alert">
+                  {tomImportar === "sucesso" ? <IconeCheck tamanho={16} /> : null}
                   <span>{estadoImportar.mensagem}</span>
                 </div>
               ) : null}
