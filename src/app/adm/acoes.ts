@@ -18,6 +18,7 @@ import {
   type DesafioNovo,
 } from "@/lib/desafios";
 import { parseLista, type ErroLinha } from "@/lib/importar";
+import { tomDaImportacao } from "@/lib/importacao";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { SENHA_BLOQUEADA } from "@/lib/senha";
 import { sanitizarTexto } from "@/lib/seguranca";
@@ -263,8 +264,14 @@ export async function importarLista(
     lido.duplicadas ? `${lido.duplicadas} duplicada${lido.duplicadas > 1 ? "s" : ""} na própria colagem` : null,
   ].filter(Boolean);
 
+  // O tom não é o `ok`: reimportar uma planilha que já está toda lá é sucesso
+  // neutro, e com o booleano só ele virava banner vermelho ("12 já estavam
+  // completos"). `ok` continua significando "não houve falha".
+  const tom = tomDaImportacao({ criados, atualizados, erros: erros.length });
+
   return {
-    ok: criados + atualizados > 0,
+    ok: tom !== "erro",
+    tom,
     mensagem: resumo.length ? resumo.join(" · ") : "Nada mudou.",
     erros,
   };

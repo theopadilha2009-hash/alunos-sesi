@@ -101,6 +101,28 @@ export function crachaValido(token: string | undefined | null): boolean {
   return abrirAssinado(token, "adm") === MARCA_ADM;
 }
 
+/**
+ * Quem pode abrir o painel: o crachá do link `/adm/<chave>` OU a sessão de
+ * `super_adm`.
+ *
+ * A disjunção estava copiada em cada tela que precisava dela, e as duas
+ * consequências de uma cópia desatualizada são ruins em direções opostas: um
+ * item de menu oferecido a quem o servidor recusa (o aluno clica em "Ir para
+ * Painel do ADM" e recebe um 404 dizendo que o recurso não existe — ele existe)
+ * ou uma tela que deixa passar.
+ *
+ * Isto NÃO substitui o `exigirAdm` das actions: lá o `role` é relido do banco
+ * de propósito, para fechar a janela do token de 30 dias. Aqui é o que dá para
+ * decidir com o que veio no cookie, que é o suficiente para escolher o que
+ * desenhar.
+ */
+export function podeAdmin(
+  cracha: string | null | undefined,
+  papel: string | null | undefined,
+): boolean {
+  return crachaValido(cracha) || papel === "super_adm";
+}
+
 /** Compara a chave da URL com a do ambiente em tempo constante. */
 export function chaveValida(chave: string | undefined | null): boolean {
   const alvo = process.env.ADM_CHAVE;

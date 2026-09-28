@@ -11,6 +11,7 @@ import {
   crachaValido,
   novoVisitante,
   opcoesCookie,
+  podeAdmin,
   segredo,
 } from "../src/lib/sessao.ts";
 
@@ -153,4 +154,36 @@ test("nome dos cookies e opcoes nao mudam por acidente", () => {
   // Sem `expires`: o cookie é de sessão do ponto de vista do navegador só se
   // maxAge/expires faltarem, e o maxAge acima é o que segura.
   assert.equal("expires" in opcoes, false);
+});
+
+/**
+ * `podeAdmin` decide quem vê o painel e quem recebe o item "Ir para Painel do
+ * ADM" na paleta de comandos. Era a mesma disjunção escrita em três lugares —
+ * e a cópia que ficar para trás vira um item de menu que mente (o aluno clica e
+ * recebe um 404 dizendo que o recurso não existe) ou, pior, uma porta aberta.
+ */
+test("podeAdmin aceita o cracha do link e a sessao de super_adm", () => {
+  const cracha = crachaAdm();
+
+  assert.equal(podeAdmin(cracha, null), true, "crachá do link /adm/<chave>");
+  assert.equal(podeAdmin(null, "super_adm"), true, "sessão de super_adm");
+  assert.equal(podeAdmin(cracha, "super_adm"), true, "os dois");
+});
+
+test("podeAdmin recusa todo o resto", () => {
+  assert.equal(podeAdmin(null, null), false, "ninguém");
+  assert.equal(podeAdmin(undefined, undefined), false, "sem cookie e sem sessão");
+  assert.equal(podeAdmin("", ""), false, "string vazia não é crachá");
+  assert.equal(podeAdmin("lixo", null), false, "token não assinado");
+  // O papel decide sozinho: aluno logado não passa, e por isso o item do painel
+  // não aparece para ele.
+  assert.equal(podeAdmin(null, "aluno"), false, "aluno comum");
+  assert.equal(podeAdmin(null, "super_adm_u"), false, "papel parecido não vale");
+});
+
+test("o cracha de outro proposito nao serve como cracha de ADM", () => {
+  // `participante` é outro domínio de assinatura: o token é válido, mas não
+  // como crachá do painel.
+  const outro = assinar("adm-v1", "visitante");
+  assert.equal(podeAdmin(outro, null), false);
 });

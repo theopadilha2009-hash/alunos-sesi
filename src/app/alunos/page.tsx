@@ -8,7 +8,8 @@ import {
   listarSalas,
   votosDoVisitante,
 } from "@/lib/dados";
-import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
+import { COOKIE_ADM, COOKIE_VISITANTE, abrirAssinado, podeAdmin } from "@/lib/sessao";
+import { obterSessao } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Alunos · Escola SESI",
@@ -17,6 +18,12 @@ export const metadata: Metadata = {
 export default async function AlunosPage() {
   const jar = await cookies();
   const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value, "visitante");
+  // A vitrine é pública, mas quem a abre pode ser o ADM — e ele é a única
+  // pessoa para quem o item "Ir para Painel do ADM" da paleta de comandos leva
+  // a algum lugar. Sem isto o item era oferecido a visitante anônimo e a aluno,
+  // e os dois batiam num 404 dizendo que o recurso não existe.
+  const sessao = await obterSessao();
+  const ehAdm = podeAdmin(jar.get(COOKIE_ADM)?.value, sessao?.role);
 
   try {
     const [alunos, salas, retrato] = await Promise.all([
@@ -38,6 +45,7 @@ export default async function AlunosPage() {
             salas={salas}
             retrato={retrato}
             meusVotos={meusVotos}
+            ehAdm={ehAdm}
           />
         </main>
         <Rodape>Clique na estrela para guardar quem você quer acompanhar.</Rodape>

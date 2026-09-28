@@ -92,7 +92,10 @@ export function ImportarLista() {
           ) : null}
 
           {estado.mensagem ? (
-            <p className={`recado ${estado.ok ? "recado-ok" : "recado-erro"}`} role="status">
+            <p
+              className={`recado recado-${estado.tom ?? (estado.ok ? "ok" : "erro")}`}
+              role="status"
+            >
               {estado.mensagem}
             </p>
           ) : null}

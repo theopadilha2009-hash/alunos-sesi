@@ -1563,6 +1563,17 @@
   color: var(--vermelho);
 }
 
+/* O terceiro tom: não deu erro e não mudou nada. A importação reimportada
+   quando a planilha já está toda lá era o caso que caía em vermelho. */
+.alerta-banner.alerta-atencao {
+  background: color-mix(in srgb, var(--amarelo) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--amarelo) 45%, var(--line));
+}
+
+.alerta-banner.alerta-atencao svg {
+  color: var(--amarelo);
+}
+
 /* A lista de avisos da importação ("linha 4: sem sala") também nascia sem
    regra: `<ul>` cru, com o marcador default sobre fundo escuro. */
 .erros-importacao-lista {

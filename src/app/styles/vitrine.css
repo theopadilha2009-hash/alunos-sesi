@@ -696,6 +696,13 @@
   background: color-mix(in srgb, var(--vermelho) 10%, transparent);
 }
 
+/* Nem novidade nem falha — hoje, só a importação que não tinha nada a fazer. */
+.recado-atencao {
+  color: var(--amarelo);
+  border-color: color-mix(in srgb, var(--amarelo) 45%, transparent);
+  background: color-mix(in srgb, var(--amarelo) 10%, transparent);
+}
+
 .previa {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
