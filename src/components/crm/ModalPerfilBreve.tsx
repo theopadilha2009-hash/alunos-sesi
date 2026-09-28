@@ -18,6 +18,7 @@ import {
   IconeProjetos,
 } from "@/components/Icones";
 import { VideoEmbed } from "@/components/VideoEmbed";
+import { copiarTexto } from "@/lib/clipboard";
 import { useTravaDeFoco } from "@/lib/foco";
 import { MAX_VIDEOS } from "@/lib/limites";
 import { handleLinkedin, urlGithub } from "@/lib/links";
@@ -31,9 +32,11 @@ type Props = {
 
 export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   const [copiado, setCopiado] = useState(false);
+  const [erroCopiar, setErroCopiar] = useState(false);
   const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
+  const [avisoApoio, setAvisoApoio] = useState<string | null>(null);
 
   const dialogoRef = useRef<HTMLDivElement>(null);
   useTravaDeFoco(dialogoRef);
@@ -72,11 +75,15 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
       : `https://alunos-sesi.vercel.app/alunos/${aluno.slug}`;
 
   async function copiarLink() {
-    try {
-      await navigator.clipboard.writeText(urlPerfil);
+    if (await copiarTexto(urlPerfil)) {
+      setErroCopiar(false);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2400);
-    } catch {}
+      return;
+    }
+    setCopiado(false);
+    setErroCopiar(true);
+    setTimeout(() => setErroCopiar(false), 4000);
   }
 
   function handleAbrirCracha() {
@@ -85,19 +92,34 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
     }
   }
 
+  // O +1 otimista some se o servidor recusar. Antes o `catch {}` vazio (e o
+  // caminho `!res.ok`) deixavam o voto na tela: o aluno via o apoio contado,
+  // saía do modal e o número voltava ao de antes — ou pior, apoiava o próprio
+  // perfil e a tela confirmava.
+  function desfazerApoio(hab: string) {
+    setVotos((prev) => ({ ...prev, [hab]: Math.max(0, (prev[hab] || 0) - 1) }));
+  }
+
   async function handleApoiarCompetencia(hab: string) {
     if (apoiandoHab) return;
     setApoiandoHab(hab);
+    setAvisoApoio(null);
 
-    // Otimista
+    // Otimista, para a estrela responder na hora.
     setVotos((prev) => ({ ...prev, [hab]: (prev[hab] || 0) + 1 }));
 
     try {
       const res = await apoiarHabilidadeAction(aluno.id, hab);
       if (res.ok && res.votos) {
-        setVotos(res.votos);
+        setVotos(res.votos); // contagem real, vinda do banco
+      } else {
+        desfazerApoio(hab);
+        setAvisoApoio(res.mensagem ?? "Não foi possível registrar o apoio.");
       }
-    } catch {} finally {
+    } catch {
+      desfazerApoio(hab);
+      setAvisoApoio("Não foi possível registrar o apoio agora. Tente de novo.");
+    } finally {
       setTimeout(() => setApoiandoHab(null), 400);
     }
   }
@@ -231,6 +253,11 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
                     <IconeCheck tamanho={13} />
                     <span>Copiado!</span>
                   </>
+                ) : erroCopiar ? (
+                  <>
+                    <IconeCopiar tamanho={13} />
+                    <span>Não deu para copiar</span>
+                  </>
                 ) : (
                   <>
                     <IconeCopiar tamanho={13} />
@@ -282,6 +309,11 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
                     );
                   })}
                 </div>
+                {avisoApoio ? (
+                  <p className="recado recado-erro" role="alert">
+                    {avisoApoio}
+                  </p>
+                ) : null}
               </div>
             ) : null}
 

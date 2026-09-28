@@ -52,6 +52,22 @@ function texto(formData: FormData, campo: string): string {
   return String(formData.get(campo) ?? "").trim();
 }
 
+/**
+ * Motivo de falha em linguagem que o ADM entende, para o relatório da importação.
+ *
+ * O `error.message` do PostgREST é jargão — `duplicate key value violates unique
+ * constraint` não diz ao professor o que fazer com a linha. Quem chama já manda
+ * o erro real para o log; aqui sai só a frase.
+ */
+function motivoDaFalha(error: { code?: string; message: string }): string {
+  // O único UNIQUE de `alunos` é o `slug`: um 23505 aqui é colisão de endereço
+  // de perfil, não de nome — a dedup por nome+sala é do app, via `fold`, e não
+  // tem constraint no banco que a sustente.
+  if (error.code === "23505") return "já existe outro aluno com esse endereço de perfil";
+  if (error.code === "23503") return "a turma informada não existe mais";
+  return "o banco recusou esta linha";
+}
+
 /** Sala pelo nome, criando se não existir. Aguenta duas colagens ao mesmo tempo. */
 async function garantirSala(
   db: ReturnType<typeof clienteAdmin>,
@@ -78,7 +94,11 @@ async function garantirSala(
       .eq("nome", nome)
       .maybeSingle();
     if (deNovo) return deNovo.id as string;
-    throw new Error(`não deu para criar a sala "${nome}": ${error.message}`);
+    // O erro cru do PostgREST vai para o log; quem chamou recebe uma frase. A
+    // mensagem antiga subia com o jargão embutido e, sem try/catch no laço da
+    // importação, derrubava a colagem inteira levando o texto do banco junto.
+    logger.error("ADM", `Falha ao criar a turma "${nome}"`, error);
+    throw new Error(`Não foi possível criar a turma "${nome}".`);
   }
 
   return criada.id as string;
@@ -109,7 +129,8 @@ export async function importarLista(
     .from("alunos")
     .select("id,slug,nome,sala_id,linkedin,github");
   if (erroLeitura) {
-    return { ok: false, mensagem: `Falha ao ler os alunos: ${erroLeitura.message}` };
+    logger.error("ADM", "Falha ao ler os alunos na importação", erroLeitura);
+    return { ok: false, mensagem: "Não foi possível ler a lista de alunos agora. Tente de novo." };
   }
 
   const slugs = new Set((jaExistem ?? []).map((a) => a.slug as string));
@@ -148,7 +169,21 @@ export async function importarLista(
       });
     }
 
-    const salaId = await garantirSala(db, linha.sala);
+    // Sem o try/catch, uma sala que não sobe lançava e abortava a importação
+    // inteira: as linhas boas antes dela ficavam no banco sem o ADM saber quais,
+    // e o relatório nunca saía. Aqui a linha vira erro e o laço segue.
+    let salaId: string;
+    try {
+      salaId = await garantirSala(db, linha.sala);
+    } catch (err) {
+      erros.push({
+        linha: linha.linha,
+        texto: linha.sala,
+        motivo: err instanceof Error ? err.message : "não deu para criar a turma",
+      });
+      continue;
+    }
+
     const chave = `${fold(linha.nome)}|${salaId}`;
     const existente = porChave.get(chave);
 
@@ -163,13 +198,13 @@ export async function importarLista(
       });
       if (error) {
         // O log guarda o erro do PostgREST; a linha mostra o que o ADM precisa
-        // ler. Antes o painel exibia `duplicate key value violates unique
-        // constraint "alunos_slug_key"` no lugar do motivo.
+        // ler. Este é o ramo onde a colisão de slug acontece — o UPDATE abaixo
+        // só toca linkedin/github de uma linha que já existe.
         logger.error("ADM", `Falha ao importar ${linha.nome}`, error);
         erros.push({
           linha: linha.linha,
           texto: linha.nome,
-          motivo: "não foi possível gravar (erro no banco)",
+          motivo: motivoDaFalha(error),
         });
         continue;
       }
@@ -196,10 +231,11 @@ export async function importarLista(
       .update(faltando)
       .eq("id", existente.id);
     if (error) {
+      logger.error("ADM", `Falha ao completar ${linha.nome}`, error);
       erros.push({
         linha: linha.linha,
         texto: linha.nome,
-        motivo: error.message,
+        motivo: motivoDaFalha(error),
       });
       continue;
     }
@@ -240,10 +276,20 @@ export async function criarAluno(
   const { data: todos } = await db.from("alunos").select("slug");
   const slug = slugUnico(nome, (todos ?? []).map((a) => a.slug as string));
 
+  // Mesma exposição do laço da importação: `garantirSala` lança quando não
+  // consegue criar a turma, e uma Server Action que lança devolve erro genérico
+  // do Next em vez da frase que o ADM precisa ler.
+  let salaId: string;
+  try {
+    salaId = await garantirSala(db, sala);
+  } catch {
+    return { ok: false, mensagem: `Não foi possível criar a turma "${sala}".` };
+  }
+
   const { error } = await db.from("alunos").insert({
     nome,
     slug,
-    sala_id: await garantirSala(db, sala),
+    sala_id: salaId,
     linkedin: normalizarLinkedin(texto(formData, "linkedin")),
     github: normalizarGithub(texto(formData, "github")),
     bio: texto(formData, "bio") || null,
@@ -347,7 +393,8 @@ export async function gerarCodigoAtivacao(
       .update(campos)
       .eq("id", existente.id);
     if (error) {
-      return { ok: false, mensagem: `Não deu para emitir o código: ${error.message}` };
+      logger.error("ADM", `Falha ao reemitir código para ${aluno.nome}`, error);
+      return { ok: false, mensagem: "Não deu para emitir o código agora. Tente de novo." };
     }
   } else {
     const { error } = await db.from("usuarios").insert({
@@ -358,7 +405,8 @@ export async function gerarCodigoAtivacao(
       ...campos,
     });
     if (error) {
-      return { ok: false, mensagem: `Não deu para emitir o código: ${error.message}` };
+      logger.error("ADM", `Falha ao emitir código para ${aluno.nome}`, error);
+      return { ok: false, mensagem: "Não deu para emitir o código agora. Tente de novo." };
     }
   }
 
@@ -455,7 +503,16 @@ export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
   const { data: aluno } = await db.from("alunos").select("id").eq("id", alunoId).maybeSingle();
   if (!aluno) return;
 
-  const salaId = await garantirSala(db, nomeSala);
+  // `void`: não há para onde devolver a falha, e a exceção subiria como erro
+  // genérico do Next. Silêncio aqui é o mesmo contrato dos outros `return`
+  // vazios desta ação — a turma continua a antiga e o painel não mente.
+  let salaId: string;
+  try {
+    salaId = await garantirSala(db, nomeSala);
+  } catch {
+    return;
+  }
+
   await db.from("alunos").update({ sala_id: salaId }).eq("id", alunoId);
 
   revalidar();

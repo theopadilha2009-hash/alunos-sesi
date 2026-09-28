@@ -497,7 +497,8 @@ export async function apoiarHabilidadeAction(
     revalidatePath("/alunos");
     return { ok: true, votos: res.votos };
   } catch (err) {
-    return { ok: false, mensagem: err instanceof Error ? err.message : "Erro ao apoiar competência" };
+    logger.error("CRM", "Erro ao apoiar competência", err);
+    return { ok: false, mensagem: "Não foi possível registrar o apoio agora. Tente de novo." };
   }
 }
 
@@ -560,11 +561,16 @@ export async function submeterDesafioAction(
     revalidatePath("/");
     return { ok: true, mensagem: "Projeto submetido com sucesso ao Desafio SESI Joinville! Parabéns pela iniciativa!" };
   } catch (err) {
-    const mensagem = err instanceof Error ? err.message : "";
-    if (mensagem.includes("23505") || mensagem.includes("submissoes_unica_por_aluno")) {
+    const bruto = err instanceof Error ? err.message : "";
+    // O PostgREST põe o SQLSTATE em `error.code`, não na `message` — e
+    // `submeterDesafio` relança como `Error`, perdendo o código. O que sobra de
+    // confiável é o nome da constraint, que o próprio Postgres escreve na
+    // mensagem. A condição por "23505" que estava aqui nunca casava.
+    if (bruto.includes("submissoes_unica_por_aluno")) {
       return { ok: false, mensagem: "Você já submeteu um projeto para este desafio." };
     }
-    return { ok: false, mensagem: mensagem || "Falha ao enviar submissão." };
+    logger.error("CRM", "Falha ao submeter projeto ao desafio", err);
+    return { ok: false, mensagem: "Não foi possível enviar sua submissão agora. Tente de novo." };
   }
 }
 

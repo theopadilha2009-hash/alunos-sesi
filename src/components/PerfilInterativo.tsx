@@ -22,6 +22,7 @@ import {
 } from "@/components/Icones";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { VideoEmbed } from "@/components/VideoEmbed";
+import { copiarTexto } from "@/lib/clipboard";
 import { handleLinkedin, urlGithub } from "@/lib/links";
 import { MAX_VIDEOS } from "@/lib/limites";
 import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
@@ -117,11 +118,12 @@ export function PerfilInterativo({ aluno, salaNome, abrirCurriculo = false }: Pr
   }
 
   async function copiarLink() {
-    try {
-      await navigator.clipboard.writeText(urlAtual);
+    if (await copiarTexto(urlAtual)) {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2400);
-    } catch {}
+      return;
+    }
+    setRecado("Não deu para copiar o link. Selecione o endereço e copie pela barra do navegador.");
   }
 
   async function handleApoiarCompetencia(hab: string) {
