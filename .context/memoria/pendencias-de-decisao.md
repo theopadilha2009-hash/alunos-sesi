@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-28T18:15:00.000Z
+  modified: 2026-09-28T19:35:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -76,7 +76,7 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   todo `false` em `null`, e depois dela todo `false` é rejeição de verdade.
 
 - **A UI do mural não foi exercida em navegador** (28/09). A PR #38 fechou o ciclo
-  com typecheck, 275 testes e build verdes, mas nenhuma das telas novas — fila de
+  com typecheck, 282 testes e build verdes, mas nenhuma das telas novas — fila de
   envios no painel, selo de status no card do aluno, botão de reenvio — foi aberta
   com sessão real. Mesma situação do caminho do perfil logo abaixo: o primeiro ADM
   a julgar um envio prova.
@@ -108,6 +108,39 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   isso — não escrevi em dado de aluno de produção para testar. Verificado em
   27/09: `cor_perfil` e `banner_url` (PR #21) nascem na mesma situação, e os
   contatos do Théo (instagram, github, linkedin e e-mail) estão preenchidos.
+
+- **Por que ele nunca salvou — e a causa era o próprio formulário** (28/09, PR
+  #40). O Théo relatou "Salvar não funciona e não dá confirmação". Medido:
+  `vercel logs --environment production --since 24h` **não tinha um único POST**
+  de Server Action (só `GET /` e `GET /alunos`), e o banco confirmou o perfil do
+  `theo-padilha` intocado — os 2 projetos e 2 mídias que aparecem ali são o
+  **seed** do `003_crm_auth.sql` (`proj-1`/`proj-2`, imagens Unsplash), não
+  edição de ninguém. A causa: validação HTML nativa em campos que vivem dentro
+  de painéis de aba com `display: none` — o `required` duplicado do "Nome Visual
+  de Exibição" (é o mesmo estado `nome` do "Nome Completo") e o `type="url"` do
+  link da criação. Um controle inválido que o navegador **não consegue focar**
+  faz ele cancelar o submit **em silêncio**: sem request, sem bolha de validação,
+  sem mensagem. Foi trocado por `noValidate` + validação que escreve na tela, a
+  barra de salvar virou fixa no rodapé (a confirmação nasce ao lado do botão, não
+  ~1200 linhas acima), a capa passou a ser desenhada no hero do editor (só era
+  desenhada no perfil público) e o upload ganhou teto de 30 s com
+  `AbortController` — sem ele o `finally` que devolve o botão nunca rodava e o
+  campo ficava preso em "Enviando a imagem…".
+  **Ainda não verificado em navegador com sessão real** — o deploy foi conferido
+  (chunk novo no ar, `/api/health` com banco `ok`), mas quem prova o save é o
+  primeiro a abrir o perfil e salvar estando em cada aba. Não repita o diagnóstico
+  pelo banco antes disso: coluna NULL em `foto_url`/`banner_url` pode ser "ninguém
+  salvou ainda", não regressão.
+- **Competência escrita à mão é permitida; endosso não** (28/09, PR #40). O
+  campo livre entrou em `normalizarNomeHabilidade` (`src/lib/habilidades.ts`) com
+  teto de 32 caracteres e allowlist de caracteres, e o nome digitado que casa com
+  a lista vira a **forma canônica** ("python" → "Python") — é o "Python" que a
+  turma consegue endossar. O `+1` continua restrito às dez conhecidas nos dois
+  lados: `apoiarHabilidadeAction` (`acoes-crm.ts`) recusa por
+  `habilidadePermitida` e o `PerfilInterativo` não desenha o botão fora da
+  allowlist. A PK de `public.endossos` é o **nome exato** da competência, então
+  abrir o texto livre ali criaria lixo no banco. `habilidadePermitida` deixou de
+  ser "o que pode existir no perfil" e virou só "o que pode receber +1".
 - **Hierarquia entre `--faint` e `--dim` no tema escuro.** Efeito colateral de
   fazer o `--faint` passar AA: a distância entre os dois caiu de 1,85:1 para
   1,24:1 e, no mesmo corpo de fonte, os dois se leem como um. Onde dói:
