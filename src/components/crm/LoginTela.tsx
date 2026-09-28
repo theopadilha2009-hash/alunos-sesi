@@ -12,6 +12,28 @@ import { TemaToggle } from "@/components/TemaToggle";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { DOMINIO_EMAIL_ESCOLA } from "@/lib/limites";
 
+/**
+ * Põe o domínio da escola no campo de usuário.
+ *
+ * O aluno digita só a parte local — `arthur_oliveira150` — e esquece o resto,
+ * e aí o login dele deixa de ser o e-mail que a escola deu. No celular, digitar
+ * `@estudante.sesisenai.org.br` são 26 caracteres a mais para errar.
+ *
+ * Não mexe em campo vazio (não há o que completar) nem em campo que já tem `@`
+ * (o aluno digitou o endereço inteiro, ou escolheu outro usuário).
+ */
+function completarDominio(idCampo: string) {
+  const campo = document.getElementById(idCampo) as HTMLInputElement | null;
+  if (!campo) return;
+  const valor = campo.value.trim();
+  if (!valor || valor.includes("@")) {
+    campo.focus();
+    return;
+  }
+  campo.value = `${valor}@${DOMINIO_EMAIL_ESCOLA}`;
+  campo.focus();
+}
+
 export function LoginTela() {
   const [modo, setModo] = useState<"login" | "cadastro" | "ativar">("login");
 
@@ -196,7 +218,16 @@ export function LoginTela() {
                     cadastro o recusava — quem tentasse não entendia o motivo.
                     O domínio vai escrito para o aluno não digitar o errado: o
                     `alunos.email` do perfil exige exatamente este sufixo. */}
-                <span className="dica-campo">Pode ser o seu e-mail da escola (@{DOMINIO_EMAIL_ESCOLA}).</span>
+                <span className="dica-campo">
+                  Pode ser o seu e-mail da escola.{" "}
+                  <button
+                    type="button"
+                    className="dica-acao"
+                    onClick={() => completarDominio("cad-user")}
+                  >
+                    Completar com @{DOMINIO_EMAIL_ESCOLA}
+                  </button>
+                </span>
               </div>
 
               <div className="campo">
@@ -264,7 +295,16 @@ export function LoginTela() {
                 required
                 autoComplete="username"
               />
-              <span className="dica-campo">Pode ser o seu e-mail da escola (@{DOMINIO_EMAIL_ESCOLA}).</span>
+              <span className="dica-campo">
+                Pode ser o seu e-mail da escola.{" "}
+                <button
+                  type="button"
+                  className="dica-acao"
+                  onClick={() => completarDominio("atv-user")}
+                >
+                  Completar com @{DOMINIO_EMAIL_ESCOLA}
+                </button>
+              </span>
             </div>
 
             <div className="campo">
