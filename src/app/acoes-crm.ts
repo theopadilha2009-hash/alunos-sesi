@@ -562,7 +562,11 @@ export async function submeterDesafioAction(
     return { ok: true, mensagem: "Projeto submetido com sucesso ao Desafio SESI Joinville! Parabéns pela iniciativa!" };
   } catch (err) {
     const bruto = err instanceof Error ? err.message : "";
-    if (bruto.includes("23505") || bruto.includes("submissoes_unica_por_aluno")) {
+    // O PostgREST põe o SQLSTATE em `error.code`, não na `message` — e
+    // `submeterDesafio` relança como `Error`, perdendo o código. O que sobra de
+    // confiável é o nome da constraint, que o próprio Postgres escreve na
+    // mensagem. A condição por "23505" que estava aqui nunca casava.
+    if (bruto.includes("submissoes_unica_por_aluno")) {
       return { ok: false, mensagem: "Você já submeteu um projeto para este desafio." };
     }
     logger.error("CRM", "Falha ao submeter projeto ao desafio", err);

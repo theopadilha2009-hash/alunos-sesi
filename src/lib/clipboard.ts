@@ -21,8 +21,12 @@ export async function copiarTexto(texto: string): Promise<boolean> {
     // Permissão negada ou contexto não-seguro: tenta o caminho antigo.
   }
 
+  const area = document.createElement("textarea");
+  // `select()` tira o foco de onde ele estava. Três destes botões vivem em
+  // modal com trava de foco: não devolver deixa o teclado preso fora do diálogo.
+  const focoAnterior = document.activeElement as HTMLElement | null;
+
   try {
-    const area = document.createElement("textarea");
     area.value = texto;
     area.setAttribute("readonly", "");
     // Fora da tela, mas ainda focável — `select()` precisa do elemento visível
@@ -31,10 +35,14 @@ export async function copiarTexto(texto: string): Promise<boolean> {
     area.style.top = "-9999px";
     document.body.appendChild(area);
     area.select();
-    const copiou = document.execCommand("copy");
-    document.body.removeChild(area);
-    return copiou;
+    return document.execCommand("copy");
   } catch {
     return false;
+  } finally {
+    // `finally` e não o fim do bloco: se `execCommand` lançar (ou nem existir,
+    // o que dá TypeError), o `return false` do `catch` sairia sem remover o nó,
+    // e cada clique deixaria um textarea preso no body.
+    area.remove();
+    focoAnterior?.focus();
   }
 }
