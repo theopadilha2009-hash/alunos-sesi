@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-25T22:22:43.233Z
+  modified: 2026-09-28T18:15:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -58,6 +58,28 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   alunos. Não houve migração a fazer.
 
 **Continua aberto:**
+
+- **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural
+  fechou o ciclo na PR #38: o ADM publica desafio, o ADM julga o envio, o aluno vê
+  onde o dele parou. Antes disso o botão "Rejeitar" era **no-op**:
+  `submissoes_desafios.aprovado` era `boolean default false` (004:48) e um envio
+  novo também nascia `false`, então rejeitar gravava o valor que a linha já tinha.
+  A migration **016** tornou a coluna tri-estado (`null` = pendente, `true` =
+  aprovado, `false` = rejeitado) e o aluno rejeitado recebe o botão de volta para
+  corrigir e reenviar — o envio virou upsert sobre `submissoes_unica_por_aluno`, que
+  antes recusaria o segundo com uma mensagem de banco.
+  O único envio em produção é o do **Arthur Oliveira**, `"aisdjasdjasçdlajs"`, DSM3
+  — criado antes de a fila existir, nunca julgado (o backfill da 016 o devolveu a
+  pendente). É decisão de produto: aprovar, rejeitar, ou apagar (o título parece
+  teste de teclado).
+  **A 016 não pode ser reaplicada às cegas**: o `UPDATE` do backfill transforma
+  todo `false` em `null`, e depois dela todo `false` é rejeição de verdade.
+
+- **A UI do mural não foi exercida em navegador** (28/09). A PR #38 fechou o ciclo
+  com typecheck, 275 testes e build verdes, mas nenhuma das telas novas — fila de
+  envios no painel, selo de status no card do aluno, botão de reenvio — foi aberta
+  com sessão real. Mesma situação do caminho do perfil logo abaixo: o primeiro ADM
+  a julgar um envio prova.
 
 - **A busca de GIF no Giphy continua bloqueada por insumo externo** (27/09). Não
   é decisão de design nem trabalho de código: falta a **chave da API**
