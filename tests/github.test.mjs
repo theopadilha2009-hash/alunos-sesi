@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { descricaoDoRepo, quandoDoRepo, tituloDoRepo } from "../src/lib/github.ts";
+import { descricaoDoRepo, tituloDoRepo } from "../src/lib/github.ts";
 
 test("tituloDoRepo humaniza hífen, underline e caixa", () => {
   assert.equal(tituloDoRepo("robo-seguidor-de-linha"), "Robo seguidor de linha");
@@ -20,10 +20,4 @@ test("descricaoDoRepo usa a linguagem quando não há descrição", () => {
     descricaoDoRepo({ descricao: "Feito na aula", linguagem: "Python" }),
     "Feito na aula",
   );
-});
-
-test("quandoDoRepo formata a data e recusa o que não é data", () => {
-  assert.equal(quandoDoRepo("2026-03-14T10:22:31Z"), "14/03/2026");
-  assert.equal(quandoDoRepo(""), null);
-  assert.equal(quandoDoRepo("ontem"), null);
 });

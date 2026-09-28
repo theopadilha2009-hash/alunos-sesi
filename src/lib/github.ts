@@ -42,9 +42,3 @@ export function descricaoDoRepo(r: Pick<RepoGithub, "descricao" | "linguagem">):
   return r.linguagem ? `Projeto em ${r.linguagem}.` : "";
 }
 
-/** `2026-03-14T10:22:31Z` → `14/03/2026`. `null` quando não veio data válida. */
-export function quandoDoRepo(iso: string): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("pt-BR");
-}
