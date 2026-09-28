@@ -2618,6 +2618,25 @@
   color: var(--dim);
 }
 
+/* Ação dentro da dica do campo — hoje só o atalho que completa o domínio da
+   escola. Parece link porque é ação secundária, mas é `<button>`: um `<a>` sem
+   href não recebe foco nem responde ao Enter. */
+.dica-acao {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dica-acao:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 /* Painel do ADM: trocar a turma de um aluno na própria linha da tabela. O input
    é estreito porque a coluna é apertada e nome de turma é curto. */
 .adm-form-sala {
