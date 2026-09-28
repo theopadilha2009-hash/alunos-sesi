@@ -33,6 +33,7 @@ import { VideoEmbed } from "@/components/VideoEmbed";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
+import { copiarTexto } from "@/lib/clipboard";
 import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
 import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
 import {
@@ -74,6 +75,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   const [crachaAberto, setCrachaAberto] = useState(false);
   const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
+  const [erroLink, setErroLink] = useState(false);
 
   // Stickers e Elementos Decorativos Estilo Canva
   const [stickers, setStickers] = useState<StickerPerfil[]>(
@@ -164,17 +166,29 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   // nada, sem saber se quebrou ou se ainda está subindo.
   const [enviando, setEnviando] = useState<"midia" | "projeto" | null>(null);
 
-  const urlPerfil =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/alunos/${alunoAtual?.slug ?? "theo-padilha"}`
-      : `https://alunos-sesi.vercel.app/alunos/${alunoAtual?.slug ?? "theo-padilha"}`;
+  // O `?? "theo-padilha"` que estava aqui mandava o aluno copiar e abrir o
+  // perfil de OUTRA pessoa quando `alunoAtual` era nulo — o estado de quem teve
+  // o perfil removido pelo ADM com a sessão ainda viva. Sem perfil, sem link.
+  const urlPerfil = alunoAtual
+    ? `${
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "https://alunos-sesi.vercel.app"
+      }/alunos/${alunoAtual.slug}`
+    : "";
 
   async function copiarLink() {
-    try {
-      await navigator.clipboard.writeText(urlPerfil);
+    if (await copiarTexto(urlPerfil)) {
+      setErroLink(false);
       setLinkCopiado(true);
       setTimeout(() => setLinkCopiado(false), 2400);
-    } catch {}
+      return;
+    }
+    // `copiarTexto` devolve `false` em vez de lançar: sem este ramo a falha
+    // sumia no `catch {}` e o botão não dava sinal nenhum.
+    setLinkCopiado(false);
+    setErroLink(true);
+    setTimeout(() => setErroLink(false), 4000);
   }
 
   // Os chips são a única porta de entrada de competência, e todos saem de
@@ -837,46 +851,55 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
               </span>
             ) : null}
 
-            <div className="perfil-acoes-rapidas">
-              <button
-                type="button"
-                className="btn-acao-rapida"
-                onClick={copiarLink}
-                title="Copiar link do portfólio"
-              >
-                <IconeCopiar tamanho={15} />
-                <span>{linkCopiado ? "Link Copiado!" : "Copiar Link"}</span>
-              </button>
+            {/* Todas as quatro ações apontam para o perfil do próprio aluno —
+                copiar o link, o crachá, o currículo e o cartão. Sem perfil
+                carregado não há para onde apontar, e o `Link` abaixo era o
+                último que ainda caía em `/u/theo-padilha`. Mesma guarda dos
+                botões acima. */}
+            {alunoAtual ? (
+              <div className="perfil-acoes-rapidas">
+                <button
+                  type="button"
+                  className="btn-acao-rapida"
+                  onClick={copiarLink}
+                  title="Copiar link do portfólio"
+                >
+                  <IconeCopiar tamanho={15} />
+                  <span>
+                    {erroLink ? "Não deu para copiar" : linkCopiado ? "Link Copiado!" : "Copiar Link"}
+                  </span>
+                </button>
 
-              <button
-                type="button"
-                className="btn-acao-rapida"
-                onClick={() => setCrachaAberto(true)}
-                title="Visualizar crachá digital 3D"
-              >
-                <IconeCracha tamanho={15} />
-                <span>Crachá Digital</span>
-              </button>
+                <button
+                  type="button"
+                  className="btn-acao-rapida"
+                  onClick={() => setCrachaAberto(true)}
+                  title="Visualizar crachá digital 3D"
+                >
+                  <IconeCracha tamanho={15} />
+                  <span>Crachá Digital</span>
+                </button>
 
-              <button
-                type="button"
-                className="btn-acao-rapida"
-                onClick={() => setCurriculoAberto(true)}
-                title="Gerar Mini-Currículo A4 para vagas de estágio"
-              >
-                <IconeDownload tamanho={15} />
-                <span>Mini-Currículo A4</span>
-              </button>
+                <button
+                  type="button"
+                  className="btn-acao-rapida"
+                  onClick={() => setCurriculoAberto(true)}
+                  title="Gerar Mini-Currículo A4 para vagas de estágio"
+                >
+                  <IconeDownload tamanho={15} />
+                  <span>Mini-Currículo A4</span>
+                </button>
 
-              <Link
-                href={`/u/${alunoAtual?.slug ?? "theo-padilha"}`}
-                target="_blank"
-                className="btn-acao-rapida"
-                title="Abrir versão Cartão NFC / Linktree"
-              >
-                <span>Cartão NFC / Bio</span>
-              </Link>
-            </div>
+                <Link
+                  href={`/u/${alunoAtual.slug}`}
+                  target="_blank"
+                  className="btn-acao-rapida"
+                  title="Abrir versão Cartão NFC / Linktree"
+                >
+                  <span>Cartão NFC / Bio</span>
+                </Link>
+              </div>
+            ) : null}
           </div>
 
           {/* Card 2: Aparência do perfil público */}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fold } from "@/lib/busca";
+import { copiarTexto } from "@/lib/clipboard";
 import { corDaSala } from "@/lib/cores";
 import { useTravaDeFoco } from "@/lib/foco";
 import { Avatar } from "@/components/Avatar";
@@ -158,13 +159,14 @@ export function CommandBar({
         subtitulo: "Compartilhe o diretório com a turma",
         icone: <IconeLink tamanho={16} />,
         executar: () => {
-          if (typeof navigator !== "undefined") {
-            navigator.clipboard.writeText(
-              typeof window !== "undefined"
-                ? `${window.location.origin}/alunos`
-                : "https://alunos-sesi.vercel.app/alunos",
-            );
-          }
+          // Sem `await` e sem `catch`, uma recusa da clipboard virava
+          // `Uncaught (in promise)` no console e o menu fechava sem sinal
+          // nenhum — o mesmo silêncio que os outros quatro copiarLink tinham.
+          void copiarTexto(
+            typeof window !== "undefined"
+              ? `${window.location.origin}/alunos`
+              : "https://alunos-sesi.vercel.app/alunos",
+          );
           onFechar();
         },
       },

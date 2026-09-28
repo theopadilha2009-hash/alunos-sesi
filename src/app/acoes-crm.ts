@@ -497,7 +497,8 @@ export async function apoiarHabilidadeAction(
     revalidatePath("/alunos");
     return { ok: true, votos: res.votos };
   } catch (err) {
-    return { ok: false, mensagem: err instanceof Error ? err.message : "Erro ao apoiar competência" };
+    logger.error("CRM", "Erro ao apoiar competência", err);
+    return { ok: false, mensagem: "Não foi possível registrar o apoio agora. Tente de novo." };
   }
 }
 
@@ -564,8 +565,8 @@ export async function submeterDesafioAction(
     // `submissoes_unica_por_aluno`, então reenviar é o caminho esperado de quem
     // teve um envio rejeitado — não um erro. Um 23505 aqui só apareceria se a
     // constraint sumisse do banco, e aí a mensagem genérica é a honesta.
-    const mensagem = err instanceof Error ? err.message : "";
-    return { ok: false, mensagem: mensagem || "Falha ao enviar submissão." };
+    logger.error("CRM", "Falha ao submeter projeto ao desafio", err);
+    return { ok: false, mensagem: "Não foi possível enviar sua submissão agora. Tente de novo." };
   }
 }
 
