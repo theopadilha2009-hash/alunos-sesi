@@ -23,6 +23,7 @@ import {
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { copiarTexto } from "@/lib/clipboard";
+import { lerRespostaEstrela } from "@/lib/estrela";
 import { habilidadePermitida } from "@/lib/habilidades";
 import { handleLinkedin, urlGithub } from "@/lib/links";
 import { MAX_VIDEOS } from "@/lib/limites";
@@ -160,20 +161,36 @@ export function PerfilInterativo({ aluno, salaNome, abrirCurriculo = false }: Pr
       dispararConfetes(ev.clientX, ev.clientY);
     }
 
+    // Desfaz o otimismo. Antes disto o `if (resp.ok)` sem `else` deixava a
+    // estrela acesa na tela mesmo quando o servidor recusava — o número subia,
+    // ninguém tinha votado, e o visitante só descobria no próximo carregamento.
+    function desfazer() {
+      setEstrelado(!proximoEstrelado);
+      setEstrelas((prev) => Math.max(0, prev + (proximoEstrelado ? -1 : 1)));
+    }
+
     try {
       const resp = await fetch("/api/estrela", {
         method: proximoEstrelado ? "POST" : "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ alunoId: aluno.id }),
       });
-      const dados = (await resp.json()) as { estrelas?: number; votado?: boolean };
-      if (resp.ok && typeof dados.estrelas === "number") {
-        setEstrelas(dados.estrelas);
-        setEstrelado(Boolean(dados.votado));
+      const resultado = lerRespostaEstrela(
+        resp.status,
+        await resp.json().catch(() => null),
+      );
+
+      if (!resultado.ok) {
+        desfazer();
+        setRecado(resultado.motivo);
+        return;
       }
+
+      setEstrelas(resultado.estrelas);
+      setEstrelado(resultado.votado);
     } catch {
-      setEstrelado(!proximoEstrelado);
-      setEstrelas((prev) => Math.max(0, prev + (proximoEstrelado ? -1 : 1)));
+      desfazer();
+      setRecado("Não deu para votar agora. Confira a conexão e tente de novo.");
     } finally {
       setCarregandoVoto(false);
     }

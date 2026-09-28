@@ -32,6 +32,7 @@ import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
+import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -89,6 +90,8 @@ export function CrmApp({
   const [lista, setLista] = useState<Aluno[]>(alunosIniciais);
   const [meus, setMeus] = useState<string[]>(meusVotos);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  /** Recusa do servidor no voto, escrita perto de quem clicou. */
+  const [recado, setRecado] = useState<string | null>(null);
 
   // Modais
   const [alunoBreveSelecionado, setAlunoBreveSelecionado] = useState<AlunoNaTela | null>(null);
@@ -238,20 +241,29 @@ export function CrmApp({
     return arr;
   }, [naTela]);
 
-  // Voto de Estrela Otimizado com som e confetes
+  // Voto de estrela otimista, com som e confetes.
+  //
+  // Quem confirma o resultado é a resposta do servidor, não o que a tela
+  // pintou. Quando ele recusa — perfil pendente, rate limit, navegador sem
+  // cookie — o otimismo é desfeito E o motivo vai para a tela. Antes o desfazer
+  // era mudo, então recusa e voto duplicado davam o mesmo sintoma: confete,
+  // som, e o número de volta sem explicação.
+  //
+  // atalho: um voto por vez na tela inteira (o otimismo guarda o estado
+  // anterior para poder desfazer, e dois em voo se atropelam); revisitar se o
+  // POST passar de ~1s.
   async function estrelar(alunoId: string, ev?: React.MouseEvent) {
     if (ocupado) return;
     setOcupado(alunoId);
+    setRecado(null);
 
     const meusAnteriores = meus;
     const listaAnterior = lista;
-
     const eraEstrelado = meus.includes(alunoId);
-    const proximaListaMeus = eraEstrelado
-      ? meus.filter((id) => id !== alunoId)
-      : [...meus, alunoId];
 
-    setMeus(proximaListaMeus);
+    setMeus(
+      eraEstrelado ? meus.filter((id) => id !== alunoId) : [...meus, alunoId],
+    );
     setLista((antiga) =>
       antiga.map((a) =>
         a.id === alunoId
@@ -267,19 +279,46 @@ export function CrmApp({
       }
     }
 
+    function desfazer() {
+      setMeus(meusAnteriores);
+      setLista(listaAnterior);
+    }
+
     try {
       const resp = await fetch("/api/estrela", {
-        method: "POST",
+        // Tirar a estrela é DELETE. Mandar POST aqui não removia nada: a rota
+        // insere com `on conflict do nothing`, então a tela desmarcava e o voto
+        // voltava no próximo carregamento.
+        method: eraEstrelado ? "DELETE" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ alunoId }),
       });
-      if (!resp.ok) {
-        setMeus(meusAnteriores);
-        setLista(listaAnterior);
+      const resultado = lerRespostaEstrela(
+        resp.status,
+        await resp.json().catch(() => null),
+      );
+
+      if (!resultado.ok) {
+        desfazer();
+        setRecado(resultado.motivo);
+        return;
       }
+
+      setLista((antiga) =>
+        antiga.map((a) =>
+          a.id === alunoId ? { ...a, estrelas: resultado.estrelas } : a,
+        ),
+      );
+      setMeus((antes) =>
+        resultado.votado
+          ? antes.includes(alunoId)
+            ? antes
+            : [...antes, alunoId]
+          : antes.filter((id) => id !== alunoId),
+      );
     } catch {
-      setMeus(meusAnteriores);
-      setLista(listaAnterior);
+      desfazer();
+      setRecado("Não deu para votar agora. Confira a conexão e tente de novo.");
     } finally {
       setOcupado(null);
     }
@@ -518,6 +557,15 @@ export function CrmApp({
           </div>
         ) : null}
 
+        {/* A recusa do voto aparece aqui, no mesmo lugar em todas as abas: os
+            botões de estrela vivem no Portfólio e na aba Tabelas, e a mensagem
+            não pode nascer dentro de uma delas. */}
+        {recado ? (
+          <p className="recado recado-erro" role="status">
+            {recado}
+          </p>
+        ) : null}
+
         {/* ── ABA 1: PORTFÓLIO (Aba Principal) ──────────────────────────── */}
         {aba === "portfolio" ? (
           <div className="crm-secao-conteudo">
@@ -689,6 +737,7 @@ export function CrmApp({
                       <div className="grade-portfolio">
                         {grupo.alunos.map((aluno) => {
                           const estrelado = meus.includes(aluno.id);
+                          const impedimento = motivoParaNaoEstrelar(aluno);
                           return (
                             <article
                               key={aluno.id}
@@ -720,6 +769,17 @@ export function CrmApp({
                                   type="button"
                                   className="estrela mini-estrela"
                                   aria-pressed={estrelado}
+                                  // Desabilitado também enquanto OUTRO voto está
+                                  // em voo: o `estrelar` só aceita um por vez, e
+                                  // sem isto o clique era descartado em silêncio.
+                                  disabled={impedimento !== null || ocupado !== null}
+                                  title={impedimento ?? undefined}
+                                  aria-label={
+                                    impedimento ??
+                                    (estrelado
+                                      ? `Tirar estrela de ${aluno.nome}`
+                                      : `Dar estrela para ${aluno.nome}`)
+                                  }
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     estrelar(aluno.id, e);

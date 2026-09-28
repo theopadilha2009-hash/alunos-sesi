@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
 import { GrupoRedes } from "@/components/RedesBadges";
+import { motivoParaNaoEstrelar } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -57,6 +58,7 @@ export function TabelaAlunos({
         <tbody>
           {alunos.map((aluno) => {
             const estrelado = meusVotos.includes(aluno.id);
+            const impedimento = motivoParaNaoEstrelar(aluno);
 
             return (
               <tr
@@ -159,15 +161,20 @@ export function TabelaAlunos({
                     type="button"
                     className="estrela"
                     aria-pressed={estrelado}
-                    disabled={ocupado === aluno.id}
+                    // Duas razões para não deixar clicar, e as duas com o motivo
+                    // na tela: o perfil pendente, que a rota recusa sempre, e um
+                    // voto já em voo — o `estrelar` do CRM aceita um por vez.
+                    disabled={impedimento !== null || ocupado !== null}
                     onClick={(e) => {
                       e.stopPropagation();
                       onEstrelar(aluno.id, e);
                     }}
+                    title={impedimento ?? undefined}
                     aria-label={
-                      estrelado
+                      impedimento ??
+                      (estrelado
                         ? `Tirar estrela de ${aluno.nome}`
-                        : `Dar estrela para ${aluno.nome}`
+                        : `Dar estrela para ${aluno.nome}`)
                     }
                   >
                     <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
