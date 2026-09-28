@@ -85,7 +85,10 @@ export function PainelAdmIntegrado({
 
   // A fila mostra primeiro o que espera decisão: um envio julgado some da
   // frente do ADM e vira histórico.
-  const pendentes = submissoes.filter((s) => !s.aprovado);
+  //
+  // `=== null` e não `!s.aprovado`: com o tri-estado da 016 o `!` também
+  // pegaria os rejeitados, e eles voltariam para a fila de quem já os julgou.
+  const pendentes = submissoes.filter((s) => (s.aprovado ?? null) === null);
 
   // `alguns` alunos já têm login; o código é só para quem falta.
   const comAcessoSet = useMemo(() => new Set(comAcesso), [comAcesso]);
@@ -839,26 +842,54 @@ export function PainelAdmIntegrado({
                         <td>
                           <span
                             className={`adm-desafios-status ${
-                              s.aprovado ? "adm-desafios-aprovado" : "adm-desafios-pendente"
+                              s.aprovado === true
+                                ? "adm-desafios-aprovado"
+                                : s.aprovado === false
+                                  ? "adm-desafios-rejeitado"
+                                  : "adm-desafios-pendente"
                             }`}
                           >
-                            {s.aprovado ? "Aprovado" : "Pendente"}
+                            {s.aprovado === true
+                              ? "Aprovado"
+                              : s.aprovado === false
+                                ? "Rejeitado"
+                                : "Pendente"}
                           </span>
                         </td>
                         <td>
-                          {/* Um botão só, com o valor invertido: o rótulo diz o
-                              que o clique FAZ, não o estado em que já está. */}
-                          <form action={decidirSubmissaoAction}>
-                            <input type="hidden" name="submissaoId" value={s.id} />
-                            <button
-                              type="submit"
-                              name="decisao"
-                              value={s.aprovado ? "rejeitar" : "aprovar"}
-                              className="botao botao-fraco adm-desafios-decidir"
-                            >
-                              {s.aprovado ? "Rejeitar" : "Aprovar"}
-                            </button>
-                          </form>
+                          {/* Um botão por decisão, cada um escondido quando ela
+                              já é a dele: com o tri-estado o ADM pode voltar
+                              atrás (rejeitar um aprovado, aprovar um
+                              rejeitado), e um botão único de rótulo invertido
+                              ficaria ambíguo em três estados. */}
+                          <div className="adm-desafios-decidir">
+                            {s.aprovado !== true ? (
+                              <form action={decidirSubmissaoAction}>
+                                <input type="hidden" name="submissaoId" value={s.id} />
+                                <button
+                                  type="submit"
+                                  name="decisao"
+                                  value="aprovar"
+                                  className="botao botao-fraco"
+                                >
+                                  Aprovar
+                                </button>
+                              </form>
+                            ) : null}
+                            {s.aprovado !== false ? (
+                              <form action={decidirSubmissaoAction}>
+                                <input type="hidden" name="submissaoId" value={s.id} />
+                                <button
+                                  type="submit"
+                                  name="decisao"
+                                  value="rejeitar"
+                                  className="botao botao-fraco"
+                                >
+                                  Rejeitar
+                                </button>
+                              </form>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))}

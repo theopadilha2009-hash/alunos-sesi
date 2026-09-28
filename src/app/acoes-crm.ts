@@ -560,10 +560,11 @@ export async function submeterDesafioAction(
     revalidatePath("/");
     return { ok: true, mensagem: "Projeto submetido com sucesso ao Desafio SESI Joinville! Parabéns pela iniciativa!" };
   } catch (err) {
+    // Sem ramo para "já submeteu": `submeterDesafio` virou upsert sobre
+    // `submissoes_unica_por_aluno`, então reenviar é o caminho esperado de quem
+    // teve um envio rejeitado — não um erro. Um 23505 aqui só apareceria se a
+    // constraint sumisse do banco, e aí a mensagem genérica é a honesta.
     const mensagem = err instanceof Error ? err.message : "";
-    if (mensagem.includes("23505") || mensagem.includes("submissoes_unica_por_aluno")) {
-      return { ok: false, mensagem: "Você já submeteu um projeto para este desafio." };
-    }
     return { ok: false, mensagem: mensagem || "Falha ao enviar submissão." };
   }
 }

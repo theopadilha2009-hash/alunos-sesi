@@ -146,10 +146,33 @@ export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
                   {desafio.submissoesCount} soluções enviadas por alunos
                 </span>
 
-                {/* Quem já enviou não vê mais o botão: a constraint
-                    `submissoes_unica_por_aluno` recusaria o segundo envio com
-                    uma mensagem de banco. Ele vê onde o primeiro parou. */}
-                {meuEnvio ? (
+                {/* Três estados desde a 016, e a decisão do ADM tem
+                    consequência: o aluno cujo projeto foi rejeitado recebe o
+                    botão de volta para corrigir e reenviar.
+
+                    Reenviar não esbarra em `submissoes_unica_por_aluno`: o
+                    envio é upsert (dados.ts), então atualiza a mesma linha e
+                    devolve o registro para a fila como pendente. */}
+                {!meuEnvio ? (
+                  <button
+                    type="button"
+                    className="botao botao-primario btn-submeter-desafio"
+                    onClick={() => setDesafioSelecionado(desafio)}
+                  >
+                    <IconePlus tamanho={15} />
+                    <span>Submeter Projeto</span>
+                  </button>
+                ) : meuEnvio.aprovado === false ? (
+                  <button
+                    type="button"
+                    className="botao botao-primario btn-submeter-desafio"
+                    onClick={() => setDesafioSelecionado(desafio)}
+                    title={`Seu envio: ${meuEnvio.tituloProjeto}`}
+                  >
+                    <IconePlus tamanho={15} />
+                    <span>Corrigir e reenviar</span>
+                  </button>
+                ) : (
                   <span
                     className={`mural-meu-envio ${
                       meuEnvio.aprovado ? "mural-envio-aprovado" : "mural-envio-pendente"
@@ -168,15 +191,6 @@ export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
                       </>
                     )}
                   </span>
-                ) : (
-                  <button
-                    type="button"
-                    className="botao botao-primario btn-submeter-desafio"
-                    onClick={() => setDesafioSelecionado(desafio)}
-                  >
-                    <IconePlus tamanho={15} />
-                    <span>Submeter Projeto</span>
-                  </button>
                 )}
               </div>
             </div>

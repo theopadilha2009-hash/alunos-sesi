@@ -433,8 +433,19 @@
   color: var(--amarelo);
 }
 
+/* Terceiro estado da 016: antes "rejeitado" e "pendente" eram os dois `false`
+   e não havia como pintar a diferença. */
+.adm-desafios-rejeitado {
+  background: rgba(215, 77, 66, 0.16);
+  color: var(--vermelho);
+}
+
+/* Dois botões lado a lado — cada um some quando a decisão já é a dele. `wrap`
+   porque no celular a célula da tabela é estreita. */
 .adm-desafios-decidir {
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 /* Publicar é ação rara: fica recolhida abaixo da fila, que é a rotina. */

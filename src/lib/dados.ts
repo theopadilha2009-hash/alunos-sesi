@@ -293,15 +293,28 @@ export async function submeterDesafio(dados: {
   descricao: string;
 }): Promise<SubmissaoDesafio> {
   const db = clienteAdmin();
+  // `upsert` e não `insert`: `submissoes_unica_por_aluno` (005:57) só permite
+  // uma linha por par aluno+desafio, e o aluno cujo envio foi rejeitado precisa
+  // poder corrigir e reenviar — é o que dá consequência ao "Rejeitar" em vez de
+  // deixá-lo como carimbo sem saída.
+  //
+  // `aprovado: null` explícito: o reenvio volta para a fila. Sem isto a linha
+  // corrigida continuaria carregando a rejeição antiga, e o ADM não a veria
+  // de novo. `null` é o estado pendente desde a 016 — a coluna não tem mais
+  // default.
   const { data, error } = await db
     .from("submissoes_desafios")
-    .insert({
-      desafio_id: dados.desafioId,
-      aluno_id: dados.alunoId,
-      titulo_projeto: dados.tituloProjeto,
-      link_projeto: dados.linkProjeto || null,
-      descricao: dados.descricao,
-    })
+    .upsert(
+      {
+        desafio_id: dados.desafioId,
+        aluno_id: dados.alunoId,
+        titulo_projeto: dados.tituloProjeto,
+        link_projeto: dados.linkProjeto || null,
+        descricao: dados.descricao,
+        aprovado: null,
+      },
+      { onConflict: "desafio_id,aluno_id" },
+    )
     .select("id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em")
     .single();
 
@@ -323,7 +336,7 @@ export async function submeterDesafio(dados: {
     tituloProjeto: data.titulo_projeto,
     linkProjeto: data.link_projeto ?? "",
     descricao: data.descricao,
-    aprovado: data.aprovado ?? false,
+    aprovado: data.aprovado ?? null,
     criadoEm: data.criado_em,
   };
 }
@@ -362,7 +375,9 @@ export async function listarSubmissoes(): Promise<SubmissaoDesafio[]> {
     tituloProjeto: s.titulo_projeto,
     linkProjeto: s.link_projeto ?? "",
     descricao: s.descricao,
-    aprovado: Boolean(s.aprovado),
+    // Tri-estado preservado: coagir com `Boolean()` transformaria "pendente"
+    // e "rejeitado" no mesmo `false`, que é o bug que a 016 desfaz.
+    aprovado: s.aprovado ?? null,
     criadoEm: s.criado_em,
     desafioTitulo: (s.desafios as { titulo?: string } | null)?.titulo ?? "",
   }));
@@ -392,7 +407,9 @@ export async function submissoesDoAluno(alunoId: string): Promise<SubmissaoDesaf
     tituloProjeto: s.titulo_projeto,
     linkProjeto: s.link_projeto ?? "",
     descricao: s.descricao,
-    aprovado: Boolean(s.aprovado),
+    // Tri-estado preservado: coagir com `Boolean()` transformaria "pendente"
+    // e "rejeitado" no mesmo `false`, que é o bug que a 016 desfaz.
+    aprovado: s.aprovado ?? null,
     criadoEm: s.criado_em,
   }));
 }
