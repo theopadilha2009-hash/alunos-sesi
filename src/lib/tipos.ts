@@ -77,6 +77,12 @@ export type SubmissaoDesafio = {
   descricao: string;
   aprovado?: boolean;
   criadoEm: string;
+  /**
+   * Só nos envios lidos pela fila do ADM. A submissão guarda o `desafio_id`,
+   * não o título — quem mostra a fila precisa do nome, e resolvê-lo com uma
+   * segunda consulta por linha seria uma query por envio.
+   */
+  desafioTitulo?: string;
 };
 
 export type Aluno = {

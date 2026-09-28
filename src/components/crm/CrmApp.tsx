@@ -35,7 +35,15 @@ import { corDaSala, corDoAluno } from "@/lib/cores";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
-import type { Aluno, AlunoNaTela, DesafioHackathon, RetratoSala, Sala, UsuarioSessao } from "@/lib/tipos";
+import type {
+  Aluno,
+  AlunoNaTela,
+  DesafioHackathon,
+  RetratoSala,
+  Sala,
+  SubmissaoDesafio,
+  UsuarioSessao,
+} from "@/lib/tipos";
 
 type Props = {
   usuario: UsuarioSessao;
@@ -46,6 +54,14 @@ type Props = {
   desafiosIniciais?: DesafioHackathon[];
   /** `aluno_id` de quem já tem login — o painel só oferece código a quem não tem. */
   comAcesso?: string[];
+  /**
+   * Fila de moderação do mural. Vem direto da prop, sem `useState`: o ADM
+   * decide por Server Action e o `revalidatePath` re-renderiza o Server
+   * Component. Guardar em estado congelaria a fila na primeira carga.
+   */
+  submissoesIniciais?: SubmissaoDesafio[];
+  /** Os envios DESTE aluno, para o mural mostrar a situação de cada um. */
+  meusEnvios?: SubmissaoDesafio[];
 };
 
 type AbaAtiva = "portfolio" | "projetos" | "desafios" | "tabelas" | "perfil" | "adm";
@@ -58,6 +74,8 @@ export function CrmApp({
   meusVotos,
   desafiosIniciais = [],
   comAcesso = [],
+  submissoesIniciais = [],
+  meusEnvios = [],
 }: Props) {
   const [aba, setAba] = useState<AbaAtiva>("portfolio");
   const [desafios, setDesafios] = useState<DesafioHackathon[]>(desafiosIniciais);
@@ -844,7 +862,7 @@ export function CrmApp({
         {/* ── ABA: MURAL DE DESAFIOS & HACKATHONS SESI ─────────────── */}
         {aba === "desafios" ? (
           <div className="crm-secao-conteudo">
-            <MuralDesafios desafios={desafios} usuario={usuario} />
+            <MuralDesafios desafios={desafios} usuario={usuario} envios={meusEnvios} />
           </div>
         ) : null}
 
@@ -888,6 +906,7 @@ export function CrmApp({
               alunos={naTela}
               salas={salas}
               comAcesso={comAcesso}
+              submissoes={submissoesIniciais}
               onAbrirCracha={(a) => setAlunoCracha(a)}
               onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
             />

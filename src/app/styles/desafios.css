@@ -312,3 +312,29 @@
   margin-top: 0.5rem;
 }
 
+/* O selo de quem já enviou — ocupa o lugar do botão "Submeter Projeto".
+   Sem ele o aluno enviava, não via nada mudar, e tentava de novo: o segundo
+   envio é recusado pela constraint, com mensagem de banco. */
+.mural-meu-envio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mural-envio-aprovado {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--verde);
+}
+
+.mural-envio-pendente {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--amarelo);
+}
+
+

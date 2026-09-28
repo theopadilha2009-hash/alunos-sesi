@@ -9,6 +9,8 @@ import {
   listarDesafios,
   listarRetrato,
   listarSalas,
+  listarSubmissoes,
+  submissoesDoAluno,
   votosDoVisitante,
 } from "@/lib/dados";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
@@ -47,7 +49,18 @@ export default async function PaginaPrincipal() {
   const comAcesso =
     sessao.role === "super_adm" ? await listarAcessos() : [];
 
+  // Os envios do mural viram fila de moderação. A RLS da 004 fechou a leitura
+  // para a anon key, então nem a vitrine puxa: só o ADM, por aqui.
+  const submissoes =
+    sessao.role === "super_adm" ? await listarSubmissoes() : [];
+
   const meusVotos = visitante ? await votosDoVisitante(visitante) : [];
+
+  // O mural mostra ao aluno onde cada envio dele parou — sem isto ele submete
+  // um projeto e nunca mais sabe se alguém olhou.
+  const meusEnvios = sessao.alunoId
+    ? await submissoesDoAluno(sessao.alunoId)
+    : [];
 
   return (
     <CrmApp
@@ -58,6 +71,8 @@ export default async function PaginaPrincipal() {
       meusVotos={meusVotos}
       desafiosIniciais={desafios}
       comAcesso={comAcesso}
+      submissoesIniciais={submissoes}
+      meusEnvios={meusEnvios}
     />
   );
 }

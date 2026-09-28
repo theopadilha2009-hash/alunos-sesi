@@ -5,7 +5,18 @@ import { cookies } from "next/headers";
 import type { Estado, EstadoCodigo } from "@/app/adm/estado";
 import { formatarCodigo, gerarCodigo, hashCodigo, VALIDADE_CODIGO_MS } from "@/lib/ativacao";
 import { fold } from "@/lib/busca";
+import { decidirSubmissao, idsDeDesafios, publicarDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
+import {
+  MAX_DESCRICAO,
+  MAX_PRAZO,
+  MAX_RECOMPENSA,
+  MAX_SUBTITULO,
+  MAX_TITULO,
+  parseCriterios,
+  problemaDoDesafio,
+  type DesafioNovo,
+} from "@/lib/desafios";
 import { parseLista, type ErroLinha } from "@/lib/importar";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { SENHA_BLOQUEADA } from "@/lib/senha";
@@ -458,5 +469,74 @@ export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
   const salaId = await garantirSala(db, nomeSala);
   await db.from("alunos").update({ sala_id: salaId }).eq("id", alunoId);
 
+  revalidar();
+}
+
+/**
+ * Publica um desafio no mural.
+ *
+ * Antes disto `desafios` só recebia linha por SQL na mão: a tabela existe em
+ * produção desde antes do repositório (a 004 fechou o drift) e nunca teve tela
+ * de escrita. O mural aparecia vazio para o aluno e não havia como preenchê-lo.
+ *
+ * O `id` sai do título pelo mesmo `slugUnico` do aluno — ele é a chave primária
+ * e viaja nas submissões, então precisa ser legível e não colidir.
+ */
+export async function publicarDesafioAction(
+  _estado: Estado,
+  formData: FormData,
+): Promise<Estado> {
+  await exigirAdm();
+
+  const dados: DesafioNovo = {
+    titulo: sanitizarTexto(texto(formData, "titulo"), MAX_TITULO),
+    subtitulo: sanitizarTexto(texto(formData, "subtitulo"), MAX_SUBTITULO),
+    categoria: texto(formData, "categoria"),
+    prazo: sanitizarTexto(texto(formData, "prazo"), MAX_PRAZO),
+    recompensa: sanitizarTexto(texto(formData, "recompensa"), MAX_RECOMPENSA),
+    descricao: sanitizarTexto(texto(formData, "descricao"), MAX_DESCRICAO),
+    criterios: parseCriterios(texto(formData, "criterios")).map((c) =>
+      sanitizarTexto(c, 120),
+    ),
+  };
+
+  const problema = problemaDoDesafio(dados);
+  if (problema) return { ok: false, mensagem: problema };
+
+  const id = slugUnico(dados.titulo, await idsDeDesafios());
+  const resultado = await publicarDesafio({ id, ...dados });
+
+  if (!resultado.ok) {
+    return {
+      ok: false,
+      mensagem: resultado.duplicado
+        ? "Já existe um desafio nesse endereço. Mude o título."
+        : "Não foi possível publicar o desafio agora. Tente de novo.",
+    };
+  }
+
+  logger.info("ADM", `Desafio publicado: ${dados.titulo}`);
+  revalidar();
+  return { ok: true, mensagem: `"${dados.titulo}" está no mural.` };
+}
+
+/**
+ * Aprova ou rejeita um envio do mural.
+ *
+ * `void` e não `Estado` porque é `action` direta de `<form>`, como `mudarSala`
+ * e `removerAluno`: o botão que decide é um submit, não um `useActionState`.
+ *
+ * Quem julga é o mesmo `exigirAdm()` das outras ações do painel — hoje só
+ * `super_adm`. Alargar isso para o professor da turma é a aposta 3, que muda
+ * autorização e não entra de carona aqui.
+ */
+export async function decidirSubmissaoAction(formData: FormData): Promise<void> {
+  await exigirAdm();
+
+  const id = texto(formData, "submissaoId");
+  if (!id) return;
+
+  const aprovado = texto(formData, "decisao") === "aprovar";
+  await decidirSubmissao(id, aprovado);
   revalidar();
 }

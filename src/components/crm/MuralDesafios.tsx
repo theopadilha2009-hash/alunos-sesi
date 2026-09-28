@@ -12,14 +12,16 @@ import {
   IconeProjetos,
 } from "@/components/Icones";
 import { useTravaDeFoco } from "@/lib/foco";
-import type { DesafioHackathon, UsuarioSessao } from "@/lib/tipos";
+import type { DesafioHackathon, SubmissaoDesafio, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
   desafios: DesafioHackathon[];
   usuario: UsuarioSessao;
+  /** Os envios deste aluno, para o card mostrar onde cada um parou. */
+  envios?: SubmissaoDesafio[];
 };
 
-export function MuralDesafios({ desafios, usuario }: Props) {
+export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>("todos");
   const [desafioSelecionado, setDesafioSelecionado] = useState<DesafioHackathon | null>(null);
   const [estadoSubmissao, formAction, enviando] = useActionState(submeterDesafioAction, {
@@ -60,6 +62,10 @@ export function MuralDesafios({ desafios, usuario }: Props) {
     return d.categoria === categoriaAtiva;
   });
 
+  // A constraint `submissoes_unica_por_aluno` garante um envio por desafio,
+  // então o mapa é 1:1 e o último vence por construção, não por sorte.
+  const envioPorDesafio = new Map(envios.map((e) => [e.desafioId, e]));
+
   return (
     <div className="mural-desafios-container">
       {/* Topo do Mural com identidade SESI Joinville */}
@@ -96,61 +102,88 @@ export function MuralDesafios({ desafios, usuario }: Props) {
 
       {/* Grade de Desafios Ativos */}
       <div className="mural-desafios-grid">
-        {desafiosFiltrados.map((desafio) => (
-          <div key={desafio.id} className="card-desafio-item">
-            <div className="desafio-card-header">
-              <span className="desafio-categoria-badge">{desafio.categoria}</span>
-              <span className="desafio-prazo-tag">Prazo: {desafio.prazo}</span>
-            </div>
+        {desafiosFiltrados.map((desafio) => {
+          const meuEnvio = envioPorDesafio.get(desafio.id);
+          return (
+            <div key={desafio.id} className="card-desafio-item">
+              <div className="desafio-card-header">
+                <span className="desafio-categoria-badge">{desafio.categoria}</span>
+                <span className="desafio-prazo-tag">Prazo: {desafio.prazo}</span>
+              </div>
 
-            <div className="desafio-corpo">
-              <h2 className="desafio-titulo">{desafio.titulo}</h2>
-              <p className="desafio-subtitulo-texto">{desafio.subtitulo}</p>
-              <p className="desafio-descricao">{desafio.descricao}</p>
+              <div className="desafio-corpo">
+                <h2 className="desafio-titulo">{desafio.titulo}</h2>
+                <p className="desafio-subtitulo-texto">{desafio.subtitulo}</p>
+                <p className="desafio-descricao">{desafio.descricao}</p>
 
-              {/* Critérios de Avaliação */}
-              {desafio.criterios && desafio.criterios.length > 0 ? (
-                <div className="desafio-criterios-bloco">
-                  <span className="criterios-label">Requisitos & Critérios:</span>
-                  <ul className="criterios-lista">
-                    {desafio.criterios.map((c, i) => (
-                      <li key={i}>
-                        <IconeCheck tamanho={12} />
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
+                {/* Critérios de Avaliação */}
+                {desafio.criterios && desafio.criterios.length > 0 ? (
+                  <div className="desafio-criterios-bloco">
+                    <span className="criterios-label">Requisitos & Critérios:</span>
+                    <ul className="criterios-lista">
+                      {desafio.criterios.map((c, i) => (
+                        <li key={i}>
+                          <IconeCheck tamanho={12} />
+                          <span>{c}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
 
-              {/* Recompensa & Insígnia */}
-              <div className="desafio-recompensa-box">
-                <div className="recompensa-icone-wrap">
-                  <IconeEstrela preenchida tamanho={16} />
-                </div>
-                <div className="recompensa-info">
-                  <span className="recompensa-rotulo">Recompensa & Insígnia no Perfil:</span>
-                  <strong className="recompensa-nome">{desafio.recompensa}</strong>
+                {/* Recompensa & Insígnia */}
+                <div className="desafio-recompensa-box">
+                  <div className="recompensa-icone-wrap">
+                    <IconeEstrela preenchida tamanho={16} />
+                  </div>
+                  <div className="recompensa-info">
+                    <span className="recompensa-rotulo">Recompensa & Insígnia no Perfil:</span>
+                    <strong className="recompensa-nome">{desafio.recompensa}</strong>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="desafio-card-footer">
-              <span className="desafio-contagem-submissoes">
-                {desafio.submissoesCount} soluções enviadas por alunos
-              </span>
+              <div className="desafio-card-footer">
+                <span className="desafio-contagem-submissoes">
+                  {desafio.submissoesCount} soluções enviadas por alunos
+                </span>
 
-              <button
-                type="button"
-                className="botao botao-primario btn-submeter-desafio"
-                onClick={() => setDesafioSelecionado(desafio)}
-              >
-                <IconePlus tamanho={15} />
-                <span>Submeter Projeto</span>
-              </button>
+                {/* Quem já enviou não vê mais o botão: a constraint
+                    `submissoes_unica_por_aluno` recusaria o segundo envio com
+                    uma mensagem de banco. Ele vê onde o primeiro parou. */}
+                {meuEnvio ? (
+                  <span
+                    className={`mural-meu-envio ${
+                      meuEnvio.aprovado ? "mural-envio-aprovado" : "mural-envio-pendente"
+                    }`}
+                    title={`Seu envio: ${meuEnvio.tituloProjeto}`}
+                  >
+                    {meuEnvio.aprovado ? (
+                      <>
+                        <IconeCheck tamanho={14} />
+                        <span>Envio aprovado</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconeEstrela tamanho={14} />
+                        <span>Envio em análise</span>
+                      </>
+                    )}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="botao botao-primario btn-submeter-desafio"
+                    onClick={() => setDesafioSelecionado(desafio)}
+                  >
+                    <IconePlus tamanho={15} />
+                    <span>Submeter Projeto</span>
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Modal de Submissão de Projeto para o Desafio */}

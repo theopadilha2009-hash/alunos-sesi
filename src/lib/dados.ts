@@ -328,6 +328,137 @@ export async function submeterDesafio(dados: {
   };
 }
 
+/**
+ * Todos os envios, para o ADM julgar.
+ *
+ * O nome do aluno e o título do desafio vêm no mesmo `select`: a tabela guarda
+ * só os ids, e resolvê-los linha a linha seria uma consulta por envio. O
+ * embedding do PostgREST usa as FKs que a 004 criou.
+ */
+export async function listarSubmissoes(): Promise<SubmissaoDesafio[]> {
+  const { data, error } = await clienteAdmin()
+    .from("submissoes_desafios")
+    .select(
+      "id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em,alunos(nome),desafios(titulo)",
+    )
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao listar submissões", error);
+    return [];
+  }
+
+  return (data ?? []).map((s) => ({
+    id: s.id,
+    desafioId: s.desafio_id,
+    alunoId: s.aluno_id,
+    // Aluno apagado leva as submissões junto (`on delete cascade`), então o
+    // nulo aqui só aparece se o embedding vier vazio por outro motivo.
+    alunoNome: (s.alunos as { nome?: string } | null)?.nome ?? "Aluno removido",
+    alunoSala: "",
+    tituloProjeto: s.titulo_projeto,
+    linkProjeto: s.link_projeto ?? "",
+    descricao: s.descricao,
+    aprovado: Boolean(s.aprovado),
+    criadoEm: s.criado_em,
+    desafioTitulo: (s.desafios as { titulo?: string } | null)?.titulo ?? "",
+  }));
+}
+
+/** Os envios deste aluno, para o mural mostrar onde cada um parou. */
+export async function submissoesDoAluno(alunoId: string): Promise<SubmissaoDesafio[]> {
+  if (!alunoId) return [];
+
+  const { data, error } = await clienteAdmin()
+    .from("submissoes_desafios")
+    .select("id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em")
+    .eq("aluno_id", alunoId)
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao listar submissões do aluno", error);
+    return [];
+  }
+
+  return (data ?? []).map((s) => ({
+    id: s.id,
+    desafioId: s.desafio_id,
+    alunoId: s.aluno_id,
+    alunoNome: "",
+    alunoSala: "",
+    tituloProjeto: s.titulo_projeto,
+    linkProjeto: s.link_projeto ?? "",
+    descricao: s.descricao,
+    aprovado: Boolean(s.aprovado),
+    criadoEm: s.criado_em,
+  }));
+}
+
+/**
+ * Aprova ou rejeita um envio.
+ *
+ * O gate de quem pode chamar isto está na Server Action (`exigirAdm`), não
+ * aqui — este módulo não conhece sessão.
+ */
+export async function decidirSubmissao(id: string, aprovado: boolean): Promise<boolean> {
+  const { error } = await clienteAdmin()
+    .from("submissoes_desafios")
+    .update({ aprovado })
+    .eq("id", id);
+
+  if (error) {
+    logger.error("DADOS", "Erro ao decidir submissão", error);
+    return false;
+  }
+  limparCacheDados();
+  return true;
+}
+
+/** Os ids já usados, para o novo desafio nascer com um livre. */
+export async function idsDeDesafios(): Promise<string[]> {
+  const { data, error } = await clienteAdmin().from("desafios").select("id");
+  if (error) {
+    logger.error("DADOS", "Erro ao listar ids de desafios", error);
+    return [];
+  }
+  return (data ?? []).map((d) => d.id as string);
+}
+
+/** Publica um desafio no mural. Sem `aprovado`: desafio não passa por fila. */
+export async function publicarDesafio(dados: {
+  id: string;
+  titulo: string;
+  subtitulo: string;
+  categoria: string;
+  prazo: string;
+  recompensa: string;
+  descricao: string;
+  criterios: string[];
+}): Promise<{ ok: true } | { ok: false; duplicado: boolean }> {
+  const { error } = await clienteAdmin()
+    .from("desafios")
+    .insert({
+      id: dados.id,
+      titulo: dados.titulo,
+      subtitulo: dados.subtitulo,
+      categoria: dados.categoria,
+      prazo: dados.prazo,
+      recompensa: dados.recompensa,
+      // Sem seletor de ícone na tela: o card tem um enfeite fixo e a coluna é
+      // `not null`. Fica registrado se um dia houver escolha.
+      insignia_icone: "trofeu",
+      descricao: dados.descricao,
+      criterios: dados.criterios,
+    });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao publicar desafio", error);
+    return { ok: false, duplicado: error.code === "23505" };
+  }
+  limparCacheDados();
+  return { ok: true };
+}
+
 /** Os ids que ESTE navegador já estrelou. Depende do cookie assinado. */
 export async function votosDoVisitante(visitante: string): Promise<string[]> {
   if (!visitante) return [];
