@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
@@ -35,7 +35,12 @@ import { aoSetasDasAbas } from "@/lib/abas";
 import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
 import { copiarTexto } from "@/lib/clipboard";
 import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
-import { LISTA_HABILIDADES, corHabilidade } from "@/lib/habilidades";
+import {
+  LISTA_HABILIDADES,
+  MAX_CARACTERES_HABILIDADE,
+  corHabilidade,
+  normalizarNomeHabilidade,
+} from "@/lib/habilidades";
 import {
   DOMINIO_EMAIL_ESCOLA,
   FOTO_LADO,
@@ -54,6 +59,32 @@ type Props = {
   alunoAtual: AlunoNaTela | null;
   salas: { id: string; nome: string }[];
 };
+
+/**
+ * Depois disso o envio da imagem é dado como perdido.
+ *
+ * Folgado de propósito: uma foto de celular em 4G pode levar alguns segundos.
+ * O teto não existe para apressar o envio, e sim para o campo não ficar preso
+ * em "Enviando a imagem…" quando a rede morre no meio.
+ */
+const TETO_ENVIO_MS = 30 * 1000;
+
+/**
+ * A frase que o aluno lê quando o envio da imagem falha.
+ *
+ * O timeout e a conta sem perfil têm o que dizer; o resto cai na genérica, que
+ * é a única coisa que o aluno pode fazer a respeito. Sem isto, as três virariam
+ * "não foi possível enviar" e o motivo real morreria no console.
+ */
+function mensagemDeEnvio(erro: unknown): string {
+  if (erro instanceof Error && erro.message.includes("demorou demais")) {
+    return "O envio demorou demais e foi cancelado. Verifique sua conexão e tente de novo.";
+  }
+  if (erro instanceof Error && erro.message.includes("não está ligada a um perfil")) {
+    return "Sua conta não está ligada a um perfil de aluno. Fale com o professor ou com o ADM.";
+  }
+  return "Não foi possível enviar a imagem. Tente de novo.";
+}
 
 export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
@@ -76,6 +107,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [erroLink, setErroLink] = useState(false);
+  // Motivo pelo qual o submit foi barrado no cliente. Diferente de
+  // `estado.mensagem` (que é a resposta do servidor), este é nosso — e existe
+  // porque o navegador barrava sem dizer nada.
+  const [erroValidacao, setErroValidacao] = useState<string | null>(null);
+  // A barra de salvar é fixa no rodapé; a ref serve para trazer o olho do aluno
+  // até ela quando algo impede o salvamento.
+  const barraSalvarRef = useRef<HTMLDivElement | null>(null);
 
   // Stickers e Elementos Decorativos Estilo Canva
   const [stickers, setStickers] = useState<StickerPerfil[]>(
@@ -110,6 +148,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   // da camada de dados (o regex da bio, quando o aluno nunca editou). É de
   // propósito — o aluno vê o que o perfil já afirma sobre ele e confirma ou tira.
   const [habilidades, setHabilidades] = useState<string[]>(alunoAtual?.habilidades ?? []);
+  // O campo livre de competência. A lista de chips continua sendo a porta
+  // rápida; isto é a porta para o que não está nela — o aluno escreve o que
+  // domina de verdade, e o servidor (`sanitizarHabilidades`) aceita desde que
+  // caiba no padrão. O endosso dos colegas é que segue restrito às dez da lista.
+  const [novaHabilidade, setNovaHabilidade] = useState("");
+  const [avisoHabilidade, setAvisoHabilidade] = useState<string | null>(null);
   const [foto, setFoto] = useState(alunoAtual?.foto_url ?? "");
   const [avisoFoto, setAvisoFoto] = useState<string | null>(null);
 
@@ -203,8 +247,88 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
     });
   }
 
+  /**
+   * Cria a competência que o aluno escreveu à mão.
+   *
+   * A validação mora em `normalizarNomeHabilidade` — a mesma que o servidor
+   * aplica —, então o que entra aqui é exatamente o que sobrevive ao save. O
+   * aviso na tela existe porque um nome recusado em silêncio é o que faz o
+   * aluno achar que o campo está quebrado.
+   */
+  function adicionarHabilidade() {
+    const nome = normalizarNomeHabilidade(novaHabilidade);
+    if (!nome) {
+      setAvisoHabilidade(
+        `Escreva uma competência de até ${MAX_CARACTERES_HABILIDADE} caracteres, começando por letra ou número.`,
+      );
+      return;
+    }
+    // Deduplica por caixa: "python" e "Python" são a mesma competência na tela,
+    // e `normalizarNomeHabilidade` já traz o digitado para a forma da lista.
+    if (habilidades.some((h) => h.toLowerCase() === nome.toLowerCase())) {
+      setAvisoHabilidade(`"${nome}" já está no seu perfil.`);
+      return;
+    }
+    if (habilidades.length >= MAX_HABILIDADES) {
+      setAvisoHabilidade(
+        `O perfil aceita ${MAX_HABILIDADES} competências. Tire uma para adicionar outra.`,
+      );
+      return;
+    }
+    setHabilidades([...habilidades, nome]);
+    setNovaHabilidade("");
+    setAvisoHabilidade(null);
+  }
+
+  /**
+   * Espelha o `urlSegura` do servidor para o link do projeto.
+   *
+   * O campo era `type="url"`, e era ele — mais o `required` de um painel
+   * escondido — que fazia o navegador cancelar o salvamento em silêncio. A
+   * checagem que importa continua sendo a do servidor, que descarta o link
+   * inválido em `sanitizarProjetos`; esta aqui só existe para o aluno saber na
+   * hora, em vez de descobrir depois que o link sumiu.
+   */
+  function linkAceitavel(bruto: string): boolean {
+    const link = bruto.trim();
+    if (!link) return true;
+    try {
+      const url = new URL(link);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * O que o navegador validava sozinho, agora escrito na tela.
+   *
+   * Devolve o motivo do bloqueio, ou `null` para seguir com o salvamento.
+   * Cobre o nome (que era `required` em dois campos ao mesmo tempo) e o link
+   * do rascunho de projeto (que era `type="url"`). O resto — e-mail, senha,
+   * tetos — já era validado no servidor com mensagem de volta.
+   */
+  function validarAntesDeSalvar(): string | null {
+    if (nome.trim().length < 2) {
+      return "O nome precisa ter pelo menos 2 caracteres.";
+    }
+    if (!linkAceitavel(novoProjLink)) {
+      return "O link da criação precisa começar com http:// ou https://.";
+    }
+    return null;
+  }
+
   function adicionarProjeto() {
-    if (!novoProjTitulo.trim()) return;
+    // Cada recusa diz o motivo. Antes, o título vazio só desabilitava o botão —
+    // o clique não fazia nada e não havia nada na tela explicando por quê.
+    if (!novoProjTitulo.trim()) {
+      setAvisoProjeto("Dê um título ao projeto para adicioná-lo à lista.");
+      return;
+    }
+    if (!linkAceitavel(novoProjLink)) {
+      setAvisoProjeto("O link da criação precisa começar com http:// ou https://.");
+      return;
+    }
     // Mesmo teto do `adicionarVideo`, e aqui o corte do servidor é silencioso:
     // `sanitizarProjetos` faz `slice(0, MAX_PROJETOS)`, então o 11º projeto
     // entraria na tela e sumiria no submit — junto com a capa, que já subiu
@@ -484,16 +608,33 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
     }
 
     const arquivo = blobDoDataUrl(dataUrl);
-    const { url } = await upload(
-      caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
-      arquivo,
-      {
-        access: "public",
-        handleUploadUrl: "/api/upload",
-        clientPayload: JSON.stringify({ campo }),
-      },
-    );
-    return url;
+    // Sem teto de tempo, uma rede que não responde deixava o campo preso em
+    // "Enviando a imagem…" para sempre: o `finally` que devolve o botão só roda
+    // quando a promise assenta, e ela não assentava. Abortar de verdade — e não
+    // só ignorar a resposta — evita o upload fantasma seguir subindo bytes.
+    const controle = new AbortController();
+    const relogio = setTimeout(() => controle.abort(), TETO_ENVIO_MS);
+
+    try {
+      const { url } = await upload(
+        caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
+        arquivo,
+        {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+          clientPayload: JSON.stringify({ campo }),
+          abortSignal: controle.signal,
+        },
+      );
+      return url;
+    } catch (erro) {
+      if (controle.signal.aborted) {
+        throw new Error("O envio demorou demais e foi cancelado. Tente de novo.");
+      }
+      throw erro;
+    } finally {
+      clearTimeout(relogio);
+    }
   }
 
   /** Aceita a imagem só se ela couber no teto; senão explica o motivo. */
@@ -509,10 +650,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
     setEnviando("midia");
     try {
       setNovaMidiaUrl(await subirImagem(dataUrl, "midia"));
-    } catch {
+    } catch (erro) {
       // A imagem continua no computador do aluno: o que falhou foi o envio,
-      // não a escolha. "Tente de novo" é o que ele pode fazer a respeito.
-      setAvisoMidia("Não foi possível enviar a imagem. Tente de novo.");
+      // não a escolha. "Tente de novo" é o que ele pode fazer a respeito — e a
+      // mensagem do timeout diz que o envio foi cancelado, que é diferente de
+      // "o servidor recusou".
+      setAvisoMidia(mensagemDeEnvio(erro));
       setNovaMidiaUrl("");
     } finally {
       setEnviando(null);
@@ -531,10 +674,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
     setEnviando("projeto");
     try {
       setNovoProjImg(await subirImagem(dataUrl, "projeto"));
-    } catch {
-      setAvisoProjeto("Não foi possível enviar a imagem. Tente de novo.");
+    } catch (erro) {
+      setAvisoProjeto(mensagemDeEnvio(erro));
       setNovoProjImg("");
     } finally {
+      // Roda sempre: sem ele `enviando` nunca volta a `null` e o campo fica
+      // preso em "Enviando a imagem…" — o travamento que o aluno relatou.
       setEnviando(null);
     }
   }
@@ -696,7 +841,26 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
       </div>
 
       {/* ── BANNER HERO INSTITUCIONAL (Estilo Imagem 4) ────────────────────── */}
-      <section className="perfil-hero-banner" style={{ position: "relative", overflow: "hidden" }}>
+      <section
+        className="perfil-hero-banner"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          // A capa que o aluno escolheu, aqui no editor também. Ela só era
+          // desenhada no perfil público (`PerfilInterativo`) e na prévia
+          // pequena do card de aparência — no topo, onde o aluno está olhando,
+          // continuava o degradê padrão, e a escolha parecia não ter pegado.
+          // O degradê por cima existe pelo texto: o hero é escrito em claro e
+          // uma foto clara por baixo o deixaria ilegível.
+          ...(capa
+            ? {
+                backgroundImage: `linear-gradient(180deg, rgba(6, 14, 24, 0.35) 0%, rgba(6, 14, 24, 0.82) 100%), url("${capa}")`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {}),
+        }}
+      >
         {/* Stickers posicionados estilo Canva no banner */}
         {stickers.filter((s) => s.alvo !== "projeto").map((st) => (
           <div
@@ -769,7 +933,35 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
       ) : null}
 
       {/* ── FORMULÁRIO PRINCIPAL DE EDIÇÃO EM DOIS BLOCOS (Imagem 4) ─────── */}
-      <form action={formAction} className="perfil-grid-layout">
+      <form
+        action={formAction}
+        className="perfil-grid-layout"
+        // A validação nativa do navegador sai de cena de propósito: dois dos
+        // campos com `required`/`type="url"` vivem dentro de painéis de aba com
+        // `display: none`, e um controle inválido que o navegador não consegue
+        // focar faz ele **cancelar o submit em silêncio** — sem request, sem
+        // bolha, sem mensagem. Era esse o "Salvar não funciona e não confirma".
+        // Quem valida agora é `validarAntesDeSalvar`, que escreve na tela.
+        noValidate
+        onSubmit={(e) => {
+          // O botão "Alterar Senha" também é submit e tem action própria
+          // (`formAction`). Ele sai por outro caminho — validar o perfil aqui
+          // barraria uma troca de senha por causa do nome ou de um link.
+          const gatilho = (e.nativeEvent as SubmitEvent).submitter as
+            | HTMLButtonElement
+            | null;
+          if (gatilho?.dataset.acao === "senha") return;
+
+          const motivo = validarAntesDeSalvar();
+          if (!motivo) {
+            setErroValidacao(null);
+            return;
+          }
+          e.preventDefault();
+          setErroValidacao(motivo);
+          barraSalvarRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+        }}
+      >
         <input type="hidden" name="nome" value={nome} />
         {/* `sala` não vai no payload de propósito: o action do aluno ignora o
             campo, e mandar um valor que ninguém lê só sugere que ele manda. */}
@@ -1294,12 +1486,81 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                           </button>
                         );
                       })}
+
+                      {/* As que o aluno escreveu, e que a lista acima não
+                          desenha. Sem este map elas existiriam no estado e no
+                          banco mas não na tela — o aluno só descobriria que a
+                          competência entrou depois de salvar e abrir o perfil. */}
+                      {habilidades
+                        .filter(
+                          (nome) => !LISTA_HABILIDADES.some((h) => h.nome === nome),
+                        )
+                        .map((nome) => (
+                          <button
+                            key={nome}
+                            type="button"
+                            className="edit-hab-chip edit-hab-chip-ativa"
+                            style={{ ["--cor-hab" as string]: corHabilidade(nome) }}
+                            onClick={() => alternarHabilidade(nome)}
+                            aria-pressed
+                            title="Competência criada por você. Clique para tirar."
+                          >
+                            <span className="edit-hab-ponto" />
+                            {nome}
+                          </button>
+                        ))}
                     </div>
                     <span className="dica-campo">
-                      Escolha até {MAX_HABILIDADES} do que você domina de verdade. O nome tem que
-                      ser um destes: é por ele que a turma endossa, e endosso de competência com
-                      outro nome não conta.
+                      Escolha até {MAX_HABILIDADES} do que você domina de verdade. As da lista
+                      recebem o apoio dos colegas; as que você escrever aparecem no seu perfil do
+                      mesmo jeito.
                     </span>
+
+                    <div className="upload-linha-flex">
+                      <input
+                        type="text"
+                        className="input-texto"
+                        value={novaHabilidade}
+                        onChange={(e) => {
+                          setNovaHabilidade(e.target.value);
+                          setAvisoHabilidade(null);
+                        }}
+                        onKeyDown={(e) => {
+                          // Enter aqui adiciona a competência; sem isto ele
+                          // submeteria o formulário inteiro, que é a última
+                          // coisa que quem está digitando quer.
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            adicionarHabilidade();
+                          }
+                        }}
+                        maxLength={MAX_CARACTERES_HABILIDADE}
+                        placeholder="Outra competência (ex: Javascript)"
+                        aria-label="Criar nova competência"
+                        disabled={noTetoDeHabilidades}
+                      />
+                      <button
+                        type="button"
+                        className="botao botao-secundario"
+                        onClick={adicionarHabilidade}
+                        disabled={noTetoDeHabilidades || !novaHabilidade.trim()}
+                      >
+                        <IconePlus tamanho={15} /> Adicionar
+                      </button>
+                    </div>
+                    {noTetoDeHabilidades ? (
+                      <span className="dica-campo">
+                        Você já escolheu {MAX_HABILIDADES}. Tire uma para criar outra.
+                      </span>
+                    ) : null}
+                    {avisoHabilidade ? (
+                      <span
+                        role="alert"
+                        style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}
+                      >
+                        ⚠ {avisoHabilidade}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -1408,12 +1669,20 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
 
                     <label className="campo-form">
                       <span className="label-texto">Link da Criação (GitHub, Vercel, Figma)</span>
+                      {/* `type="text"`, e não `url`: este campo vive num painel
+                          de aba e um valor fora do formato de URL bloqueava o
+                          salvamento do formulário inteiro, sem mensagem. Quem
+                          valida é `linkAceitavel`, com aviso na tela. */}
                       <input
-                        type="url"
+                        type="text"
                         className="input-texto"
                         value={novoProjLink}
-                        onChange={(e) => setNovoProjLink(e.target.value)}
+                        onChange={(e) => {
+                          setNovoProjLink(e.target.value);
+                          setAvisoProjeto(null);
+                        }}
                         placeholder="https://..."
+                        inputMode="url"
                       />
                     </label>
                   </div>
@@ -1484,13 +1753,18 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                   </div>
 
                   <div className="form-acoes-fim">
+                    {/* Só o upload da capa desabilita o botão. Ficar desabilitado
+                        com o título vazio — sem dizer o motivo — era o clique
+                        mudo que parecia travamento: agora ele clica, e a
+                        resposta aparece no aviso acima. */}
                     <button
                       type="button"
                       className="botao botao-primario"
                       onClick={adicionarProjeto}
-                      disabled={!novoProjTitulo.trim()}
+                      disabled={enviando === "projeto"}
                     >
-                      <IconePlus tamanho={15} /> Adicionar Projeto à Lista
+                      <IconePlus tamanho={15} />
+                      {enviando === "projeto" ? "Enviando a imagem…" : "Adicionar Projeto à Lista"}
                     </button>
                   </div>
                 </div>
@@ -1756,13 +2030,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                 <div className="form-dupla">
                   <label className="campo-form">
                     <span className="label-texto">Nome Visual de Exibição *</span>
+                    {/* Sem `required`: este campo é o MESMO estado `nome` do
+                        "Nome Completo" da aba de dados, e este painel fica com
+                        `display: none` quando a aba ativa é outra. Um controle
+                        obrigatório e não focável aqui cancelava o submit de
+                        qualquer aba, em silêncio. */}
                     <input
                       type="text"
                       className="input-texto"
                       value={nome}
                       onChange={(e) => setNome(e.target.value)}
                       placeholder="Ex: Theo Padilha"
-                      required
                     />
                     <span className="campo-dica">
                       Nome que aparece em destaque na vitrine, no crachá e nas listagens escolares.
@@ -1874,6 +2152,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                   type="submit"
                   className="botao botao-primario"
                   formAction={acaoSeguranca}
+                  // O `onSubmit` do form roda para este botão também. Sem a
+                  // marca, trocar a senha passaria pela validação do perfil e
+                  // uma mensagem sobre o nome barrava uma troca que não tem
+                  // nada a ver com o nome.
+                  data-acao="senha"
                   disabled={alterandoSenha || !novaSenha}
                 >
                   <IconeEscudo tamanho={16} />
@@ -1925,10 +2208,30 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
           </div>
 
           {/* ── BARRA FIXA DE SALVAMENTO ──────────────────────────────────── */}
-          <div className="perfil-barra-salvar">
-            <span className="salvar-dica">
-              As alterações salvas são refletidas instantaneamente na vitrine da turma e no crachá digital.
-            </span>
+          <div className="perfil-barra-salvar" ref={barraSalvarRef}>
+            <div className="salvar-textos">
+              {/* A resposta aparece aqui, colada no botão que a provocou. O
+                  banner do topo continua como eco para quem rola para cima. */}
+              {erroValidacao ? (
+                <div className="alerta-banner alerta-erro" role="alert">
+                  <span>⚠ {erroValidacao}</span>
+                </div>
+              ) : estado.mensagem ? (
+                <div
+                  className={`alerta-banner ${estado.ok ? "alerta-sucesso" : "alerta-erro"}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {estado.ok ? <IconeCheck tamanho={16} /> : null}
+                  <span>{estado.mensagem}</span>
+                </div>
+              ) : (
+                <span className="salvar-dica">
+                  As alterações salvas são refletidas instantaneamente na vitrine da turma e no
+                  crachá digital.
+                </span>
+              )}
+            </div>
             <button
               type="submit"
               className="botao botao-primario btn-salvar-perfil-grande"

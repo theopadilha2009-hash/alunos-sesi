@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   LISTA_HABILIDADES,
+  MAX_CARACTERES_HABILIDADE,
   corHabilidade,
   extrairHabilidades,
   habilidadePermitida,
+  normalizarNomeHabilidade,
 } from "../src/lib/habilidades.ts";
 
 test("habilidadePermitida aceita o nome exato da lista", () => {
@@ -65,4 +67,57 @@ test("corHabilidade usa a cor da lista e cai no fallback", () => {
   // habilidade desconhecida nao pode sair sem cor
   assert.equal(corHabilidade("Culinaria"), "#3fc2bc");
   assert.equal(corHabilidade(""), "#3fc2bc");
+});
+
+// ── Competencia escrita pelo aluno ───────────────────────────────────────
+
+test("normalizarNomeHabilidade colapsa espaco e apara as pontas", () => {
+  assert.equal(normalizarNomeHabilidade("  Machine   Learning  "), "Machine Learning");
+  assert.equal(normalizarNomeHabilidade("Javascript"), "Javascript");
+});
+
+test("normalizarNomeHabilidade devolve a forma canonica da lista", () => {
+  // o digitado tem que virar o nome que o endosso alcanca
+  assert.equal(normalizarNomeHabilidade("python"), "Python");
+  assert.equal(normalizarNomeHabilidade("WEB FRONTEND"), "Web Frontend");
+  assert.equal(normalizarNomeHabilidade("C++ & Embarcados"), "C++ & Embarcados");
+  // abreviacao nao e a mesma competencia: "c++" continua nome livre, sem endosso
+  assert.equal(normalizarNomeHabilidade("c++"), "c++");
+  assert.equal(habilidadePermitida(normalizarNomeHabilidade("c++")), false);
+});
+
+test("normalizarNomeHabilidade recusa o que nao pode ser competencia", () => {
+  assert.equal(normalizarNomeHabilidade(""), null);
+  assert.equal(normalizarNomeHabilidade("   "), null);
+  assert.equal(normalizarNomeHabilidade(null), null);
+  assert.equal(normalizarNomeHabilidade(42), null);
+  assert.equal(normalizarNomeHabilidade({}), null);
+  assert.equal(normalizarNomeHabilidade("-hifen-na-frente"), null);
+  assert.equal(normalizarNomeHabilidade("<script>alert(1)</script>"), null);
+  assert.equal(normalizarNomeHabilidade("ops\u0000nulo"), null);
+  assert.equal(normalizarNomeHabilidade("a".repeat(MAX_CARACTERES_HABILIDADE + 1)), null);
+  // exatamente no teto ainda entra
+  assert.equal(
+    normalizarNomeHabilidade("a".repeat(MAX_CARACTERES_HABILIDADE))?.length,
+    MAX_CARACTERES_HABILIDADE,
+  );
+});
+
+test("todo nome da lista sobrevive a normalizacao", () => {
+  // se um nome da lista deixasse de casar com o padrao de `normalizarNomeHabilidade`,
+  // o perfil recusaria uma competencia que a propria casa oferece
+  for (const h of LISTA_HABILIDADES) {
+    assert.equal(
+      normalizarNomeHabilidade(h.nome),
+      h.nome,
+      `"${h.nome}" deveria passar pela normalizacao`,
+    );
+  }
+});
+
+test("o endosso continua fechado no que o perfil passou a aceitar", () => {
+  // a lista de sugestao e a allowlist de endosso sao coisas diferentes agora:
+  // "Javascript" pode estar no perfil, mas nao recebe +1
+  assert.equal(habilidadePermitida("Javascript"), false);
+  assert.equal(normalizarNomeHabilidade("Javascript"), "Javascript");
 });

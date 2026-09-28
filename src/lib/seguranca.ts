@@ -18,7 +18,7 @@ import {
   type MotivoDescarte,
 } from "./limites.ts";
 import { CORES_SALA } from "./cores.ts";
-import { habilidadePermitida } from "./habilidades.ts";
+import { normalizarNomeHabilidade } from "./habilidades.ts";
 import type { RepoGithub } from "./github.ts";
 import { normalizarVideo } from "./video.ts";
 import type { MidiaAluno, ProjetoAluno, StickerPerfil, VideoAluno } from "./tipos.ts";
@@ -613,10 +613,16 @@ export function sanitizarStickers(
 /**
  * As competências que o aluno escolheu, na ordem em que escolheu.
  *
- * Compara por igualdade exata, via `habilidadePermitida`. Não é preciosismo:
- * `endossos` tem a habilidade na chave primária, e o Postgres trata `Python` e
- * `python` como habilidades distintas — o perfil anuncia uma competência que o
- * contador de endossos não reconhece, e o chip fica sem número para sempre.
+ * Aceita as dez da lista e também o nome que o aluno escreveu à mão, desde que
+ * passe em `normalizarNomeHabilidade` (teto de tamanho e allowlist de
+ * caracteres). O que continua fechado é o **endosso**: só as dez conhecidas
+ * recebem +1, porque a PK de `public.endossos` é o nome exato da competência e
+ * abrir o texto livre ali criaria lixo no banco (`apoiarHabilidadeAction`
+ * segue checando por `habilidadePermitida`).
+ *
+ * A normalização também traz a forma canônica da lista — "python" digitado
+ * vira "Python" —, o que mantém um chip só por competência e o endosso
+ * alcançando o que o aluno escreveu.
  *
  * Deduplica porque para quem lê a lista é um conjunto. Não devolve descarte: o
  * excedente só chegaria por POST montado à mão (o editor trava no teto), e a
@@ -627,14 +633,19 @@ export function sanitizarHabilidades(bruto: unknown[]): string[] {
   if (!Array.isArray(bruto)) return [];
 
   const escolhidas: string[] = [];
+  // Deduplica por caixa: "Python" e "python" são a mesma competência para quem
+  // lê o perfil, mesmo sendo chaves diferentes para o Postgres.
   const vistas = new Set<string>();
 
   for (const item of bruto) {
-    if (typeof item !== "string" || !habilidadePermitida(item)) continue;
-    if (vistas.has(item)) continue;
+    const nome = normalizarNomeHabilidade(item);
+    if (!nome) continue;
+
+    const chave = nome.toLowerCase();
+    if (vistas.has(chave)) continue;
     if (escolhidas.length >= MAX_HABILIDADES) break;
-    vistas.add(item);
-    escolhidas.push(item);
+    vistas.add(chave);
+    escolhidas.push(nome);
   }
 
   return escolhidas;
