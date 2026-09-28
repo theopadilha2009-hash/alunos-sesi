@@ -97,6 +97,9 @@ export function CrmApp({
   const [alunoBreveSelecionado, setAlunoBreveSelecionado] = useState<AlunoNaTela | null>(null);
   const [alunoCracha, setAlunoCracha] = useState<AlunoNaTela | null>(null);
   const [cmdAberto, setCmdAberto] = useState(false);
+  // Com que sub-aba o Painel ADM abre. O atalho do Mural de Desafios escreve
+  // aqui antes de trocar de aba — o painel monta depois, e pega o valor novo.
+  const [subAbaAdm, setSubAbaAdm] = useState<"alunos" | "desafios">("alunos");
 
   // Mapeia alunos para a visualização na tela
   const naTela: AlunoNaTela[] = useMemo(() => {
@@ -328,6 +331,13 @@ export function CrmApp({
   const nomeExibicao = usuario.nome || usuario.username;
   const salaExibicao = usuario.sala || "SESI SP";
 
+  // Mesmo filtro do painel (`aprovado === null` é pendente no tri-estado da 016).
+  // Só super_adm recebe `submissoesIniciais`; para os outros papéis a lista vem
+  // vazia e o contador nem é desenhado.
+  const enviosPendentes = submissoesIniciais.filter(
+    (s) => (s.aprovado ?? null) === null,
+  ).length;
+
   return (
     <div className="crm-layout">
       {/* ── BARRA LATERAL (SIDEBAR CRM) ──────────────────────────────────── */}
@@ -417,12 +427,30 @@ export function CrmApp({
             <button
               type="button"
               className={`nav-item ${aba === "adm" ? "nav-item-ativo" : ""}`}
-              onClick={() => setAba("adm")}
+              // Entrar pelo menu abre na primeira sub-aba. Sem este reset, quem
+              // chegou à fila pelo atalho do Mural deixaria o `subAbaAdm` em
+              // "desafios" e o próximo clique aqui cairia na 5ª de 5 — a fila
+              // virava a porta de entrada do painel sem ninguém ter pedido.
+              onClick={() => {
+                setSubAbaAdm("alunos");
+                setAba("adm");
+              }}
             >
               <span className="nav-icone">
                 <IconeEscudo tamanho={18} />
               </span>
               <span className="nav-label">Painel ADM</span>
+              {/* O contador do que espera decisão. Sem ele, a fila do mural só
+                  existe depois de três cliques — o ADM não tem como saber que
+                  há algo esperando por ele. */}
+              {enviosPendentes > 0 ? (
+                <span
+                  className="nav-badge nav-badge-fila"
+                  title={`${enviosPendentes} ${enviosPendentes === 1 ? "envio" : "envios"} do mural esperando julgamento`}
+                >
+                  {enviosPendentes}
+                </span>
+              ) : null}
               <span className="nav-badge-adm">Super</span>
             </button>
           ) : null}
@@ -922,7 +950,22 @@ export function CrmApp({
         {/* ── ABA: MURAL DE DESAFIOS & HACKATHONS SESI ─────────────── */}
         {aba === "desafios" ? (
           <div className="crm-secao-conteudo">
-            <MuralDesafios desafios={desafios} usuario={usuario} envios={meusEnvios} />
+            <MuralDesafios
+              desafios={desafios}
+              usuario={usuario}
+              envios={meusEnvios}
+              enviosPendentes={enviosPendentes}
+              // Sem `onJulgarEnvios` a faixa nem é desenhada: a fila não existe
+              // para quem não pode julgar.
+              onJulgarEnvios={
+                ehSuperAdm
+                  ? () => {
+                      setSubAbaAdm("desafios");
+                      setAba("adm");
+                    }
+                  : undefined
+              }
+            />
           </div>
         ) : null}
 
@@ -967,6 +1010,7 @@ export function CrmApp({
               salas={salas}
               comAcesso={comAcesso}
               submissoes={submissoesIniciais}
+              subAbaInicial={subAbaAdm}
               onAbrirCracha={(a) => setAlunoCracha(a)}
               onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
             />

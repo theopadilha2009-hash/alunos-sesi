@@ -268,6 +268,14 @@
   font-weight: 700;
 }
 
+/* Contador do que espera decisão na fila do mural. Distinto do `.nav-badge`
+   comum (que é só contagem) porque este pede ação: o amarelo é o mesmo tom do
+   aviso de moderação, e não da cor de destaque do app. */
+.nav-badge-fila {
+  background: color-mix(in srgb, var(--amarelo) 22%, transparent);
+  color: var(--amarelo);
+}
+
 .nav-badge-adm {
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
@@ -1499,7 +1507,7 @@
 .crm-aviso-moderacao {
   margin: 0 0 1.25rem;
   padding: 0.85rem 1.1rem;
-  border-radius: var(--raio-m, 12px);
+  border-radius: var(--raio-p);
   font-size: 0.9rem;
   line-height: 1.5;
   background: color-mix(in srgb, var(--amarelo) 12%, var(--surface-2));
@@ -1508,6 +1516,74 @@
 }
 
 .crm-aviso-moderacao strong {
+  color: var(--amarelo);
+}
+
+/* ── Aviso de ação: sucesso e erro ───────────────────────────────────────────
+   `alerta-banner` era usada em seis pontos (submissão do mural, importação e
+   cadastro do painel, salvar e validar do editor de perfil) e NÃO TINHA CSS
+   NENHUM — a única regra existente era `.salvar-textos .alerta-banner`, que
+   escopa margem e corpo de fonte a um container. O resultado é que a mensagem
+   de sucesso e a de erro apareciam como parágrafo comum, idênticas: quem
+   importava a planilha e era recusado não tinha como saber que algo falhou. */
+.alerta-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--raio-p);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.alerta-banner svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.alerta-banner.alerta-sucesso {
+  background: color-mix(in srgb, var(--verde) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--verde) 45%, var(--line));
+}
+
+.alerta-banner.alerta-sucesso svg {
+  color: var(--verde);
+}
+
+.alerta-banner.alerta-erro {
+  background: color-mix(in srgb, var(--vermelho) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--vermelho) 45%, var(--line));
+}
+
+.alerta-banner.alerta-erro svg {
+  color: var(--vermelho);
+}
+
+/* A lista de avisos da importação ("linha 4: sem sala") também nascia sem
+   regra: `<ul>` cru, com o marcador default sobre fundo escuro. */
+.erros-importacao-lista {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.erros-importacao-lista h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.erros-importacao-lista ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.erros-importacao-lista li::marker {
   color: var(--amarelo);
 }
 
@@ -2599,6 +2675,19 @@
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--glow);
+}
+
+/* O placeholder dos campos do tema escuro. Só o `.busca` da vitrine tinha
+   regra; o resto caía no default do navegador, que assume fundo claro e escreve
+   cinza-escuro — praticamente ilegível sobre `--surface-2`. O `opacity` existe
+   porque o Firefox aplica uma transparência própria ao placeholder que vence a
+   cor declarada. */
+.input-texto::placeholder,
+.input-textarea::placeholder,
+.campo input::placeholder,
+.campo textarea::placeholder {
+  color: var(--faint);
+  opacity: 1;
 }
 
 /* Sala do aluno: dado, não formulário. Quem move de turma é o ADM, então o

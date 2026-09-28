@@ -45,6 +45,8 @@ import {
 import { contarLacunas, filtrarPorLacuna, ROTULO_LACUNA, type Lacuna } from "@/lib/lacunas";
 import type { AlunoNaTela, SubmissaoDesafio } from "@/lib/tipos";
 
+type SubAba = "alunos" | "importar" | "novo" | "salas" | "desafios";
+
 type Props = {
   alunos: AlunoNaTela[];
   salas: { id: string; nome: string }[];
@@ -52,6 +54,12 @@ type Props = {
   comAcesso: string[];
   /** Fila de moderação do mural, já com o nome do aluno e o título do desafio. */
   submissoes: SubmissaoDesafio[];
+  /**
+   * Em que sub-aba abrir. O painel só monta quando a aba `adm` fica ativa, então
+   * o valor vale como estado inicial — é assim que o atalho do Mural de Desafios
+   * leva direto à fila de envios, que fica a dois níveis de fundo daqui.
+   */
+  subAbaInicial?: SubAba;
   onAbrirCracha: (aluno: AlunoNaTela) => void;
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
 };
@@ -61,12 +69,11 @@ export function PainelAdmIntegrado({
   salas,
   comAcesso,
   submissoes,
+  subAbaInicial = "alunos",
   onAbrirCracha,
   onSelecionarAluno,
 }: Props) {
-  const [subAba, setSubAba] = useState<
-    "alunos" | "importar" | "novo" | "salas" | "desafios"
-  >("alunos");
+  const [subAba, setSubAba] = useState<SubAba>(subAbaInicial);
   const [busca, setBusca] = useState("");
   const [salaFiltro, setSalaFiltro] = useState<string>("todas");
   const [lacuna, setLacuna] = useState<Lacuna | null>(null);
