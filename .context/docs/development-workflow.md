@@ -34,7 +34,7 @@ Sempre nesta ordem, e sempre com o output colado antes de dizer "pronto":
 
 ```bash
 npm run typecheck   # tsc --noEmit — pega tipo errado e prop que não existe
-npm test            # node:test, 208 testes, sem rede
+npm test            # node:test — funções puras e varreduras de fonte, sem rede
 npm run build       # next build — pega erro de RSC, rota e import de servidor no cliente
 ```
 
@@ -141,18 +141,29 @@ cópia de `src/sql/`, ele falha no 005 e aponta o erro exato
 
 ## Deploy
 
-Na Vercel, por CLI. As variáveis de ambiente precisam existir na Vercel **antes**
-do primeiro deploy de produção — sem elas o build passa e as páginas quebram em
-runtime.
+**O deploy de produção é automático: todo merge na `main` publica sozinho
+(~30s), e toda branch ganha preview.** Não há passo manual no caminho normal —
+mergeou, subiu. Foi assim desde que o projeto foi ligado ao GitHub, e é o que a
+`.context/memoria/infra-deploy.md` registra.
 
-```bash
-vercel link
-vercel env add NEXT_PUBLIC_SUPABASE_URL production   # ...e as demais
-vercel deploy --prod --yes --token "$VERCEL_TOKEN"
-```
+Duas consequências que valem saber:
 
-O `scripts/vercel-env.sh` faz o mesmo caminho por API, sem o CLI interativo
-(`pull`, `list`, `deploy`, `deploy prod`) — ver `tooling.md`.
+- **Preview é onde se confere o que o CI não vê.** O que é visual ou interativo
+  (layout, cor, um clique que depende de sessão) se aprova no preview deploy da
+  branch, antes do merge — depois dele já é produção.
+- **O alias `alunos-sesi.vercel.app` pode apontar para um deploy manual**, não
+  para o automático: o CLI também cria alias de produção. Quem duvida de qual SHA
+  está no ar confere pelo deploy, não pelo domínio.
+
+O CLI (`vercel deploy --prod`) passou a ser **caminho de exceção** — rollback
+deliberado, republicar um SHA antigo, ou o que o auto-deploy não cobre. As
+variáveis de ambiente precisam existir na Vercel **antes** do primeiro deploy de
+produção: sem elas o build passa e as páginas quebram em runtime. As chaves do
+app são cadastradas como *Sensitive* em Production, direto no dashboard —
+`vercel login` está no deny do kit, então env nova é passo manual.
+
+O `scripts/vercel-env.sh` faz `pull`, `list` e `deploy` por API, sem o CLI
+interativo — ver `tooling.md`.
 
 ## Documentação
 

@@ -20,9 +20,27 @@ type Props = {
   usuario: UsuarioSessao;
   /** Os envios deste aluno, para o card mostrar onde cada um parou. */
   envios?: SubmissaoDesafio[];
+  /**
+   * Quantos envios da turma esperam julgamento. Vem preenchido só para
+   * `super_adm` — os outros papéis não enxergam a fila, e um contador aqui
+   * seria a única pista de que ela existe.
+   */
+  enviosPendentes?: number;
+  /**
+   * Leva à fila de julgamento. Existe só para `super_adm`, e é o que resolve
+   * "onde eu vejo os projetos que a turma enviou": a fila mora no Painel ADM,
+   * dois níveis fundo, e quem procura por ela procura aqui.
+   */
+  onJulgarEnvios?: () => void;
 };
 
-export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
+export function MuralDesafios({
+  desafios,
+  usuario,
+  envios = [],
+  enviosPendentes = 0,
+  onJulgarEnvios,
+}: Props) {
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>("todos");
   const [desafioSelecionado, setDesafioSelecionado] = useState<DesafioHackathon | null>(null);
   const [estadoSubmissao, formAction, enviando] = useActionState(submeterDesafioAction, {
@@ -80,6 +98,34 @@ export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
           </p>
         </div>
       </header>
+
+      {/* A fila de julgamento é do ADM, não do aluno — mas é AQUI que alguém
+          procura por ela, porque é aqui que os desafios e os envios acontecem.
+          Antes ela ficava só no Painel ADM (aba 6) → sub-aba 5 de 5, e o Théo
+          perguntou "como eu vejo os projetos enviados pela turma?" tendo a fila
+          a três cliques de distância. */}
+      {onJulgarEnvios ? (
+        <div
+          className={`mural-fila-adm ${enviosPendentes > 0 ? "mural-fila-adm-tem" : ""}`}
+        >
+          <span className="mural-fila-texto">
+            {enviosPendentes > 0 ? (
+              <>
+                <b>
+                  {enviosPendentes} {enviosPendentes === 1 ? "envio" : "envios"}
+                </b>{" "}
+                da turma {enviosPendentes === 1 ? "espera" : "esperam"} julgamento.
+              </>
+            ) : (
+              "Nenhum envio esperando julgamento."
+            )}
+          </span>
+          <button type="button" className="botao botao-fraco" onClick={onJulgarEnvios}>
+            <IconeEscudo tamanho={14} />
+            <span>Ver envios da turma</span>
+          </button>
+        </div>
+      ) : null}
 
       {/* Barra de Filtros por Categoria */}
       <div className="mural-filtros-bar">
@@ -260,25 +306,41 @@ export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
                 <label htmlFor="submissao-link" className="label-texto">
                   Link do Repositório GitHub / Protótipo / Demonstração
                 </label>
+                {/* `type="text"` com `inputMode="url"`, e não `type="url"`: o
+                    campo `url` faz o navegador barrar o envio com uma bolha
+                    nativa quando falta o esquema — quem digita
+                    `github.com/meu-projeto` não descobre por quê. Quem valida é
+                    o servidor (`urlSegura`), que devolve uma frase legível no
+                    aviso do próprio modal. Mesma troca que o editor de perfil
+                    recebeu. */}
                 <input
                   id="submissao-link"
                   name="linkProjeto"
-                  type="url"
+                  type="text"
+                  inputMode="url"
                   className="input-texto"
                   placeholder="https://github.com/usuario/meu-robo-sesi"
                 />
+                <span className="dica-campo">
+                  Cole o endereço completo, começando com https://
+                </span>
               </div>
 
               <div className="campo-form">
                 <label htmlFor="submissao-desc" className="label-texto">
                   Descrição da Solução Desenvolvida *
                 </label>
+                {/* `input-textarea` é a classe dos campos de texto do CRM. O
+                    `textarea-bio` que estava aqui não existe em CSS nenhum do
+                    repositório, e sem classe e sem `color-scheme: dark` o campo
+                    caía no estilo default do navegador — fundo branco no meio de
+                    um modal escuro. */}
                 <textarea
                   id="submissao-desc"
                   name="descricao"
                   required
                   rows={4}
-                  className="textarea-bio"
+                  className="input-textarea"
                   placeholder="Explique como seu código/projeto resolve os critérios do desafio, tecnologias usadas (ex: Arduino, Python, ESP32) e diferenciais..."
                 />
               </div>

@@ -18,7 +18,7 @@ scaffoldVersion: "2.0.0"
 | `npm run build` | `next build` | build de produção; é o passo que pega import de servidor vazando para o cliente |
 | `npm start` | `next start` | serve o build (precisa de `npm run build` antes) |
 | `npm run typecheck` | `tsc --noEmit` | checagem de tipos isolada, sem emitir arquivo |
-| `npm test` | `node --experimental-strip-types --test tests/*.test.mjs` | 208 testes de funções puras, sem rede |
+| `npm test` | `node --experimental-strip-types --test tests/*.test.mjs` | a suíte de funções puras e varreduras de fonte, sem rede e sem banco (a lista por arquivo está em `testing-strategy.md`) |
 
 Não há script de lint de JS/TS: não há ESLint nem Prettier no repositório. O
 gate de estilo é o `typecheck` mais a revisão. O lint que existe é o de SQL,

@@ -338,3 +338,39 @@
 }
 
 
+/* ── Faixa da fila de julgamento (só super_adm) ──────────────────────────────
+   Fica no topo do Mural de Desafios de propósito: a fila mora no Painel ADM,
+   dois níveis fundo, e quem procura por ela procura aqui, onde os envios
+   acontecem. Só o `-tem` (com pendente) acende no amarelo de atenção; a versão
+   zerada é informação, não alarme. */
+.mural-fila-adm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--raio-p);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.mural-fila-adm-tem {
+  background: color-mix(in srgb, var(--amarelo) 12%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--amarelo) 45%, var(--line));
+}
+
+.mural-fila-adm-tem .mural-fila-texto b {
+  color: var(--amarelo);
+}
+
+.mural-fila-adm .botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
