@@ -209,6 +209,11 @@ export function CommandBar({
 
           if (copiou) {
             setAvisoAcao({ id: "acao-copiar-vitrine", texto: "Link copiado!", erro: false });
+            // Cancela antes de agendar: um segundo clique antes de o primeiro
+            // `await` resolver sobrescreveria o handle sem desligar o anterior,
+            // e o timer órfão não teria mais como ser cancelado — justo o
+            // invariante que a ref existe para garantir.
+            if (timerFecharRef.current) clearTimeout(timerFecharRef.current);
             timerFecharRef.current = setTimeout(() => {
               timerFecharRef.current = null;
               fecharRef.current();
