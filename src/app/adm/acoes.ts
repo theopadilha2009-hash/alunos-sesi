@@ -52,6 +52,20 @@ function texto(formData: FormData, campo: string): string {
   return String(formData.get(campo) ?? "").trim();
 }
 
+/**
+ * Motivo de falha em linguagem que o ADM entende, para o relatório da importação.
+ *
+ * O `error.message` do PostgREST é jargão — `duplicate key value violates unique
+ * constraint` não diz ao professor o que fazer com a linha. O erro real vai para
+ * o log; o relatório recebe o motivo acionável.
+ */
+function motivoDaFalha(error: { code?: string; message: string }): string {
+  if (error.code === "23505") return "já existe um aluno com esse nome nesta turma";
+  if (error.code === "23503") return "a turma informada não existe mais";
+  logger.error("ADM", `Falha ao gravar linha da importação: ${error.message}`);
+  return "o banco recusou esta linha";
+}
+
 /** Sala pelo nome, criando se não existir. Aguenta duas colagens ao mesmo tempo. */
 async function garantirSala(
   db: ReturnType<typeof clienteAdmin>,
@@ -109,7 +123,8 @@ export async function importarLista(
     .from("alunos")
     .select("id,slug,nome,sala_id,linkedin,github");
   if (erroLeitura) {
-    return { ok: false, mensagem: `Falha ao ler os alunos: ${erroLeitura.message}` };
+    logger.error("ADM", "Falha ao ler os alunos na importação", erroLeitura);
+    return { ok: false, mensagem: "Não foi possível ler a lista de alunos agora. Tente de novo." };
   }
 
   const slugs = new Set((jaExistem ?? []).map((a) => a.slug as string));
@@ -199,7 +214,7 @@ export async function importarLista(
       erros.push({
         linha: linha.linha,
         texto: linha.nome,
-        motivo: error.message,
+        motivo: motivoDaFalha(error),
       });
       continue;
     }
@@ -347,7 +362,8 @@ export async function gerarCodigoAtivacao(
       .update(campos)
       .eq("id", existente.id);
     if (error) {
-      return { ok: false, mensagem: `Não deu para emitir o código: ${error.message}` };
+      logger.error("ADM", `Falha ao reemitir código para ${aluno.nome}`, error);
+      return { ok: false, mensagem: "Não deu para emitir o código agora. Tente de novo." };
     }
   } else {
     const { error } = await db.from("usuarios").insert({
@@ -358,7 +374,8 @@ export async function gerarCodigoAtivacao(
       ...campos,
     });
     if (error) {
-      return { ok: false, mensagem: `Não deu para emitir o código: ${error.message}` };
+      logger.error("ADM", `Falha ao emitir código para ${aluno.nome}`, error);
+      return { ok: false, mensagem: "Não deu para emitir o código agora. Tente de novo." };
     }
   }
 

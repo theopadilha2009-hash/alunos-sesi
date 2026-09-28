@@ -6,6 +6,7 @@ import { Roseta } from "@/components/Roseta";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { Avatar } from "@/components/Avatar";
+import { copiarTexto } from "@/lib/clipboard";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { useTravaDeFoco } from "@/lib/foco";
 import { corHabilidade } from "@/lib/habilidades";
@@ -23,6 +24,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
   useTravaDeFoco(dialogoRef);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
+  const [erroCopiar, setErroCopiar] = useState(false);
   const [baixando, setBaixando] = useState(false);
 
   const urlPerfil =
@@ -74,11 +76,15 @@ export function CrachaModal({ aluno, onClose }: Props) {
   }, []);
 
   async function copiarLink() {
-    try {
-      await navigator.clipboard.writeText(urlPerfil);
+    if (await copiarTexto(urlPerfil)) {
+      setErroCopiar(false);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2400);
-    } catch {}
+      return;
+    }
+    setCopiado(false);
+    setErroCopiar(true);
+    setTimeout(() => setErroCopiar(false), 4000);
   }
 
   async function handleBaixarCracha() {
@@ -240,7 +246,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
               title="Copiar link do portfólio"
             >
               <IconeCopiar tamanho={15} />
-              <span>{copiado ? "Link Copiado!" : "Copiar Link"}</span>
+              <span>{erroCopiar ? "Não deu para copiar" : copiado ? "Link Copiado!" : "Copiar Link"}</span>
             </button>
 
             <Link
