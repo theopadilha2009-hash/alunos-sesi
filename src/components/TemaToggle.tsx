@@ -26,17 +26,23 @@ export function TemaToggle({ compacto = true }: { compacto?: boolean }) {
       type="button"
       className="botao-tema-icone"
       onClick={alternar}
-      aria-label="Alternar entre tema claro e escuro"
-      title="Alternar entre tema claro e escuro"
+      title="Alternar tema"
     >
       {/* Em tema escuro mostra-se o sol e em tema claro a lua: o ícone anuncia
-          para onde o clique leva, não onde se está. */}
+          para onde o clique leva, não onde se está.
+          O texto de leitor de tela acompanha o ícone pelo mesmo par de classes
+          (`tema-icone-*`), que é o que faz a troca pelo `data-theme`. Os dois
+          SVGs são `aria-hidden`, então sem isto quem não vê o desenho ouvia um
+          `aria-label` fixo — a mesma frase nos dois temas, descrevendo o botão
+          em vez de dizer o que o clique faz. Aqui as duas informações batem. */}
       <span className="tema-icone tema-icone-escuro" aria-hidden="true">
         <IconeSol tamanho={18} />
       </span>
+      <span className="sr-only tema-icone-escuro">Ativar o tema claro</span>
       <span className="tema-icone tema-icone-claro" aria-hidden="true">
         <IconeLua tamanho={18} />
       </span>
+      <span className="sr-only tema-icone-claro">Ativar o tema escuro</span>
     </button>
   );
 }

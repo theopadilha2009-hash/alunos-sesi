@@ -20,10 +20,6 @@ const COR_DA_BARRA: Record<Tema, string> = {
   light: "#f8fafc",
 };
 
-export function ehTema(valor: unknown): valor is Tema {
-  return valor === "dark" || valor === "light";
-}
-
 /**
  * Aplica o tema no documento e sincroniza a cor da barra do PWA.
  *
@@ -39,16 +35,13 @@ export function aplicarTema(tema: Tema): void {
   if (meta) meta.setAttribute("content", COR_DA_BARRA[tema]);
 }
 
-/** Tema salvo pelo usuário, ou `null` se nunca escolheu ou o storage está bloqueado. */
-export function lerTemaSalvo(): Tema | null {
-  try {
-    const salvo = localStorage.getItem(CHAVE_TEMA);
-    return ehTema(salvo) ? salvo : null;
-  } catch {
-    // modo privado sem storage
-    return null;
-  }
-}
+/*
+ * Do lado da LEITURA não há função aqui de propósito: quem lê o tema salvo é o
+ * script inline do `layout.tsx`, antes da primeira pintura, e ele não pode
+ * importar deste módulo (é string). O `lerTemaSalvo` que existia fazia essa
+ * leitura em React, e depois que o alternador passou a ler o `data-theme` do
+ * documento ninguém mais precisava dele — ficou órfão, e órfão saiu.
+ */
 
 export function salvarTema(tema: Tema): void {
   try {
