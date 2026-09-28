@@ -11,6 +11,7 @@ import {
   IconePlus,
   IconeProjetos,
 } from "@/components/Icones";
+import { CATEGORIAS } from "@/lib/desafios";
 import { useTravaDeFoco } from "@/lib/foco";
 import type { DesafioHackathon, SubmissaoDesafio, UsuarioSessao } from "@/lib/tipos";
 
@@ -49,13 +50,10 @@ export function MuralDesafios({ desafios, usuario, envios = [] }: Props) {
     };
   }, [desafioSelecionado]);
 
-  const categorias = [
-    "todos",
-    "Robótica FLL",
-    "Desenvolvimento Web",
-    "Inteligência Artificial",
-    "Automação IoT",
-  ];
+  // Derivado de `CATEGORIAS`, não escrito à mão: a lista local tinha quatro das
+  // cinco, e um desafio publicado em "Design & UI/UX" só aparecia em "todos" —
+  // o botão que o filtraria não existia.
+  const categorias = ["todos", ...CATEGORIAS];
 
   const desafiosFiltrados = desafios.filter((d) => {
     if (categoriaAtiva === "todos") return true;

@@ -339,7 +339,7 @@ export async function listarSubmissoes(): Promise<SubmissaoDesafio[]> {
   const { data, error } = await clienteAdmin()
     .from("submissoes_desafios")
     .select(
-      "id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em,alunos(nome),desafios(titulo)",
+      "id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em,alunos(nome,salas(nome)),desafios(titulo)",
     )
     .order("criado_em", { ascending: false });
 
@@ -355,7 +355,10 @@ export async function listarSubmissoes(): Promise<SubmissaoDesafio[]> {
     // Aluno apagado leva as submissões junto (`on delete cascade`), então o
     // nulo aqui só aparece se o embedding vier vazio por outro motivo.
     alunoNome: (s.alunos as { nome?: string } | null)?.nome ?? "Aluno removido",
-    alunoSala: "",
+    // O embedding aninhado (alunos → salas) usa a FK `alunos.sala_id`. Turma
+    // nula é aluno sem sala — a fila mostra "—" nesse caso.
+    alunoSala:
+      (s.alunos as { salas?: { nome?: string } | null } | null)?.salas?.nome ?? "",
     tituloProjeto: s.titulo_projeto,
     linkProjeto: s.link_projeto ?? "",
     descricao: s.descricao,

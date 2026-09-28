@@ -809,12 +809,12 @@ export function PainelAdmIntegrado({
                 <table className="tabela-alunos">
                   <thead>
                     <tr>
-                      <th>Aluno</th>
-                      <th>Desafio</th>
-                      <th>Projeto</th>
-                      <th>Enviado</th>
-                      <th>Situação</th>
-                      <th>Ações</th>
+                      <th scope="col">Aluno</th>
+                      <th scope="col">Desafio</th>
+                      <th scope="col">Projeto</th>
+                      <th scope="col">Enviado</th>
+                      <th scope="col">Situação</th>
+                      <th scope="col">Ações</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -8,6 +8,8 @@
  * entraria como item vazio na lista que o aluno lê no card.
  */
 
+import { slugificar } from "./slug.ts";
+
 export const MAX_CRITERIOS = 8;
 export const MAX_TITULO = 80;
 export const MAX_SUBTITULO = 140;
@@ -59,6 +61,12 @@ export type DesafioNovo = {
 export function problemaDoDesafio(d: DesafioNovo): string | null {
   if (!d.titulo) return "Dê um título ao desafio.";
   if (d.titulo.length > MAX_TITULO) return `O título passa de ${MAX_TITULO} caracteres.`;
+  // O `id` do desafio nasce do título pelo `slugUnico`, cujo fallback é "aluno"
+  // quando o texto não rende slug nenhum (só emoji, só símbolo, uma letra). A
+  // chave primária da linha ficaria "aluno" — nome de gente num desafio.
+  if (slugificar(d.titulo) === "aluno" && !/aluno/i.test(d.titulo)) {
+    return "O título precisa de pelo menos duas letras ou números.";
+  }
   if (!d.subtitulo) return "Escreva o subtítulo que aparece no card.";
   if (d.subtitulo.length > MAX_SUBTITULO)
     return `O subtítulo passa de ${MAX_SUBTITULO} caracteres.`;

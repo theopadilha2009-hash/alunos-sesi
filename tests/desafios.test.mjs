@@ -78,6 +78,25 @@ test("categoria inventada é recusada", () => {
   assert.match(problemaDoDesafio(desafio({ categoria: "Astronáutica" })), /categoria/i);
 });
 
+test("título que não rende slug é recusado", () => {
+  // O `id` do desafio sai do título pelo `slugUnico`, que cai em "aluno" quando
+  // não sobra letra nem número. Sem esta barreira a chave primária da linha
+  // nasceria com nome de gente.
+  for (const titulo of ["🎯🚀", "& % $", "á", "—"]) {
+    assert.match(
+      problemaDoDesafio(desafio({ titulo })),
+      /letras ou números/i,
+      `deveria recusar ${JSON.stringify(titulo)}`,
+    );
+  }
+});
+
+test("título que é literalmente 'Aluno' continua passando", () => {
+  // O slug coincide com o fallback, mas o título rende slug de verdade — a
+  // barreira é o colapso, não a palavra.
+  assert.equal(problemaDoDesafio(desafio({ titulo: "Aluno" })), null);
+});
+
 test("cada campo obrigatório vazio é recusado com a própria frase", () => {
   assert.match(problemaDoDesafio(desafio({ titulo: "" })), /título/i);
   assert.match(problemaDoDesafio(desafio({ subtitulo: "" })), /subtítulo/i);
