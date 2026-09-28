@@ -71,6 +71,14 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   10 GB de transfer) e não cobra excedente — um vídeo pesado derrubaria o store
   inteiro, inclusive as imagens do perfil. *(Comportamento do plano Hobby
   registrado de memória; não medido no repo.)* Reabrir só se o plano subir.
+- **O login do Lucas Bento não tem o domínio da escola** (27/09). Ficou
+  `lucas_r_bento@sesisenai.org.br` — sem `estudante.` e sem `.br`, um domínio que não
+  existe. O Théo passou esse valor de próprio punho, e foi com ele que a conta nasceu;
+  mas a decisão posterior foi "o domínio da escola termina em `.br` e tem que ter isso
+  sempre". Trocar o username de quem já recebeu a senha quebra o acesso dele até
+  alguém avisar — então é decisão do Théo, não conserto de código.
+  O Arthur tinha o mesmo tipo de defeito (`olieira` sem o `v`) e foi corrigido em
+  27/09, com o aval dele.
 - **O caminho novo do perfil nunca foi exercido com dado real** (25/09): ninguém
   editou o perfil ainda, então `foto_url` e `habilidades` estão NULL para todos
   os alunos e o upload de foto / escolha de competências só foi coberto por
