@@ -561,14 +561,10 @@ export async function submeterDesafioAction(
     revalidatePath("/");
     return { ok: true, mensagem: "Projeto submetido com sucesso ao Desafio SESI Joinville! Parabéns pela iniciativa!" };
   } catch (err) {
-    const bruto = err instanceof Error ? err.message : "";
-    // O PostgREST põe o SQLSTATE em `error.code`, não na `message` — e
-    // `submeterDesafio` relança como `Error`, perdendo o código. O que sobra de
-    // confiável é o nome da constraint, que o próprio Postgres escreve na
-    // mensagem. A condição por "23505" que estava aqui nunca casava.
-    if (bruto.includes("submissoes_unica_por_aluno")) {
-      return { ok: false, mensagem: "Você já submeteu um projeto para este desafio." };
-    }
+    // Sem ramo para "já submeteu": `submeterDesafio` virou upsert sobre
+    // `submissoes_unica_por_aluno`, então reenviar é o caminho esperado de quem
+    // teve um envio rejeitado — não um erro. Um 23505 aqui só apareceria se a
+    // constraint sumisse do banco, e aí a mensagem genérica é a honesta.
     logger.error("CRM", "Falha ao submeter projeto ao desafio", err);
     return { ok: false, mensagem: "Não foi possível enviar sua submissão agora. Tente de novo." };
   }

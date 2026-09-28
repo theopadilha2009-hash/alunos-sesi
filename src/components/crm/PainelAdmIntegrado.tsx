@@ -6,9 +6,11 @@ import {
   alternar,
   aprovarAluno,
   criarAluno,
+  decidirSubmissaoAction,
   gerarCodigoAtivacao,
   importarLista,
   mudarSalaDoAluno,
+  publicarDesafioAction,
   removerAluno,
 } from "@/app/adm/acoes";
 import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
@@ -30,14 +32,26 @@ import {
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Avatar } from "@/components/Avatar";
 import { aoSetasDasAbas } from "@/lib/abas";
+import { dataCurta } from "@/lib/datas";
+import {
+  CATEGORIAS,
+  MAX_CRITERIOS,
+  MAX_DESCRICAO,
+  MAX_PRAZO,
+  MAX_RECOMPENSA,
+  MAX_SUBTITULO,
+  MAX_TITULO,
+} from "@/lib/desafios";
 import { contarLacunas, filtrarPorLacuna, ROTULO_LACUNA, type Lacuna } from "@/lib/lacunas";
-import type { AlunoNaTela } from "@/lib/tipos";
+import type { AlunoNaTela, SubmissaoDesafio } from "@/lib/tipos";
 
 type Props = {
   alunos: AlunoNaTela[];
   salas: { id: string; nome: string }[];
   /** `aluno_id` de quem já tem login — o código só é oferecido a quem não tem. */
   comAcesso: string[];
+  /** Fila de moderação do mural, já com o nome do aluno e o título do desafio. */
+  submissoes: SubmissaoDesafio[];
   onAbrirCracha: (aluno: AlunoNaTela) => void;
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
 };
@@ -46,10 +60,13 @@ export function PainelAdmIntegrado({
   alunos,
   salas,
   comAcesso,
+  submissoes,
   onAbrirCracha,
   onSelecionarAluno,
 }: Props) {
-  const [subAba, setSubAba] = useState<"alunos" | "importar" | "novo" | "salas">("alunos");
+  const [subAba, setSubAba] = useState<
+    "alunos" | "importar" | "novo" | "salas" | "desafios"
+  >("alunos");
   const [busca, setBusca] = useState("");
   const [salaFiltro, setSalaFiltro] = useState<string>("todas");
   const [lacuna, setLacuna] = useState<Lacuna | null>(null);
@@ -61,6 +78,17 @@ export function PainelAdmIntegrado({
     gerarCodigoAtivacao,
     ESTADO_CODIGO_INICIAL,
   );
+  const [estadoDesafio, formDesafio, publicando] = useActionState(
+    publicarDesafioAction,
+    ESTADO_INICIAL,
+  );
+
+  // A fila mostra primeiro o que espera decisão: um envio julgado some da
+  // frente do ADM e vira histórico.
+  //
+  // `=== null` e não `!s.aprovado`: com o tri-estado da 016 o `!` também
+  // pegaria os rejeitados, e eles voltariam para a fila de quem já os julgou.
+  const pendentes = submissoes.filter((s) => (s.aprovado ?? null) === null);
 
   // `alguns` alunos já têm login; o código é só para quem falta.
   const comAcessoSet = useMemo(() => new Set(comAcesso), [comAcesso]);
@@ -230,6 +258,23 @@ export function PainelAdmIntegrado({
         >
           <IconeSala tamanho={15} />
           <span>Salas & Turmas ({salas.length})</span>
+        </button>
+
+        {/* O contador é dos envios que esperam decisão, não do total: é o
+            número que diz ao ADM se há trabalho ali. */}
+        <button
+          type="button"
+          id="adm-tab-desafios"
+          className={`adm-tab-item ${subAba === "desafios" ? "adm-tab-item-ativo" : ""}`}
+          onClick={() => setSubAba("desafios")}
+          onKeyDown={aoSetasDasAbas}
+          role="tab"
+          aria-selected={subAba === "desafios"}
+          aria-controls="adm-painel-desafios"
+          tabIndex={subAba === "desafios" ? 0 : -1}
+        >
+          <IconeEstrela tamanho={15} />
+          <span>Desafios do Mural ({pendentes.length})</span>
         </button>
       </div>
 
@@ -734,6 +779,232 @@ export function PainelAdmIntegrado({
               })}
             </div>
           </div>
+        </section>
+      </div>
+
+      {/* Sub-Aba 5: Desafios do Mural */}
+      <div
+        id="adm-painel-desafios"
+        role="tabpanel"
+        aria-labelledby="adm-tab-desafios"
+        style={{ display: subAba === "desafios" ? "block" : "none" }}
+      >
+        <section className="adm-secao-conteudo">
+          {/* A fila vem antes do formulário: julgar envio é rotina, publicar
+              desafio é raro. O que o ADM abre esta aba para fazer fica no topo. */}
+          <div className="painel-card">
+            <header className="painel-card-topo">
+              <h3>Envios dos alunos ({submissoes.length})</h3>
+              <p>
+                {pendentes.length > 0
+                  ? `${pendentes.length} esperando decisão.`
+                  : "Nenhum envio esperando decisão."}
+              </p>
+            </header>
+
+            {submissoes.length === 0 ? (
+              <p className="adm-desafios-vazio">
+                Nenhum aluno enviou projeto ainda. O envio acontece no mural, dentro do
+                CRM do aluno.
+              </p>
+            ) : (
+              <div className="tabela-container">
+                <table className="tabela-alunos">
+                  <thead>
+                    <tr>
+                      <th scope="col">Aluno</th>
+                      <th scope="col">Desafio</th>
+                      <th scope="col">Projeto</th>
+                      <th scope="col">Enviado</th>
+                      <th scope="col">Situação</th>
+                      <th scope="col">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {submissoes.map((s) => (
+                      <tr key={s.id}>
+                        <td>{s.alunoNome}</td>
+                        <td>{s.desafioTitulo || "—"}</td>
+                        <td>
+                          <span className="adm-desafios-projeto">{s.tituloProjeto}</span>
+                          {s.linkProjeto ? (
+                            <a
+                              href={s.linkProjeto}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="adm-desafios-link"
+                            >
+                              abrir
+                            </a>
+                          ) : null}
+                        </td>
+                        <td>{dataCurta(s.criadoEm) ?? "—"}</td>
+                        <td>
+                          <span
+                            className={`adm-desafios-status ${
+                              s.aprovado === true
+                                ? "adm-desafios-aprovado"
+                                : s.aprovado === false
+                                  ? "adm-desafios-rejeitado"
+                                  : "adm-desafios-pendente"
+                            }`}
+                          >
+                            {s.aprovado === true
+                              ? "Aprovado"
+                              : s.aprovado === false
+                                ? "Rejeitado"
+                                : "Pendente"}
+                          </span>
+                        </td>
+                        <td>
+                          {/* Um botão por decisão, cada um escondido quando ela
+                              já é a dele: com o tri-estado o ADM pode voltar
+                              atrás (rejeitar um aprovado, aprovar um
+                              rejeitado), e um botão único de rótulo invertido
+                              ficaria ambíguo em três estados. */}
+                          <div className="adm-desafios-decidir">
+                            {s.aprovado !== true ? (
+                              <form action={decidirSubmissaoAction}>
+                                <input type="hidden" name="submissaoId" value={s.id} />
+                                <button
+                                  type="submit"
+                                  name="decisao"
+                                  value="aprovar"
+                                  className="botao botao-fraco"
+                                >
+                                  Aprovar
+                                </button>
+                              </form>
+                            ) : null}
+                            {s.aprovado !== false ? (
+                              <form action={decidirSubmissaoAction}>
+                                <input type="hidden" name="submissaoId" value={s.id} />
+                                <button
+                                  type="submit"
+                                  name="decisao"
+                                  value="rejeitar"
+                                  className="botao botao-fraco"
+                                >
+                                  Rejeitar
+                                </button>
+                              </form>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <details className="painel-card adm-desafios-publicar">
+            <summary>Publicar um desafio novo</summary>
+
+            <form action={formDesafio} className="adm-desafios-form">
+              {estadoDesafio.mensagem ? (
+                <p
+                  className={`recado ${estadoDesafio.ok ? "recado-ok" : "recado-erro"}`}
+                  role="alert"
+                >
+                  {estadoDesafio.mensagem}
+                </p>
+              ) : null}
+
+              <div className="linha-campos">
+                <div className="campo">
+                  <label htmlFor="dft-titulo">Título</label>
+                  <input
+                    id="dft-titulo"
+                    name="titulo"
+                    type="text"
+                    required
+                    maxLength={MAX_TITULO}
+                    placeholder="Ex.: Robô Seguidor de Linha"
+                  />
+                </div>
+                <div className="campo">
+                  <label htmlFor="dft-categoria">Categoria</label>
+                  <select id="dft-categoria" name="categoria" required defaultValue={CATEGORIAS[0]}>
+                    {CATEGORIAS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="campo">
+                <label htmlFor="dft-subtitulo">Subtítulo do card</label>
+                <input
+                  id="dft-subtitulo"
+                  name="subtitulo"
+                  type="text"
+                  required
+                  maxLength={MAX_SUBTITULO}
+                  placeholder="Uma linha dizendo o que o aluno vai construir"
+                />
+              </div>
+
+              <div className="linha-campos">
+                <div className="campo">
+                  <label htmlFor="dft-prazo">Prazo</label>
+                  <input
+                    id="dft-prazo"
+                    name="prazo"
+                    type="text"
+                    required
+                    maxLength={MAX_PRAZO}
+                    placeholder="10/11/2026"
+                  />
+                  <span className="dica-campo">Texto livre: cabe uma data ou um período.</span>
+                </div>
+                <div className="campo">
+                  <label htmlFor="dft-recompensa">Recompensa</label>
+                  <input
+                    id="dft-recompensa"
+                    name="recompensa"
+                    type="text"
+                    required
+                    maxLength={MAX_RECOMPENSA}
+                    placeholder="Ex.: Insígnia de Engenharia"
+                  />
+                </div>
+              </div>
+
+              <div className="campo">
+                <label htmlFor="dft-descricao">Descrição</label>
+                <textarea
+                  id="dft-descricao"
+                  name="descricao"
+                  required
+                  rows={3}
+                  maxLength={MAX_DESCRICAO}
+                  placeholder="O que o aluno precisa fazer e com que tecnologias"
+                />
+              </div>
+
+              <div className="campo">
+                <label htmlFor="dft-criterios">Critérios de avaliação</label>
+                <textarea
+                  id="dft-criterios"
+                  name="criterios"
+                  required
+                  rows={4}
+                  placeholder={"Um por linha. Ex.:\nPercurso completo sem sair da pista\nCódigo comentado"}
+                />
+                <span className="dica-campo">
+                  Um critério por linha, até {MAX_CRITERIOS}. Linha em branco é ignorada.
+                </span>
+              </div>
+
+              <button type="submit" className="botao botao-primario" disabled={publicando}>
+                {publicando ? "Publicando..." : "Publicar no mural"}
+              </button>
+            </form>
+          </details>
         </section>
       </div>
     </div>

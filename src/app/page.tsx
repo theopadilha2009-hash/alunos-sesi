@@ -9,6 +9,8 @@ import {
   listarDesafios,
   listarRetrato,
   listarSalas,
+  listarSubmissoes,
+  submissoesDoAluno,
   votosDoVisitante,
 } from "@/lib/dados";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
@@ -42,12 +44,22 @@ export default async function PaginaPrincipal() {
     listarDesafios(),
   ]);
 
-  // Quem já tem login, para o painel só oferecer o código a quem precisa.
-  // Só o ADM consulta: não é dado da vitrine.
-  const comAcesso =
-    sessao.role === "super_adm" ? await listarAcessos() : [];
-
-  const meusVotos = visitante ? await votosDoVisitante(visitante) : [];
+  // Em paralelo: são quatro consultas independentes entre si. Em série, cada
+  // uma esperava a anterior terminar, e a tela só saía depois da soma das
+  // quatro — o painel do ADM é quem mais paga, porque é o único que dispara
+  // todas.
+  const [comAcesso, submissoes, meusVotos, meusEnvios] = await Promise.all([
+    // Quem já tem login, para o painel só oferecer o código a quem precisa.
+    // Só o ADM consulta: não é dado da vitrine.
+    sessao.role === "super_adm" ? listarAcessos() : [],
+    // Os envios do mural viram fila de moderação. A RLS da 004 fechou a leitura
+    // para a anon key, então nem a vitrine puxa: só o ADM, por aqui.
+    sessao.role === "super_adm" ? listarSubmissoes() : [],
+    visitante ? votosDoVisitante(visitante) : [],
+    // O mural mostra ao aluno onde cada envio dele parou — sem isto ele submete
+    // um projeto e nunca mais sabe se alguém olhou.
+    sessao.alunoId ? submissoesDoAluno(sessao.alunoId) : [],
+  ]);
 
   return (
     <CrmApp
@@ -58,6 +70,8 @@ export default async function PaginaPrincipal() {
       meusVotos={meusVotos}
       desafiosIniciais={desafios}
       comAcesso={comAcesso}
+      submissoesIniciais={submissoes}
+      meusEnvios={meusEnvios}
     />
   );
 }

@@ -293,15 +293,28 @@ export async function submeterDesafio(dados: {
   descricao: string;
 }): Promise<SubmissaoDesafio> {
   const db = clienteAdmin();
+  // `upsert` e não `insert`: `submissoes_unica_por_aluno` (005:57) só permite
+  // uma linha por par aluno+desafio, e o aluno cujo envio foi rejeitado precisa
+  // poder corrigir e reenviar — é o que dá consequência ao "Rejeitar" em vez de
+  // deixá-lo como carimbo sem saída.
+  //
+  // `aprovado: null` explícito: o reenvio volta para a fila. Sem isto a linha
+  // corrigida continuaria carregando a rejeição antiga, e o ADM não a veria
+  // de novo. `null` é o estado pendente desde a 016 — a coluna não tem mais
+  // default.
   const { data, error } = await db
     .from("submissoes_desafios")
-    .insert({
-      desafio_id: dados.desafioId,
-      aluno_id: dados.alunoId,
-      titulo_projeto: dados.tituloProjeto,
-      link_projeto: dados.linkProjeto || null,
-      descricao: dados.descricao,
-    })
+    .upsert(
+      {
+        desafio_id: dados.desafioId,
+        aluno_id: dados.alunoId,
+        titulo_projeto: dados.tituloProjeto,
+        link_projeto: dados.linkProjeto || null,
+        descricao: dados.descricao,
+        aprovado: null,
+      },
+      { onConflict: "desafio_id,aluno_id" },
+    )
     .select("id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em")
     .single();
 
@@ -323,9 +336,147 @@ export async function submeterDesafio(dados: {
     tituloProjeto: data.titulo_projeto,
     linkProjeto: data.link_projeto ?? "",
     descricao: data.descricao,
-    aprovado: data.aprovado ?? false,
+    aprovado: data.aprovado ?? null,
     criadoEm: data.criado_em,
   };
+}
+
+/**
+ * Todos os envios, para o ADM julgar.
+ *
+ * O nome do aluno e o título do desafio vêm no mesmo `select`: a tabela guarda
+ * só os ids, e resolvê-los linha a linha seria uma consulta por envio. O
+ * embedding do PostgREST usa as FKs que a 004 criou.
+ */
+export async function listarSubmissoes(): Promise<SubmissaoDesafio[]> {
+  const { data, error } = await clienteAdmin()
+    .from("submissoes_desafios")
+    .select(
+      "id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em,alunos(nome,salas(nome)),desafios(titulo)",
+    )
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao listar submissões", error);
+    return [];
+  }
+
+  return (data ?? []).map((s) => ({
+    id: s.id,
+    desafioId: s.desafio_id,
+    alunoId: s.aluno_id,
+    // Aluno apagado leva as submissões junto (`on delete cascade`), então o
+    // nulo aqui só aparece se o embedding vier vazio por outro motivo.
+    alunoNome: (s.alunos as { nome?: string } | null)?.nome ?? "Aluno removido",
+    // O embedding aninhado (alunos → salas) usa a FK `alunos.sala_id`. Turma
+    // nula é aluno sem sala — a fila mostra "—" nesse caso.
+    alunoSala:
+      (s.alunos as { salas?: { nome?: string } | null } | null)?.salas?.nome ?? "",
+    tituloProjeto: s.titulo_projeto,
+    linkProjeto: s.link_projeto ?? "",
+    descricao: s.descricao,
+    // Tri-estado preservado: coagir com `Boolean()` transformaria "pendente"
+    // e "rejeitado" no mesmo `false`, que é o bug que a 016 desfaz.
+    aprovado: s.aprovado ?? null,
+    criadoEm: s.criado_em,
+    desafioTitulo: (s.desafios as { titulo?: string } | null)?.titulo ?? "",
+  }));
+}
+
+/** Os envios deste aluno, para o mural mostrar onde cada um parou. */
+export async function submissoesDoAluno(alunoId: string): Promise<SubmissaoDesafio[]> {
+  if (!alunoId) return [];
+
+  const { data, error } = await clienteAdmin()
+    .from("submissoes_desafios")
+    .select("id,desafio_id,aluno_id,titulo_projeto,link_projeto,descricao,aprovado,criado_em")
+    .eq("aluno_id", alunoId)
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao listar submissões do aluno", error);
+    return [];
+  }
+
+  return (data ?? []).map((s) => ({
+    id: s.id,
+    desafioId: s.desafio_id,
+    alunoId: s.aluno_id,
+    alunoNome: "",
+    alunoSala: "",
+    tituloProjeto: s.titulo_projeto,
+    linkProjeto: s.link_projeto ?? "",
+    descricao: s.descricao,
+    // Tri-estado preservado: coagir com `Boolean()` transformaria "pendente"
+    // e "rejeitado" no mesmo `false`, que é o bug que a 016 desfaz.
+    aprovado: s.aprovado ?? null,
+    criadoEm: s.criado_em,
+  }));
+}
+
+/**
+ * Aprova ou rejeita um envio.
+ *
+ * O gate de quem pode chamar isto está na Server Action (`exigirAdm`), não
+ * aqui — este módulo não conhece sessão.
+ */
+export async function decidirSubmissao(id: string, aprovado: boolean): Promise<boolean> {
+  const { error } = await clienteAdmin()
+    .from("submissoes_desafios")
+    .update({ aprovado })
+    .eq("id", id);
+
+  if (error) {
+    logger.error("DADOS", "Erro ao decidir submissão", error);
+    return false;
+  }
+  limparCacheDados();
+  return true;
+}
+
+/** Os ids já usados, para o novo desafio nascer com um livre. */
+export async function idsDeDesafios(): Promise<string[]> {
+  const { data, error } = await clienteAdmin().from("desafios").select("id");
+  if (error) {
+    logger.error("DADOS", "Erro ao listar ids de desafios", error);
+    return [];
+  }
+  return (data ?? []).map((d) => d.id as string);
+}
+
+/** Publica um desafio no mural. Sem `aprovado`: desafio não passa por fila. */
+export async function publicarDesafio(dados: {
+  id: string;
+  titulo: string;
+  subtitulo: string;
+  categoria: string;
+  prazo: string;
+  recompensa: string;
+  descricao: string;
+  criterios: string[];
+}): Promise<{ ok: true } | { ok: false; duplicado: boolean }> {
+  const { error } = await clienteAdmin()
+    .from("desafios")
+    .insert({
+      id: dados.id,
+      titulo: dados.titulo,
+      subtitulo: dados.subtitulo,
+      categoria: dados.categoria,
+      prazo: dados.prazo,
+      recompensa: dados.recompensa,
+      // Sem seletor de ícone na tela: o card tem um enfeite fixo e a coluna é
+      // `not null`. Fica registrado se um dia houver escolha.
+      insignia_icone: "trofeu",
+      descricao: dados.descricao,
+      criterios: dados.criterios,
+    });
+
+  if (error) {
+    logger.error("DADOS", "Erro ao publicar desafio", error);
+    return { ok: false, duplicado: error.code === "23505" };
+  }
+  limparCacheDados();
+  return { ok: true };
 }
 
 /** Os ids que ESTE navegador já estrelou. Depende do cookie assinado. */

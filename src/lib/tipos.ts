@@ -75,8 +75,25 @@ export type SubmissaoDesafio = {
   tituloProjeto: string;
   linkProjeto: string;
   descricao: string;
-  aprovado?: boolean;
+  /**
+   * Decisão do ADM sobre o envio, em três estados (016).
+   *
+   * `null` = pendente, `true` = aprovado, `false` = rejeitado. Antes eram dois
+   * valores só, e "rejeitado" era indistinguível de "ninguém olhou ainda": o
+   * botão "Rejeitar" gravava o mesmo `false` com que a linha já nascia, e o
+   * aluno não tinha como saber se alguém chegou a julgar o projeto dele.
+   *
+   * Opcional porque quem monta a submissão a partir do formulário não tem a
+   * decisão na mão — ali o valor é sempre pendente.
+   */
+  aprovado?: boolean | null;
   criadoEm: string;
+  /**
+   * Só nos envios lidos pela fila do ADM. A submissão guarda o `desafio_id`,
+   * não o título — quem mostra a fila precisa do nome, e resolvê-lo com uma
+   * segunda consulta por linha seria uma query por envio.
+   */
+  desafioTitulo?: string;
 };
 
 export type Aluno = {

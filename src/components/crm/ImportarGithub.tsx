@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { importarReposGithubAction } from "@/app/acoes-crm";
 import { IconeGitHub } from "@/components/RedesBadges";
+import { dataCurta } from "@/lib/datas";
 import {
   descricaoDoRepo,
-  quandoDoRepo,
   tituloDoRepo,
   type RepoGithub,
 } from "@/lib/github";
@@ -204,7 +204,7 @@ export function ImportarGithub({ handleInicial, projetos, onImportar }: Props) {
                       </b>
                       <span className="gh-repo-desc">{descricaoDoRepo(r)}</span>
                       <span className="gh-repo-meta">
-                        {[r.linguagem, r.estrelas > 0 ? `${r.estrelas} ★` : null, quandoDoRepo(r.atualizadoEm)]
+                        {[r.linguagem, r.estrelas > 0 ? `${r.estrelas} ★` : null, dataCurta(r.atualizadoEm)]
                           .filter(Boolean)
                           .join(" · ")}
                       </span>
