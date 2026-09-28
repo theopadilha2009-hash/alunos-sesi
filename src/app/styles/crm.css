@@ -2927,6 +2927,29 @@
   border: 1px solid var(--line);
   box-shadow: var(--sombra);
   flex-wrap: wrap;
+  /* Fica no rodapé da tela enquanto o aluno rola o editor. Antes ela era uma
+     caixa no fim de uma página de ~1900 linhas: quem editava a capa, no topo,
+     não tinha como saber que o botão existia. O fundo sólido é obrigatório —
+     sem ele o conteúdo passa por baixo da barra. */
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+}
+
+/* A mensagem do salvamento mora aqui, ao lado do botão que a provocou. O banner
+   do topo continua existindo, mas ele nasce ~1200 linhas acima do clique. */
+.salvar-textos {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.salvar-textos .alerta-banner {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  font-size: 0.86rem;
 }
 
 .salvar-dica {

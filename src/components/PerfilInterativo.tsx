@@ -23,6 +23,7 @@ import {
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { copiarTexto } from "@/lib/clipboard";
+import { habilidadePermitida } from "@/lib/habilidades";
 import { handleLinkedin, urlGithub } from "@/lib/links";
 import { MAX_VIDEOS } from "@/lib/limites";
 import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
@@ -288,15 +289,23 @@ export function PerfilInterativo({ aluno, salaNome, abrirCurriculo = false }: Pr
                 return (
                   <div key={hab} className="endorsement-pill">
                     <span className="endorsement-nome">{hab}</span>
-                    <button
-                      type="button"
-                      className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
-                      onClick={() => handleApoiarCompetencia(hab)}
-                      title={`Apoiar ${hab} de ${aluno.nome}`}
-                    >
-                      <IconePlus tamanho={11} />
-                      <span>1</span>
-                    </button>
+                    {/* O botão só existe para as competências que o endosso
+                        alcança: a PK de `public.endossos` é o nome exato, e a
+                        action recusa o que não está na lista. Um +1 que
+                        responde "competência inválida" é pior que não ter +1 —
+                        o aluno que criou a própria competência vê o chip, sem
+                        número e sem botão, e entende que ali não há apoio ainda. */}
+                    {habilidadePermitida(hab) ? (
+                      <button
+                        type="button"
+                        className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
+                        onClick={() => handleApoiarCompetencia(hab)}
+                        title={`Apoiar ${hab} de ${aluno.nome}`}
+                      >
+                        <IconePlus tamanho={11} />
+                        <span>1</span>
+                      </button>
+                    ) : null}
                     {count > 0 ? (
                       <span className="endorsement-count" title={`${count} apoios recebidos`}>
                         {count}

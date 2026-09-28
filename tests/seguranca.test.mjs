@@ -533,19 +533,36 @@ test("o corte por orcamento separa quem estourou de quem veio depois", () => {
 
 // ── Competencias declaradas pelo aluno ───────────────────────────────────
 
-test("sanitizarHabilidades mantem a ordem escolhida e a lista fechada", () => {
+test("sanitizarHabilidades mantem a ordem escolhida", () => {
   assert.deepEqual(
     sanitizarHabilidades(["Mobile", "Python", "Robótica"]),
     ["Mobile", "Python", "Robótica"],
   );
 });
 
-test("sanitizarHabilidades recusa o que nao esta na lista, inclusive por caixa", () => {
-  // Comparacao exata de proposito: a PK de `endossos` trata `Python` e `python`
-  // como habilidades distintas, entao aceitar a caixa errada criaria um chip que
-  // nunca recebe endosso nenhum.
-  assert.deepEqual(sanitizarHabilidades(["python", "Javascript", "Python", ""]), ["Python"]);
+test("sanitizarHabilidades aceita competencia escrita a mao", () => {
+  // O aluno pode criar a propria competencia; ela entra no perfil mesmo sem
+  // estar nas dez conhecidas (o que fica fechado e o endosso, nao o perfil).
+  assert.deepEqual(
+    sanitizarHabilidades(["Javascript", "Machine Learning"]),
+    ["Javascript", "Machine Learning"],
+  );
+});
+
+test("sanitizarHabilidades traz a caixa errada para a forma canonica da lista", () => {
+  // "python" e "Python" sao a mesma competencia para quem le; so o "Python" da
+  // lista recebe endosso, entao o digitado tem que virar a forma canonica.
+  assert.deepEqual(sanitizarHabilidades(["python", "web frontend"]), ["Python", "Web Frontend"]);
+  // e o par so-diferente-na-caixa nao pode virar dois chips
+  assert.deepEqual(sanitizarHabilidades(["python", "Python", "PYTHON"]), ["Python"]);
+});
+
+test("sanitizarHabilidades recusa nome fora do padrao", () => {
   assert.deepEqual(sanitizarHabilidades(["<script>alert(1)</script>"]), []);
+  assert.deepEqual(sanitizarHabilidades(["-comeca-com-hifen"]), []);
+  assert.deepEqual(sanitizarHabilidades(["a".repeat(64)]), []);
+  assert.deepEqual(sanitizarHabilidades(["com\u0000controle"]), []);
+  assert.deepEqual(sanitizarHabilidades([42, null, {}, ""]), []);
 });
 
 test("sanitizarHabilidades deduplica", () => {
