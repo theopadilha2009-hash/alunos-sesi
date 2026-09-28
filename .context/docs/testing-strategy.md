@@ -13,8 +13,13 @@ scaffoldVersion: "2.0.0"
 ## O que é testado
 
 Só as funções puras de `src/lib/`, mais as varreduras de código-fonte que travam
-uma regra que nenhum tipo segura. **297 testes em 22 arquivos**, todos em
-`node:test` + `node:assert/strict`, sem rede e sem banco:
+uma regra que nenhum tipo segura. Tudo em `node:test` + `node:assert/strict`,
+sem rede e sem banco:
+
+> O total não está escrito aqui de propósito. Ele já envelheceu duas vezes numa
+> única leva de trabalho — o número foi corrigido para 297 e uma rodada de
+> review somou dois testes no mesmo PR. Quem quer o total pergunta ao runner
+> (`npm test`); esta página diz **o que** cada suíte trava.
 
 | Arquivo | Módulo | O que os testes travam |
 |---|---|---|
@@ -35,7 +40,7 @@ uma regra que nenhum tipo segura. **297 testes em 22 arquivos**, todos em
 | `senha.test.mjs` (8) | `senha` | `hashSenha` sai argon2id e nunca em claro; hash malformado não derruba a verificação nem autentica |
 | `estrela.test.mjs` (6) | `estrela` | `lerRespostaEstrela` traduz a resposta da rota — o motivo que o servidor deu, o 200 sem os campos, a mensagem própria quando ele não explica — e `motivoParaNaoEstrelar` barra o perfil pendente |
 | `foco.test.mjs` (6) | `foco` | o ciclo de Tab e Shift+Tab preso no diálogo, e a ponta por onde o foco entra |
-| `importacao.test.mjs` (5) | `importacao` | `tomDaImportacao`: a planilha que não mudou nada não é sucesso (reimportar a lista inteira pintava banner vermelho de erro), erro junto de criação é atenção, e o tom devolvido é sempre um que o CSS conhece |
+| `importacao.test.mjs` (7) | `importacao` | `tomDaImportacao`: a planilha que não mudou nada não é sucesso (reimportar a lista inteira pintava banner vermelho de erro), erro junto de criação é atenção, e o tom devolvido é sempre um que o CSS conhece. Mais a varredura que confere **a classe** de cada tom contra as declaradas nos dois CSS: o tom de sucesso vira `recado-ok`, não `recado-sucesso` (que não existe e deixava a importação bem-sucedida sem cor em `/adm`) |
 | `cores.test.mjs` (4) | `cores` | `corDaSala` estável; `corDoAluno` que prefere a escolha; a paleta do app é a mesma lista do `CHECK` no banco |
 | `datas.test.mjs` (3) | `datas` | a data no padrão brasileiro, o lixo que devolve `null` e o fuso fixo em São Paulo — não o de quem roda o código |
 | `github.test.mjs` (3) | `github` | `tituloDoRepo` (com o corte no teto de 80), `descricaoDoRepo` e `quandoDoRepo` |
