@@ -12,24 +12,38 @@ scaffoldVersion: "2.0.0"
 
 ## O que é testado
 
-Só as funções puras de `src/lib/`. **208 testes em 13 arquivos**, todos em
+Só as funções puras de `src/lib/`, mais as varreduras de código-fonte que travam
+uma regra que nenhum tipo segura. **289 testes em 21 arquivos**, todos em
 `node:test` + `node:assert/strict`, sem rede e sem banco:
 
 | Arquivo | Módulo | O que os testes travam |
 |---|---|---|
+| `seguranca.test.mjs` (72) | `seguranca` | `compararTempoConstante`; `urlSegura`/`urlImagemSegura` (esquemas e data URL); `sanitizarTexto`; `verificarRateLimit`; `sanitizarProjetos`/`sanitizarMidias`/`sanitizarStickers` (clamp de posição, tamanho e rotação, o orçamento de bytes dos data URL); `sanitizarHabilidades`, que aceita competência escrita à mão desde a `009`; `sanitizarFoto`/`sanitizarCapa`/`sanitizarCor`/`sanitizarEmail`; `sanitizarVideos` |
 | `puros.test.mjs` (29) | `busca`, `links`, `slug`, `importar`, `ranking` | `fold` ignora acento e caixa; `3ºA`/`3oA`/`3A` caem na mesma busca; `filtrarAlunos` não vaza outra sala e o atalho `ESTRELADOS` ignora o filtro; `normalizarGithub`/`normalizarLinkedin`; `slugificar`/`slugUnico`; `parseLista`; `ordenarAlunos`/`rankingSalas` |
-| `seguranca.test.mjs` (69) | `seguranca` | `compararTempoConstante`; `urlSegura`/`urlImagemSegura` (esquemas e data URL); `sanitizarTexto`; `verificarRateLimit`; `sanitizarProjetos`/`sanitizarMidias` e a moderação de bio, habilidade, legenda e título de vídeo |
+| `lacunas.test.mjs` (17) | `lacunas` | o que conta como perfil incompleto (vazio e ausente contam; bio só de espaços conta como vazia), `filtrarPorLacuna`/`contarLacunas` e o rótulo de tela de cada lacuna |
 | `limites.test.mjs` (16) | `limites` | os tetos por campo e `descreverDescartes`, que agrupa o descarte por motivo e campo sem confundir capa perdida com projeto perdido |
 | `blob.test.mjs` (15) | `blob` | `nomeDaImagem` pela extensão do MIME; `blobDoDataUrl` (incluindo bytes acima de 127, que o `atob` devolveria corrompidos); as recusas de `caminhoPertenceAoAluno` |
-| `video.test.mjs` (15) | `video` | `normalizarVideo`: formas do YouTube e do Vimeo, host que só *parece* o da plataforma, `http:` recusado, `youtube-nocookie` no embed e o `frame-src` fechado |
 | `csp.test.mjs` (15) | `csp` | o nonce do `script-src`, o `style-src` sem nonce, `unsafe-eval` só em dev, `upgrade-insecure-requests` só em produção, e a fonte que cobre a **forma real** do host do Blob |
+| `desafios.test.mjs` (15) | `desafios` | `parseCriterios` (uma linha por critério, o `\r` do Windows fora, teto) e a validação de publicação: categoria inventada é recusada, título que não rende slug também — mas o título que é literalmente "Aluno" passa |
+| `video.test.mjs` (15) | `video` | `normalizarVideo`: formas do YouTube e do Vimeo, host que só *parece* o da plataforma, `http:` recusado, `youtube-nocookie` no embed e o `frame-src` fechado |
+| `ativacao.test.mjs` (13) | `ativacao` | o alfabeto Crockford Base32 (sem as letras que se confundem); o código entra com ou sem o prefixo SESI, com hífen e espaço a mais; a dobra das letras ambíguas acontece **depois** de tirar o prefixo; o hash é determinístico e não deixa o código aparecer |
+| `habilidades.test.mjs` (13) | `habilidades` | `habilidadePermitida` aceita só o nome exato da lista (é a allowlist do endosso, não a do perfil); `extrairHabilidades` respeita o teto; `normalizarNomeHabilidade` |
 | `sessao.test.mjs` (11) | `sessao` | ida e volta por propósito, a subchave HKDF que não abre em outro, a adulteração de qualquer byte e o token que devolve `null` em vez de explodir |
-| `senha.test.mjs` (8) | `senha` | `hashSenha` sai argon2id e nunca em claro; hash malformado não derruba a verificação nem autentica |
-| `habilidades.test.mjs` (8) | `habilidades` | `habilidadePermitida` aceita só o nome exato da lista e `extrairHabilidades` respeita o teto |
+| `username.test.mjs` (10) | `username` | `normalizarUsername` e os limites do banco, com o e-mail institucional aceito onde o cadastro antes recusava |
+| `identidade.test.mjs` (9) | `identidade` | a matrícula é estável — a mesma entrada dá o mesmo número, e ele não muda com estrelas nem com edição de perfil. Roda fora do servidor porque o crachá é desenhado no navegador |
 | `insignias.test.mjs` (8) | `insignias` | a escada fixa das seis, cada limiar acendendo só a sua, e progresso que nunca passa do alvo |
+| `senha.test.mjs` (8) | `senha` | `hashSenha` sai argon2id e nunca em claro; hash malformado não derruba a verificação nem autentica |
+| `estrela.test.mjs` (6) | `estrela` | `lerRespostaEstrela` traduz a resposta da rota — o motivo que o servidor deu, o 200 sem os campos, a mensagem própria quando ele não explica — e `motivoParaNaoEstrelar` barra o perfil pendente |
 | `foco.test.mjs` (6) | `foco` | o ciclo de Tab e Shift+Tab preso no diálogo, e a ponta por onde o foco entra |
 | `cores.test.mjs` (4) | `cores` | `corDaSala` estável; `corDoAluno` que prefere a escolha; a paleta do app é a mesma lista do `CHECK` no banco |
-| `github.test.mjs` (4) | `github` | `tituloDoRepo`, `descricaoDoRepo` e `quandoDoRepo` |
+| `datas.test.mjs` (3) | `datas` | a data no padrão brasileiro, o lixo que devolve `null` e o fuso fixo em São Paulo — não o de quem roda o código |
+| `github.test.mjs` (3) | `github` | `tituloDoRepo` (com o corte no teto de 80), `descricaoDoRepo` e `quandoDoRepo` |
+| `endosso.test.mjs` (1) | varredura | não testa módulo nenhum: lê os `.tsx` de `src/components/` e falha se algum arquivo desenhar mais botões `+1` do que chamadas a `habilidadePermitida` |
+
+`estrela`, `endosso`, `lacunas`, `desafios`, `identidade`, `ativacao`, `datas` e
+`username` são posteriores a esta tabela — ela ficou oito arquivos atrás. As
+contagens são de declarações `test(` no arquivo, não do que o `npm test` imprime:
+quem quiser o total de verdade pergunta ao runner, não a este parágrafo.
 
 Os testes cobrem os pontos onde o comportamento é sutil e barato de errar:
 normalização de link colado, parser de planilha, desempate estável, o `fold` do

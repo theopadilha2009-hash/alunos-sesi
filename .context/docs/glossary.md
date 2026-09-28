@@ -84,9 +84,14 @@ assinado — nunca do corpo da requisição. Migration `src/sql/006_endossos.sql
 
 ## Habilidade / competência
 
-O que o aluno declara saber, na coluna `alunos.habilidades` (JSONB). A entrada
-passa por `habilidadePermitida` (`src/lib/habilidades.ts`), que só aceita o
-**nome exato** da lista — variação de caixa ou espaço sobrando é recusada. É
+O que o aluno declara saber, na coluna `alunos.habilidades` (JSONB). Desde a
+`009` o aluno escreve o que quiser (até o teto de `extrairHabilidades`) — o
+texto livre entra na coluna como está. `habilidadePermitida`
+(`src/lib/habilidades.ts`) existe para outra coisa: é a allowlist das dez
+competências **endossáveis**, e é o que `apoiarHabilidadeAction` consulta antes
+de gravar um `+1`. Ou seja, competência fora da lista aparece no perfil e não
+recebe apoio. Quem desenha o botão de `+1` precisa passar por ela, senão
+oferece um clique que o servidor sempre recusa. É
 diferente das habilidades *derivadas* da bio: enquanto `habilidades` for `NULL`
 ("nunca editou o perfil"), `resolverAluno` cai em `extrairHabilidades(bio)`;
 `[]` significa "escolheu não ter nenhuma" e **não** cai no fallback. Migration
@@ -255,11 +260,17 @@ as cores do símbolo do SESI (`CORES_SALA`), injetada como `--sala` nos cartões
 no trilho de filtros e no ranking. Mesma cor em qualquer máquina e render, sem
 guardar no banco.
 
-## Roseta
+## Roseta / LogoSesi
 
-A marca do app: quatro arcos nas cores do símbolo girando em volta de um miolo,
-desenhada em SVG em `src/components/Roseta.tsx`. É desenho próprio — a logo
-oficial do SESI é marca registrada e não mora no repositório.
+A marca do app. **Os PNGs oficiais do SESI moram no repositório** —
+`public/logo-sesi.png`, `logo-sesi-branco.png` e as versões `-icone` — e
+`src/components/LogoSesi.tsx` só escolhe qual servir, alternando por tema via
+`.logo-modo-light` / `.logo-modo-dark`. Quem escreve código novo importa
+`LogoSesi`; `Roseta` continua exportado no mesmo arquivo como alias para os
+imports antigos, e `girando` liga `logo-sesi-pulse` (`crm.css`).
+
+O desenho em SVG nas quatro cores do símbolo foi a versão anterior, e não é
+mais o que o app usa.
 
 ## Selo
 
