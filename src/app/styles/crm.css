@@ -117,12 +117,14 @@ body:has(.login-tela-container) {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.16em;
-  /* Texto de 0,68rem em caixa alta: aqui o contraste é o que decide, e ele foi
-     medido sobre o fundo da tela. `#6aa9dc` dá 6,92:1; o `--azul-claro`
-     (`#4881ae`), que seria o candidato óbvio por já existir no tema, dá
-     4,18:1 — passa raspando o piso de 4,5:1 e reprova para este corpo. A troca
-     do turquesa por azul nesta tela não foi por contraste (o turquesa antigo
-     dava 8,38:1, mais que o novo); foi para a tela ter uma família de cor só. */
+  /* Texto de 0,68rem em caixa alta: aqui o contraste é o que decide. O fundo
+     que conta é o do CARTÃO, não o da tela — este texto mora dentro dele, e o
+     cartão é um blend (`--surface` com azul, 92% de opacidade) que dá algo
+     perto de `#0e1e2e`. Sobre ele, `#6aa9dc` dá ~6,7:1; o `--azul-claro`
+     (`#4881ae`), candidato óbvio por já existir no tema, dá ~4,0:1 — abaixo do
+     piso de 4,5:1 para este corpo. A troca do turquesa por azul nesta tela não
+     foi por contraste (o turquesa antigo dava 8,38:1 sobre o fundo da tela,
+     mais que o novo); foi para a tela ter uma família de cor só. */
   color: var(--login-acento);
   text-transform: uppercase;
 }

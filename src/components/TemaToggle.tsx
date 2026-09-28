@@ -22,19 +22,18 @@ export function TemaToggle({ compacto = true }: { compacto?: boolean }) {
   }
 
   return (
-    <button
-      type="button"
-      className="botao-tema-icone"
-      onClick={alternar}
-      title="Alternar tema"
-    >
+    <button type="button" className="botao-tema-icone" onClick={alternar}>
       {/* Em tema escuro mostra-se o sol e em tema claro a lua: o ícone anuncia
           para onde o clique leva, não onde se está.
           O texto de leitor de tela acompanha o ícone pelo mesmo par de classes
           (`tema-icone-*`), que é o que faz a troca pelo `data-theme`. Os dois
           SVGs são `aria-hidden`, então sem isto quem não vê o desenho ouvia um
           `aria-label` fixo — a mesma frase nos dois temas, descrevendo o botão
-          em vez de dizer o que o clique faz. Aqui as duas informações batem. */}
+          em vez de dizer o que o clique faz. Aqui as duas informações batem.
+          O `title` saiu na mesma troca: com o nome vindo do conteúdo, ele passa
+          a ser lido como *descrição*, e o anúncio virava "Ativar o tema claro,
+          Alternar tema". O ícone já diz o que faz, e tooltip duplicado só faz
+          ruído. */}
       <span className="tema-icone tema-icone-escuro" aria-hidden="true">
         <IconeSol tamanho={18} />
       </span>
