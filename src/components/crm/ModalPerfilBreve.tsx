@@ -20,6 +20,7 @@ import {
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { copiarTexto } from "@/lib/clipboard";
 import { useTravaDeFoco } from "@/lib/foco";
+import { habilidadePermitida } from "@/lib/habilidades";
 import { MAX_VIDEOS } from "@/lib/limites";
 import { handleLinkedin, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -291,15 +292,26 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
                     return (
                       <div key={hab} className="endorsement-pill">
                         <span className="endorsement-nome">{hab}</span>
-                        <button
-                          type="button"
-                          className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
-                          onClick={() => handleApoiarCompetencia(hab)}
-                          title={`Apoiar ${hab} de ${aluno.nome}`}
-                        >
-                          <IconePlus tamanho={11} />
-                          <span>1</span>
-                        </button>
+                        {/* Mesmo corte do perfil público: o +1 só existe para as
+                            competências que a action aceita. Sem isto, quem
+                            escreveu a própria competência ganhava um botão que
+                            sempre respondia "Competência não reconhecida" — o
+                            CRM tinha ficado fora da PR #40, que fechou o perfil. */}
+                        {habilidadePermitida(hab) ? (
+                          <button
+                            type="button"
+                            className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
+                            // Um apoio por vez: o `apoiandoHab` é um só, e sem o
+                            // disabled o clique no +1 de outra competência era
+                            // descartado pelo guard sem nenhum sinal na tela.
+                            disabled={apoiandoHab !== null}
+                            onClick={() => handleApoiarCompetencia(hab)}
+                            title={`Apoiar ${hab} de ${aluno.nome}`}
+                          >
+                            <IconePlus tamanho={11} />
+                            <span>1</span>
+                          </button>
+                        ) : null}
                         {count > 0 ? (
                           <span className="endorsement-count" title={`${count} colegas apoiaram esta competência`}>
                             {count}
