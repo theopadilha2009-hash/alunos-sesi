@@ -1,6 +1,23 @@
 /* ── TELA DE LOGIN & CADASTRO (Abertura Direta) ────────────────────────── */
 
 .login-tela-container {
+  /* Paleta própria desta tela: só azul e branco.
+     O app inteiro é turquesa (`--accent`), e o login era onde a mistura
+     aparecia mais — turquesa no fundo, VERDE no mesh glow e ciano no botão,
+     sobre cinco cinzas azulados diferentes. Aqui o acento vira azul e o verde
+     sai; o resto do app continua turquesa. A escolha é estética (uma família
+     de cor a menos nesta tela), não de contraste: o turquesa daqui era até
+     mais contrastado. */
+  --login-acento: #6aa9dc;
+  /* Redefinir o TOKEN, não enumerar seletores. O `--accent` é usado por tudo
+     que é interativo — o contorno de foco do `base.css`, o hover do botão de
+     tema, o `.dica-acao` ("Completar com @estudante…", que vive nesta tela).
+     A primeira versão deste PR listou os casos um a um e esqueceu o
+     `.dica-acao` — que continuou turquesa no meio de uma tela azul, com o
+     agravante de o `:focus-visible` dele (mesma especificidade 0-2-0, mas
+     declarado depois) vencer o override de foco. Redefinindo aqui, todo
+     descendente entra na paleta, inclusive o que for escrito amanhã. */
+  --accent: var(--login-acento);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -8,16 +25,38 @@
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
+  background: #0a1a2f;
+}
+
+:root[data-theme="light"] .login-tela-container {
+  /* O tema claro do app já é azul e branco — lá o `--accent` é o próprio
+     `--azul`. Então aqui basta devolver o fundo do tema. */
+  --login-acento: var(--azul);
+  background: var(--bg);
+}
+
+/* O fundo do `<body>` acompanha: sem isto, o "elástico" da rolagem no celular
+   descobre o `--bg` quase preto atrás da tela azul. O container é `100vh`, mas
+   o body é quem pinta a área além dele. */
+body:has(.login-tela-container) {
+  background: #0a1a2f;
+}
+
+:root[data-theme="light"] body:has(.login-tela-container) {
+  background: var(--bg);
 }
 
 .login-mesh-glow {
   position: absolute;
   width: 600px;
   height: 600px;
+  /* Um azul só, no lugar do turquesa com verde por baixo. O
+     `--login-acento` seria claro demais para um brilho de fundo: aqui quem
+     manda é o `--azul` institucional. */
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--accent) 22%, transparent) 0%,
-    color-mix(in srgb, var(--verde) 12%, transparent) 40%,
+    color-mix(in srgb, var(--azul) 32%, transparent) 0%,
+    color-mix(in srgb, var(--azul) 14%, transparent) 40%,
     transparent 70%
   );
   top: 50%;
@@ -34,8 +73,17 @@
   max-width: 27rem;
   padding: 2.2rem;
   border-radius: var(--raio);
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  /* O cartão puxa o azul para dentro de si: sobre o fundo azul, o `--surface`
+     puro (cinza-azulado) lia como um bloco de outra família. No tema claro o
+     mesmo mix dá um branco levemente azulado. */
+  border: 1px solid color-mix(in srgb, var(--azul) 28%, var(--line));
+  /* O mix de dentro tinge de azul; o de fora devolve a transparência que o
+     cartão já tinha (e que o `backdrop-filter` abaixo usa). */
+  background: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--surface) 88%, var(--azul)) 92%,
+    transparent
+  );
   backdrop-filter: blur(16px);
   box-shadow: 0 25px 60px -20px rgb(0 0 0 / 0.85);
   animation: scaleUp 0.25s var(--ease);
@@ -69,7 +117,15 @@
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.16em;
-  color: var(--accent);
+  /* Texto de 0,68rem em caixa alta: aqui o contraste é o que decide. O fundo
+     que conta é o do CARTÃO, não o da tela — este texto mora dentro dele, e o
+     cartão é um blend (`--surface` com azul, 92% de opacidade) que dá algo
+     perto de `#0e1e2e`. Sobre ele, `#6aa9dc` dá ~6,7:1; o `--azul-claro`
+     (`#4881ae`), candidato óbvio por já existir no tema, dá ~4,0:1 — abaixo do
+     piso de 4,5:1 para este corpo. A troca do turquesa por azul nesta tela não
+     foi por contraste (o turquesa antigo dava 8,38:1 sobre o fundo da tela,
+     mais que o novo); foi para a tela ter uma família de cor só. */
+  color: var(--login-acento);
   text-transform: uppercase;
 }
 
@@ -126,6 +182,23 @@
   font-size: 0.72rem;
   color: var(--faint);
 }
+
+/* O botão do login deixa o gradiente ciano→azul do `.botao-primario-grande`
+   (vitrine-moderno.css) e vira azul chapado. Escopado aqui de propósito: a
+   classe é compartilhada por 13 arquivos, e a mudança é só desta tela. */
+.login-tela-container .botao-primario-grande {
+  background: var(--azul);
+  box-shadow: 0 10px 25px -8px color-mix(in srgb, var(--azul) 70%, transparent);
+}
+
+.login-tela-container .botao-primario-grande:hover {
+  box-shadow: 0 14px 30px -6px color-mix(in srgb, var(--azul) 80%, transparent);
+}
+
+/* Os dois overrides que existiam aqui (hover do botão de tema e contorno de
+   foco) saíram quando o `--accent` passou a ser redefinido no container: os
+   dois puxam `var(--accent)`, então já chegam azuis. Antes eram necessários
+   porque só o `--accent` do `:root` existia. */
 
 /* ── LAYOUT DO CRM (Sidebar + Main) ────────────────────────────────────── */
 
@@ -1320,21 +1393,9 @@
   display: block !important;
 }
 
-/* Pulso sutil para indicador de carregamento/login */
-.logo-sesi-pulse {
-  animation: logo-pulse-anim 2.2s ease-in-out infinite;
-}
-
-@keyframes logo-pulse-anim {
-  0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 0px var(--accent));
-  }
-  50% {
-    transform: scale(1.05);
-    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 55%, transparent));
-  }
-}
+/* O pulso do logo (`logo-sesi-pulse`) saiu daqui: o único uso era o
+   `girando` do login, e era ele que fazia o SESI pular — escala até 1.05 e
+   volta, em loop infinito, num elemento ao lado do texto "ALUNOS SESI". */
 
 /* ── Badges Oficiais de Redes Sociais (LinkedIn e GitHub) ─────────────── */
 

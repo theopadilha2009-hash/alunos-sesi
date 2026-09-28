@@ -61,7 +61,7 @@ export function LoginTela() {
         </div>
         <header className="login-topo">
           <div className="login-marca">
-            <Roseta tamanho={38} girando />
+            <Roseta tamanho={38} />
             <div>
               <span className="login-titulo-marca">ALUNOS SESI</span>
               <span className="login-sub-marca">CRM & PORTFÓLIO ESCOLAR</span>
