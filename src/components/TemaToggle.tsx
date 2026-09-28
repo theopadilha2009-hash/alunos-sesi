@@ -1,27 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { IconeLua, IconeSol } from "@/components/Icones";
-import { aplicarTema, ehTema, lerTemaSalvo, salvarTema, type Tema } from "@/lib/tema";
+import { aplicarTema, salvarTema, type Tema } from "@/lib/tema";
 
-/** Alternador minimalista de tema (somente botão de ícone SVG, sem emoji nem texto) */
+/**
+ * Alternador minimalista de tema (somente botão de ícone SVG, sem emoji nem texto).
+ *
+ * O estado do tema NÃO mora aqui. Ele vive em `data-theme`, no `<html>`, e é
+ * escrito antes da primeira pintura pelo script inline do layout — guardá-lo em
+ * `useState` obrigava o ícone a nascer errado no SSR ("dark") e a ser corrigido
+ * só depois do mount, e o botão trocava de ícone depois da tela pintar, colado
+ * no logo. Agora os dois ícones existem no DOM e quem escolhe é o CSS
+ * (`.tema-icone-*`, em `vitrine.css`), pelo mesmo padrão do logo.
+ */
 export function TemaToggle({ compacto = true }: { compacto?: boolean }) {
-  const [tema, setTema] = useState<Tema>("dark");
-
-  useEffect(() => {
-    const salvo = lerTemaSalvo();
-    if (salvo) {
-      setTema(salvo);
-      aplicarTema(salvo);
-      return;
-    }
-    const atual = document.documentElement.dataset.theme;
-    if (ehTema(atual)) setTema(atual);
-  }, []);
-
   function alternar() {
-    const proximo: Tema = tema === "dark" ? "light" : "dark";
-    setTema(proximo);
+    const atual = document.documentElement.dataset.theme;
+    const proximo: Tema = atual === "light" ? "dark" : "light";
     aplicarTema(proximo);
     salvarTema(proximo);
   }
@@ -31,11 +26,17 @@ export function TemaToggle({ compacto = true }: { compacto?: boolean }) {
       type="button"
       className="botao-tema-icone"
       onClick={alternar}
-      aria-label={tema === "dark" ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-      title={tema === "dark" ? "Alternar para Modo Claro" : "Alternar para Modo Escuro"}
+      aria-label="Alternar entre tema claro e escuro"
+      title="Alternar entre tema claro e escuro"
     >
-      {tema === "dark" ? <IconeSol tamanho={18} /> : <IconeLua tamanho={18} />}
+      {/* Em tema escuro mostra-se o sol e em tema claro a lua: o ícone anuncia
+          para onde o clique leva, não onde se está. */}
+      <span className="tema-icone tema-icone-escuro" aria-hidden="true">
+        <IconeSol tamanho={18} />
+      </span>
+      <span className="tema-icone tema-icone-claro" aria-hidden="true">
+        <IconeLua tamanho={18} />
+      </span>
     </button>
   );
 }
-

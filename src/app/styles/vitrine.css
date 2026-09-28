@@ -845,6 +845,29 @@
   line-height: 1;
 }
 
+/* Qual dos dois ícones aparece. Os dois estão sempre no DOM e quem escolhe é o
+   `data-theme` — o mesmo desenho do logo. Antes o ícone vinha de estado React,
+   que nascia "dark" no servidor e virava o tema salvo só depois da hidratação,
+   então o botão trocava sozinho depois da tela pintar.
+   Em tema escuro mostra o sol: o ícone anuncia para onde o clique leva. */
+:root .tema-icone-claro,
+:root[data-theme="dark"] .tema-icone-claro {
+  display: none;
+}
+
+:root .tema-icone-escuro,
+:root[data-theme="dark"] .tema-icone-escuro {
+  display: flex;
+}
+
+:root[data-theme="light"] .tema-icone-claro {
+  display: flex;
+}
+
+:root[data-theme="light"] .tema-icone-escuro {
+  display: none;
+}
+
 .tema-texto {
   display: none;
 }
