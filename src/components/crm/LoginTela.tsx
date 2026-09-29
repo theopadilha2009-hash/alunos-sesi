@@ -115,7 +115,7 @@ export function LoginTela() {
             aria-controls="login-painel-ativar"
             tabIndex={modo === "ativar" ? 0 : -1}
           >
-            Tenho Código
+            Ativar
           </button>
         </div>
 

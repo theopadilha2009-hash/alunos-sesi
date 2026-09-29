@@ -151,19 +151,19 @@ body:has(.login-tela-container) {
      precisa de ~110px e a célula dá ~101px no desktop, então ele quebrava em
      duas linhas e a barra inteira ficava alta — o controle parava de ler como um
      seletor.
-     `nowrap` sozinho resolve o desktop mas piora o mobile: sem poder quebrar, a
-     célula do rótulo longo cresce além das outras (medido: 68/79/114px), e aí o
-     pill ativo muda de largura ao trocar de aba, que é o pulo de volta. Por isso
-     a correção é dupla: o rótulo perdeu a palavra supérflua ("Tenho um Código" →
-     "Tenho Código") e a tipografia aperta um pouco.
+     A correção foi dupla: `nowrap` com a tipografia um pouco menor (a barra cai
+     de ~62px para 45px de altura) e o rótulo curto. A terceira aba nasceu "Tenho
+     um Código", passou por "Tenho Código" e ficou "Ativar" — que já era o nome
+     no código (`modo === "ativar"`, `#login-painel-ativar`). O painel se explica
+     sozinho ("Código de Ativação" e a dica de pedir ao professor), então a aba
+     não precisa carregar a frase inteira para ser entendida.
 
-     O que isso resolve, medido: uma linha nas três abas de 360px a 1280px, e a
-     barra cai de ~62px para 45px de altura. O que NÃO resolve: em tela estreita
-     as células ainda ficam desiguais — 84/84/93 a 390px e 59/79/93 a 360px,
-     contra 117/117/117 no desktop. O motivo é aritmético, não é CSS: doze
-     caracteres não cabem num terço de uma barra de 231px em corpo legível. Para
-     igualar de verdade o rótulo teria que encurtar mais ("Ativar", "Código"),
-     e isso é texto de produto — não se muda por conta. */
+     Medido nas três abas depois da troca: 117/117/117 no desktop e no tablet, e
+     87/87/87 a 390px — igualdade exata. A 360px sobra uma diferença de 3px
+     (76/79/76), e ela não vem mais desta aba: "Criar Conta" tem 70px de texto e
+     pede 79px de célula, contra os 76px que a igualdade daria. Fechar esses 3px
+     custaria baixar o corpo para ~0,70rem (11px, apertado demais para rótulo de
+     aba) ou renomear um segundo texto de produto — caro para 1,5px de cada lado. */
   white-space: nowrap;
   padding: 0.5rem 0.3rem;
   border: none;
