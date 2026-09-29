@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T23:14:33.000Z
+  modified: 2026-09-29T23:27:10.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -332,9 +332,9 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   action — aí o estado local fica velho até o próximo clique.
 - **Cinco props recebidas e nunca lidas ficam de fora** (29/09), e é decisão, não
   esquecimento. `noUnusedParameters` as acusa, mas elas podem ser **recurso
-  morto, não código morto**: `onSelecionarAluno` (`PainelAdmIntegrado.tsx:72`),
-  `usuario` (`MuralDesafios.tsx:39`), `retrato` (`CrmApp.tsx:73`), `salas`
-  (`PaginaMeuPerfil.tsx:89`) e `compacto` (`TemaToggle.tsx:16`). Duas são
+  morto, não código morto**: `onSelecionarAluno` (`PainelAdmIntegrado.tsx:71`),
+  `usuario` (`MuralDesafios.tsx:36`), `retrato` (`CrmApp.tsx:73`), `salas`
+  (`PaginaMeuPerfil.tsx:87`) e `compacto` (`TemaToggle.tsx:16`). Duas são
   **obrigatórias** na assinatura, então removê-las mexe em quem chama — é a
   decisão cara que a flag não toma sozinha. Enquanto isso, o `noUnusedLocals`
   sozinho já cobre o caso que mordeu três vezes (import morto) sem tocar em
