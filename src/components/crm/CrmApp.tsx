@@ -3,7 +3,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
-import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
 import { PaginaMeuPerfil } from "@/components/crm/PaginaMeuPerfil";
