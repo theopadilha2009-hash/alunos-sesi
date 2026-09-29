@@ -321,7 +321,16 @@ export async function registrarUsuario(dados: {
     .single();
 
   if (erroAluno || !novoAluno) {
-    return { ok: false, mensagem: `Erro ao criar perfil de estudante: ${erroAluno?.message}` };
+    // A mensagem do PostgREST fica no log. Ela ia crua para a tela de cadastro
+    // (`estadoCadastro.mensagem` em `LoginTela`), ou seja: um anônimo lendo
+    // `duplicate key value violates unique constraint "alunos_slug_key"`. O
+    // nome de usuário já é checado antes; o que sobra aqui é corrida, e para
+    // quem está se cadastrando a única frase útil é "tente de novo".
+    logger.error("AUTH", "falha ao criar o aluno no cadastro", erroAluno);
+    return {
+      ok: false,
+      mensagem: "Não foi possível criar seu perfil agora. Tente novamente em instantes.",
+    };
   }
 
   // Cria o usuário
@@ -338,7 +347,14 @@ export async function registrarUsuario(dados: {
     .single();
 
   if (erroUsuario || !novoUsuario) {
-    return { ok: false, mensagem: `Erro ao cadastrar usuário: ${erroUsuario?.message}` };
+    // Mesmo motivo do aluno acima. O perfil já foi criado nesta altura, então
+    // a frase não promete "nada aconteceu" — o ADM vê o perfil pendente e o
+    // aluno pode tentar de novo com outro nome de usuário.
+    logger.error("AUTH", "falha ao criar o usuário no cadastro", erroUsuario);
+    return {
+      ok: false,
+      mensagem: "Não foi possível concluir o cadastro agora. Tente novamente em instantes.",
+    };
   }
 
   const sessao: UsuarioSessao = {

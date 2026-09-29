@@ -119,6 +119,11 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // Daqui para baixo não é recusa — é falha do servidor, e o texto que veio
     // junto nomeia a plataforma. Fica no log; para o aluno vai a frase da casa.
+    //
+    // atalho: todo não-recusa vira 500, inclusive `BlobError` de requisição
+    // malformada (assinatura de callback, tipo de evento), que seria 400;
+    // revisitar se a rota passar a ter `onUploadCompleted`, porque aí existe
+    // webhook e um 5xx vira retentativa — separar com `instanceof BlobError`.
     logger.error("upload", "falha ao autorizar o envio", error);
     return NextResponse.json({ error: FALHA_AO_ENVIAR }, { status: 500 });
   }
