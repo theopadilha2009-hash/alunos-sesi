@@ -8,6 +8,7 @@ import { CrachaModal } from "@/components/CrachaModal";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
+import { lerRespostaEstrela } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -160,32 +161,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
       ),
     );
 
-    try {
-      const resposta = await fetch("/api/estrela", {
-        method: jaTem ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ alunoId: id }),
-      });
-      const dados = (await resposta.json()) as {
-        estrelas?: number;
-        votado?: boolean;
-        erro?: string;
-      };
-      if (!resposta.ok) throw new Error(dados.erro ?? "não deu para votar");
-
-      setLista((p) =>
-        p.map((a) =>
-          a.id === id ? { ...a, estrelas: dados.estrelas ?? a.estrelas } : a,
-        ),
-      );
-      setMeus((p) =>
-        dados.votado
-          ? p.includes(id)
-            ? p
-            : [...p, id]
-          : p.filter((x) => x !== id),
-      );
-    } catch (erro) {
+    const desfazer = () => {
       setMeus((p) => (jaTem ? [...p, id] : p.filter((x) => x !== id)));
       setLista((p) =>
         p.map((a) =>
@@ -194,9 +170,45 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
             : a,
         ),
       );
-      setRecado(
-        erro instanceof Error ? erro.message : "não deu para votar agora",
+    };
+
+    try {
+      const resposta = await fetch("/api/estrela", {
+        method: jaTem ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alunoId: id }),
+      });
+      const resultado = lerRespostaEstrela(
+        resposta.status,
+        await resposta.json().catch(() => null),
       );
+      // A recusa do servidor tem motivo escrito para a tela — é o mesmo que o
+      // CRM e o perfil público mostram. Falha de transporte é outra conversa,
+      // e cai no `catch`.
+      if (!resultado.ok) {
+        desfazer();
+        setRecado(resultado.motivo);
+        return;
+      }
+
+      setLista((p) =>
+        p.map((a) =>
+          a.id === id ? { ...a, estrelas: resultado.estrelas } : a,
+        ),
+      );
+      setMeus((p) =>
+        resultado.votado
+          ? p.includes(id)
+            ? p
+            : [...p, id]
+          : p.filter((x) => x !== id),
+      );
+    } catch {
+      // Frase própria, como nas outras duas telas: a `message` de um `fetch`
+      // que falha é "Failed to fetch" — texto de biblioteca, em inglês, na cara
+      // do aluno. Mesma família do `BlobError` do upload.
+      desfazer();
+      setRecado("Não deu para votar agora. Confira a conexão e tente de novo.");
     } finally {
       setOcupado(null);
     }
