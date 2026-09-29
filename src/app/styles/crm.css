@@ -16,7 +16,10 @@
      `.dica-acao` — que continuou turquesa no meio de uma tela azul, com o
      agravante de o `:focus-visible` dele (mesma especificidade 0-2-0, mas
      declarado depois) vencer o override de foco. Redefinindo aqui, todo
-     descendente entra na paleta, inclusive o que for escrito amanhã. */
+     descendente entra na paleta, inclusive o que for escrito amanhã.
+     O que NÃO entra junto, e vale saber antes de usar: `--glow`, `--ciano` e
+     `--verde` são literais em `tokens.css`, não derivam do `--accent` — código
+     novo nesta tela que peça `var(--glow)` sai turquesa no meio do azul. */
   --accent: var(--login-acento);
   min-height: 100vh;
   display: flex;
@@ -26,20 +29,26 @@
      card 95px no desktop, 137px no tablet e 58px no celular — o mesmo "pulo"
      que a carga da tela já teve, só que no clique.
      A alternativa era reservar no card a altura do painel mais alto; custaria
-     276px de espaço morto em toda aba (a diferença entre o maior e o menor) e,
-     no desktop, o card deixaria de caber na tela em todas elas.
+     275px de espaço morto em toda aba (896,6 − 621,2, a diferença entre o maior
+     e o menor) e, numa janela de 860px de altura, o card de 897px deixaria de
+     caber em qualquer aba — numa de 1024px ele ainda caberia.
      O deslocamento é proporcional à janela, não fixo: `7vh`, com piso no
-     padding e teto para telas muito altas. O pulo do topo foi a zero nas cinco
-     alturas medidas (640, 700, 844, 860 e 1024px), e o painel de login — que é
-     o que a maioria abre — cabe inteiro em todas elas, sem rolar.
-     O que NÃO sai de graça: ancorado abaixo do padding, o painel "Ativar"
-     (800px) passa a rolar 24px numa janela de 860px de altura, onde antes
-     cabia, e "Criar Conta" (897px) rola 36px mais do que rolava. Um
-     deslocamento de 4vh tiraria essa rolagem, mas deixaria o card colado no
-     topo. Ficou o 7vh.
-     Estes dois números de rolagem foram remedidos em produção depois do merge:
-     a primeira versão deles foi tomada com o deslocamento em 8vh, e ficou no
-     commit por engano. A 7vh, o topo do card no desktop é 60px, não 69px.
+     padding e teto de 6rem (96px) para telas muito altas. Acima de ~1370px de
+     altura o teto congela o deslocamento e o vazio abaixo do card cresce com a
+     tela (medido: 722,8px a 1440px de altura). O pulo do topo foi a zero nas
+     cinco alturas medidas (640, 700, 844, 860 e 1024px).
+     O que NÃO sai de graça é rolagem nova ou maior, e são três: o painel de
+     login rola 50px a 640px de altura, onde rolava 29px antes de a âncora
+     existir (a 700px ele cabe exato, e nas outras três alturas cabe com folga);
+     o painel "Ativar" (800px) passa a rolar 24px numa janela de 860px, onde
+     antes cabia; e "Criar Conta" (897px) rola 36px mais do que rolava. Um
+     deslocamento de 4vh tiraria a rolagem do "Ativar", mas deixaria o card
+     colado no topo. Ficou o 7vh.
+     Os números de rolagem foram medidos em produção depois do merge: os dois
+     primeiros saíram, por engano, com o deslocamento em 8vh, e o do login a
+     640px só apareceu na revisão dos oito PRs — a primeira versão deste
+     comentário afirmava que o login cabia "em todas elas". A 7vh, o topo do
+     card no desktop é 60px, não 69px.
      O preço de composição: em tela grande o card fica no terço de cima, com
      mais espaço abaixo do que acima. */
   align-items: flex-start;
@@ -186,7 +195,15 @@ body:has(.login-tela-container) {
      (76/79/76), e ela não vem mais desta aba: "Criar Conta" tem 70px de texto e
      pede 79px de célula, contra os 76px que a igualdade daria. Fechar esses 3px
      custaria baixar o corpo para ~0,70rem (11px, apertado demais para rótulo de
-     aba) ou renomear um segundo texto de produto — caro para 1,5px de cada lado. */
+     aba) ou renomear um segundo texto de produto — caro para 1,5px de cada lado.
+
+     Abaixo de ~300px, porém, as três células não cabem de uma vez: com o
+     `nowrap` e o `min-width: auto` do item flex, cada célula trava no próprio
+     conteúdo e a LINHA passa a sair do trilho cinza — medido a 280px (Galaxy
+     Fold fechado), o "Ativar" termina 16px depois da borda da barra, sobre o
+     card. A 320px não há transbordo. A media query abaixo devolve a quebra de
+     linha só nessa faixa, que é o comportamento anterior a esta correção: a
+     barra fica mais alta, mas nada sai de dentro dela. */
   white-space: nowrap;
   padding: 0.5rem 0.3rem;
   border: none;
@@ -198,6 +215,14 @@ body:has(.login-tela-container) {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.16s var(--ease);
+}
+
+/* Ver o comentário de `.login-aba-btn`: sem isto, três células de uma linha só
+   não cabem no trilho em tela de ~280px e a última sai da barra. */
+@media (max-width: 310px) {
+  .login-aba-btn {
+    white-space: normal;
+  }
 }
 
 .login-aba-ativa {

@@ -41,6 +41,12 @@ export function aplicarTema(tema: Tema): void {
  * importar deste módulo (é string). O `lerTemaSalvo` que existia fazia essa
  * leitura em React, e depois que o alternador passou a ler o `data-theme` do
  * documento ninguém mais precisava dele — ficou órfão, e órfão saiu.
+ *
+ * A duplicação que sobra é assumida: os dois valores de `COR_DA_BARRA` também
+ * estão escritos, em hex, dentro daquele script — ele é string e não alcança
+ * este módulo. Mudar a cor aqui sem mudar lá deixa a barra do PWA com a cor
+ * antiga para quem só recarrega a página (quem clica no alternador passa por
+ * `aplicarTema` e acerta).
  */
 
 export function salvarTema(tema: Tema): void {

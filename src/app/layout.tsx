@@ -59,12 +59,18 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         {/* Roda antes da primeira pintura: sem isso a página aparece escura
-            e pisca para clara quando o React hidrata. */}
+            e pisca para clara quando o React hidrata. A cor da barra do PWA
+            (`theme-color`) é sincronizada aqui pelo mesmo motivo: quem escolhe
+            o tema no alternador passa por `aplicarTema`, mas quem só recarrega
+            a página com um tema salvo não passava por lugar nenhum e a barra
+            ficava escura sobre uma tela clara. As duas cores são as mesmas de
+            `COR_DA_BARRA`, em `src/lib/tema.ts` — este script é string e não
+            pode importar de lá. */}
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('sesi.tema');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){};if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
+              "try{var t=localStorage.getItem('sesi.tema');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='light'?'#f8fafc':'#090d12')}}catch(e){};if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
           }}
         />
       </head>
