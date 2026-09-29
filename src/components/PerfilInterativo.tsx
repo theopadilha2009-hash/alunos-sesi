@@ -14,9 +14,7 @@ import {
   IconeDownload,
   IconeEscudo,
   IconeEstrela,
-  IconeLinkExterno,
   IconePlus,
-  IconeProjetos,
   IconeSom,
   IconeSomMudo,
 } from "@/components/Icones";
@@ -25,7 +23,6 @@ import { VideoEmbed } from "@/components/VideoEmbed";
 import { copiarTexto } from "@/lib/clipboard";
 import { lerRespostaEstrela } from "@/lib/estrela";
 import { habilidadePermitida } from "@/lib/habilidades";
-import { handleLinkedin, urlGithub } from "@/lib/links";
 import { MAX_VIDEOS } from "@/lib/limites";
 import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -74,8 +71,6 @@ export function PerfilInterativo({
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
   const [recado, setRecado] = useState<string | null>(null);
 
-  const github = urlGithub(aluno.github);
-  const linkedinHandle = handleLinkedin(aluno.linkedin);
   // A lista já vem resolvida da camada de dados (coluna `habilidades` ?? regex da
   // bio). O `?? []` cobre aluno antigo, e array vazio aqui é escolha do aluno —
   // "não quero nenhuma" —, então não pode voltar para o regex da bio.

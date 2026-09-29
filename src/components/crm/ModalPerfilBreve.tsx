@@ -13,9 +13,7 @@ import {
   IconeDownload,
   IconeEscudo,
   IconeEstrela,
-  IconeLinkExterno,
   IconePlus,
-  IconeProjetos,
 } from "@/components/Icones";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { copiarTexto } from "@/lib/clipboard";

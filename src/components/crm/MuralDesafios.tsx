@@ -4,12 +4,9 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { submeterDesafioAction } from "@/app/acoes-crm";
 import {
   IconeCheck,
-  IconeCracha,
   IconeEscudo,
   IconeEstrela,
-  IconeLinkExterno,
   IconePlus,
-  IconeProjetos,
 } from "@/components/Icones";
 import { CATEGORIAS } from "@/lib/desafios";
 import { useTravaDeFoco } from "@/lib/foco";

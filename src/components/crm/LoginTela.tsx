@@ -5,7 +5,6 @@ import {
   ativarAcessoAction,
   cadastroAction,
   loginAction,
-  type EstadoAcaoCrm,
 } from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
 import { TemaToggle } from "@/components/TemaToggle";

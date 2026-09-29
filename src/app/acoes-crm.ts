@@ -238,7 +238,11 @@ export async function salvarPerfilAction(
     return { ok: false, mensagem: `O e-mail precisa terminar em @${DOMINIO_EMAIL_ESCOLA} e usar só letras, números, ponto, hífen e _ antes do @.` };
   }
 
-  const db = clienteAdmin();
+  // Chamado e descartado de propósito: `clienteAdmin` lança quando falta
+  // `NEXT_PUBLIC_SUPABASE_URL` ou `SUPABASE_SERVICE_ROLE_KEY`, e este é o
+  // fail-fast mais cedo deste caminho. Nesta função o cliente não é usado para
+  // mais nada — quem grava é o `atualizarPerfilAluno`.
+  clienteAdmin();
 
   // A troca de senha NÃO acontece aqui: ela exige a senha atual e vive na aba
   // de Segurança (alterarSegurancaAction).

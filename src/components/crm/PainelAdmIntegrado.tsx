@@ -17,7 +17,6 @@ import {
   IconeCheck,
   IconeChave,
   IconeCracha,
-  IconeEditar,
   IconeEscudo,
   IconeEstrela,
   IconeLixeira,
@@ -144,7 +143,6 @@ export function PainelAdmIntegrado({
     setRolarParaLista((n) => n + 1);
   }
 
-  const totalFixados = alunos.filter((a) => a.fixado).length;
   const totalDestaques = alunos.filter((a) => a.destaque).length;
   const totalComRedes = alunos.filter((a) => a.linkedin || a.github).length;
 
