@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   alternar,
   aprovarAluno,
@@ -13,7 +12,7 @@ import {
   publicarDesafioAction,
   removerAluno,
 } from "@/app/adm/acoes";
-import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL, type Estado } from "@/app/adm/estado";
+import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL } from "@/app/adm/estado";
 import {
   IconeCheck,
   IconeChave,

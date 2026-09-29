@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
-import { IconeCracha, IconeEscudo, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
+import { IconeEscudo, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
 import { matriculaDe } from "@/lib/identidade";

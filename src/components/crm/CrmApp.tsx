@@ -33,7 +33,7 @@ import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
 import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
-import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
+import { ordenarAlunos } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
 import type {
   Aluno,

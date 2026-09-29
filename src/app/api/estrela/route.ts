@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { logger } from "@/lib/debug";
 import { limitar } from "@/lib/rate-limit";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
