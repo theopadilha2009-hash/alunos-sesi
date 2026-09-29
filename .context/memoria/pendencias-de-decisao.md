@@ -81,6 +81,18 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   O gate do CRM segue `ehSuperAdm`, e é de propósito: `CrmApp` é client component
   e não enxerga o cookie `httpOnly` `sesi.adm` — a sub-aba do ADM na sidebar sempre
   foi gated assim. Ver [[infra-deploy]] para o fluxo de PR.
+- **O card do login não é mais centralizado** (29/09, PR #49). Centralizado, o
+  topo dele era função da própria altura, e as três abas medem 621px ("Entrar"),
+  800px ("Ativar") e 897px ("Criar Conta"): trocar de aba movia o card 95px no
+  desktop e **137px no tablet** — a mesma família do "pulo" da carga, só que no
+  clique. Agora ele ancora no topo (`align-items: flex-start` mais
+  `padding-block-start: clamp(1.5rem, 7vh, 6rem)`) e o pulo medido é 0 nas cinco
+  alturas de teste. O preço está no comentário do CSS: em tela grande a
+  composição fica assimétrica (card no terço de cima) e, numa janela de 860px de
+  altura, o painel "Ativar" passa a rolar 33px, onde antes cabia. Reservar a
+  altura do maior painel foi descartado: custaria 276px de espaço morto em toda
+  aba. A mesma leva encurtou o rótulo da terceira aba para "Ativar" — ver
+  [[acesso-por-codigo]].
 
 **Continua aberto:**
 
@@ -176,6 +188,12 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   (pill, fundo). Peça de design, para o Daniel.
 - **Ícones 192 e 512 são wordmarks** (165x64 e 264x64) rotulados como quadrados no
   manifest. Peça de design, para o Daniel.
+- **O mesmo wordmark no cabeçalho do login** desenha a linha "Serviço Social da
+  Indústria" com ~7px de altura — o PNG de 264x64 vai à tela a 157x38, e a linha
+  pequena fica ilegível. Junto disso, o "SESI" aparece duas vezes a 12,8px de
+  distância, porque o título ao lado também diz "ALUNOS SESI". Medido por QA em
+  29/09/2026. Ou vem um asset só com o wordmark (Daniel), ou o título perde o
+  "SESI". Peça de design, não se resolve por conta.
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
