@@ -81,7 +81,7 @@ que resolve é o que o Node acha sozinho:
 Então a regra não é "não importa nada", e sim **não importar por um
 especificador que o Node não resolva**. Uma cadeia é permitida — `seguranca.ts`
 importa `./cores.ts`, `./habilidades.ts` e `./video.ts` (todos com extensão) e
-é testado direto por `seguranca.test.mjs`, com 69 testes. O que não pode é um
+é testado direto por `seguranca.test.mjs`. O que não pode é um
 `from "@/lib/dados"` no meio da cadeia.
 
 A base continua folha por isso: `busca.ts`, `blob.ts`, `cores.ts`, `csp.ts`,

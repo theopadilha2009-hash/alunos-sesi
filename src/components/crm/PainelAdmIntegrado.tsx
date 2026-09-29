@@ -17,7 +17,6 @@ import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL, type Estado } from "@/app/adm/es
 import {
   IconeCheck,
   IconeChave,
-  IconeCopiar,
   IconeCracha,
   IconeEditar,
   IconeEscudo,
@@ -444,6 +443,13 @@ export function PainelAdmIntegrado({
                             maxLength={30}
                             required
                             minLength={2}
+                            /* `minLength` conta a string crua: " A " o passa e
+                               chega no servidor, que faz `.trim()` e devolve em
+                               silêncio — clique morto, que é o defeito que o
+                               `minLength` veio fechar. O `pattern` exige dois
+                               caracteres que não sejam espaço, que é a regra de
+                               `mudarSalaDoAluno`. */
+                            pattern="\s*\S[\s\S]*\S\s*"
                             aria-label={`Trocar a turma de ${a.nome}`}
                           />
                           <button type="submit" className="btn-acao-tabela" title="Mover de turma">
