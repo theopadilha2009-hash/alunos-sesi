@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T18:25:00.000Z
+  modified: 2026-09-29T20:20:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -114,9 +114,63 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   que não tem `try/catch` — se só ela falhar, o perfil cai no error boundary.
   Engolir o erro ressuscitaria em silêncio a estrela errada que o PR mata, e o
   `/alunos` também prefere falhar alto a mostrar lista errada.
+- **A mensagem crua do banco saiu das rotas de API** (29/09). `/api/estrela`
+  devolvia `{ erro: error.message }` do PostgREST em 500, nos dois ramos (POST e
+  DELETE), sem escrever nada no log — e `error.message` ali nomeia tabela e
+  constraint. Agora o erro vai para o `logger.error` e o corpo volta vazio, o que
+  faz o cliente cair em `RECUSA_PADRAO` (`src/lib/estrela.ts`); é o mesmo desenho
+  do `motivoDaFalha` (`src/app/adm/acoes.ts`), que traduz o código e manda o erro
+  real para o log. No mesmo PR, os dois `maybeSingle` de apoio
+  (`contarEstrelas`, `alunoVisivel`) passaram a registrar o erro que engoliam em
+  silêncio — o de `alunoVisivel` era pior: a falha de leitura virava o **mesmo
+  404 de "perfil pendente"**. Em `/api/upload`, só as três recusas escritas na
+  própria rota (agora `RecusaDeEnvio`) podem virar frase; `BlobError` da
+  biblioteca vai para o log com uma frase da casa e status 500. Quem trava isso
+  no CI é `tests/erro-interno.test.mjs`, que varre todo `src/app/api` atrás de
+  `.message` dentro de um literal de `NextResponse.json`. A revisão do PR #60
+  achou a **mesma classe fora do diff, e mais grave**: `src/lib/auth.ts` mandava
+  `Erro ao criar perfil de estudante: ${erroAluno?.message}` para a tela de
+  cadastro — um anônimo lendo `duplicate key value violates unique constraint`.
+  Os dois pontos agora logam o erro e devolvem frase da casa (o nome de usuário
+  já era checado antes, então o que sobra ali é corrida). A varredura não pega
+  esse caso — ela só olha `src/app/api` e só o literal de `NextResponse.json`;
+  a lista do que escapa está no cabeçalho do teste.
 
 **Continua aberto:**
 
+- **`src/lib/dados.ts` interpola `.message` em 10 pontos** (achado da revisão do
+  PR #60). `throw new Error(\`...: ${error.message}\`)` em `:58,144,219,323` e
+  vizinhos. Não vaza no browser em produção — o Next sanitiza a mensagem de erro
+  de Server Component — mas é a mesma matéria-prima do vazamento que o #60
+  fechou, e é o que faria uma varredura estendida a `src/` falhar. Fechar exige
+  decidir o que cada um desses `throw` deve dizer na tela; não é o mesmo caso do
+  `/api/estrela`, onde a resposta ia crua para o cliente.
+- **A `Vitrine` não protege o `.json()` da resposta da estrela** (achado da
+  revisão do #60, severidade baixa e latente). `Vitrine.tsx:169` faz
+  `await resposta.json()` sem `catch`, enquanto `CrmApp` e `PerfilInterativo`
+  usam `resp.json().catch(() => null)`. Com o corpo `{}` que o #60 passou a
+  devolver isso funciona e cai na frase `"não deu para votar"` (`:174`), mas se
+  um dia o 500 vier sem corpo JSON, o `SyntaxError` sobe e é exibido cru. Uma
+  linha resolve; não entrou para o PR não crescer.
+- **O `logger.error` descarta `code`/`details`/`hint` do PostgREST** (achado da
+  revisão do #60). `src/lib/debug.ts:74` loga só `erro.message` de um
+  `Error` — e `PostgrestError` estende `Error`. A constraint já aparece no
+  `message`, então o log serve; mas "o erro real foi para o log" é menos
+  verdadeiro do que parece: o `code` (`23505`) não vai junto. Pré-existente,
+  fora do escopo do #60.
+- **As recusas do `/api/upload` não chegam à tela de quem envia** (achado de
+  29/09, ao consertar o vazamento). Medido no pacote instalado: o `upload()` do
+  `@vercel/blob/client` lança `BlobError("Failed to retrieve the client token")`
+  quando a resposta não é `ok` (`node_modules/@vercel/blob/dist/client.js:398`),
+  **sem ler o corpo** — então as três frases escritas para o aluno ("Entre como
+  aluno para enviar imagens.", "Endereço de envio fora da sua pasta.", "Muitos
+  envios em pouco tempo. Aguarde um instante.") morrem no corpo HTTP, e quem
+  envia vê o texto em inglês da biblioteca. O conserto do vazamento as manteve no
+  corpo: são nossas, não são detalhe interno, e são o contrato da rota. Fazê-las
+  aparecer é mudança de comportamento visível — ou envolver o `upload()` num
+  wrapper que leia o corpo, ou trocar o client por `fetch` próprio — e é decisão
+  de produto. Vale saber, antes de decidir, que o cliente já descarta o corpo
+  hoje: ninguém perde nada que estivesse funcionando.
 - **Cluster de classes usadas em `.tsx` que não existem em CSS nenhum** (achado da
   revisão dos oito PRs, 29/09). A varredura de `src/**/*.css` contra os
   `className` do código achou: `botao-secundario`, `busca-campo`,

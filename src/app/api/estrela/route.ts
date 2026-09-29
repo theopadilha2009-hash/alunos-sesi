@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/debug";
 import { limitar } from "@/lib/rate-limit";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -29,11 +30,16 @@ async function lerAlunoId(request: Request): Promise<string | null> {
 }
 
 async function contarEstrelas(alunoId: string): Promise<number> {
-  const { data } = await clienteAdmin()
+  const { data, error } = await clienteAdmin()
     .from("alunos")
     .select("estrelas")
     .eq("id", alunoId)
     .maybeSingle();
+  // Erro aqui virava `0` em silêncio: o voto entrava, e a tela mostrava um
+  // contador que ninguém calculou. Fica o log e o zero — devolver 500 depois de
+  // a linha ter sido gravada diria à pessoa que o voto falhou, o que seria
+  // mentira pior que o número errado.
+  if (error) logger.error("estrela", "falha ao contar as estrelas", error);
   return (data?.estrelas as number) ?? 0;
 }
 
@@ -46,11 +52,15 @@ async function contarEstrelas(alunoId: string): Promise<number> {
  * estar vendo. O 404 espelha o da página: para quem está de fora, não existe.
  */
 async function alunoVisivel(alunoId: string): Promise<boolean> {
-  const { data } = await clienteAdmin()
+  const { data, error } = await clienteAdmin()
     .from("alunos")
     .select("aprovado")
     .eq("id", alunoId)
     .maybeSingle();
+  // Falha de leitura fecha a porta (o lado seguro da dúvida) — mas fechava
+  // também em silêncio, com o mesmo 404 de "perfil pendente" cobrindo "o banco
+  // não respondeu a esta consulta".
+  if (error) logger.error("estrela", "falha ao checar se o perfil está visível", error);
   return data?.aprovado === true;
 }
 
@@ -91,7 +101,12 @@ export async function POST(request: Request) {
     );
 
   if (error) {
-    return NextResponse.json({ erro: error.message }, { status: 500 });
+    // O `.message` do PostgREST nomeia tabela e constraint — serve ao log, não
+    // à tela. O corpo vai vazio de propósito: sem `erro` no corpo, os clientes
+    // caem na recusa da casa (`RECUSA_PADRAO` em `src/lib/estrela.ts`) em vez de
+    // mostrar jargão do banco para quem clicou na estrela.
+    logger.error("estrela", "falha ao gravar o voto", error);
+    return NextResponse.json({}, { status: 500 });
   }
 
   return NextResponse.json({
@@ -130,7 +145,8 @@ export async function DELETE(request: Request) {
     .eq("visitante_id", visitante);
 
   if (error) {
-    return NextResponse.json({ erro: error.message }, { status: 500 });
+    logger.error("estrela", "falha ao remover o voto", error);
+    return NextResponse.json({}, { status: 500 });
   }
 
   return NextResponse.json({
