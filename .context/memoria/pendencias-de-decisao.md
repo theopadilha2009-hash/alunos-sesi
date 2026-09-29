@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T21:20:58.000Z
+  modified: 2026-09-29T21:25:36.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -160,10 +160,15 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   ou `{` desbalanceado aparecia dentro de um literal do ramo do `true`. Os quatro
   estão fechados em código e provados por mutação.
 
-  O que resta é barulhento, de propósito: a janela estoura. Continua fora: o `+1`
-  desenhado **sem** essa classe, o que estiver fora de `src/components/`, e um
-  `\"` ou regex literal dentro do trecho (a contagem fecha o literal no
-  `indexOf` antes do escape).
+  O que resta é quase tudo barulhento, de propósito: a janela estoura, e o `\"`
+  ou regex literal dentro do trecho reprovam por excesso de zelo. **Uma exceção,
+  e é silenciosa:** aspa solta em texto JSX (`<span>aluno's</span>`) abre uma
+  "string" fantasma que nunca fecha, a contagem para antes do `:` e o botão no
+  `else` passa verde — e, ao contrário do que eu supus na rodada 4, isso
+  **compila** (texto JSX não é literal JS; o revisor provou com o parser TSX do
+  repo). Não existe em `src/components/` hoje. Se aparecer, trocar a contagem de
+  caractere pelo parser TSX em vez de somar mais uma regra. Continua fora também:
+  o `+1` desenhado **sem** essa classe e o que estiver fora de `src/components/`.
 
 **Continua aberto:**
 

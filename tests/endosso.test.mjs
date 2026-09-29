@@ -40,8 +40,10 @@ import { fileURLToPath } from "node:url";
  *     quando o guard falha — mas não essa vizinhança emprestada. Ela não existe
  *     hoje: há uma ocorrência de cada por arquivo;
  *   - a contagem de nível da checagem do ramo pula string e comentário, mas não
- *     entende `\"` dentro de string, nem regex literal com delimitador. Não
- *     existe no código; o literal que nunca fecha cai no lado barulhento.
+ *     entende aspa solta em texto JSX (`<span>aluno's</span>`), `\"` dentro de
+ *     string, nem regex literal. Os dois últimos reprovam por excesso de zelo;
+ *     o primeiro **compila** e é silencioso. Nenhum `src/components/` tem aspa
+ *     em texto hoje — ver `estaNoRamoDoElse`.
  */
 
 const RAIZ = fileURLToPath(new URL("../src/components/", import.meta.url));
@@ -101,12 +103,19 @@ function ocorrencias(fonte) {
  * hipótese: os três casos foram reproduzidos na revisão do #62, todos
  * passando. Pular literais fecha os três.
  *
- * O que ainda escapa: `\"` dentro de string (o `indexOf` fecha cedo) e regex
- * literal com delimitador. Um literal ou comentário que **abre e não fecha**
- * dentro do trecho encerra a contagem — e isso não é desleixo: o trecho acaba
- * no meio do template do próprio botão (`` className={` ``), então essa é a
- * situação normal. Um literal de verdade torto não compila, e quem pega é o
- * `tsc`, antes do teste.
+ * O que ainda escapa: `\"` dentro de string (o `indexOf` fecha cedo), regex
+ * literal com delimitador, e **aspa solta em texto JSX**. Este último é o único
+ * silencioso: `<span>aluno's</span>` no ramo do `true` abre uma "string"
+ * fantasma que nunca fecha, a contagem para antes do `:`, e um botão no `else`
+ * passa verde. Texto JSX não é literal JS (aspas ali são caracteres comuns) —
+ * os três casos **compilam** no parser TSX, então o `tsc` não pega. Medido na
+ * revisão do #62 e ausente do repo: nenhum `src/components/` tem aspa em texto.
+ * Se aparecer, o caminho é parar de contar caractere e usar o parser TSX (o
+ * `typescript` já é dependência do projeto) em vez de mais uma regra aqui.
+ *
+ * Um literal ou comentário que **abre e não fecha** dentro do trecho encerra a
+ * contagem, e isso não é desleixo: o trecho acaba no meio do template do
+ * próprio botão (`` className={` ``), então essa é a situação normal.
  */
 function estaNoRamoDoElse(trecho) {
   let nivel = 0;
