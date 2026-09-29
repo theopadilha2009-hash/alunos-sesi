@@ -137,19 +137,18 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   é regressão (é igual desde antes desta leva), mas é valor sem consumidor: quem
   for usar `adm` de verdade precisa mexer no gate.
 
-- **A estrela desabilitada não diz por quê** (achado da revisão, 29/09). Em
-  `TabelaAlunos.tsx:167-172` e `CrmApp.tsx:803-808` o motivo do bloqueio viaja
-  no `title` de um `<button disabled>` — e o Chrome **não emite evento de mouse
-  em controle desabilitado**, então o tooltip nunca aparece para quem usa mouse.
-  O `aria-label` cobre o leitor de tela; quem enxerga fica sem nada. Pior: o
-  estilo do desabilitado é `cursor: progress` + `opacity: .6`
-  (`vitrine.css:452`), escrito para o voto em voo — transitório —, e diz
-  "carregando" justamente no caso **permanente** (perfil pendente de aprovação).
-  Três saídas, todas com o mesmo custo: (a) envolver o botão num `<span
-  title>` (nenhum pixel muda, o tooltip volta a funcionar), (b) um selo visível
-  ao lado do nome — a classe `pill-pendente` já existe para isso
-  (`PainelAdmIntegrado.tsx:407`) —, (c) as duas. É decisão de produto, não
-  conserto: nenhuma das três é obviamente certa. Recomendação: (c).
+- **O `cursor` da estrela bloqueada ainda diz "carregando"** (achado da revisão,
+  29/09). O `title` que nunca disparava **já foi corrigido** (PR #56): o motivo
+  passou para um `<span class="estrela-wrap">`, que recebe o ponteiro, e o botão
+  segue `disabled` com o `aria-label`. O que sobrou é o outro sintoma: o estilo
+  do desabilitado é `cursor: progress` + `opacity: .6` (`vitrine.css:452`),
+  escrito para o voto em voo — transitório —, e diz "carregando" justamente no
+  caso **permanente** (perfil pendente de aprovação). Separar os dois casos pede
+  um marcador no DOM (o `<span>` que o #56 criou é o lugar natural para ele) e é
+  decisão de produto. Alternativa que dispensa o marcador: um selo visível ao
+  lado do nome — a classe `pill-pendente` já existe para isso
+  (`PainelAdmIntegrado.tsx:407`) e o painel do ADM já a usa. Recomendação: o
+  selo, que resolve o cursor e o motivo de uma vez.
 - **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
   filtra só por `visitante_id` (`dados.ts:488`) e o único índice é a PK
   `(aluno_id, visitante_id)` (`001_schema.sql:72`), então é seq scan. A vitrine
