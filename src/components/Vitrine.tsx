@@ -161,6 +161,17 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
       ),
     );
 
+    const desfazer = () => {
+      setMeus((p) => (jaTem ? [...p, id] : p.filter((x) => x !== id)));
+      setLista((p) =>
+        p.map((a) =>
+          a.id === id
+            ? { ...a, estrelas: Math.max(0, a.estrelas + (jaTem ? 1 : -1)) }
+            : a,
+        ),
+      );
+    };
+
     try {
       const resposta = await fetch("/api/estrela", {
         method: jaTem ? "DELETE" : "POST",
@@ -171,7 +182,14 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
         resposta.status,
         await resposta.json().catch(() => null),
       );
-      if (!resultado.ok) throw new Error(resultado.motivo);
+      // A recusa do servidor tem motivo escrito para a tela — é o mesmo que o
+      // CRM e o perfil público mostram. Falha de transporte é outra conversa,
+      // e cai no `catch`.
+      if (!resultado.ok) {
+        desfazer();
+        setRecado(resultado.motivo);
+        return;
+      }
 
       setLista((p) =>
         p.map((a) =>
@@ -185,18 +203,12 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
             : [...p, id]
           : p.filter((x) => x !== id),
       );
-    } catch (erro) {
-      setMeus((p) => (jaTem ? [...p, id] : p.filter((x) => x !== id)));
-      setLista((p) =>
-        p.map((a) =>
-          a.id === id
-            ? { ...a, estrelas: Math.max(0, a.estrelas + (jaTem ? 1 : -1)) }
-            : a,
-        ),
-      );
-      setRecado(
-        erro instanceof Error ? erro.message : "não deu para votar agora",
-      );
+    } catch {
+      // Frase própria, como nas outras duas telas: a `message` de um `fetch`
+      // que falha é "Failed to fetch" — texto de biblioteca, em inglês, na cara
+      // do aluno. Mesma família do `BlobError` do upload.
+      desfazer();
+      setRecado("Não deu para votar agora. Confira a conexão e tente de novo.");
     } finally {
       setOcupado(null);
     }

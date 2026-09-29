@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T21:32:16.000Z
+  modified: 2026-09-29T21:39:17.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -179,14 +179,22 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   o `meus`, mostrando um número que ninguém calculou. Agora as três telas leem
   igual. **Mudança de texto visível:** a recusa padrão da Vitrine era "não deu
   para votar" e agora é a `RECUSA_PADRAO` do `src/lib/estrela.ts`, "Não deu para
-  votar agora. Tente de novo."
+  votar agora. Tente de novo." A revisão do #63 pegou que o `catch` continuava
+  divergente — mostrava `erro.message`, isto é, "Failed to fetch" cru na tela. O
+  desenho agora é o mesmo do `PerfilInterativo`: recusa do servidor sai com o
+  `motivo` do helper, e falha de transporte com a frase de conexão da casa.
 - **O `logger.error` deixou de perder o `code` e o `hint` do PostgREST** (29/09).
   `PostgrestError` **estende `Error`**, então o `erro instanceof Error ?
   erro.message` de `src/lib/debug.ts:74` mandava só a mensagem — e o pacote diz o
   contrário no doc do próprio tipo: *"Always log the full object; logging only
-  `error.message` hides the hint"*. Agora `descreverErro` acrescenta
-  `code`/`details`/`hint` **quando existem**, então um `Error` comum sai byte a
-  byte como antes. Teste em `tests/debug.test.mjs` (4), com o console capturado.
+  `error.message` hides the hint"*. Agora `descreverErro` acrescenta `code` e
+  `hint` **quando existem** — o `code` do Node (`ENOENT`) entra pela mesma porta,
+  e um `Error` sem os campos sai como sempre saiu. **O `details` fica de fora de
+  propósito:** é o campo que ecoa o *valor* da coluna (`Key (username)=(theo)
+  already exists.`) e o log não é lugar de dado de aluno — achado da revisão do
+  #63, que também mostrou que o `mascararSegredos` não pegaria isso (ele filtra
+  por nome de campo, e string com espaço não é truncada). `tests/debug.test.mjs`
+  (6) trava as duas pontas: os dois campos entram, o valor não.
 
 **Continua aberto:**
 

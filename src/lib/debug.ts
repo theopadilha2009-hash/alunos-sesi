@@ -81,16 +81,22 @@ export const logger = {
  * `PostgrestError` estende `Error`, então `erro.message` sozinho saía — levando
  * junto o `code` (`23505`, `42501`) e o `hint`, que é onde o Postgres costuma
  * dizer o conserto. O próprio pacote avisa no doc do tipo: "Always log the full
- * object; logging only `error.message` hides the hint". Só entra o que existir,
- * então um `Error` comum continua saindo exatamente como antes.
+ * object; logging only `error.message` hides the hint".
+ *
+ * O `details` fica de fora **de propósito**: é o campo que ecoa o valor da
+ * coluna (`Key (username)=(theo) already exists.`) e o log não é lugar de dado
+ * de aluno. O `message` já nomeia a constraint, e o `code` e o `hint` são
+ * forma — código fixo e orientação do Postgres. O `code` do Node (`ENOENT`)
+ * entra pela mesma porta.
+ *
+ * Só acrescenta o que existir: um `Error` sem esses campos sai como sempre saiu.
  */
 function descreverErro(erro: unknown): unknown {
   if (!(erro instanceof Error)) return mascararSegredos(erro);
 
   const partes = [erro.message];
-  const campos = erro as Error & { code?: unknown; details?: unknown; hint?: unknown };
+  const campos = erro as Error & { code?: unknown; hint?: unknown };
   if (campos.code) partes.push(`code=${campos.code}`);
-  if (campos.details) partes.push(`details=${campos.details}`);
   if (campos.hint) partes.push(`hint=${campos.hint}`);
   return partes.join(" | ");
 }

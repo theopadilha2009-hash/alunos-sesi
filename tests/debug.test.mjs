@@ -11,8 +11,11 @@ import { logger, mascararSegredos } from "../src/lib/debug.ts";
  * onde o Postgres diz o conserto, como o próprio pacote avisa no doc do tipo:
  * "Always log the full object; logging only `error.message` hides the hint".
  *
- * O log é diagnóstico: o `hint` traz SQL e nome de coluna, então ele mora aqui e
- * nunca na tela.
+ * Quem exercita o fix é o **primeiro** teste (roda vermelho sem ele); os outros
+ * são guarda de não-regressão — o log não virou depósito de dado de aluno, o
+ * `Error` sem os campos não ganhou sujeira, e o mascaramento de segredo continua
+ * valendo para o que não é `Error`. O último chama `mascararSegredos` direto, sem
+ * passar pelo logger: é teste da função, não do caminho.
  */
 
 /** Captura o que o `logger` escreveu, sem sujar a saída do runner. */
@@ -37,7 +40,7 @@ function erroDoPostgrest() {
   });
 }
 
-test("o erro do PostgREST sai no log com code, details e hint", () => {
+test("o erro do PostgREST sai no log com o code e o hint", () => {
   const linhas = capturarErro(() =>
     logger.error("estrela", "falha ao gravar o voto", erroDoPostgrest()),
   );
@@ -45,9 +48,26 @@ test("o erro do PostgREST sai no log com code, details e hint", () => {
   assert.equal(linhas.length, 1);
   const [, saida] = linhas[0];
   assert.match(saida, /23505/, "o `code` do PostgREST ficou de fora do log");
-  assert.match(saida, /already exists/, "o `details` ficou de fora do log");
   assert.match(saida, /ainda não existe/, "o `hint` ficou de fora do log");
   assert.match(saida, /alunos_username_key/, "a mensagem em si ficou de fora");
+});
+
+test("o `details` fica de fora — é ele que carrega o valor da coluna", () => {
+  const linhas = capturarErro(() => logger.error("AUTH", "falha no cadastro", erroDoPostgrest()));
+
+  const [, saida] = linhas[0];
+  assert.doesNotMatch(
+    saida,
+    /\(theo\)/,
+    "o valor da chave foi para o log pelo `details`: o log não é lugar de dado de aluno",
+  );
+});
+
+test("o `code` do Node (`ENOENT`) entra pela mesma porta", () => {
+  const erro = Object.assign(new Error("no such file or directory"), { code: "ENOENT" });
+  const linhas = capturarErro(() => logger.error("PERF", "falha ao ler o arquivo", erro));
+
+  assert.match(linhas[0][1], /code=ENOENT/);
 });
 
 test("erro sem os campos extras sai só com a mensagem, sem sujeira", () => {
