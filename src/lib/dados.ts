@@ -12,6 +12,13 @@ import type { Aluno, DesafioHackathon, RetratoSala, Sala, SubmissaoDesafio } fro
  * O que a RLS esconde do anon — os votos, que não têm policy nenhuma — é
  * lido pelo cliente admin, sempre filtrado pelo id que veio do cookie
  * assinado. Nunca aceite esse id vindo do corpo de um request.
+ *
+ * O texto cru do PostgREST vai para o `logger.error`; o que sobe daqui é sempre
+ * uma frase da casa. `error.message` nomeia tabela, constraint e às vezes o
+ * valor da coluna — é diagnóstico para quem lê o log, e o `logger` já o registra
+ * com `code` e `hint` junto (`descreverErro`). É o mesmo desenho de `garantirSala`
+ * (`src/app/adm/acoes.ts`), e quem trava é a varredura de
+ * `tests/erro-interno.test.mjs`.
  */
 
 const CAMPOS_ALUNO =
@@ -55,7 +62,7 @@ export async function listarSalas(): Promise<Sala[]> {
     .order("nome", { ascending: true });
   if (error) {
     logger.error("DADOS", "Erro em listarSalas", error);
-    throw new Error(`listarSalas: ${error.message}`);
+    throw new Error("Não foi possível carregar as turmas.");
   }
 
   const salas = (data ?? []) as Sala[];
@@ -86,7 +93,7 @@ export async function listarAlunos(
 
   if (error) {
     logger.error("DADOS", "Erro em listarAlunos", error);
-    throw new Error(`listarAlunos: ${error.message}`);
+    throw new Error("Não foi possível carregar a lista de alunos.");
   }
   return ((data ?? []) as Aluno[]).map(resolverAluno);
 }
@@ -111,7 +118,7 @@ export async function listarAcessos(): Promise<string[]> {
 
   if (error) {
     logger.error("DADOS", "Erro em listarAcessos", error);
-    throw new Error(`listarAcessos: ${error.message}`);
+    throw new Error("Não foi possível carregar quem já tem acesso.");
   }
   return (data ?? []).map((u) => u.aluno_id as string);
 }
@@ -127,7 +134,7 @@ export async function listarRetrato(): Promise<RetratoSala[]> {
     .select("id,nome,curso,turno,ordem,alunos,com_linkedin,com_github,estrelas,completude");
   if (error) {
     logger.error("DADOS", "Erro em listarRetrato", error);
-    throw new Error(`listarRetrato: ${error.message}`);
+    throw new Error("Não foi possível carregar o retrato das turmas.");
   }
 
   const retratos = (data ?? []) as RetratoSala[];
@@ -141,7 +148,10 @@ export async function alunoPorSlug(slug: string): Promise<Aluno | null> {
     .select(CAMPOS_ALUNO)
     .eq("slug", slug)
     .maybeSingle();
-  if (error) throw new Error(`alunoPorSlug: ${error.message}`);
+  if (error) {
+    logger.error("DADOS", `Erro em alunoPorSlug slug=${slug}`, error);
+    throw new Error("Não foi possível carregar o perfil.");
+  }
   return data ? resolverAluno(data as Aluno) : null;
 }
 
@@ -151,7 +161,10 @@ export async function alunoPorId(id: string): Promise<Aluno | null> {
     .select(CAMPOS_ALUNO)
     .eq("id", id)
     .maybeSingle();
-  if (error) throw new Error(`alunoPorId: ${error.message}`);
+  if (error) {
+    logger.error("DADOS", `Erro em alunoPorId id=${id}`, error);
+    throw new Error("Não foi possível carregar o perfil.");
+  }
   return data ? resolverAluno(data as Aluno) : null;
 }
 
@@ -185,7 +198,7 @@ export async function atualizarPerfilAluno(
 
   if (error) {
     logger.error("DADOS", `Erro em atualizarPerfilAluno id=${id}`, error);
-    throw new Error(`atualizarPerfilAluno: ${error.message}`);
+    throw new Error("Não foi possível salvar o perfil.");
   }
   limparCacheDados();
   return resolverAluno(data as Aluno);
@@ -216,7 +229,8 @@ export async function apoiarHabilidade(
     );
 
   if (errInsert) {
-    throw new Error(`Erro ao registrar apoio: ${errInsert.message}`);
+    logger.error("DADOS", `Erro ao registrar apoio de "${habilidade}"`, errInsert);
+    throw new Error("Não foi possível registrar o apoio.");
   }
 
   const { data: aluno, error: errLeitura } = await db
@@ -225,7 +239,14 @@ export async function apoiarHabilidade(
     .eq("id", alunoId)
     .maybeSingle();
 
-  if (errLeitura || !aluno) {
+  // Os dois casos eram uma condição só, e o erro de leitura saía rotulado como
+  // "aluno não encontrado" — uma causa errada no lugar do diagnóstico. Separados:
+  // a falha de banco vai para o log, e só a ausência de linha é o que diz.
+  if (errLeitura) {
+    logger.error("DADOS", `Erro ao reler habilidades_votos id=${alunoId}`, errLeitura);
+    throw new Error("Não foi possível registrar o apoio.");
+  }
+  if (!aluno) {
     throw new Error("Aluno não encontrado para apoio de habilidade.");
   }
 
@@ -320,7 +341,7 @@ export async function submeterDesafio(dados: {
 
   if (error || !data) {
     logger.error("DADOS", "Erro ao submeter projeto para desafio", error);
-    throw new Error(`Erro ao submeter desafio: ${error?.message}`);
+    throw new Error("Não foi possível enviar o projeto.");
   }
 
   // `desafios.submissoes_count` é mantido por trigger (sync_submissoes_count).
@@ -486,6 +507,9 @@ export async function votosDoVisitante(visitante: string): Promise<string[]> {
     .from("votos")
     .select("aluno_id")
     .eq("visitante_id", visitante);
-  if (error) throw new Error(`votosDoVisitante: ${error.message}`);
+  if (error) {
+    logger.error("DADOS", "Erro em votosDoVisitante", error);
+    throw new Error("Não foi possível carregar os votos deste navegador.");
+  }
   return (data ?? []).map((v) => v.aluno_id as string);
 }

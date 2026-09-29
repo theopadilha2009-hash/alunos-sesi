@@ -32,9 +32,9 @@ import { fileURLToPath } from "node:url";
  *     `/api/health`, que só existe no ramo autenticado do ADM e é deliberado);
  *   - rota fora de `src/app/api`. Não é hipótese: o PR #60 fechou duas em
  *     `src/lib/auth.ts`, onde `error.message` ia para a tela de cadastro de um
- *     anônimo. E `src/lib/dados.ts` ainda interpola `.message` em
- *     `throw new Error` (10 pontos — registrados em `pendencias-de-decisao.md`,
- *     sem vazamento confirmado porque o Next sanitiza erro de Server Component).
+ *     anônimo. Esse outro formato — `throw new Error` com o texto do banco
+ *     dentro — é o que o **segundo teste** deste arquivo cobre, agora que
+ *     `src/lib/dados.ts` parou de interpolar `.message` nos dez pontos que tinha.
  *
  * O que segura esses casos é o revisor, não o teste. O valor daqui é travar o
  * formato que existe hoje: corpo plano com `.message` num literal.
@@ -103,5 +103,116 @@ test("nenhuma rota de API devolve `.message` de erro no corpo", () => {
     vazamentos,
     [],
     "mensagem de erro interna indo para o cliente — ela pertence ao log",
+  );
+});
+
+/**
+ * O outro formato: `throw new Error(\`…: ${error.message}\`)`.
+ *
+ * É a mesma matéria-prima por outra porta. O texto do PostgREST nomeia tabela,
+ * constraint e valor; ele pertence ao `logger.error`, e quem é lançado dali para
+ * cima carrega uma frase da casa. O caso que originou esta varredura foi
+ * `src/lib/dados.ts`, com dez pontos assim — e o padrão certo já estava escrito
+ * no repo, em `garantirSala` (`src/app/adm/acoes.ts:109-113`), com o comentário
+ * dizendo exatamente por quê: a mensagem antiga subia com o jargão embutido.
+ *
+ * Por que dez pontos sem ninguém ver: em produção o Next **sanitiza** a mensagem
+ * de erro de Server Component, e nenhum destes `throw` é alimentado por um
+ * `catch` que mostre o texto — ou não há `catch`, e a exceção sobe ao error
+ * boundary (cujo `<details>` que renderiza `error.message`, em
+ * `src/app/error.tsx`, é dev-only), ou o `catch` devolve frase própria. Não é
+ * vazamento; é a mesma matéria-prima do vazamento, esperando a primeira tela que
+ * renderizar a mensagem sem sanitização no meio.
+ *
+ * O repo **tem** outros pontos que renderizam mensagem derivada de `err.message`
+ * — o `motivo` que o painel do ADM mostra (`src/app/adm/acoes.ts:194` →
+ * `PainelAdmIntegrado.tsx`), o `/api/health` no ramo autenticado e as recusas
+ * escritas do `/api/upload`. Nenhum é alimentado por esta casa: o `motivo` do
+ * ADM vem de `garantirSala`, que já lança frase da casa. A distinção está aqui
+ * para ninguém ler este bloco como "o app só tem um lugar que mostra erro".
+ *
+ * O que esta varredura NÃO pega — de novo a lista é longa de propósito:
+ *
+ *   - o texto cru que entra por fora da interpolação: `"x" + error.message`,
+ *     `String(error)`, `JSON.stringify(error)`, `error["message"]`, `error.stack`;
+ *   - `throw new Error(frase, { cause: error })` — o `cause` não passa pela
+ *     template, e o que o Next faz com ele na serialização é assunto dele;
+ *   - o erro que entra na frase por uma variável — `const t = error.message;
+ *     throw new Error(t)` —, que é o mesmo furo do `lastError` do `/api/health`;
+ *   - `throw` que não é `new Error` (uma classe própria, `Promise.reject`);
+ *   - e, o mais importante: **esta varredura não exige que o erro vá para o log**.
+ *     Ela impede o jargão de virar mensagem; ela não garante que alguém consiga
+ *     diagnosticar depois. Apagar o `logger.error` de uma dessas funções deixa o
+ *     teste verde e o erro invisível. Esse é o lado que o revisor segura.
+ *
+ * Travar a vizinhança (`logger.error` na mesma função) foi descartado: é a mesma
+ * conta por janela que o `endosso.test.mjs` levou quatro rodadas para acertar, e
+ * aqui ela seria mais fraca — a informação pode legitimamente ir para o log por
+ * outro caminho, e um `logger.error` a três linhas de distância não prova nada.
+ */
+
+const SRC = fileURLToPath(new URL("../src/", import.meta.url));
+
+/**
+ * Os arquivos onde esta classe já mordeu, e que a varredura precisa alcançar.
+ *
+ * Mesma ideia do `ESPERADAS` de cima: não é teto nem contagem, é o guard de
+ * "olhou o lugar certo". `auth.ts` foi o vazamento que o PR #60 fechou à mão;
+ * `dados.ts` é onde a varredura nasceu.
+ */
+const JARDAS = ["lib/auth.ts", "lib/dados.ts"];
+
+/** Todo `.ts` e `.tsx` de `src/`, recursivo. */
+function fontes(dir, achados = []) {
+  for (const entrada of readdirSync(dir)) {
+    const caminho = join(dir, entrada);
+    if (statSync(caminho).isDirectory()) {
+      fontes(caminho, achados);
+    } else if (entrada.endsWith(".ts") || entrada.endsWith(".tsx")) {
+      achados.push(caminho);
+    }
+  }
+  return achados;
+}
+
+/**
+ * O jargão **interpolado** numa frase lançada: `throw new Error(\`… ${erro.x} …\`)`.
+ *
+ * A `${` antes do campo é load-bearing: sem ela, a palavra "message" escrita na
+ * prosa de uma mensagem da casa reprovaria. O `[^}]*` atravessa quebra de linha
+ * e para no primeiro `}` — que é onde a interpolação acaba nos casos reais
+ * (`${error.message}`, `${err?.message}`, `${(e as Error).message}`).
+ *
+ * `.details` entra junto porque é o campo que ecoa o **valor** da coluna
+ * (`Key (username)=(theo) already exists.`), e `.hint`/`.stack` pelo mesmo
+ * motivo do `.message`: são diagnóstico, não frase.
+ */
+const JARGAO = /throw new Error\(\s*`[^`]*\$\{[^}]*\.(?:message|details|hint|stack)[^}]*\}/g;
+
+test("nenhum `throw new Error` carrega o texto cru do banco", () => {
+  const arquivos = fontes(SRC);
+  const relativos = arquivos.map((caminho) => relative(SRC, caminho));
+
+  for (const jardas of JARDAS) {
+    assert.ok(
+      relativos.includes(jardas),
+      `a varredura perdeu o alvo: ${jardas} não está em src/`,
+    );
+  }
+
+  const vazamentos = [];
+  for (const caminho of arquivos) {
+    const texto = readFileSync(caminho, "utf8");
+    for (const achado of texto.matchAll(JARGAO)) {
+      const linha = texto.slice(0, achado.index).split("\n").length;
+      vazamentos.push(`${relative(SRC, caminho)}:${linha}`);
+    }
+  }
+
+  assert.deepEqual(
+    vazamentos,
+    [],
+    "texto cru do banco virando frase lançada — ele pertence ao logger.error, " +
+      "e quem sobe daqui é uma frase da casa",
   );
 });
