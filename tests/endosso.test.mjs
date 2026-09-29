@@ -36,9 +36,12 @@ import { fileURLToPath } from "node:url";
  *     teste, de novo do lado barulhento;
  *   - um `habilidadePermitida(` que esteja ali por outro motivo (um comentário,
  *     ou o guard de outro botão colado no mesmo bloco) satisfaz a janela. A
- *     checagem do `:` fecha o caso mais grave — botão no ramo do `else`, que
- *     renderiza quando o guard falha — mas não essa vizinhança emprestada. Ela
- *     não existe hoje: há uma ocorrência de cada por arquivo.
+ *     checagem do ramo fecha o caso mais grave — botão no `else`, que renderiza
+ *     quando o guard falha — mas não essa vizinhança emprestada. Ela não existe
+ *     hoje: há uma ocorrência de cada por arquivo;
+ *   - a contagem de nível da checagem do ramo não entende string: um `)` ou um
+ *     `:` dentro de um literal bagunça a conta. Não existe no código, e falha
+ *     para o lado barulhento.
  */
 
 const RAIZ = fileURLToPath(new URL("../src/components/", import.meta.url));
@@ -60,14 +63,46 @@ function arquivosTsx(dir) {
   });
 }
 
+/** A classe do `+1`, sem casar nome maior que comece igual (`-addx`). */
+const ALVO = /btn-endorsement-add(?![\w-])/g;
+
+/**
+ * O botão está no ramo do `:` do ternário do guard?
+ *
+ * Recebe o trecho que vai do guard até a classe e caminha contando parênteses,
+ * colchetes e chaves. O `:` que interessa é o que aparece **com o aninhamento
+ * de volta ao zero** — o do else do ternário. Os `:` que vivem dentro de algo
+ * (`style={{...}}`, um `title` ternário, um `{...spread}`) estão em nível
+ * maior e não contam.
+ *
+ * A checagem anterior proibia qualquer `:` no caminho, e por isso reprovava
+ * botão **correto** com um `style` ou um `title` antes do `className` — o
+ * código de hoje só passava por causa da ordem dos atributos. Contar o nível
+ * desfaz esse acoplamento.
+ *
+ * Limite conhecido: a contagem não entende string, então um `)` ou `:` dentro
+ * de um literal (`title={")"}`) bagunça o nível. Não existe no código, e o
+ * modo de falha é o lado barulhento (reprova código certo).
+ */
+function estaNoRamoDoElse(trecho) {
+  let nivel = 0;
+  for (const caractere of trecho) {
+    if (caractere === "(" || caractere === "[" || caractere === "{") nivel++;
+    else if (caractere === ")" || caractere === "]" || caractere === "}") nivel--;
+    else if (caractere === ":" && nivel === 0) return true;
+  }
+  return false;
+}
+
 test("todo +1 de competência tem o guard de habilidadePermitida à vista", () => {
   const arquivos = arquivosTsx(RAIZ);
-  const comBotao = arquivos.filter((caminho) =>
-    readFileSync(caminho, "utf8").includes("btn-endorsement-add"),
-  );
+  const comBotao = arquivos.filter((caminho) => ALVO.test(readFileSync(caminho, "utf8")));
 
   // Se isto cair para zero, a varredura perdeu o alvo — a classe mudou de nome e
-  // o teste passaria sem olhar para nada.
+  // o teste passaria sem olhar para nada. O filtro usa o MESMO matcher do laço,
+  // de propósito: com um `.includes` cru, renomear a classe para algo que comece
+  // igual (`btn-endorsement-add-x`) mantinha este canário verde enquanto o laço
+  // não achava nada — varredura vazia com o teste passando. Foi a revisão do #62.
   assert.ok(
     comBotao.length >= 2,
     `esperava ao menos os dois pontos de +1 (perfil e modal do CRM), achei ${comBotao.length}`,
@@ -75,8 +110,9 @@ test("todo +1 de competência tem o guard de habilidadePermitida à vista", () =
 
   for (const caminho of comBotao) {
     const fonte = readFileSync(caminho, "utf8");
-    // O `(?![\w-])` evita casar um nome maior que comece igual (`-addx`).
-    for (const achado of fonte.matchAll(/btn-endorsement-add(?![\w-])/g)) {
+    // `matchAll` precisa do `/g`; o `ALVO` compartilhado tem, e o `lastIndex`
+    // dele não é lido aqui porque `matchAll` clona o regex.
+    for (const achado of fonte.matchAll(ALVO)) {
       const i = achado.index;
       const linha = fonte.slice(0, i).split("\n").length;
       const antes = fonte.slice(Math.max(0, i - JANELA), i);
@@ -89,15 +125,10 @@ test("todo +1 de competência tem o guard de habilidadePermitida à vista", () =
           `botão que sempre falha`,
       );
 
-      // Do guard até o botão não pode haver `:`. Um ternário bem-formado leva o
-      // botão no ramo do `?`; o `:` no caminho denuncia o ramo do `else` — que
-      // renderiza **exatamente quando o guard falha**, e o teste daria verde.
-      // Foi o pior falso positivo que a revisão do #62 achou.
-      const depoisDoGuard = antes.slice(posGuard);
       assert.ok(
-        !depoisDoGuard.includes(":"),
-        `${caminho}:${linha}: o +1 parece estar no ramo do \`:\` do guard — ` +
-          `renderiza quando o guard FALHA`,
+        !estaNoRamoDoElse(antes.slice(posGuard)),
+        `${caminho}:${linha}: o +1 está no ramo do \`:\` do guard — renderiza ` +
+          `exatamente quando o guard FALHA`,
       );
     }
   }

@@ -141,9 +141,16 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   num trecho que não envolve botão nenhum —, enquanto a conta por arquivo
   (`guards >= botoes`) continuava fechando. Agora cada `btn-endorsement-add` é
   conferido na vizinhança: o guard tem que estar nas 500 letras anteriores à
-  classe (distância real medida nos dois pontos: 133 e 145). A janela estoura de
-  propósito, para quem escrever um ternário longo ajustar a constante em vez de
-  o teste esconder o botão. Continua fora: o `+1` desenhado **sem** essa classe.
+  classe (distância real medida nos dois pontos: 133 e 145), **e o botão não pode
+  estar no ramo do `:` do ternário** — esse é o pior caso, porque renderiza
+  exatamente quando o guard falha e o teste daria verde no bug que ele existe
+  para impedir. O ramo é decidido contando parênteses/chaves/colchetes do guard
+  até a classe e olhando o `:` que aparece com o aninhamento zerado (um `:`
+  dentro de `style`, `title` ou spread não conta — foi assim que a primeira
+  versão reprovava botão correto). Dois modos de falha ficam do lado barulhento,
+  de propósito: a janela estoura, e a contagem de nível não entende string.
+  Continua fora: o `+1` desenhado **sem** essa classe e o que estiver fora de
+  `src/components/`.
 
 **Continua aberto:**
 
