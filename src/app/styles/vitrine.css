@@ -469,6 +469,18 @@
   margin-left: auto;
 }
 
+/* Bloqueio com motivo (perfil pendente) não é o voto em voo: o `progress` do
+   `:disabled` é para a espera, que passa — e dizia "carregando" justamente no
+   caso permanente, em que o que existe é um motivo escrito no `title` do
+   envoltório.
+
+   O seletor precisa alcançar o botão: quem está sob o ponteiro é ele, e o
+   `cursor: progress` do `.estrela:disabled` venceria o do envoltório. */
+.estrela-wrap[data-bloqueada],
+.estrela-wrap[data-bloqueada] .estrela:disabled {
+  cursor: not-allowed;
+}
+
 /* ── vazio e erro ──────────────────────────────────────────────────────── */
 
 .vazio {

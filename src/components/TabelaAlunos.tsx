@@ -165,8 +165,14 @@ export function TabelaAlunos({
                       Duas razões para não deixar clicar: o perfil pendente, que a
                       rota recusa sempre, e um voto já em voo — o `estrelar` do
                       CRM aceita um por vez. Só a primeira rende motivo a
-                      explicar; a segunda é transitória. */}
-                  <span className="estrela-wrap" title={impedimento ?? undefined}>
+                      explicar; a segunda é transitória. É essa diferença que o
+                      `data-bloqueada` marca: sem ele o cursor era `progress` nos
+                      dois casos, dizendo "carregando" no que não vai passar. */}
+                  <span
+                    className="estrela-wrap"
+                    title={impedimento ?? undefined}
+                    data-bloqueada={impedimento ? "" : undefined}
+                  >
                     <button
                       type="button"
                       className="estrela"
