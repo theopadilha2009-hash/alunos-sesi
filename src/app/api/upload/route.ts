@@ -2,6 +2,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { obterSessao } from "@/lib/auth";
 import { caminhoPertenceAoAluno } from "@/lib/blob";
+import { logger } from "@/lib/debug";
 import { LIMITES_STICKERS, MAX_DATA_URL_IMAGEM } from "@/lib/limites";
 import { limitar } from "@/lib/rate-limit";
 
@@ -48,6 +49,35 @@ function lerCampo(clientPayload: string | null): string {
   }
 }
 
+/**
+ * Recusa com frase escrita para o aluno.
+ *
+ * O `catch` desta rota pega dois tipos de erro muito diferentes: as recusas
+ * escritas neste arquivo, que são frases nossas para quem está enviando, e o
+ * que mais der errado lá dentro — assinatura de callback inválida, store sem
+ * token, resposta estranha da API do Blob. A `BlobError` da biblioteca traz
+ * texto da plataforma ("Invalid callback signature"), que é diagnóstico.
+ *
+ * A classe é a linha divisória: só o que nasce `RecusaDeEnvio` tem a frase
+ * repassada no corpo; o resto vai para o log.
+ *
+ * Nota de leitura, medida no `@vercel/blob` instalado (`dist/client.js:398`):
+ * o `upload()` do browser lança `BlobError` genérico quando a resposta não é
+ * `ok`, sem ler o corpo — então hoje estas frases não chegam à tela de ninguém.
+ * Elas continuam aqui porque são nossas (não são vazamento) e porque é o que a
+ * rota devolve por contrato. Fazer a frase aparecer é mudança de comportamento
+ * e está registrada em `.context/memoria/pendencias-de-decisao.md`.
+ */
+class RecusaDeEnvio extends Error {}
+
+/** A frase da recusa, e só dela. Qualquer outro erro não tem frase para a tela. */
+function fraseDaRecusa(error: unknown): string | null {
+  return error instanceof RecusaDeEnvio ? error.message : null;
+}
+
+/** Quando não é recusa nossa: o aluno não pode receber o texto da biblioteca. */
+const FALHA_AO_ENVIAR = "Não deu para enviar a imagem agora. Tente de novo.";
+
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;
 
@@ -58,16 +88,16 @@ export async function POST(request: Request): Promise<NextResponse> {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const sessao = await obterSessao();
         if (!sessao?.alunoId) {
-          throw new Error("Entre como aluno para enviar imagens.");
+          throw new RecusaDeEnvio("Entre como aluno para enviar imagens.");
         }
 
         if (!caminhoPertenceAoAluno(pathname, sessao.alunoId)) {
-          throw new Error("Endereço de envio fora da sua pasta.");
+          throw new RecusaDeEnvio("Endereço de envio fora da sua pasta.");
         }
 
         const limite = await limitar(`upload:${sessao.alunoId}`, 40, 60 * 1000);
         if (!limite.permitido) {
-          throw new Error("Muitos envios em pouco tempo. Aguarde um instante.");
+          throw new RecusaDeEnvio("Muitos envios em pouco tempo. Aguarde um instante.");
         }
 
         return {
@@ -80,9 +110,16 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(json);
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 },
-    );
+    const motivo = fraseDaRecusa(error);
+    if (motivo) {
+      // Recusa nossa: a frase foi escrita para o aluno, e o 400 diz que o
+      // pedido é que estava errado.
+      return NextResponse.json({ error: motivo }, { status: 400 });
+    }
+
+    // Daqui para baixo não é recusa — é falha do servidor, e o texto que veio
+    // junto nomeia a plataforma. Fica no log; para o aluno vai a frase da casa.
+    logger.error("upload", "falha ao autorizar o envio", error);
+    return NextResponse.json({ error: FALHA_AO_ENVIAR }, { status: 500 });
   }
 }

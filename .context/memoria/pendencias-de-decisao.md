@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T18:25:00.000Z
+  modified: 2026-09-29T19:54:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -114,9 +114,36 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   que não tem `try/catch` — se só ela falhar, o perfil cai no error boundary.
   Engolir o erro ressuscitaria em silêncio a estrela errada que o PR mata, e o
   `/alunos` também prefere falhar alto a mostrar lista errada.
+- **A mensagem crua do banco saiu das rotas de API** (29/09). `/api/estrela`
+  devolvia `{ erro: error.message }` do PostgREST em 500, nos dois ramos (POST e
+  DELETE), sem escrever nada no log — e `error.message` ali nomeia tabela e
+  constraint. Agora o erro vai para o `logger.error` e o corpo volta vazio, o que
+  faz o cliente cair em `RECUSA_PADRAO` (`src/lib/estrela.ts`); é o mesmo desenho
+  do `motivoDaFalha` (`src/app/adm/acoes.ts`), que traduz o código e manda o erro
+  real para o log. No mesmo PR, os dois `maybeSingle` de apoio
+  (`contarEstrelas`, `alunoVisivel`) passaram a registrar o erro que engoliam em
+  silêncio — o de `alunoVisivel` era pior: a falha de leitura virava o **mesmo
+  404 de "perfil pendente"**. Em `/api/upload`, só as três recusas escritas na
+  própria rota (agora `RecusaDeEnvio`) podem virar frase; `BlobError` da
+  biblioteca vai para o log com uma frase da casa e status 500. Quem trava isso
+  no CI é `tests/erro-interno.test.mjs`, que varre todo `src/app/api` atrás de
+  `.message` dentro de um literal de `NextResponse.json`.
 
 **Continua aberto:**
 
+- **As recusas do `/api/upload` não chegam à tela de quem envia** (achado de
+  29/09, ao consertar o vazamento). Medido no pacote instalado: o `upload()` do
+  `@vercel/blob/client` lança `BlobError("Failed to retrieve the client token")`
+  quando a resposta não é `ok` (`node_modules/@vercel/blob/dist/client.js:398`),
+  **sem ler o corpo** — então as três frases escritas para o aluno ("Entre como
+  aluno para enviar imagens.", "Endereço de envio fora da sua pasta.", "Muitos
+  envios em pouco tempo. Aguarde um instante.") morrem no corpo HTTP, e quem
+  envia vê o texto em inglês da biblioteca. O conserto do vazamento as manteve no
+  corpo: são nossas, não são detalhe interno, e são o contrato da rota. Fazê-las
+  aparecer é mudança de comportamento visível — ou envolver o `upload()` num
+  wrapper que leia o corpo, ou trocar o client por `fetch` próprio — e é decisão
+  de produto. Vale saber, antes de decidir, que o cliente já descarta o corpo
+  hoje: ninguém perde nada que estivesse funcionando.
 - **Cluster de classes usadas em `.tsx` que não existem em CSS nenhum** (achado da
   revisão dos oito PRs, 29/09). A varredura de `src/**/*.css` contra os
   `className` do código achou: `botao-secundario`, `busca-campo`,
