@@ -66,7 +66,7 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   `podeAdmin(cracha, papel)`.
   (2) "Copiar Link da Vitrine" jogava fora o retorno de `copiarTexto` (`void`) e
   fechava no mesmo tick: com a área de transferência recusando, a pessoa colava o
-  conteúdo **antigo** achando que tinha mandado o link. Era a única das seis telas
+  conteúdo **antigo** achando que tinha mandado o link. Era a única das cinco telas
   que copiam a não usar o retorno.
   (3) Reimportar uma planilha já completa devolvia `ok: false` e pintava banner
   **vermelho de erro** ("12 já estavam completos") — não mudar nada não é falha;

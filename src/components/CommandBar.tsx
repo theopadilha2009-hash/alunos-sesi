@@ -196,7 +196,7 @@ export function CommandBar({
         subtitulo: "Compartilhe o diretório com a turma",
         icone: <IconeLink tamanho={16} />,
         // Assíncrona porque o resultado da cópia decide o que acontece depois.
-        // As outras cinco telas que copiam já usam o retorno de `copiarTexto`;
+        // As outras quatro telas que copiam já usam o retorno de `copiarTexto`;
         // esta era a única que o jogava fora (`void`), e a única em que a
         // pessoa não tinha como saber que nada foi copiado — o menu fechava no
         // mesmo tick e ela colava o conteúdo antigo da área de transferência.
