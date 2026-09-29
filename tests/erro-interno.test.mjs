@@ -117,10 +117,19 @@ test("nenhuma rota de API devolve `.message` de erro no corpo", () => {
  * dizendo exatamente por quê: a mensagem antiga subia com o jargão embutido.
  *
  * Por que dez pontos sem ninguém ver: em produção o Next **sanitiza** a mensagem
- * de erro de Server Component, então o jargão nunca chegou à tela de ninguém —
- * o único lugar que renderiza `error.message` é o `<details>` de desenvolvimento
- * do `src/app/error.tsx`. Não é vazamento; é a mesma matéria-prima do vazamento,
- * esperando a primeira tela que renderizar a mensagem sem sanitização no meio.
+ * de erro de Server Component, e nenhum destes `throw` é alimentado por um
+ * `catch` que mostre o texto — ou não há `catch`, e a exceção sobe ao error
+ * boundary (cujo `<details>` que renderiza `error.message`, em
+ * `src/app/error.tsx`, é dev-only), ou o `catch` devolve frase própria. Não é
+ * vazamento; é a mesma matéria-prima do vazamento, esperando a primeira tela que
+ * renderizar a mensagem sem sanitização no meio.
+ *
+ * O repo **tem** outros pontos que renderizam mensagem derivada de `err.message`
+ * — o `motivo` que o painel do ADM mostra (`src/app/adm/acoes.ts:194` →
+ * `PainelAdmIntegrado.tsx`), o `/api/health` no ramo autenticado e as recusas
+ * escritas do `/api/upload`. Nenhum é alimentado por esta casa: o `motivo` do
+ * ADM vem de `garantirSala`, que já lança frase da casa. A distinção está aqui
+ * para ninguém ler este bloco como "o app só tem um lugar que mostra erro".
  *
  * O que esta varredura NÃO pega — de novo a lista é longa de propósito:
  *

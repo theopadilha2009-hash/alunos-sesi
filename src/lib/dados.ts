@@ -239,7 +239,14 @@ export async function apoiarHabilidade(
     .eq("id", alunoId)
     .maybeSingle();
 
-  if (errLeitura || !aluno) {
+  // Os dois casos eram uma condição só, e o erro de leitura saía rotulado como
+  // "aluno não encontrado" — uma causa errada no lugar do diagnóstico. Separados:
+  // a falha de banco vai para o log, e só a ausência de linha é o que diz.
+  if (errLeitura) {
+    logger.error("DADOS", `Erro ao reler habilidades_votos id=${alunoId}`, errLeitura);
+    throw new Error("Não foi possível registrar o apoio.");
+  }
+  if (!aluno) {
     throw new Error("Aluno não encontrado para apoio de habilidade.");
   }
 
