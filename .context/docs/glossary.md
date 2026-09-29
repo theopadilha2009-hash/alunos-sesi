@@ -264,10 +264,12 @@ guardar no banco.
 
 A marca do app. **Os PNGs oficiais do SESI moram no repositório** —
 `public/logo-sesi.png`, `logo-sesi-branco.png` e as versões `-icone` — e
-`src/components/LogoSesi.tsx` só escolhe qual servir, alternando por tema via
+`src/components/Roseta.tsx` só escolhe qual servir, alternando por tema via
 `.logo-modo-light` / `.logo-modo-dark`. Quem escreve código novo importa
 `LogoSesi`; `Roseta` continua exportado no mesmo arquivo como alias para os
-imports antigos, e `girando` liga `logo-sesi-pulse` (`crm.css`).
+imports antigos. A prop `girando` e a classe `logo-sesi-pulse` **não existem
+mais**: elas ligavam uma pulsação em loop que só a tela de login usava, e o
+único efeito era o "pulo" do logo na carga (saíram na PR #44).
 
 O desenho em SVG nas quatro cores do símbolo foi a versão anterior, e não é
 mais o que o app usa.
