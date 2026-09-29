@@ -35,7 +35,6 @@ import {
 } from "@/lib/seguranca";
 import { abrirAssinado, COOKIE_VISITANTE, opcoesCookie, TRINTA_DIAS } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
-import type { MidiaAluno, ProjetoAluno } from "@/lib/tipos";
 
 export type EstadoAcaoCrm = {
   ok: boolean;

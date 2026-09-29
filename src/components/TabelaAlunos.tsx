@@ -5,7 +5,6 @@ import { Avatar } from "@/components/Avatar";
 import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
 import { GrupoRedes } from "@/components/RedesBadges";
 import { motivoParaNaoEstrelar } from "@/lib/estrela";
-import { corHabilidade } from "@/lib/habilidades";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {

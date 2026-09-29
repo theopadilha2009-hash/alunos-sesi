@@ -22,7 +22,6 @@ import { copiarTexto } from "@/lib/clipboard";
 import { useTravaDeFoco } from "@/lib/foco";
 import { habilidadePermitida } from "@/lib/habilidades";
 import { MAX_VIDEOS } from "@/lib/limites";
-import { handleLinkedin, urlGithub } from "@/lib/links";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { urlGithub } from "@/lib/links";
 
 export function IconeLinkedIn({ tamanho = 16, className = "" }: { tamanho?: number; className?: string }) {
