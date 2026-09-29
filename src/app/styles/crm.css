@@ -146,13 +146,32 @@ body:has(.login-tela-container) {
 
 .login-aba-btn {
   flex: 1;
-  padding: 0.5rem;
+  /* As três células têm a mesma largura de propósito: largura que muda ao trocar
+     de aba é o mesmo "pulo" que o login já teve. Só que o rótulo mais longo
+     precisa de ~110px e a célula dá ~101px no desktop, então ele quebrava em
+     duas linhas e a barra inteira ficava alta — o controle parava de ler como um
+     seletor.
+     `nowrap` sozinho resolve o desktop mas piora o mobile: sem poder quebrar, a
+     célula do rótulo longo cresce além das outras (medido: 68/79/114px), e aí o
+     pill ativo muda de largura ao trocar de aba, que é o pulo de volta. Por isso
+     a correção é dupla: o rótulo perdeu a palavra supérflua ("Tenho um Código" →
+     "Tenho Código") e a tipografia aperta um pouco.
+
+     O que isso resolve, medido: uma linha nas três abas de 360px a 1280px, e a
+     barra cai de ~62px para 45px de altura. O que NÃO resolve: em tela estreita
+     as células ainda ficam desiguais — 84/84/93 a 390px e 59/79/93 a 360px,
+     contra 117/117/117 no desktop. O motivo é aritmético, não é CSS: doze
+     caracteres não cabem num terço de uma barra de 231px em corpo legível. Para
+     igualar de verdade o rótulo teria que encurtar mais ("Ativar", "Código"),
+     e isso é texto de produto — não se muda por conta. */
+  white-space: nowrap;
+  padding: 0.5rem 0.3rem;
   border: none;
   border-radius: calc(var(--raio-p) - 3px);
   background: transparent;
   color: var(--dim);
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.16s var(--ease);
