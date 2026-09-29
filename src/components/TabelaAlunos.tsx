@@ -157,28 +157,36 @@ export function TabelaAlunos({
                 </td>
 
                 <td style={{ textAlign: "right" }}>
-                  <button
-                    type="button"
-                    className="estrela"
-                    aria-pressed={estrelado}
-                    // Duas razões para não deixar clicar, e as duas com o motivo
-                    // na tela: o perfil pendente, que a rota recusa sempre, e um
-                    // voto já em voo — o `estrelar` do CRM aceita um por vez.
-                    disabled={impedimento !== null || ocupado !== null}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEstrelar(aluno.id, e);
-                    }}
-                    title={impedimento ?? undefined}
-                    aria-label={
-                      impedimento ??
-                      (estrelado
-                        ? `Tirar estrela de ${aluno.nome}`
-                        : `Dar estrela para ${aluno.nome}`)
-                    }
-                  >
-                    <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
-                  </button>
+                  {/* O motivo do bloqueio mora no `<span>`, não no botão: o Chrome
+                      não emite evento de mouse em controle `disabled`, então um
+                      `title` no botão nunca vira tooltip — quem enxerga ficava
+                      sem o motivo (o `aria-label` abaixo atende o leitor de
+                      tela). O envoltório é quem recebe o ponteiro.
+
+                      Duas razões para não deixar clicar: o perfil pendente, que a
+                      rota recusa sempre, e um voto já em voo — o `estrelar` do
+                      CRM aceita um por vez. Só a primeira rende motivo a
+                      explicar; a segunda é transitória. */}
+                  <span className="estrela-wrap" title={impedimento ?? undefined}>
+                    <button
+                      type="button"
+                      className="estrela"
+                      aria-pressed={estrelado}
+                      disabled={impedimento !== null || ocupado !== null}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEstrelar(aluno.id, e);
+                      }}
+                      aria-label={
+                        impedimento ??
+                        (estrelado
+                          ? `Tirar estrela de ${aluno.nome}`
+                          : `Dar estrela para ${aluno.nome}`)
+                      }
+                    >
+                      <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
+                    </button>
+                  </span>
                 </td>
 
                 <td style={{ textAlign: "center" }}>

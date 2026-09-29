@@ -454,6 +454,21 @@
   opacity: 0.6;
 }
 
+/* Envoltório da estrela que pode estar bloqueada. Existe porque `title` em
+   `<button disabled>` não vira tooltip: o Chrome não emite evento de mouse em
+   controle desabilitado, então quem carrega o motivo é este `<span>`, que não
+   tem estado desabilitado.
+
+   A margem existe por causa do cartão do CRM, onde o botão era item de flex e o
+   `margin-left: auto` do `.estrela` empurrava o chip para a direita — dentro do
+   envoltório ele deixa de ser item, e a margem passa a valer aqui. Na tabela
+   não muda nada: o botão nunca foi item de flex (a célula é bloco), então
+   aquela margem já era inerte lá. */
+.estrela-wrap {
+  display: inline-flex;
+  margin-left: auto;
+}
+
 /* ── vazio e erro ──────────────────────────────────────────────────────── */
 
 .vazio {
