@@ -41,6 +41,13 @@ import { fileURLToPath } from "node:url";
  *     propósito, como o `JANELA` do `endosso.test.mjs`;
  *   - regra dentro de `@media`: o leitor de regras não desce em bloco aninhado,
  *     então um `cursor` redefinido lá dentro escapa (hoje não existe);
+ *   - **quem vence a cascata**: isto confere a **forma** dos seletores, não
+ *     simula o motor. Um `cursor` declarado por um seletor equivalente que não
+ *     traga `.estrela-wrap[data-bloqueada]` naquela ordem exata
+ *     (`[data-bloqueada].estrela-wrap …`) escapa — não existe hoje. O
+ *     `!important`, que é o mecanismo real de override, esse é **recusado**: se
+ *     nenhuma asserção daqui saberia prever quem vence, o teste não finge que
+ *     sabe;
  *   - se o `not-allowed` é a escolha certa (é design), e se o cursor de fato
  *     aparece no navegador — não há jsdom aqui.
  *
@@ -64,6 +71,18 @@ const RE_VINCULO = /data-bloqueada=\{impedimento \? "" : undefined\}/;
 /** O seletor do envoltório; quem o contém por prefixo alcança o elemento. */
 const ALVO = ".estrela-wrap[data-bloqueada]";
 const NO_BOTAO = `${ALVO} .estrela:disabled`;
+
+/**
+ * Um seletor que alcança o wrap bloqueado **e** a estrela dentro dele (ou o
+ * próprio wrap). Sem esta estreiteza, um `cursor` legítimo noutro filho —
+ * `.estrela-wrap[data-bloqueada] .selo { cursor: help }` — seria reprovado.
+ */
+function alcancaOMarcado(seletor) {
+  const i = seletor.indexOf(ALVO);
+  if (i === -1) return false;
+  const resto = seletor.slice(i + ALVO.length);
+  return resto === "" || /\.estrela(?![\w-])/.test(resto);
+}
 
 function arquivos(dir, sufixo, achados = []) {
   for (const entrada of readdirSync(dir)) {
@@ -116,6 +135,7 @@ test("todo envoltório da estrela marca o bloqueio, e nenhum CSS desmente o curs
   }
 
   const conflitos = [];
+  const importantes = [];
   let definiuWrap = false;
   let definiuBotao = false;
 
@@ -124,14 +144,24 @@ test("todo envoltório da estrela marca o bloqueio, e nenhum CSS desmente o curs
     for (const regra of regrasDe(readFileSync(caminho, "utf8"))) {
       if (!/cursor\s*:/.test(regra.corpo)) continue;
       for (const seletor of regra.seletores) {
-        if (!seletor.includes(ALVO)) continue;
-        // Um seletor que alcança o wrap bloqueado e mexe no cursor: só pode ser
-        // `not-allowed`. Qualquer outro aqui vence por ordem de import.
+        if (!alcancaOMarcado(seletor)) continue;
+        // Um seletor que alcança a estrela bloqueada e mexe no cursor: só pode
+        // ser `not-allowed`. Qualquer outro aqui vence por ordem de import.
         if (!/cursor:\s*not-allowed/.test(regra.corpo)) {
           conflitos.push(`${rel} \`${seletor}\` → ${regra.corpo.trim().split("\n")[0]}`);
         }
         if (seletor === ALVO) definiuWrap = true;
         if (seletor === NO_BOTAO) definiuBotao = true;
+      }
+
+      // `!important` na família da estrela, mesmo na regra-base: ele vence a
+      // especificidade, e esta varredura confere **forma de seletor**, não
+      // cascata — quem escrever um `cursor: … !important` que alcance a estrela
+      // derrota o `not-allowed` sem que nenhuma asserção daqui saiba prever.
+      // Não existe nenhum hoje (conferido); quem precisar de um, que mude este
+      // teste de propósito, com o motivo escrito.
+      if (/!important/.test(regra.corpo) && regra.seletores.some((s) => /estrela/.test(s))) {
+        importantes.push(`${rel} \`${regra.seletores.join(", ")}\` → ${regra.corpo.trim().split("\n")[0]}`);
       }
     }
   }
@@ -139,7 +169,14 @@ test("todo envoltório da estrela marca o bloqueio, e nenhum CSS desmente o curs
   assert.deepEqual(
     conflitos,
     [],
-    "regra de `cursor` alcançando o wrap bloqueado sem ser `not-allowed`",
+    "regra de `cursor` alcançando a estrela bloqueada sem ser `not-allowed`",
+  );
+
+  assert.deepEqual(
+    importantes,
+    [],
+    "`!important` num `cursor` da família da estrela: ele vence a cascata e esta " +
+      "varredura não simula cascata — tire o `!important` ou mude o teste de propósito",
   );
 
   // O envoltório cobre os cantos da pílula: o botão tem `border-radius: 999px`,
