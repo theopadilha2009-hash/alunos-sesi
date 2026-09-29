@@ -138,7 +138,7 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
 
 **Continua aberto:**
 
-- **`src/lib/dados.ts` interpola `.message` em 11 pontos** (achado da revisão do
+- **`src/lib/dados.ts` interpola `.message` em 10 pontos** (achado da revisão do
   PR #60). `throw new Error(\`...: ${error.message}\`)` em `:58,144,219,323` e
   vizinhos. Não vaza no browser em produção — o Next sanitiza a mensagem de erro
   de Server Component — mas é a mesma matéria-prima do vazamento que o #60

@@ -33,7 +33,7 @@ import { fileURLToPath } from "node:url";
  *   - rota fora de `src/app/api`. Não é hipótese: o PR #60 fechou duas em
  *     `src/lib/auth.ts`, onde `error.message` ia para a tela de cadastro de um
  *     anônimo. E `src/lib/dados.ts` ainda interpola `.message` em
- *     `throw new Error` (11 pontos — registrados em `pendencias-de-decisao.md`,
+ *     `throw new Error` (10 pontos — registrados em `pendencias-de-decisao.md`,
  *     sem vazamento confirmado porque o Next sanitiza erro de Server Component).
  *
  * O que segura esses casos é o revisor, não o teste. O valor daqui é travar o
