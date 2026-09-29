@@ -454,6 +454,16 @@
   opacity: 0.6;
 }
 
+/* Envoltório da estrela que pode estar bloqueada. Existe porque `title` em
+   `<button disabled>` não vira tooltip: o Chrome não emite evento de mouse em
+   controle desabilitado, então quem carrega o motivo na tela é este `<span>`.
+   O `margin-left` repete o que o `.estrela` fazia como item de flex — dentro do
+   envoltório o botão deixa de ser item, e a margem dele vira inerte. */
+.estrela-wrap {
+  display: inline-flex;
+  margin-left: auto;
+}
+
 /* ── vazio e erro ──────────────────────────────────────────────────────── */
 
 .vazio {

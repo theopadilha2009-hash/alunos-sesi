@@ -792,28 +792,33 @@ export function CrmApp({
                                   </span>
                                 </div>
 
-                                <button
-                                  type="button"
-                                  className="estrela mini-estrela"
-                                  aria-pressed={estrelado}
-                                  // Desabilitado também enquanto OUTRO voto está
-                                  // em voo: o `estrelar` só aceita um por vez, e
-                                  // sem isto o clique era descartado em silêncio.
-                                  disabled={impedimento !== null || ocupado !== null}
-                                  title={impedimento ?? undefined}
-                                  aria-label={
-                                    impedimento ??
-                                    (estrelado
-                                      ? `Tirar estrela de ${aluno.nome}`
-                                      : `Dar estrela para ${aluno.nome}`)
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    estrelar(aluno.id, e);
-                                  }}
-                                >
-                                  <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
-                                </button>
+                                {/* O `title` fica no envoltório: em controle
+                                    `disabled` o Chrome não emite evento de
+                                    mouse, e o tooltip não saía (ver
+                                    `TabelaAlunos.tsx`, mesmo desenho). */}
+                                <span className="estrela-wrap" title={impedimento ?? undefined}>
+                                  <button
+                                    type="button"
+                                    className="estrela mini-estrela"
+                                    aria-pressed={estrelado}
+                                    // Desabilitado também enquanto OUTRO voto está
+                                    // em voo: o `estrelar` só aceita um por vez, e
+                                    // sem isto o clique era descartado em silêncio.
+                                    disabled={impedimento !== null || ocupado !== null}
+                                    aria-label={
+                                      impedimento ??
+                                      (estrelado
+                                        ? `Tirar estrela de ${aluno.nome}`
+                                        : `Dar estrela para ${aluno.nome}`)
+                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      estrelar(aluno.id, e);
+                                    }}
+                                  >
+                                    <IconeEstrela preenchida={estrelado} tamanho={12} /> {aluno.estrelas}
+                                  </button>
+                                </span>
                               </header>
 
                               {aluno.bio ? (
