@@ -39,8 +39,9 @@ import { fileURLToPath } from "node:url";
  *   - o vínculo por **semântica**: a expressão exata é exigida, então uma forma
  *     diferente que signifique o mesmo reprova — do lado barulhento, de
  *     propósito, como o `JANELA` do `endosso.test.mjs`;
- *   - regra dentro de `@media`: o leitor de regras não desce em bloco aninhado,
- *     então um `cursor` redefinido lá dentro escapa (hoje não existe);
+ *   - regra dentro de bloco aninhado — `@media`, ou o nesting nativo (`& {}`):
+ *     o leitor de regras não desce, então um `cursor` redefinido lá dentro
+ *     escapa (não existe nenhum dos dois hoje);
  *   - **quem vence a cascata**: isto confere a **forma** dos seletores, não
  *     simula o motor. Um `cursor` declarado por um seletor equivalente que não
  *     traga `.estrela-wrap[data-bloqueada]` naquela ordem exata
@@ -154,13 +155,18 @@ test("todo envoltório da estrela marca o bloqueio, e nenhum CSS desmente o curs
         if (seletor === NO_BOTAO) definiuBotao = true;
       }
 
-      // `!important` na família da estrela, mesmo na regra-base: ele vence a
-      // especificidade, e esta varredura confere **forma de seletor**, não
-      // cascata — quem escrever um `cursor: … !important` que alcance a estrela
-      // derrota o `not-allowed` sem que nenhuma asserção daqui saiba prever.
-      // Não existe nenhum hoje (conferido); quem precisar de um, que mude este
-      // teste de propósito, com o motivo escrito.
-      if (/!important/.test(regra.corpo) && regra.seletores.some((s) => /estrela/.test(s))) {
+      // `!important` na declaração do cursor, em **qualquer** seletor: ele vence
+      // a cascata independente de especificidade e de quem ele alcança, e esta
+      // varredura confere forma de seletor — não simula o motor. Limitar o
+      // guard aos seletores que dizem "estrela" deixaria passar um
+      // `button:disabled { cursor: progress !important }`, que alcança a
+      // estrela justamente por não dizer o nome dela.
+      //
+      // A regex amarra o `!important` à declaração do cursor: uma regra que
+      // tenha `cursor: not-allowed` e um `opacity: 0 !important` ao lado não
+      // dispara. Não existe nenhum `cursor` com `!important` no projeto
+      // (conferido); quem precisar de um, que mude este teste de propósito.
+      if (/cursor\s*:[^;}]*!\s*important/.test(regra.corpo)) {
         importantes.push(`${rel} \`${regra.seletores.join(", ")}\` → ${regra.corpo.trim().split("\n")[0]}`);
       }
     }
