@@ -796,7 +796,11 @@ export function CrmApp({
                                     `disabled` o Chrome não emite evento de
                                     mouse, e o tooltip não saía (ver
                                     `TabelaAlunos.tsx`, mesmo desenho). */}
-                                <span className="estrela-wrap" title={impedimento ?? undefined}>
+                                <span
+                                  className="estrela-wrap"
+                                  title={impedimento ?? undefined}
+                                  data-bloqueada={impedimento ? "" : undefined}
+                                >
                                   <button
                                     type="button"
                                     className="estrela mini-estrela"

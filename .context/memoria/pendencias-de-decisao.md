@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T21:39:17.000Z
+  modified: 2026-09-29T21:56:09.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -246,18 +246,20 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   é regressão (é igual desde antes desta leva), mas é valor sem consumidor: quem
   for usar `adm` de verdade precisa mexer no gate.
 
-- **O `cursor` da estrela bloqueada ainda diz "carregando"** (achado da revisão,
-  29/09). O `title` que nunca disparava **já foi corrigido** (PR #56): o motivo
-  passou para um `<span class="estrela-wrap">`, que recebe o ponteiro, e o botão
-  segue `disabled` com o `aria-label`. O que sobrou é o outro sintoma: o estilo
-  do desabilitado é `cursor: progress` + `opacity: .6` (`vitrine.css:452`),
-  escrito para o voto em voo — transitório —, e diz "carregando" justamente no
-  caso **permanente** (perfil pendente de aprovação). Separar os dois casos pede
-  um marcador no DOM (o `<span>` que o #56 criou é o lugar natural para ele) e é
-  decisão de produto. Alternativa que dispensa o marcador: um selo visível ao
-  lado do nome — a classe `pill-pendente` já existe para isso
-  (`PainelAdmIntegrado.tsx:406`) e o painel do ADM já a usa. Recomendação: o
-  selo, que resolve o cursor e o motivo de uma vez.
+- **A estrela bloqueada não diz mais "carregando"** (fechado em 29/09). O `title`
+  que nunca disparava **já tinha sido corrigido** no PR #56 (o motivo passou para
+  um `<span class="estrela-wrap">`, que recebe o ponteiro, com o botão `disabled`
+  e o `aria-label`). Sobrava o outro sintoma: o `cursor: progress` do
+  `.estrela:disabled` foi escrito para o voto **em voo**, transitório, e dizia
+  "carregando" justamente no caso **permanente** — o perfil pendente, que tem
+  motivo escrito para mostrar. A separação é o `data-bloqueada` no envoltório
+  (`TabelaAlunos.tsx` e `CrmApp.tsx`, os dois únicos pontos), com
+  `cursor: not-allowed` em `vitrine.css` — **com um seletor que alcança o botão**,
+  porque quem está sob o ponteiro é ele e o cursor do `.estrela:disabled` venceria
+  o do envoltório. Sem teste: não há jsdom na suíte e o `renderToStaticMarkup`
+  esbarraria nos aliases `@/`. **Fica aberto, como design:** o selo visível ao
+  lado do nome (`pill-pendente`, `PainelAdmIntegrado.tsx:406`) — é o passo que
+  faria o pendente saltar aos olhos, e adiciona elemento à tabela.
 - **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
   filtra só por `visitante_id` (`dados.ts:488`) e o único índice é a PK
   `(aluno_id, visitante_id)` (`001_schema.sql:72`), então é seq scan. A vitrine
