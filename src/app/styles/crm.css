@@ -20,9 +20,29 @@
   --accent: var(--login-acento);
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  /* O card fica ancorado no TOPO, não centralizado: centralizado, o topo dele
+     era função da própria altura, e as três abas têm alturas bem diferentes
+     (621, 800 e 897px no desktop). Medido antes: trocar de aba movia o topo do
+     card 95px no desktop, 137px no tablet e 58px no celular — o mesmo "pulo"
+     que a carga da tela já teve, só que no clique.
+     A alternativa era reservar no card a altura do painel mais alto; custaria
+     276px de espaço morto em toda aba (a diferença entre o maior e o menor) e,
+     no desktop, o card deixaria de caber na tela em todas elas.
+     O deslocamento é proporcional à janela, não fixo: `7vh`, com piso no
+     padding e teto para telas muito altas. O pulo do topo foi a zero nas cinco
+     alturas medidas (640, 700, 844, 860 e 1024px), e o painel de login — que é
+     o que a maioria abre — cabe inteiro em todas elas, sem rolar.
+     O que NÃO sai de graça: ancorado abaixo do padding, o painel "Ativar"
+     (800px) passa a rolar 33px numa janela de 860px de altura, onde antes
+     cabia, e "Criar Conta" (897px) rola 44px mais do que rolava. Um
+     deslocamento de 4vh tiraria essa rolagem, mas deixaria o card colado no
+     topo. Ficou o 7vh.
+     O preço de composição: em tela grande o card fica no terço de cima, com
+     mais espaço abaixo do que acima. */
+  align-items: flex-start;
   justify-content: center;
   padding: 1.5rem;
+  padding-block-start: clamp(1.5rem, 7vh, 6rem);
   position: relative;
   overflow: hidden;
   background: #0a1a2f;
