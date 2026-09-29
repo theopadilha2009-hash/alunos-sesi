@@ -100,7 +100,7 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   nunca lia o cookie `sesi.visitante` — a vitrine já lia
   (`src/app/alunos/page.tsx:34`). Quem já tinha votado abria o perfil com a
   estrela apagada, e **o clique não denunciava o erro**: `POST /api/estrela` em
-  voto existente cai no `ignoreDuplicates` (`route.ts:85-92`) e devolve
+  voto existente cai no `ignoreDuplicates` (`route.ts:86-91`) e devolve
   `200 { votado: true }`, então o componente mantinha a estrela acesa sem
   gravar linha nova. O defeito é o **estado inicial errado**, silencioso — não
   "confete e nada", que foi como a primeira versão do relatório descreveu (e
@@ -147,7 +147,7 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   um marcador no DOM (o `<span>` que o #56 criou é o lugar natural para ele) e é
   decisão de produto. Alternativa que dispensa o marcador: um selo visível ao
   lado do nome — a classe `pill-pendente` já existe para isso
-  (`PainelAdmIntegrado.tsx:407`) e o painel do ADM já a usa. Recomendação: o
+  (`PainelAdmIntegrado.tsx:406`) e o painel do ADM já a usa. Recomendação: o
   selo, que resolve o cursor e o motivo de uma vez.
 - **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
   filtra só por `visitante_id` (`dados.ts:488`) e o único índice é a PK
@@ -161,26 +161,39 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   botão. É o mais fraco dos testes de varredura; a lacuna está registrada em
   `testing-strategy.md`.
 - **O `useState(meusVotos)` do `CrmApp` não ressincroniza** (29/09) — **e não é
-  alcançável**: o componente não usa `router.refresh()` e voto não muda por
-  Server Action, então o prop não muda com o componente montado. Fica como nota
-  para quem algum dia adicionar um refresh ali: aí o estado local fica velho até
-  o próximo clique.
+  alcançável, mas não pelo motivo que este arquivo dizia antes**. O prop *pode*
+  ser reentregue ao componente montado: as Server Actions do CRM chamam
+  `revalidatePath("/")` (`acoes-crm.ts:445`, `adm/acoes.ts:58` — a rota do
+  `CrmApp` é `/`, não `/adm`) e o próprio `CrmApp` documenta que conta com isso.
+  O que não muda é o **valor**: o voto é
+  do mesmo cookie do ADM, e o voto em si vai por `fetch("/api/estrela")`, não
+  por Server Action. Fica como nota para quem algum dia fizer o voto entrar por
+  action — aí o estado local fica velho até o próximo clique.
 - **`noUnusedLocals` está off, e a família é maior do que parece** (29/09).
   Três revisores esbarraram em import morto — `IconeCopiar` (#52), `CartaoAluno`
   (#54) e onze de uma vez (#57) — e nenhum deles é visível para o `tsc` como o
-  projeto está configurado (e não há lint). Medido:
-  `tsc --noEmit --noUnusedLocals --noUnusedParameters` acusa **29**. A maior
-  parte é import morto, mas três são **props recebidas e nunca lidas**, que
-  podem ser recurso morto e não código morto: `onSelecionarAluno`
-  (`PainelAdmIntegrado.tsx:72`), `usuario` (`MuralDesafios.tsx:39`),
-  `compacto` (`TemaToggle.tsx:16`). Ligar a flag transforma isso em falha de CI
-  — é o conserto estrutural, e é decisão de time, porque exige decidir caso a
-  caso entre remover a prop (mexe em quem chama) e mantê-la de propósito.
-  Medido, não estimado: `--noUnusedLocals` sozinho acusa **24**, e são os três
-  casos de prop que aparecem só quando `--noUnusedParameters` entra junto (29 no
-  total) — então dá para ligar só a primeira e deixar a segunda para depois.
-  Recomendação: ligar `noUnusedLocals`, limpar os 24 e tratar as três props numa
-  conversa à parte.
+  projeto está configurado (e não há lint).
+  Medido, não estimado: `--noUnusedLocals` sozinho acusa **24**;
+  `--noUnusedParameters` junto leva a **29**, e a diferença não é detalhe —
+  são **cinco props recebidas e nunca lidas**, que podem ser recurso morto e não
+  código morto: `onSelecionarAluno` (`PainelAdmIntegrado.tsx:72`), `usuario`
+  (`MuralDesafios.tsx:39`), `retrato` (`CrmApp.tsx:73`), `salas`
+  (`PaginaMeuPerfil.tsx:89`) e `compacto` (`TemaToggle.tsx:16`). Duas delas são
+  **obrigatórias** na assinatura, então removê-las mexe em quem chama — é a
+  decisão cara que a flag não toma sozinha. O resto dos 29 se reparte em 17
+  imports mortos e 7 locais mortos (`db`, `setDesafios`, `setSala`,
+  `setNovaMidiaTipo`, `totalFixados`, `github`, `linkedinHandle`).
+  *(A primeira versão deste parágrafo dizia "três props"; a revisão do próprio
+  texto mediu cinco. O número errado está corrigido aqui.)*
+  Ligar a flag transforma a família em falha de CI — é o conserto estrutural, e
+  é decisão de time. Recomendação: ligar `noUnusedLocals`, limpar os 24 e tratar
+  as cinco props numa conversa à parte.
+  **Cuidado ao limpar os 24**: nem tudo que a flag chama de morto é lixo.
+  `const db = clienteAdmin()` (`acoes-crm.ts:241`) é binding morto **e** é um
+  fail-fast — `clienteAdmin` lança quando falta `NEXT_PUBLIC_SUPABASE_URL` ou
+  `SUPABASE_SERVICE_ROLE_KEY` (`supabase/admin.ts:14-18`), e apagar a linha
+  troca uma explosão alta e imediata por uma falha mais tarde e mais obscura. A
+  linha 343 do mesmo arquivo tem a mesma chamada, essa usada de verdade.
 
 - **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural
   fechou o ciclo na PR #38: o ADM publica desafio, o ADM julga o envio, o aluno vê
