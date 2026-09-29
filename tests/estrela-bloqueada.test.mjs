@@ -12,24 +12,45 @@ import { fileURLToPath } from "node:url";
  * escrito para a espera dizia "carregando" no caso que nunca passa. O conserto
  * foi marcar o envoltório com `data-bloqueada` e dar `cursor: not-allowed` a ele.
  *
- * São duas peças em dois arquivos, e nenhuma das duas é visível para o `tsc`:
- * uma remoção do atributo em **um** dos call sites, ou o rename do seletor no
- * CSS, passa por typecheck, testes e build sem falhar — e o cursor volta a
- * mentir em silêncio. É por isso que esta varredura existe, e não por gosto de
- * varredura.
+ * São duas peças em arquivos diferentes, e nenhuma é visível para o `tsc`: o
+ * atributo sai de **um** dos call sites, ou o seletor é renomeado, ou alguém
+ * redeclara o `cursor` num CSS importado depois — e o cursor volta a mentir, com
+ * typecheck, testes e build verdes. É por isso que esta varredura existe.
+ *
+ * Três decisões que a fazem pegar o que a primeira versão deixava passar, e que
+ * são fáceis de desfazer sem perceber:
+ *
+ *   1. O JSX confere o **vínculo**, não a presença: a asserção é a expressão
+ *      `data-bloqueada={impedimento ? "" : undefined}`, não a substring
+ *      `data-bloqueada`. Com a substring, ligar o atributo ao flag errado
+ *      (`ocupado`, o voto em voo) ou escrevê-lo incondicional passava verde — e a
+ *      mentira só se invertia de lado.
+ *   2. O CSS é lido em **todos** os arquivos de `src/`, não só no `vitrine.css`:
+ *      `globals.css` importa `vitrine-moderno`, `crm`, `adm` e `print` **depois**,
+ *      então uma regra de mesmo peso lá vence, e a varredura de um arquivo só nem
+ *      abriria o arquivo para ver.
+ *   3. Nenhum seletor que alcance o wrap bloqueado pode declarar `cursor` que não
+ *      seja `not-allowed` — é o override, não a ausência, que quebra.
  *
  * O que ela NÃO pega:
  *
- *   - um terceiro ponto de bloqueio desenhado com outro markup (a âncora é a
- *     classe `estrela-wrap`; um `+1`/estrela que não passe por ela escapa);
- *   - `className` montado em tempo de execução — o alvo é o literal, de
- *     propósito, porque um valor calculado não dá para conferir sem executar;
- *   - se o `not-allowed` é a escolha certa (é design), ou se o cursor de fato
- *     aparece no navegador (não há jsdom aqui).
+ *   - um bloqueio desenhado sem a classe `estrela-wrap` (a âncora é ela), e um
+ *     `className` calculado, que não dá para conferir sem executar;
+ *   - o vínculo por **semântica**: a expressão exata é exigida, então uma forma
+ *     diferente que signifique o mesmo reprova — do lado barulhento, de
+ *     propósito, como o `JANELA` do `endosso.test.mjs`;
+ *   - regra dentro de `@media`: o leitor de regras não desce em bloco aninhado,
+ *     então um `cursor` redefinido lá dentro escapa (hoje não existe);
+ *   - se o `not-allowed` é a escolha certa (é design), e se o cursor de fato
+ *     aparece no navegador — não há jsdom aqui.
+ *
+ * Todo `estrela-wrap` do repo é de bloqueio hoje (é para isso que o envoltório
+ * nasceu, no PR #56): um envoltório novo que **não** fosse de bloqueio seria
+ * forçado a carregar o marcador por esta varredura. Se isso acontecer, a âncora
+ * precisa mudar — e não é o caso hoje.
  */
 
 const RAIZ = fileURLToPath(new URL("../src/", import.meta.url));
-const VITRINE_CSS = `${RAIZ}app/styles/vitrine.css`;
 
 /**
  * A tag de abertura do envoltório, inteira. `[^>]*` basta: nenhum dos valores
@@ -37,19 +58,39 @@ const VITRINE_CSS = `${RAIZ}app/styles/vitrine.css`;
  */
 const RE_WRAP = /<span\s[^>]*className="estrela-wrap"[^>]*>/g;
 
-function arquivosTsx(dir, achados = []) {
+/** A expressão canônica: o marcador tem que estar ligado ao `impedimento`. */
+const RE_VINCULO = /data-bloqueada=\{impedimento \? "" : undefined\}/;
+
+/** O seletor do envoltório; quem o contém por prefixo alcança o elemento. */
+const ALVO = ".estrela-wrap[data-bloqueada]";
+const NO_BOTAO = `${ALVO} .estrela:disabled`;
+
+function arquivos(dir, sufixo, achados = []) {
   for (const entrada of readdirSync(dir)) {
     if (entrada === "node_modules") continue;
     const caminho = join(dir, entrada);
-    if (statSync(caminho).isDirectory()) arquivosTsx(caminho, achados);
-    else if (entrada.endsWith(".tsx")) achados.push(caminho);
+    if (statSync(caminho).isDirectory()) arquivos(caminho, sufixo, achados);
+    else if (entrada.endsWith(sufixo)) achados.push(caminho);
   }
   return achados;
 }
 
-test("todo envoltório da estrela marca o bloqueio, e o CSS sabe pintá-lo", () => {
+/**
+ * As regras de um CSS. O comentário sai antes: a prosa tem vírgula, e o
+ * `split(",")` da lista de seletores a picaria, colando o texto no nome.
+ */
+function regrasDe(css) {
+  return [...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^}]*)\}/g)].map(
+    (achado) => ({
+      seletores: achado[1].split(",").map((s) => s.trim()),
+      corpo: achado[2],
+    }),
+  );
+}
+
+test("todo envoltório da estrela marca o bloqueio, e nenhum CSS desmente o cursor", () => {
   const wraps = [];
-  for (const caminho of arquivosTsx(RAIZ)) {
+  for (const caminho of arquivos(RAIZ, ".tsx")) {
     const fonte = readFileSync(caminho, "utf8");
     for (const achado of fonte.matchAll(RE_WRAP)) {
       const linha = fonte.slice(0, achado.index).split("\n").length;
@@ -64,47 +105,54 @@ test("todo envoltório da estrela marca o bloqueio, e o CSS sabe pintá-lo", () 
     `esperava ao menos os dois envoltórios de estrela, achei ${wraps.length}`,
   );
 
-  // Os dois envoltórios que existem são de bloqueio: o `estrela-wrap` nasceu no
-  // PR #56 exatamente para o motivo do `disabled` poder aparecer (o Chrome não
-  // emite evento de mouse em controle desabilitado). Um envoltório sem o
-  // marcador é o cursor mentindo de novo.
   for (const { rel, linha, tag } of wraps) {
     assert.match(
       tag,
-      /data-bloqueada/,
-      `${rel}:${linha}: o envoltório da estrela não marca o bloqueio — sem ` +
-        `\`data-bloqueada\`, o \`cursor: progress\` do :disabled volta a dizer ` +
-        `"carregando" no bloqueio permanente`,
+      RE_VINCULO,
+      `${rel}:${linha}: o \`data-bloqueada\` tem que estar ligado ao ` +
+        `\`impedimento\` — e com esta forma exata. Solto, ou ligado a outro ` +
+        `flag (\`ocupado\`, o voto em voo), o cursor só troca de mentira de lado`,
     );
   }
 
-  // Comentário fora antes de ler as regras: o `split(",")` da lista de seletores
-  // picaria a prosa — que tem vírgula — e o nome do seletor chegaria grudado no
-  // texto. Mesma precaução do `soSeletores` em `classes-css.test.mjs`.
-  const css = readFileSync(VITRINE_CSS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const conflitos = [];
+  let definiuWrap = false;
+  let definiuBotao = false;
 
-  // Lido como regra, não como texto solto: os dois seletores moram na **mesma**
-  // declaração, então casar `seletor\s*{` perderia aquele que não abre o bloco.
-  const regras = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map((achado) => ({
-    seletores: achado[1].split(",").map((s) => s.trim()),
-    corpo: achado[2],
-  }));
-  const pinta = (alvo) =>
-    regras.some(
-      (r) => r.seletores.includes(alvo) && /cursor:\s*not-allowed/.test(r.corpo),
-    );
+  for (const caminho of arquivos(RAIZ, ".css")) {
+    const rel = caminho.replace(RAIZ, "");
+    for (const regra of regrasDe(readFileSync(caminho, "utf8"))) {
+      if (!/cursor\s*:/.test(regra.corpo)) continue;
+      for (const seletor of regra.seletores) {
+        if (!seletor.includes(ALVO)) continue;
+        // Um seletor que alcança o wrap bloqueado e mexe no cursor: só pode ser
+        // `not-allowed`. Qualquer outro aqui vence por ordem de import.
+        if (!/cursor:\s*not-allowed/.test(regra.corpo)) {
+          conflitos.push(`${rel} \`${seletor}\` → ${regra.corpo.trim().split("\n")[0]}`);
+        }
+        if (seletor === ALVO) definiuWrap = true;
+        if (seletor === NO_BOTAO) definiuBotao = true;
+      }
+    }
+  }
 
-  // O envoltório cobre os cantos da pílula (o botão tem `border-radius: 999px`,
-  // e o hit-test dos cantos cai no envoltório).
+  assert.deepEqual(
+    conflitos,
+    [],
+    "regra de `cursor` alcançando o wrap bloqueado sem ser `not-allowed`",
+  );
+
+  // O envoltório cobre os cantos da pílula: o botão tem `border-radius: 999px`,
+  // e o hit-test dos cantos cai no envoltório.
   assert.ok(
-    pinta(".estrela-wrap[data-bloqueada]"),
-    "sumiu o `cursor: not-allowed` do envoltório bloqueado",
+    definiuWrap,
+    `sumiu o \`cursor: not-allowed\` do \`${ALVO}\` — os cantos da pílula voltam a mentir`,
   );
 
   // E o botão cobre a face: quem está sob o ponteiro é ele, e o
   // `cursor: progress` do `.estrela:disabled` venceria o do envoltório.
   assert.ok(
-    pinta(".estrela-wrap[data-bloqueada] .estrela:disabled"),
-    "sumiu o seletor que alcança o botão — o `:disabled` dele vence o envoltório",
+    definiuBotao,
+    `sumiu o seletor \`${NO_BOTAO}\` — o \`:disabled\` dele vence o envoltório`,
   );
 });

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T22:04:48.000Z
+  modified: 2026-09-29T22:07:37.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -259,8 +259,13 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   o do envoltório — o revisor confirmou os **dois** seletores como load-bearing: o
   do botão cobre a face e o do envoltório cobre os cantos da pílula, onde o
   hit-test cai nele. A varredura `tests/estrela-bloqueada.test.mjs` trava as duas
-  peças (o atributo nos dois call sites, os dois seletores no CSS), com 7 casos
-  provados por mutação. **Fica aberto, como design:** o selo visível ao
+  peças com 9 casos provados por mutação, e a revisão do #64 endureceu duas coisas
+  que a primeira versão deixava passar: o JSX confere o **vínculo** (a expressão
+  exata, não a substring `data-bloqueada` — solta ou ligada ao `ocupado`, o teste
+  ficava verde e a mentira só trocava de lado) e o CSS é lido em **todos** os
+  arquivos de `src/`, com nenhum seletor que alcance o wrap bloqueado podendo
+  declarar outro `cursor` (um override em `crm.css` vence por ordem de import e a
+  varredura de um arquivo só nem o abriria). **Fica aberto, como design:** o selo visível ao
   lado do nome (`pill-pendente`, `PainelAdmIntegrado.tsx:406`) — é o passo que
   faria o pendente saltar aos olhos, e adiciona elemento à tabela.
 - **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
