@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T20:20:00.000Z
+  modified: 2026-09-29T20:46:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -136,6 +136,15 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   esse caso — ela só olha `src/app/api` e só o literal de `NextResponse.json`;
   a lista do que escapa está no cabeçalho do teste.
 
+- **O teste do `+1` deixou de contar por arquivo** (PR #62). `endosso.test.mjs`
+  passava com o `habilidadePermitida` em **qualquer lugar** do arquivo — inclusive
+  num trecho que não envolve botão nenhum —, enquanto a conta por arquivo
+  (`guards >= botoes`) continuava fechando. Agora cada `btn-endorsement-add` é
+  conferido na vizinhança: o guard tem que estar nas 500 letras anteriores à
+  classe (distância real medida nos dois pontos: 133 e 145). A janela estoura de
+  propósito, para quem escrever um ternário longo ajustar a constante em vez de
+  o teste esconder o botão. Continua fora: o `+1` desenhado **sem** essa classe.
+
 **Continua aberto:**
 
 - **`src/lib/dados.ts` interpola `.message` em 10 pontos** (achado da revisão do
@@ -217,11 +226,6 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   já fazia essa leitura; o #54 a trouxe também para toda visita a perfil de
   quem tem cookie. Irrelevante nos 13 alunos de hoje; vira dívida se `votos`
   crescer — aí é `create index concurrently`.
-- **`tests/endosso.test.mjs` conta por arquivo** (29/09): ele falha se um `.tsx`
-  desenhar mais botões `+1` do que chamadas a `habilidadePermitida`, o que não
-  pega um terceiro `+1` com markup diferente nem um guard que não envolve o
-  botão. É o mais fraco dos testes de varredura; a lacuna está registrada em
-  `testing-strategy.md`.
 - **O `useState(meusVotos)` do `CrmApp` não ressincroniza** (29/09) — **e não é
   alcançável, mas não pelo motivo que este arquivo dizia antes**. O prop *pode*
   ser reentregue ao componente montado: as Server Actions do CRM chamam
