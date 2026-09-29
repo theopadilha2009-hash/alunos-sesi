@@ -33,10 +33,13 @@
      alturas medidas (640, 700, 844, 860 e 1024px), e o painel de login — que é
      o que a maioria abre — cabe inteiro em todas elas, sem rolar.
      O que NÃO sai de graça: ancorado abaixo do padding, o painel "Ativar"
-     (800px) passa a rolar 33px numa janela de 860px de altura, onde antes
-     cabia, e "Criar Conta" (897px) rola 44px mais do que rolava. Um
+     (800px) passa a rolar 24px numa janela de 860px de altura, onde antes
+     cabia, e "Criar Conta" (897px) rola 36px mais do que rolava. Um
      deslocamento de 4vh tiraria essa rolagem, mas deixaria o card colado no
      topo. Ficou o 7vh.
+     Estes dois números de rolagem foram remedidos em produção depois do merge:
+     a primeira versão deles foi tomada com o deslocamento em 8vh, e ficou no
+     commit por engano. A 7vh, o topo do card no desktop é 60px, não 69px.
      O preço de composição: em tela grande o card fica no terço de cima, com
      mais espaço abaixo do que acima. */
   align-items: flex-start;

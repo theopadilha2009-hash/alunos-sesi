@@ -89,7 +89,8 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   `padding-block-start: clamp(1.5rem, 7vh, 6rem)`) e o pulo medido é 0 nas cinco
   alturas de teste. O preço está no comentário do CSS: em tela grande a
   composição fica assimétrica (card no terço de cima) e, numa janela de 860px de
-  altura, o painel "Ativar" passa a rolar 33px, onde antes cabia. Reservar a
+  altura, o painel "Ativar" passa a rolar 24px, onde antes cabia (número
+  remedido em produção; a primeira medição saiu a 8vh). Reservar a
   altura do maior painel foi descartado: custaria 276px de espaço morto em toda
   aba. A mesma leva encurtou o rótulo da terceira aba para "Ativar" — ver
   [[acesso-por-codigo]].
