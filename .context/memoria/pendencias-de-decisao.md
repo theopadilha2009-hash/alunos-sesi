@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T20:20:00.000Z
+  modified: 2026-09-29T21:25:36.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -136,6 +136,40 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   esse caso — ela só olha `src/app/api` e só o literal de `NextResponse.json`;
   a lista do que escapa está no cabeçalho do teste.
 
+- **O teste do `+1` deixou de contar por arquivo** (PR #62). `endosso.test.mjs`
+  passava com o `habilidadePermitida` em **qualquer lugar** do arquivo — inclusive
+  num trecho que não envolve botão nenhum —, enquanto a conta por arquivo
+  (`guards >= botoes`) continuava fechando. Agora cada `btn-endorsement-add` é
+  conferido na vizinhança: o guard tem que estar nas 500 letras anteriores à
+  classe (distância real medida nos dois pontos: 133 e 145), **e o botão não pode
+  estar no ramo do `:` do ternário** — esse é o pior caso, porque renderiza
+  exatamente quando o guard falha e o teste daria verde no bug que ele existe
+  para impedir. O ramo é decidido contando parênteses/chaves/colchetes do guard
+  até a classe, com **string e comentário pulados inteiros**, e olhando o `:`
+  que aparece com o aninhamento zerado (um `:` dentro de `style`, `title` ou
+  spread não conta — foi assim que a primeira versão reprovava botão correto).
+
+  Foram **quatro** rodadas de revisão até o teste ficar honesto, e as três
+  primeiras versões passavam verdes no bug que o teste existe para pegar — o
+  registro vale porque o padrão se repete em varredura: (1) a janela sozinha era
+  satisfeita por um botão no `else`; (2) proibir qualquer `:` no caminho
+  reprovava código certo; (3) o matcher compartilhado **com a flag `g`** deixava
+  o `lastIndex` do `.test` no meio e a varredura **pulava o arquivo seguinte em
+  silêncio**; (4) a contagem de nível, que eu tinha documentado como "falha para
+  o lado barulhento", **também aprovava o botão do ramo errado** quando um `)`
+  ou `{` desbalanceado aparecia dentro de um literal do ramo do `true`. Os quatro
+  estão fechados em código e provados por mutação.
+
+  O que resta é quase tudo barulhento, de propósito: a janela estoura, e o `\"`
+  ou regex literal dentro do trecho reprovam por excesso de zelo. **Uma exceção,
+  e é silenciosa:** aspa solta em texto JSX (`<span>aluno's</span>`) abre uma
+  "string" fantasma que nunca fecha, a contagem para antes do `:` e o botão no
+  `else` passa verde — e, ao contrário do que eu supus na rodada 4, isso
+  **compila** (texto JSX não é literal JS; o revisor provou com o parser TSX do
+  repo). Não existe em `src/components/` hoje. Se aparecer, trocar a contagem de
+  caractere pelo parser TSX em vez de somar mais uma regra. Continua fora também:
+  o `+1` desenhado **sem** essa classe e o que estiver fora de `src/components/`.
+
 **Continua aberto:**
 
 - **`src/lib/dados.ts` interpola `.message` em 10 pontos** (achado da revisão do
@@ -217,11 +251,6 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   já fazia essa leitura; o #54 a trouxe também para toda visita a perfil de
   quem tem cookie. Irrelevante nos 13 alunos de hoje; vira dívida se `votos`
   crescer — aí é `create index concurrently`.
-- **`tests/endosso.test.mjs` conta por arquivo** (29/09): ele falha se um `.tsx`
-  desenhar mais botões `+1` do que chamadas a `habilidadePermitida`, o que não
-  pega um terceiro `+1` com markup diferente nem um guard que não envolve o
-  botão. É o mais fraco dos testes de varredura; a lacuna está registrada em
-  `testing-strategy.md`.
 - **O `useState(meusVotos)` do `CrmApp` não ressincroniza** (29/09) — **e não é
   alcançável, mas não pelo motivo que este arquivo dizia antes**. O prop *pode*
   ser reentregue ao componente montado: as Server Actions do CRM chamam
