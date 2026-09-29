@@ -1,9 +1,11 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Rodape, Topo } from "@/components/ds";
 import { PerfilInterativo } from "@/components/PerfilInterativo";
 import { corDaSala, corDoAluno } from "@/lib/cores";
-import { alunoPorSlug, listarSalas } from "@/lib/dados";
+import { alunoPorSlug, listarSalas, votosDoVisitante } from "@/lib/dados";
+import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 
 type Props = PageProps<"/alunos/[slug]">;
 
@@ -49,7 +51,21 @@ export default async function PerfilPage({ params, searchParams }: Props) {
   // abrir, com o botão prometendo um PDF.
   const { curriculo } = await searchParams;
 
-  const [aluno, salas] = await Promise.all([alunoPorSlug(slug), listarSalas()]);
+  const jar = await cookies();
+  const visitante = abrirAssinado(jar.get(COOKIE_VISITANTE)?.value, "visitante");
+
+  // O voto do visitante entra aqui, junto das outras duas leituras — é o que a
+  // vitrine já faz em `/alunos`. Sem isto, quem já tinha estrelado este aluno
+  // abria o perfil com a estrela apagada e o clique seguinte mandava um `POST`
+  // que o `on conflict do nothing` da rota descartava: confete, nenhum voto
+  // novo e nenhum aviso. É o "a estrela mente" que a PR #42 matou no CRM,
+  // sobrevivendo aqui por outra porta. Sem cookie o `votosDoVisitante` devolve
+  // lista vazia sem ir ao banco, então a visita anônima não paga nada.
+  const [aluno, salas, meusVotos] = await Promise.all([
+    alunoPorSlug(slug),
+    listarSalas(),
+    votosDoVisitante(visitante ?? ""),
+  ]);
   // 404, não "perfil em análise": para quem está de fora, um pendente não
   // existe — dizer que ele existe transformaria a moderação em vitrine.
   if (!aluno || !aluno.aprovado) notFound();
@@ -71,6 +87,7 @@ export default async function PerfilPage({ params, searchParams }: Props) {
             corSala: corDaSala(sala ?? ""),
           }}
           salaNome={sala}
+          estreladoInicial={meusVotos.includes(aluno.id)}
           abrirCurriculo={curriculo === "1"}
         />
       </main>

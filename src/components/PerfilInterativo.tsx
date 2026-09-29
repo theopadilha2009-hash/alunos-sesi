@@ -34,6 +34,15 @@ type Props = {
   aluno: AlunoNaTela;
   salaNome: string | null;
   /**
+   * O visitante desta sessão já votou neste aluno — quem responde é o cookie
+   * `sesi.visitante`, lido na página. Obrigatória de propósito: o padrão
+   * `false` era o bug. O perfil abria com a estrela apagada para quem já tinha
+   * votado, e o clique seguinte mandava um `POST` que a rota descarta
+   * (`on conflict do nothing`) — confete, nenhum voto novo, nenhum aviso. Quem
+   * esquecer de passar isto quebra no `tsc`, não na tela.
+   */
+  estreladoInicial: boolean;
+  /**
    * Deep-link `?curriculo=1`. O botão "Mini-Currículo (A4)" do cartão NFC mora
    * em `/u/[slug]` e aponta para cá com esse parâmetro: sem isto, o aluno
    * clicava e caía no perfil sem nada abrir.
@@ -41,13 +50,18 @@ type Props = {
   abrirCurriculo?: boolean;
 };
 
-export function PerfilInterativo({ aluno, salaNome, abrirCurriculo = false }: Props) {
+export function PerfilInterativo({
+  aluno,
+  salaNome,
+  estreladoInicial,
+  abrirCurriculo = false,
+}: Props) {
   const [crachaAberto, setCrachaAberto] = useState(false);
   const [curriculoAberto, setCurriculoAberto] = useState(abrirCurriculo);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [copiado, setCopiado] = useState(false);
   const [estrelas, setEstrelas] = useState(aluno.estrelas);
-  const [estrelado, setEstrelado] = useState(false);
+  const [estrelado, setEstrelado] = useState(estreladoInicial);
   const [carregandoVoto, setCarregandoVoto] = useState(false);
   // Som e confetes são opcionais e nascem ligados. `somLigado()` lê o
   // localStorage, que não existe no servidor — daí o valor entrar por efeito em
