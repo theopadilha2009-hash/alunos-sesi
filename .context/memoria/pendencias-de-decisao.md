@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T20:46:00.000Z
+  modified: 2026-09-29T21:20:58.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -145,12 +145,25 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   estar no ramo do `:` do ternário** — esse é o pior caso, porque renderiza
   exatamente quando o guard falha e o teste daria verde no bug que ele existe
   para impedir. O ramo é decidido contando parênteses/chaves/colchetes do guard
-  até a classe e olhando o `:` que aparece com o aninhamento zerado (um `:`
-  dentro de `style`, `title` ou spread não conta — foi assim que a primeira
-  versão reprovava botão correto). Dois modos de falha ficam do lado barulhento,
-  de propósito: a janela estoura, e a contagem de nível não entende string.
-  Continua fora: o `+1` desenhado **sem** essa classe e o que estiver fora de
-  `src/components/`.
+  até a classe, com **string e comentário pulados inteiros**, e olhando o `:`
+  que aparece com o aninhamento zerado (um `:` dentro de `style`, `title` ou
+  spread não conta — foi assim que a primeira versão reprovava botão correto).
+
+  Foram **quatro** rodadas de revisão até o teste ficar honesto, e as três
+  primeiras versões passavam verdes no bug que o teste existe para pegar — o
+  registro vale porque o padrão se repete em varredura: (1) a janela sozinha era
+  satisfeita por um botão no `else`; (2) proibir qualquer `:` no caminho
+  reprovava código certo; (3) o matcher compartilhado **com a flag `g`** deixava
+  o `lastIndex` do `.test` no meio e a varredura **pulava o arquivo seguinte em
+  silêncio**; (4) a contagem de nível, que eu tinha documentado como "falha para
+  o lado barulhento", **também aprovava o botão do ramo errado** quando um `)`
+  ou `{` desbalanceado aparecia dentro de um literal do ramo do `true`. Os quatro
+  estão fechados em código e provados por mutação.
+
+  O que resta é barulhento, de propósito: a janela estoura. Continua fora: o `+1`
+  desenhado **sem** essa classe, o que estiver fora de `src/components/`, e um
+  `\"` ou regex literal dentro do trecho (a contagem fecha o literal no
+  `indexOf` antes do escape).
 
 **Continua aberto:**
 

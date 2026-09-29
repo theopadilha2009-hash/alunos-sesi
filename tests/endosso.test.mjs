@@ -39,9 +39,9 @@ import { fileURLToPath } from "node:url";
  *     checagem do ramo fecha o caso mais grave — botão no `else`, que renderiza
  *     quando o guard falha — mas não essa vizinhança emprestada. Ela não existe
  *     hoje: há uma ocorrência de cada por arquivo;
- *   - a contagem de nível da checagem do ramo não entende string: um `)` ou um
- *     `:` dentro de um literal bagunça a conta. Não existe no código, e falha
- *     para o lado barulhento.
+ *   - a contagem de nível da checagem do ramo pula string e comentário, mas não
+ *     entende `\"` dentro de string, nem regex literal com delimitador. Não
+ *     existe no código; o literal que nunca fecha cai no lado barulhento.
  */
 
 const RAIZ = fileURLToPath(new URL("../src/components/", import.meta.url));
@@ -63,8 +63,22 @@ function arquivosTsx(dir) {
   });
 }
 
-/** A classe do `+1`, sem casar nome maior que comece igual (`-addx`). */
-const ALVO = /btn-endorsement-add(?![\w-])/g;
+/**
+ * A classe do `+1`, sem casar nome maior que comece igual (`-addx`).
+ *
+ * **Sem a flag `g` de propósito.** `.test` com `g` é stateful: cada chamada
+ * avança o `lastIndex`, e um regex compartilhado entre o filtro de arquivos e a
+ * varredura deixava o ponteiro no meio — a varredura então **pulava o botão do
+ * arquivo seguinte em silêncio**, e um `+1` sem guard passava verde. Foi a
+ * revisão do #62 (o fix anterior tinha introduzido isso). Quem precisa varrer
+ * todas as ocorrências usa `ocorrencias()`, que monta um regex novo.
+ */
+const ALVO = /btn-endorsement-add(?![\w-])/;
+
+/** Todas as ocorrências da classe — regex novo a cada chamada, sem `lastIndex`. */
+function ocorrencias(fonte) {
+  return [...fonte.matchAll(new RegExp(ALVO.source, "g"))];
+}
 
 /**
  * O botão está no ramo do `:` do ternário do guard?
@@ -80,13 +94,44 @@ const ALVO = /btn-endorsement-add(?![\w-])/g;
  * código de hoje só passava por causa da ordem dos atributos. Contar o nível
  * desfaz esse acoplamento.
  *
- * Limite conhecido: a contagem não entende string, então um `)` ou `:` dentro
- * de um literal (`title={")"}`) bagunça o nível. Não existe no código, e o
- * modo de falha é o lado barulhento (reprova código certo).
+ * String e comentário são pulados inteiros antes de contar: sem isso, um
+ * delimitador desbalanceado dentro de um literal no ramo do `true`
+ * (`title={")"}`, `title={"{"}`, um `(` num comentário) deslocava o nível e
+ * **escondia o `:` do else** — o teste aprovava o botão no ramo errado. Não é
+ * hipótese: os três casos foram reproduzidos na revisão do #62, todos
+ * passando. Pular literais fecha os três.
+ *
+ * O que ainda escapa: `\"` dentro de string (o `indexOf` fecha cedo) e regex
+ * literal com delimitador. Um literal ou comentário que **abre e não fecha**
+ * dentro do trecho encerra a contagem — e isso não é desleixo: o trecho acaba
+ * no meio do template do próprio botão (`` className={` ``), então essa é a
+ * situação normal. Um literal de verdade torto não compila, e quem pega é o
+ * `tsc`, antes do teste.
  */
 function estaNoRamoDoElse(trecho) {
   let nivel = 0;
-  for (const caractere of trecho) {
+  for (let i = 0; i < trecho.length; i++) {
+    const caractere = trecho[i];
+
+    if (caractere === '"' || caractere === "'" || caractere === "`") {
+      const fim = trecho.indexOf(caractere, i + 1);
+      if (fim === -1) break;
+      i = fim;
+      continue;
+    }
+    if (caractere === "/" && trecho[i + 1] === "/") {
+      const fim = trecho.indexOf("\n", i);
+      if (fim === -1) break;
+      i = fim;
+      continue;
+    }
+    if (caractere === "/" && trecho[i + 1] === "*") {
+      const fim = trecho.indexOf("*/", i + 2);
+      if (fim === -1) break;
+      i = fim + 1;
+      continue;
+    }
+
     if (caractere === "(" || caractere === "[" || caractere === "{") nivel++;
     else if (caractere === ")" || caractere === "]" || caractere === "}") nivel--;
     else if (caractere === ":" && nivel === 0) return true;
@@ -103,6 +148,9 @@ test("todo +1 de competência tem o guard de habilidadePermitida à vista", () =
   // de propósito: com um `.includes` cru, renomear a classe para algo que comece
   // igual (`btn-endorsement-add-x`) mantinha este canário verde enquanto o laço
   // não achava nada — varredura vazia com o teste passando. Foi a revisão do #62.
+  // O `ALVO` não tem `g` justamente para este `.test` não deixar `lastIndex` para
+  // trás e a varredura pular o arquivo seguinte: uma linha resolvia o canário e
+  // criava um furo pior.
   assert.ok(
     comBotao.length >= 2,
     `esperava ao menos os dois pontos de +1 (perfil e modal do CRM), achei ${comBotao.length}`,
@@ -110,9 +158,7 @@ test("todo +1 de competência tem o guard de habilidadePermitida à vista", () =
 
   for (const caminho of comBotao) {
     const fonte = readFileSync(caminho, "utf8");
-    // `matchAll` precisa do `/g`; o `ALVO` compartilhado tem, e o `lastIndex`
-    // dele não é lido aqui porque `matchAll` clona o regex.
-    for (const achado of fonte.matchAll(ALVO)) {
+    for (const achado of ocorrencias(fonte)) {
       const i = achado.index;
       const linha = fonte.slice(0, i).split("\n").length;
       const antes = fonte.slice(Math.max(0, i - JANELA), i);
