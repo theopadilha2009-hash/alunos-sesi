@@ -41,12 +41,20 @@ import { fileURLToPath } from "node:url";
  * um card escuro do CRM. O conserto é de design (que classe da casa ele usa),
  * e está em `.context/memoria/pendencias-de-decisao.md`.
  *
- * O que esta varredura NÃO pega, e é bom saber: classe montada em tempo de
- * execução (`className={cond ? "a" : "b"}`, template com `${}`, `clsx`), CSS de
- * fora de `src/`, e o caso oposto (regra CSS que nenhum `className` usa — esse
- * é lixo do outro lado, sem efeito na tela). Um `style={{...}}` inline também
- * não é visto como problema: ele funciona, mesmo quando a classe ao lado é
- * decorativa.
+ * O que esta varredura NÃO pega, e é bom saber:
+ *
+ *   - classe montada em tempo de execução — `className={cond ? "a" : "b"}`,
+ *     `clsx(...)`, e **qualquer** template com `${}`, que descarta a linha
+ *     inteira: inclusive os tokens estáticos ao lado da interpolação, como o
+ *     `cmd-item` de `` className={`cmd-item ${x}`} ``;
+ *   - CSS fora de `src/`;
+ *   - o caso oposto — regra CSS que nenhum `className` usa. É lixo do outro
+ *     lado, sem efeito na tela;
+ *   - `style={{...}}` inline, que funciona mesmo quando a classe ao lado é
+ *     decorativa.
+ *
+ * As formas que **são** cobertas: aspas duplas e simples, `className={"..."}`
+ * com espaço ou quebra antes das aspas, e template sem interpolação.
  *
  * Quando o CSS de uma destas for escrito, o teste **falha** de propósito até a
  * linha sair desta lista — a lista não pode virar cemitério.
@@ -107,25 +115,49 @@ function arquivos(dir, sufixos, achados = []) {
 }
 
 /**
- * Os três formatos de `className` que dão para ler sem executar nada.
+ * Os formatos de `className` que dão para ler sem executar nada.
  *
  * `className={cond ? "a" : "b"}` e template com `${}` ficam de fora — o valor
  * não existe em tempo de leitura, e chutar seria pior que a lacuna.
  */
-const RE_CLASS = /className=(?:"([^"]*)"|\{`([^`]*)`\}|\{"([^"]*)"\})/g;
+const RE_CLASS =
+  /className=\s*(?:"([^"]*)"|'([^']*)'|\{`([^`]*)`\}|\{\s*"([^"]*)"\s*\}|\{\s*'([^']*)'\s*\})/g;
 
-/** Nomes de classe como seletor em CSS. Comentários fora: `.x` citado não é regra. */
+/** Nomes de classe como seletor em CSS. */
 const RE_CSS = /\.([a-zA-Z_][a-zA-Z0-9_-]*)/g;
+
+/**
+ * CSS reduzido ao que pode ser seletor, antes de procurar as classes.
+ *
+ * Sem isto o regex super-casa `.x` que não é seletor nenhum e **inventa uma
+ * classe declarada** — o pior erro possível aqui, porque uma declarada falsa
+ * esconde uma órfã real de mesmo nome. Os três casos: `url(icone.svg)` declara
+ * `svg`, `content: ".icone"` declara `icone`, `var(--cor.texto)` declara
+ * `texto`. Nenhum existe no CSS de hoje (conferido), e nenhum deve voltar.
+ *
+ * A ordem importa: comentário primeiro (um `url(...)` dentro de comentário),
+ * depois strings (que podem conter `url(`), depois as funções.
+ */
+function soSeletores(css) {
+  return css
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/"[^"]*"|'[^']*'/g, "")
+    .replace(/url\([^)]*\)/g, "")
+    .replace(/var\([^)]*\)/g, "");
+}
 
 test("toda classe usada no JSX tem CSS, ou está na lista de dívida conhecida", () => {
   const usadas = new Set();
-  for (const caminho of [
-    ...arquivos(SRC, [".tsx"]),
-    ...arquivos(SRC, [".ts"]),
-  ]) {
+  // Só `.tsx`: `className` é JSX. Medido — nenhum arquivo `.ts` do projeto tem
+  // `className`, e varrer os dois não mudava um único token.
+  for (const caminho of arquivos(SRC, [".tsx"])) {
     const texto = readFileSync(caminho, "utf8");
     for (const achado of texto.matchAll(RE_CLASS)) {
-      const bruto = achado[1] ?? achado[2] ?? achado[3] ?? "";
+      const bruto =
+        achado[1] ?? achado[2] ?? achado[3] ?? achado[4] ?? achado[5] ?? "";
+      // A linha inteira cai, inclusive os tokens estáticos ao lado do `${}`:
+      // `className={`cmd-item ${x}`}` perde o `cmd-item` também. Ler a parte
+      // estática exigiria interpretar a expressão — o que este teste não faz.
       if (bruto.includes("${")) continue;
       for (const token of bruto.split(/\s+/).filter(Boolean)) usadas.add(token);
     }
@@ -133,8 +165,9 @@ test("toda classe usada no JSX tem CSS, ou está na lista de dívida conhecida",
 
   const declaradas = new Set();
   for (const caminho of arquivos(SRC, [".css"])) {
-    const texto = readFileSync(caminho, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-    for (const achado of texto.matchAll(RE_CSS)) declaradas.add(achado[1]);
+    for (const achado of soSeletores(readFileSync(caminho, "utf8")).matchAll(RE_CSS)) {
+      declaradas.add(achado[1]);
+    }
   }
 
   // Se isto cair, a varredura está olhando para o lugar errado.

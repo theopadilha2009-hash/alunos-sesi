@@ -180,13 +180,15 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   (`CrmApp.tsx:938`) é um `<button>` sem classe base nenhuma, então recebe o
   visual default do navegador (fundo claro, borda, fonte do sistema) dentro de um
   card escuro do CRM — mesma família do `textarea-bio`, que foi o bug que originou
-  a varredura. **O conserto é de design** (qual classe da casa ele usa:
-  `.botao-fraco` é a candidata óbvia, 1 linha, sem CSS novo), e por isso não
-  entrou. As outras 31 são cosméticas: 6 têm o visual em `style` inline, 4
-  acompanham classe viva que já estiliza, 9 são texto que herda tipografia, e 12
-  são containers com filhos estilizados — esses 12 (o `vazio-suave` é o mais
-  visível, aparece em três telas do painel) são o grupo que pede decisão de
-  design, não conserto mecânico.
+  a varredura. **O conserto é de design** (qual classe da casa ele usa), e por
+  isso não entrou; se for o caminho óbvio, precisa das **duas** classes:
+  `.botao-fraco` sozinha não dá padding nem borda (só cor), então
+  `className="botao botao-fraco btn-ver-autor"`. As outras 31 são cosméticas: 6
+  têm o visual em `style` inline, 4 acompanham classe viva que já estiliza, 9 são
+  texto que herda tipografia, e 12 são containers com filhos estilizados — esses
+  12 são o grupo que pede decisão de design, não conserto mecânico. O `vazio-suave`
+  é o mais visível deles, mas aparece em **três seções da mesma tela** (`Meu
+  Perfil`: criações, galeria e vídeos), não em três telas.
 - **`/api/health` é público e sem rate limit** (29/09). Uma query no Supabase por
   chamada; não há `middleware.ts` e o `src/proxy.ts` não trata essa rota. Não
   apliquei `verificarRateLimit` de propósito: monitoramento bate nele em intervalo
