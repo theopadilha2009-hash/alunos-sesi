@@ -171,16 +171,22 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   wrapper que leia o corpo, ou trocar o client por `fetch` próprio — e é decisão
   de produto. Vale saber, antes de decidir, que o cliente já descarta o corpo
   hoje: ninguém perde nada que estivesse funcionando.
-- **Cluster de classes usadas em `.tsx` que não existem em CSS nenhum** (achado da
-  revisão dos oito PRs, 29/09). A varredura de `src/**/*.css` contra os
-  `className` do código achou: `botao-secundario`, `busca-campo`,
-  `bloco-cabecalho-tabela`, `mural-topo-conteudo`, `btn-confirmar-submissao`,
-  `adm-header-info`, `criacao-*`, `nfc-dot`, `ig-icone`, `badge-rede-texto`,
-  `cracha-habilidades`, `campo-dica`, `vazio-suave`, `sticker-flutuante-*`. É a
-  mesma natureza do `textarea-bio` (que aparecia branco no mural) — mas
-  **pré-existente**, e nenhuma das listadas foi confirmada como quebrada em tela.
-  Conferir exige renderizar uma a uma: o teste `tests/importacao.test.mjs` só
-  varre a família `recado-*`. A varredura em si é trabalho próprio.
+- **`btn-ver-autor` é o único defeito de tela do cluster de classes sem CSS**
+  (medido em 29/09, no PR #61). O cluster inteiro agora está **medido e travado**:
+  são **32 classes órfãs em 760 usadas**, classificadas por motivo em
+  `tests/classes-css.test.mjs` (INLINE, BASE, TEXTO, CAIXA, SEM_ESTILO), e o
+  teste falha nas duas direções — órfã nova não classificada e classe da lista
+  que ganhou CSS. Das 32, **uma só é defeito visível**: `btn-ver-autor`
+  (`CrmApp.tsx:938`) é um `<button>` sem classe base nenhuma, então recebe o
+  visual default do navegador (fundo claro, borda, fonte do sistema) dentro de um
+  card escuro do CRM — mesma família do `textarea-bio`, que foi o bug que originou
+  a varredura. **O conserto é de design** (qual classe da casa ele usa:
+  `.botao-fraco` é a candidata óbvia, 1 linha, sem CSS novo), e por isso não
+  entrou. As outras 31 são cosméticas: 6 têm o visual em `style` inline, 4
+  acompanham classe viva que já estiliza, 9 são texto que herda tipografia, e 12
+  são containers com filhos estilizados — esses 12 (o `vazio-suave` é o mais
+  visível, aparece em três telas do painel) são o grupo que pede decisão de
+  design, não conserto mecânico.
 - **`/api/health` é público e sem rate limit** (29/09). Uma query no Supabase por
   chamada; não há `middleware.ts` e o `src/proxy.ts` não trata essa rota. Não
   apliquei `verificarRateLimit` de propósito: monitoramento bate nele em intervalo
