@@ -165,6 +165,22 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   Server Action, então o prop não muda com o componente montado. Fica como nota
   para quem algum dia adicionar um refresh ali: aí o estado local fica velho até
   o próximo clique.
+- **`noUnusedLocals` está off, e a família é maior do que parece** (29/09).
+  Três revisores esbarraram em import morto — `IconeCopiar` (#52), `CartaoAluno`
+  (#54) e onze de uma vez (#57) — e nenhum deles é visível para o `tsc` como o
+  projeto está configurado (e não há lint). Medido:
+  `tsc --noEmit --noUnusedLocals --noUnusedParameters` acusa **29**. A maior
+  parte é import morto, mas três são **props recebidas e nunca lidas**, que
+  podem ser recurso morto e não código morto: `onSelecionarAluno`
+  (`PainelAdmIntegrado.tsx:72`), `usuario` (`MuralDesafios.tsx:39`),
+  `compacto` (`TemaToggle.tsx:16`). Ligar a flag transforma isso em falha de CI
+  — é o conserto estrutural, e é decisão de time, porque exige decidir caso a
+  caso entre remover a prop (mexe em quem chama) e mantê-la de propósito.
+  Medido, não estimado: `--noUnusedLocals` sozinho acusa **24**, e são os três
+  casos de prop que aparecem só quando `--noUnusedParameters` entra junto (29 no
+  total) — então dá para ligar só a primeira e deixar a segunda para depois.
+  Recomendação: ligar `noUnusedLocals`, limpar os 24 e tratar as três props numa
+  conversa à parte.
 
 - **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural
   fechou o ciclo na PR #38: o ADM publica desafio, o ADM julga o envio, o aluno vê
