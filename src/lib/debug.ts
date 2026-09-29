@@ -71,9 +71,29 @@ export const logger = {
   },
 
   error(tag: string, mensagem: string, erro?: unknown) {
-    console.error(`[ERRO][${tag}] ${mensagem}`, erro instanceof Error ? erro.message : mascararSegredos(erro));
+    console.error(`[ERRO][${tag}] ${mensagem}`, descreverErro(erro));
   },
 };
+
+/**
+ * O erro em uma linha que sirva ao diagnóstico.
+ *
+ * `PostgrestError` estende `Error`, então `erro.message` sozinho saía — levando
+ * junto o `code` (`23505`, `42501`) e o `hint`, que é onde o Postgres costuma
+ * dizer o conserto. O próprio pacote avisa no doc do tipo: "Always log the full
+ * object; logging only `error.message` hides the hint". Só entra o que existir,
+ * então um `Error` comum continua saindo exatamente como antes.
+ */
+function descreverErro(erro: unknown): unknown {
+  if (!(erro instanceof Error)) return mascararSegredos(erro);
+
+  const partes = [erro.message];
+  const campos = erro as Error & { code?: unknown; details?: unknown; hint?: unknown };
+  if (campos.code) partes.push(`code=${campos.code}`);
+  if (campos.details) partes.push(`details=${campos.details}`);
+  if (campos.hint) partes.push(`hint=${campos.hint}`);
+  return partes.join(" | ");
+}
 
 /**
  * Mede a duração de uma operação assíncrona para diagnóstico.

@@ -8,6 +8,7 @@ import { CrachaModal } from "@/components/CrachaModal";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
+import { lerRespostaEstrela } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos, rankingSalas } from "@/lib/ranking";
 import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
@@ -166,20 +167,19 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ alunoId: id }),
       });
-      const dados = (await resposta.json()) as {
-        estrelas?: number;
-        votado?: boolean;
-        erro?: string;
-      };
-      if (!resposta.ok) throw new Error(dados.erro ?? "não deu para votar");
+      const resultado = lerRespostaEstrela(
+        resposta.status,
+        await resposta.json().catch(() => null),
+      );
+      if (!resultado.ok) throw new Error(resultado.motivo);
 
       setLista((p) =>
         p.map((a) =>
-          a.id === id ? { ...a, estrelas: dados.estrelas ?? a.estrelas } : a,
+          a.id === id ? { ...a, estrelas: resultado.estrelas } : a,
         ),
       );
       setMeus((p) =>
-        dados.votado
+        resultado.votado
           ? p.includes(id)
             ? p
             : [...p, id]

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T21:25:36.000Z
+  modified: 2026-09-29T21:32:16.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -170,6 +170,24 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   caractere pelo parser TSX em vez de somar mais uma regra. Continua fora também:
   o `+1` desenhado **sem** essa classe e o que estiver fora de `src/components/`.
 
+- **A `Vitrine` passou a ler a resposta da estrela pelo helper da casa** (29/09).
+  Era a única das três telas que fazia `await resposta.json()` cru —
+  `CrmApp:300` e `PerfilInterativo:194` já usavam
+  `lerRespostaEstrela(status, await resp.json().catch(() => null))`. Sem o
+  `catch`, um 500 sem corpo JSON subia `SyntaxError` e a frase crua ia para a
+  tela; e um 200 sem os campos mantinha o otimista na contagem enquanto revertia
+  o `meus`, mostrando um número que ninguém calculou. Agora as três telas leem
+  igual. **Mudança de texto visível:** a recusa padrão da Vitrine era "não deu
+  para votar" e agora é a `RECUSA_PADRAO` do `src/lib/estrela.ts`, "Não deu para
+  votar agora. Tente de novo."
+- **O `logger.error` deixou de perder o `code` e o `hint` do PostgREST** (29/09).
+  `PostgrestError` **estende `Error`**, então o `erro instanceof Error ?
+  erro.message` de `src/lib/debug.ts:74` mandava só a mensagem — e o pacote diz o
+  contrário no doc do próprio tipo: *"Always log the full object; logging only
+  `error.message` hides the hint"*. Agora `descreverErro` acrescenta
+  `code`/`details`/`hint` **quando existem**, então um `Error` comum sai byte a
+  byte como antes. Teste em `tests/debug.test.mjs` (4), com o console capturado.
+
 **Continua aberto:**
 
 - **`src/lib/dados.ts` interpola `.message` em 10 pontos** (achado da revisão do
@@ -179,19 +197,6 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   fechou, e é o que faria uma varredura estendida a `src/` falhar. Fechar exige
   decidir o que cada um desses `throw` deve dizer na tela; não é o mesmo caso do
   `/api/estrela`, onde a resposta ia crua para o cliente.
-- **A `Vitrine` não protege o `.json()` da resposta da estrela** (achado da
-  revisão do #60, severidade baixa e latente). `Vitrine.tsx:169` faz
-  `await resposta.json()` sem `catch`, enquanto `CrmApp` e `PerfilInterativo`
-  usam `resp.json().catch(() => null)`. Com o corpo `{}` que o #60 passou a
-  devolver isso funciona e cai na frase `"não deu para votar"` (`:174`), mas se
-  um dia o 500 vier sem corpo JSON, o `SyntaxError` sobe e é exibido cru. Uma
-  linha resolve; não entrou para o PR não crescer.
-- **O `logger.error` descarta `code`/`details`/`hint` do PostgREST** (achado da
-  revisão do #60). `src/lib/debug.ts:74` loga só `erro.message` de um
-  `Error` — e `PostgrestError` estende `Error`. A constraint já aparece no
-  `message`, então o log serve; mas "o erro real foi para o log" é menos
-  verdadeiro do que parece: o `code` (`23505`) não vai junto. Pré-existente,
-  fora do escopo do #60.
 - **As recusas do `/api/upload` não chegam à tela de quem envia** (achado de
   29/09, ao consertar o vazamento). Medido no pacote instalado: o `upload()` do
   `@vercel/blob/client` lança `BlobError("Failed to retrieve the client token")`
