@@ -23,12 +23,22 @@ import { fileURLToPath } from "node:url";
  * guard em qualquer lugar — inclusive num trecho que não envolve botão nenhum.
  * Agora cada botão é conferido na sua vizinhança imediata.
  *
- * O que continua fora, e é bom saber: um `+1` desenhado **sem** a classe
- * `btn-endorsement-add` (markup diferente) não é visto — o alvo da varredura é
- * a classe —, e um guard que esteja a mais de `JANELA` letras do botão falha o
- * teste mesmo estando certo. O segundo caso é barulhento de propósito: quem
- * escrever um ternário tão longo ajusta a janela aqui, em vez de o teste passar
- * a esconder o botão.
+ * O que continua fora, e é bom saber:
+ *
+ *   - um `+1` desenhado **sem** a classe `btn-endorsement-add` (markup
+ *     diferente) não é visto — o alvo é a classe;
+ *   - só os `.tsx` de `src/components/` (recursivo) são varridos: um `+1` numa
+ *     `page` de `src/app/`, ou num `.js`/`.jsx`, passa ao largo;
+ *   - um guard a mais de `JANELA` letras do botão falha o teste **mesmo estando
+ *     certo** — de propósito, para quem escrever um ternário tão longo ajustar
+ *     a constante em vez de o teste esconder o botão;
+ *   - o guard só é procurado **antes** do botão: guard escrito depois falha o
+ *     teste, de novo do lado barulhento;
+ *   - um `habilidadePermitida(` que esteja ali por outro motivo (um comentário,
+ *     ou o guard de outro botão colado no mesmo bloco) satisfaz a janela. A
+ *     checagem do `:` fecha o caso mais grave — botão no ramo do `else`, que
+ *     renderiza quando o guard falha — mas não essa vizinhança emprestada. Ela
+ *     não existe hoje: há uma ocorrência de cada por arquivo.
  */
 
 const RAIZ = fileURLToPath(new URL("../src/components/", import.meta.url));
@@ -65,16 +75,29 @@ test("todo +1 de competência tem o guard de habilidadePermitida à vista", () =
 
   for (const caminho of comBotao) {
     const fonte = readFileSync(caminho, "utf8");
-    let i = -1;
-    while ((i = fonte.indexOf("btn-endorsement-add", i + 1)) !== -1) {
+    // O `(?![\w-])` evita casar um nome maior que comece igual (`-addx`).
+    for (const achado of fonte.matchAll(/btn-endorsement-add(?![\w-])/g)) {
+      const i = achado.index;
       const linha = fonte.slice(0, i).split("\n").length;
       const antes = fonte.slice(Math.max(0, i - JANELA), i);
+      const posGuard = antes.lastIndexOf("habilidadePermitida(");
 
       assert.ok(
-        antes.includes("habilidadePermitida("),
+        posGuard !== -1,
         `${caminho}:${linha}: este +1 não tem o guard nas ${JANELA} letras ` +
           `anteriores — botão para competência que o servidor vai recusar é ` +
           `botão que sempre falha`,
+      );
+
+      // Do guard até o botão não pode haver `:`. Um ternário bem-formado leva o
+      // botão no ramo do `?`; o `:` no caminho denuncia o ramo do `else` — que
+      // renderiza **exatamente quando o guard falha**, e o teste daria verde.
+      // Foi o pior falso positivo que a revisão do #62 achou.
+      const depoisDoGuard = antes.slice(posGuard);
+      assert.ok(
+        !depoisDoGuard.includes(":"),
+        `${caminho}:${linha}: o +1 parece estar no ramo do \`:\` do guard — ` +
+          `renderiza quando o guard FALHA`,
       );
     }
   }
