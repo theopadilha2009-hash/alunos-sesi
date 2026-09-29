@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T21:56:09.000Z
+  modified: 2026-09-29T22:04:48.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -256,8 +256,11 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   (`TabelaAlunos.tsx` e `CrmApp.tsx`, os dois únicos pontos), com
   `cursor: not-allowed` em `vitrine.css` — **com um seletor que alcança o botão**,
   porque quem está sob o ponteiro é ele e o cursor do `.estrela:disabled` venceria
-  o do envoltório. Sem teste: não há jsdom na suíte e o `renderToStaticMarkup`
-  esbarraria nos aliases `@/`. **Fica aberto, como design:** o selo visível ao
+  o do envoltório — o revisor confirmou os **dois** seletores como load-bearing: o
+  do botão cobre a face e o do envoltório cobre os cantos da pílula, onde o
+  hit-test cai nele. A varredura `tests/estrela-bloqueada.test.mjs` trava as duas
+  peças (o atributo nos dois call sites, os dois seletores no CSS), com 7 casos
+  provados por mutação. **Fica aberto, como design:** o selo visível ao
   lado do nome (`pill-pendente`, `PainelAdmIntegrado.tsx:406`) — é o passo que
   faria o pendente saltar aos olhos, e adiciona elemento à tabela.
 - **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
