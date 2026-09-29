@@ -44,7 +44,7 @@ sem rede e sem banco:
 | `cores.test.mjs` (4) | `cores` | `corDaSala` estável; `corDoAluno` que prefere a escolha; a paleta do app é a mesma lista do `CHECK` no banco |
 | `datas.test.mjs` (3) | `datas` | a data no padrão brasileiro, o lixo que devolve `null` e o fuso fixo em São Paulo — não o de quem roda o código |
 | `github.test.mjs` (3) | `github` | `tituloDoRepo` (com o corte no teto de 80), `descricaoDoRepo` e `quandoDoRepo` |
-| `endosso.test.mjs` (1) | varredura | não testa módulo nenhum: lê os `.tsx` de `src/components/` e falha se algum arquivo desenhar mais botões `+1` do que chamadas a `habilidadePermitida` |
+| `endosso.test.mjs` (1) | varredura | não testa módulo nenhum: lê os `.tsx` de `src/components/` e falha se algum arquivo desenhar mais botões `+1` do que chamadas a `habilidadePermitida`. É o mais fraco dos três de varredura: a conta é por arquivo, então **não** pega o `+1` que nasce com outro markup nem o guard que não envolve o botão |
 
 As contagens são de declarações `test(` no arquivo, não do que o `npm test`
 imprime: quem quiser o total de verdade pergunta ao runner, não a esta tabela —
