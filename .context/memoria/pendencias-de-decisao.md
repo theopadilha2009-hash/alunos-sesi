@@ -97,6 +97,26 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
 
 **Continua aberto:**
 
+- **Cluster de classes usadas em `.tsx` que não existem em CSS nenhum** (achado da
+  revisão dos oito PRs, 29/09). A varredura de `src/**/*.css` contra os
+  `className` do código achou: `botao-secundario`, `busca-campo`,
+  `bloco-cabecalho-tabela`, `mural-topo-conteudo`, `btn-confirmar-submissao`,
+  `adm-header-info`, `criacao-*`, `nfc-dot`, `ig-icone`, `badge-rede-texto`,
+  `cracha-habilidades`, `campo-dica`, `vazio-suave`, `sticker-flutuante-*`. É a
+  mesma natureza do `textarea-bio` (que aparecia branco no mural) — mas
+  **pré-existente**, e nenhuma das listadas foi confirmada como quebrada em tela.
+  Conferir exige renderizar uma a uma: o teste `tests/importacao.test.mjs` só
+  varre a família `recado-*`. A varredura em si é trabalho próprio.
+- **`/api/health` é público e sem rate limit** (29/09). Uma query no Supabase por
+  chamada; não há `middleware.ts` e o `src/proxy.ts` não trata essa rota. Não
+  apliquei `verificarRateLimit` de propósito: monitoramento bate nele em intervalo
+  curto e um 429 derrubaria o próprio monitor. Decisão de infra, não fix.
+- **`role: "adm"` é inerte no gate** (29/09). O valor existe no schema
+  (`003_crm_auth.sql`) e no tipo, mas `podeAdmin` só aceita crachá válido ou
+  `super_adm` — quem tem `role="adm"` não abre `/adm` sem o cookie do crachá. Não
+  é regressão (é igual desde antes desta leva), mas é valor sem consumidor: quem
+  for usar `adm` de verdade precisa mexer no gate.
+
 - **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural
   fechou o ciclo na PR #38: o ADM publica desafio, o ADM julga o envio, o aluno vê
   onde o dele parou. Antes disso o botão "Rejeitar" era **no-op**:
