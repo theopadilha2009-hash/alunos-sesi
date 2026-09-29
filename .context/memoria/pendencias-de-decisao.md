@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T22:14:15.000Z
+  modified: 2026-09-29T22:41:02.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -196,15 +196,28 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   por nome de campo, e string com espaço não é truncada). `tests/debug.test.mjs`
   (6) trava as duas pontas: os dois campos entram, o valor não.
 
+- **O `throw` de `dados.ts` parou de carregar o texto do banco** (29/09). Os dez
+  pontos faziam `throw new Error(\`listarSalas: ${error.message}\`)`, e `dados.ts`
+  era a última casa desse formato em `src/`. Agora cada um registra o erro cru no
+  `logger.error` — que desde o #63 carrega `message`, `code` e `hint` — e lança
+  uma frase da casa; três deles (`alunoPorSlug`, `alunoPorId`, `votosDoVisitante`)
+  não registravam nada e passaram a registrar. **Sem mudança de tela em
+  produção**, e é isso que tornou a decisão barata: o Next sanitiza a mensagem de
+  erro de Server Component, então o jargão nunca chegou a ninguém — o único lugar
+  que renderiza `error.message` é o `<details>` de desenvolvimento do
+  `src/app/error.tsx:62`. O desenho é o que o `garantirSala`
+  (`src/app/adm/acoes.ts:109-113`) já fazia, com o comentário dizendo o porquê.
+  O segundo teste de `tests/erro-interno.test.mjs` trava o formato em **todo** o
+  `src/`, com 8 casos provados por mutação — inclusive a reintrodução **noutro
+  arquivo** (`acoes.ts`), o `${error.details}` e o falso alarme da palavra
+  "message" na prosa. O que ele **não** garante está no cabeçalho, e o principal
+  é este: ele impede o jargão de virar mensagem, **não** exige que o erro vá para
+  o log — apagar um `logger.error` deixa o verde de pé e o erro invisível. A
+  decisão que este item esperava ("o que cada `throw` diz na tela") era menor do
+  que parecia: em produção nenhuma dessas frases chega à tela.
+
 **Continua aberto:**
 
-- **`src/lib/dados.ts` interpola `.message` em 10 pontos** (achado da revisão do
-  PR #60). `throw new Error(\`...: ${error.message}\`)` em `:58,144,219,323` e
-  vizinhos. Não vaza no browser em produção — o Next sanitiza a mensagem de erro
-  de Server Component — mas é a mesma matéria-prima do vazamento que o #60
-  fechou, e é o que faria uma varredura estendida a `src/` falhar. Fechar exige
-  decidir o que cada um desses `throw` deve dizer na tela; não é o mesmo caso do
-  `/api/estrela`, onde a resposta ia crua para o cliente.
 - **As recusas do `/api/upload` não chegam à tela de quem envia** (achado de
   29/09, ao consertar o vazamento). Medido no pacote instalado: o `upload()` do
   `@vercel/blob/client` lança `BlobError("Failed to retrieve the client token")`
