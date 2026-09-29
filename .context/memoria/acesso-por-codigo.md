@@ -7,7 +7,9 @@ metadata:
 ---
 
 O ADM emite um código (**Painel ADM** → botão de chave na linha do aluno) e o aluno
-resgata em `/` → aba **Tenho Código**, definindo a própria senha. Entrou em
+resgata em `/` → aba **Ativar** (o rótulo era "Tenho Código", encurtado em
+29/09/2026 para as três abas ficarem com a mesma largura no celular), definindo
+a própria senha. Entrou em
 2026-09-27 (PR #34, migration 015).
 
 **O problema que ele fecha.** O aluno importado pelo ADM ficava órfão: `importarLista`
