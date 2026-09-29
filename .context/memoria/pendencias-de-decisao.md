@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T22:58:40.000Z
+  modified: 2026-09-29T23:14:33.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -224,6 +224,27 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   decisão que este item esperava ("o que cada `throw` diz na tela") era menor do
   que parecia: em produção nenhuma dessas frases chega à tela.
 
+- **`noUnusedLocals` está ligado, e a família de import morto virou falha de CI**
+  (29/09). Três revisores esbarraram em import morto — `IconeCopiar` (#52),
+  `CartaoAluno` (#54) e onze de uma vez (#57) — e nenhum era visível para o `tsc`
+  como o projeto estava (não há lint). Medido antes de ligar: a flag sozinha
+  acusava **24**; com `noUnusedParameters` junto, **29**. Os 24 eram 17 imports
+  mortos e 7 locais mortos (`db`, `setDesafios`, `setSala`, `setNovaMidiaTipo`,
+  `totalFixados`, `github`, `linkedinHandle`), todos limpos — e a limpeza de
+  `github`/`linkedinHandle` no `PerfilInterativo` derrubou por **cascata** um
+  import inteiro (`@/lib/links`), que só a flag mostra. Provado por mutação: um
+  `const naoLido = 1` faz o `tsc --noEmit` **e** o `next build` falharem.
+  **Nada de comportamento mudou**: os dois `useState` que perderam o setter
+  (`desafios` no `CrmApp`, `sala` no `PaginaMeuPerfil`) ficaram como estado de
+  propósito, porque o valor vem da prop e o estado o congela — trocar por acesso
+  direto à prop mudaria a semântica de ressincronização. O `novaMidiaTipo` é o
+  caso diferente, e está dito no código: nunca foi setado e o valor lido é sempre
+  o default, então virar constante seria equivalente — ficou como estado por ser
+  onde um seletor de tipo escreveria. E o `const db = clienteAdmin()`
+  (`acoes-crm.ts:241`), que era o risco desta limpeza, virou `clienteAdmin();`
+  **sem binding**: o fail-fast (lança quando falta `NEXT_PUBLIC_SUPABASE_URL` ou
+  `SUPABASE_SERVICE_ROLE_KEY`) continua explodindo no mesmo ponto.
+
 **Continua aberto:**
 
 - **As recusas do `/api/upload` não chegam à tela de quem envia** (achado de
@@ -309,31 +330,15 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   do mesmo cookie do ADM, e o voto em si vai por `fetch("/api/estrela")`, não
   por Server Action. Fica como nota para quem algum dia fizer o voto entrar por
   action — aí o estado local fica velho até o próximo clique.
-- **`noUnusedLocals` está off, e a família é maior do que parece** (29/09).
-  Três revisores esbarraram em import morto — `IconeCopiar` (#52), `CartaoAluno`
-  (#54) e onze de uma vez (#57) — e nenhum deles é visível para o `tsc` como o
-  projeto está configurado (e não há lint).
-  Medido, não estimado: `--noUnusedLocals` sozinho acusa **24**;
-  `--noUnusedParameters` junto leva a **29**, e a diferença não é detalhe —
-  são **cinco props recebidas e nunca lidas**, que podem ser recurso morto e não
-  código morto: `onSelecionarAluno` (`PainelAdmIntegrado.tsx:72`), `usuario`
-  (`MuralDesafios.tsx:39`), `retrato` (`CrmApp.tsx:73`), `salas`
-  (`PaginaMeuPerfil.tsx:89`) e `compacto` (`TemaToggle.tsx:16`). Duas delas são
+- **Cinco props recebidas e nunca lidas ficam de fora** (29/09), e é decisão, não
+  esquecimento. `noUnusedParameters` as acusa, mas elas podem ser **recurso
+  morto, não código morto**: `onSelecionarAluno` (`PainelAdmIntegrado.tsx:72`),
+  `usuario` (`MuralDesafios.tsx:39`), `retrato` (`CrmApp.tsx:73`), `salas`
+  (`PaginaMeuPerfil.tsx:89`) e `compacto` (`TemaToggle.tsx:16`). Duas são
   **obrigatórias** na assinatura, então removê-las mexe em quem chama — é a
-  decisão cara que a flag não toma sozinha. O resto dos 29 se reparte em 17
-  imports mortos e 7 locais mortos (`db`, `setDesafios`, `setSala`,
-  `setNovaMidiaTipo`, `totalFixados`, `github`, `linkedinHandle`).
-  *(A primeira versão deste parágrafo dizia "três props"; a revisão do próprio
-  texto mediu cinco. O número errado está corrigido aqui.)*
-  Ligar a flag transforma a família em falha de CI — é o conserto estrutural, e
-  é decisão de time. Recomendação: ligar `noUnusedLocals`, limpar os 24 e tratar
-  as cinco props numa conversa à parte.
-  **Cuidado ao limpar os 24**: nem tudo que a flag chama de morto é lixo.
-  `const db = clienteAdmin()` (`acoes-crm.ts:241`) é binding morto **e** é um
-  fail-fast — `clienteAdmin` lança quando falta `NEXT_PUBLIC_SUPABASE_URL` ou
-  `SUPABASE_SERVICE_ROLE_KEY` (`supabase/admin.ts:14-18`), e apagar a linha
-  troca uma explosão alta e imediata por uma falha mais tarde e mais obscura. A
-  linha 343 do mesmo arquivo tem a mesma chamada, essa usada de verdade.
+  decisão cara que a flag não toma sozinha. Enquanto isso, o `noUnusedLocals`
+  sozinho já cobre o caso que mordeu três vezes (import morto) sem tocar em
+  assinatura nenhuma.
 
 - **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural
   fechou o ciclo na PR #38: o ADM publica desafio, o ADM julga o envio, o aluno vê

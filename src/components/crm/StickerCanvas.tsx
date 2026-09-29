@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import {
-  IconeCheck,
-  IconeGaleria,
   IconeLixeira,
   IconePlus,
   IconeProjetos,
-  IconeUpload,
   IconeUsuario,
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";

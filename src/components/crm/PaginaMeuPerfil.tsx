@@ -11,11 +11,9 @@ import {
   IconeCopiar,
   IconeCracha,
   IconeDownload,
-  IconeEditar,
   IconeEscudo,
   IconeEstrela,
   IconeGaleria,
-  IconeImprimir,
   IconeLinkExterno,
   IconeLixeira,
   IconePlus,
@@ -122,7 +120,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
 
   // Campos do Aluno
   const [nome, setNome] = useState(alunoAtual?.nome ?? usuario.nome ?? "");
-  const [sala, setSala] = useState(alunoAtual?.sala ?? usuario.sala ?? "");
+  // Sem setter: a troca de sala não acontece aqui. Ela saiu do payload deste
+  // action de propósito (ver `salvarPerfilAction`) — quem move aluno de turma é
+  // o ADM. O estado congela o valor que veio da prop, e só é lido.
+  const [sala] = useState(alunoAtual?.sala ?? usuario.sala ?? "");
   // O e-mail é do domínio da escola, então o campo guarda só a parte de antes do
   // `@` e o sufixo é desenhado ao lado, fixo. Antes o campo era um `<input
   // type="email">` livre com o Gmail do Théo como valor inicial chumbado — quem
@@ -187,7 +188,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
     alunoAtual?.midias && Array.isArray(alunoAtual.midias) ? alunoAtual.midias : [],
   );
   const [novaMidiaUrl, setNovaMidiaUrl] = useState("");
-  const [novaMidiaTipo, setNovaMidiaTipo] = useState<"imagem" | "gif">("imagem");
+  // Sem setter: ninguém nunca trocou este estado. O tipo da mídia sai da URL no
+  // `adicionarMidia` (`:395`) — `.gif` no fim vira "gif", e o resto cai neste
+  // default —, então o valor lido é sempre "imagem". Continua sendo estado (e não
+  // uma constante) porque é o ponto onde um seletor de tipo escreveria.
+  const [novaMidiaTipo] = useState<"imagem" | "gif">("imagem");
   const [novaMidiaLegenda, setNovaMidiaLegenda] = useState("");
   // Aviso de arquivo grande demais, colado onde o aluno está olhando. O GIF
   // entra cru (não passa pelo canvas que redimensiona), então sem isto o

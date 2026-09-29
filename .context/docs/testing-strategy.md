@@ -141,6 +141,7 @@ Um schema errado não aparece em teste nenhum: a RLS de `votos` e a view
 | Gate | Onde | Bloqueia |
 |---|---|---|
 | `npm run typecheck` | CI e local | sim |
+| `noUnusedLocals` (dentro do `typecheck` e do `build`) | CI e local | sim — import ou local morto é erro. Pega o que três revisores acharam à mão (`IconeCopiar` no #52, `CartaoAluno` no #54, onze no #57) e o `next build` também falha. **`noUnusedParameters` está off de propósito**: as 5 props recebidas e nunca lidas podem ser recurso morto, e duas são obrigatórias na assinatura |
 | `npm test` | CI e local | sim |
 | `npm run build` | CI e local | sim |
 | lint de SQL (`--check`) | antes de aplicar migration | sim (exit 2) |

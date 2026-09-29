@@ -78,7 +78,10 @@ export function CrmApp({
   meusEnvios = [],
 }: Props) {
   const [aba, setAba] = useState<AbaAtiva>("portfolio");
-  const [desafios, setDesafios] = useState<DesafioHackathon[]>(desafiosIniciais);
+  // Sem setter: `desafios` é só lido, e o estado congela o valor da prop — o
+  // remonte depois da Server Action é quem troca a lista. Mesmo desenho do
+  // `meus` logo abaixo.
+  const [desafios] = useState<DesafioHackathon[]>(desafiosIniciais);
   const [query, setQuery] = useState("");
   const [salaSelecionada, setSalaSelecionada] = useState<string>(TODAS);
   const [habilidadeFiltro, setHabilidadeFiltro] = useState<string>("Todas");

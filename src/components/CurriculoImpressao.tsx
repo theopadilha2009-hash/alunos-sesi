@@ -4,11 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { Roseta } from "@/components/Roseta";
 import {
-  IconeCracha,
-  IconeDownload,
   IconeEscudo,
   IconeImprimir,
-  IconeLinkExterno,
   IconeProjetos,
 } from "@/components/Icones";
 import { useTravaDeFoco } from "@/lib/foco";
