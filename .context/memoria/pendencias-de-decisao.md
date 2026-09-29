@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-28T19:35:00.000Z
+  modified: 2026-09-29T18:25:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -94,6 +94,26 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   altura do maior painel foi descartado: custaria 276px de espaço morto em toda
   aba. A mesma leva encurtou o rótulo da terceira aba para "Ativar" — ver
   [[acesso-por-codigo]].
+- **A estrela do perfil público passou a saber do voto do visitante** (29/09, PR
+  #54), e o sintoma era outro do que o relatório dizia. `PerfilInterativo`
+  nascia com `estrelado = false` **sempre** e `src/app/alunos/[slug]/page.tsx`
+  nunca lia o cookie `sesi.visitante` — a vitrine já lia
+  (`src/app/alunos/page.tsx:34`). Quem já tinha votado abria o perfil com a
+  estrela apagada, e **o clique não denunciava o erro**: `POST /api/estrela` em
+  voto existente cai no `ignoreDuplicates` (`route.ts:85-92`) e devolve
+  `200 { votado: true }`, então o componente mantinha a estrela acesa sem
+  gravar linha nova. O defeito é o **estado inicial errado**, silencioso — não
+  "confete e nada", que foi como a primeira versão do relatório descreveu (e
+  como a mensagem do commit ficou). A prop `estreladoInicial` entrou
+  **obrigatória**: com valor padrão o erro voltaria pela terceira tela que
+  esquecesse de passá-la, e o `tsc` é quem trava. O mesmo PR removeu um
+  `CartaoAluno` importado e nunca usado em `CrmApp` — mesmo tipo do
+  `IconeCopiar` do #52, invisível para o `tsc` sem `noUnusedLocals`.
+  Ficou de pé, consciente: a leitura de votos usa a **service role**
+  (`clienteAdmin` em `votosDoVisitante`) e entra no `Promise.all` da página,
+  que não tem `try/catch` — se só ela falhar, o perfil cai no error boundary.
+  Engolir o erro ressuscitaria em silêncio a estrela errada que o PR mata, e o
+  `/alunos` também prefere falhar alto a mostrar lista errada.
 
 **Continua aberto:**
 
@@ -116,6 +136,36 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   `super_adm` — quem tem `role="adm"` não abre `/adm` sem o cookie do crachá. Não
   é regressão (é igual desde antes desta leva), mas é valor sem consumidor: quem
   for usar `adm` de verdade precisa mexer no gate.
+
+- **A estrela desabilitada não diz por quê** (achado da revisão, 29/09). Em
+  `TabelaAlunos.tsx:167-172` e `CrmApp.tsx:803-808` o motivo do bloqueio viaja
+  no `title` de um `<button disabled>` — e o Chrome **não emite evento de mouse
+  em controle desabilitado**, então o tooltip nunca aparece para quem usa mouse.
+  O `aria-label` cobre o leitor de tela; quem enxerga fica sem nada. Pior: o
+  estilo do desabilitado é `cursor: progress` + `opacity: .6`
+  (`vitrine.css:452`), escrito para o voto em voo — transitório —, e diz
+  "carregando" justamente no caso **permanente** (perfil pendente de aprovação).
+  Três saídas, todas com o mesmo custo: (a) envolver o botão num `<span
+  title>` (nenhum pixel muda, o tooltip volta a funcionar), (b) um selo visível
+  ao lado do nome — a classe `pill-pendente` já existe para isso
+  (`PainelAdmIntegrado.tsx:407`) —, (c) as duas. É decisão de produto, não
+  conserto: nenhuma das três é obviamente certa. Recomendação: (c).
+- **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
+  filtra só por `visitante_id` (`dados.ts:488`) e o único índice é a PK
+  `(aluno_id, visitante_id)` (`001_schema.sql:72`), então é seq scan. A vitrine
+  já fazia essa leitura; o #54 a trouxe também para toda visita a perfil de
+  quem tem cookie. Irrelevante nos 13 alunos de hoje; vira dívida se `votos`
+  crescer — aí é `create index concurrently`.
+- **`tests/endosso.test.mjs` conta por arquivo** (29/09): ele falha se um `.tsx`
+  desenhar mais botões `+1` do que chamadas a `habilidadePermitida`, o que não
+  pega um terceiro `+1` com markup diferente nem um guard que não envolve o
+  botão. É o mais fraco dos testes de varredura; a lacuna está registrada em
+  `testing-strategy.md`.
+- **O `useState(meusVotos)` do `CrmApp` não ressincroniza** (29/09) — **e não é
+  alcançável**: o componente não usa `router.refresh()` e voto não muda por
+  Server Action, então o prop não muda com o componente montado. Fica como nota
+  para quem algum dia adicionar um refresh ali: aí o estado local fica velho até
+  o próximo clique.
 
 - **O envio do Arthur espera decisão — e agora dá para decidir** (28/09). O mural
   fechou o ciclo na PR #38: o ADM publica desafio, o ADM julga o envio, o aluno vê
