@@ -36,7 +36,7 @@ test("descreverDescartes agrupa por motivo e campo, com a contagem", () => {
     { motivo: "sem-titulo", campo: "projetos" },
   ]);
 
-  assert.match(msg, /2× imagem: arquivo grande demais \(2 MB por imagem\)/);
+  assert.match(msg, /2× imagem: arquivo grande demais \(1,5 MB por imagem\)/);
   assert.match(msg, /1× projeto: projeto sem título/);
   assert.match(msg, new RegExp(`O perfil aceita ${MAX_MIDIAS} imagens, ${MAX_PROJETOS} projetos`));
 });
@@ -55,7 +55,7 @@ test("descreverDescartes nao confunde capa perdida com projeto perdido", () => {
   // O projeto ENTRA sem a capa. Dizer "1× projeto" seria mentir para o aluno,
   // que iria procurar um projeto que esta la.
   const msg = descreverDescartes([{ motivo: "grande-demais", campo: "projetos" }]);
-  assert.match(msg, /1× capa de projeto: arquivo grande demais \(2 MB por imagem\)/);
+  assert.match(msg, /1× capa de projeto: arquivo grande demais \(1,5 MB por imagem\)/);
   assert.doesNotMatch(msg, /1× projeto:/);
 });
 
@@ -66,14 +66,14 @@ test("descreverDescartes chama o link de projeto pelo nome", () => {
 
 test("descreverDescartes usa o teto do campo certo em grande-demais", () => {
   const msg = descreverDescartes([{ motivo: "grande-demais", campo: "stickers" }]);
-  assert.match(msg, /1× sticker: arquivo grande demais \(512 KB por sticker\)/);
+  assert.match(msg, /1× sticker: arquivo grande demais \(384 KB por sticker\)/);
 });
 
 test("descreverDescartes chama a foto de foto, e nao de sticker", () => {
   // O rotulo cai no default do campo. Com um ternario encadeado, um campo novo
   // ganha o substantivo do ultimo ramo — "1× sticker" para uma foto recusada.
   const msg = descreverDescartes([{ motivo: "grande-demais", campo: "foto" }]);
-  assert.match(msg, /1× foto: arquivo grande demais \(120 KB por foto\)/);
+  assert.match(msg, /1× foto: arquivo grande demais \(90 KB por foto\)/);
   // A frase final lista os tres tetos de colecao e cita "12 stickers" — o que
   // nao pode aparecer e uma FOTO rotulada de sticker.
   assert.doesNotMatch(msg, /1× sticker/);
@@ -162,4 +162,33 @@ test("tamanho e teto nunca imprimem o mesmo numero", () => {
     const [, tamanho, teto] = msg.match(/cerca de ([\d,]+ [KM]B).+até ([\d,]+ [KM]B)/);
     assert.notEqual(tamanho, teto, `campo ${campo}: "${tamanho}" nos dois lados`);
   }
+});
+
+test("o teto do aviso de descarte e o do aviso local sao o mesmo numero", () => {
+  // O aviso de descarte monta o teto a partir do Record TETO e o aviso local
+  // formata `tetoDoCampo`. Enquanto o Record repetia o numero a mao, o primeiro
+  // dizia "2 MB" e o segundo "1,5 MB": o aluno escolhia o arquivo que a tela
+  // dizia caber e ele era descartado no save. Este e o invariante que faltava.
+  for (const campo of ["midias", "projetos", "stickers", "foto", "capa"]) {
+    const descarte = descreverDescartes([{ motivo: "grande-demais", campo }]);
+    const local = conferirTamanhoDaImagem(dataUrl(tetoDoCampo(campo)), campo);
+
+    const noDescarte = descarte.match(/arquivo grande demais \(([^)]+)\)/);
+    const noLocal = local.match(/aceita até ([\d,]+ [KM]B)/);
+    assert.ok(noDescarte, `campo ${campo}: o descarte nao trouxe o teto`);
+    assert.ok(noLocal, `campo ${campo}: o aviso local nao trouxe o teto`);
+    assert.ok(
+      noDescarte[1].includes(noLocal[1]),
+      `campo ${campo}: descarte diz "${noDescarte[1]}", aviso local diz "${noLocal[1]}"`,
+    );
+  }
+});
+
+test("descreverDescartes nao poe teto em bytes no video", () => {
+  // O teto de `videos` (2048) e o do LINK, nao de arquivo. Derivar o texto dele
+  // de `tetoLegivelDoCampo` imprimiria "1 KB" ao aluno. O Record exige a chave,
+  // entao ela continua sendo descricao — e este teste trava a volta do numero.
+  const msg = descreverDescartes([{ motivo: "grande-demais", campo: "videos" }]);
+  assert.match(msg, /link de YouTube ou Vimeo/);
+  assert.doesNotMatch(msg, /\d+ ?[KM]B/);
 });
