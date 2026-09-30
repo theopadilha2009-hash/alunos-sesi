@@ -73,8 +73,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Rate limit: máx 30 ações de voto por minuto por visitante
-  const limit = await limitar(`voto:${visitante}`, 30, 60 * 1000);
+  // Rate limit: máx 150 ações de voto por minuto por visitante (tolerante a cliques repetidos)
+  const limit = await limitar(`voto:${visitante}`, 150, 60 * 1000, 10 * 1000);
   if (!limit.permitido) {
     return NextResponse.json(
       { erro: "Muitos votos em pouco tempo. Aguarde alguns instantes." },
@@ -124,8 +124,8 @@ export async function DELETE(request: Request) {
     );
   }
 
-  // Rate limit: máx 30 ações de voto por minuto por visitante
-  const limit = await limitar(`voto:${visitante}`, 30, 60 * 1000);
+  // Rate limit: máx 150 ações de voto por minuto por visitante (tolerante a cliques repetidos)
+  const limit = await limitar(`voto:${visitante}`, 150, 60 * 1000, 10 * 1000);
   if (!limit.permitido) {
     return NextResponse.json(
       { erro: "Muitos votos em pouco tempo. Aguarde alguns instantes." },

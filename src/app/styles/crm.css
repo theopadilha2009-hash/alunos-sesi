@@ -3138,6 +3138,13 @@ body:has(.login-tela-container) {
   border-color: var(--accent);
 }
 
+.card-projeto-item-editor.projeto-item-editando,
+.projeto-item-editando {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+  box-shadow: 0 0 16px -2px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
 .proj-thumb-wrap {
   width: 90px;
   height: 65px;

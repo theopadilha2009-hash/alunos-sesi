@@ -196,6 +196,24 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
   const [editandoProjId, setEditandoProjId] = useState<string | null>(null);
   const [arrastandoImgProjeto, setArrastandoImgProjeto] = useState(false);
 
+  const projetosParaEnviar = useMemo(() => {
+    if (editandoProjId && novoProjTitulo.trim()) {
+      const linkNormalizado = normalizarLink(novoProjLink);
+      return projetos.map((p) =>
+        p.id === editandoProjId
+          ? {
+              ...p,
+              titulo: novoProjTitulo.trim(),
+              descricao: novoProjDesc.trim(),
+              link: linkNormalizado,
+              imagem: novoProjImg.trim() || undefined,
+            }
+          : p,
+      );
+    }
+    return projetos;
+  }, [projetos, editandoProjId, novoProjTitulo, novoProjDesc, novoProjLink, novoProjImg]);
+
   // Lista de mídias (Imagens e GIFs da Galeria)
   const [midias, setMidias] = useState<MidiaAluno[]>(
     alunoAtual?.midias && Array.isArray(alunoAtual.midias) ? alunoAtual.midias : [],
@@ -357,6 +375,15 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
    * inválido em `sanitizarProjetos`; esta aqui só existe para o aluno saber na
    * hora, em vez de descobrir depois que o link sumiu.
    */
+  function normalizarLink(bruto: string): string | undefined {
+    const limpo = bruto.trim();
+    if (!limpo) return undefined;
+    if (!/^https?:\/\//i.test(limpo)) {
+      return `https://${limpo}`;
+    }
+    return limpo;
+  }
+
   function linkAceitavel(bruto: string): boolean {
     const link = bruto.trim();
     if (!link) return true;
@@ -380,8 +407,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     if (nome.trim().length < 2) {
       return "O nome precisa ter pelo menos 2 caracteres.";
     }
-    if (!linkAceitavel(novoProjLink)) {
-      return "O link da criação precisa começar com http:// ou https://.";
+    const linkNormalizado = normalizarLink(novoProjLink);
+    if (linkNormalizado && !linkAceitavel(linkNormalizado)) {
+      return "O link da criação é inválido.";
     }
     return null;
   }
@@ -393,8 +421,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     setNovoProjLink(proj.link || "");
     setNovoProjImg(proj.imagem || "");
     setAvisoProjeto(null);
-    const elem = document.getElementById("form-projeto-editor");
-    if (elem) elem.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      const elem = document.getElementById("form-projeto-editor");
+      if (elem) {
+        elem.scrollIntoView({ behavior: "smooth", block: "center" });
+        const input = elem.querySelector<HTMLInputElement>("input");
+        input?.focus();
+      }
+    }, 50);
   }
 
   function cancelarEdicaoProjeto() {
@@ -411,8 +445,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
       setAvisoProjeto("Dê um título ao projeto para salvá-lo.");
       return;
     }
-    if (!linkAceitavel(novoProjLink)) {
-      setAvisoProjeto("O link da criação precisa começar com http:// ou https://.");
+    const linkNormalizado = normalizarLink(novoProjLink);
+    if (linkNormalizado && !linkAceitavel(linkNormalizado)) {
+      setAvisoProjeto("O link da criação é inválido. Digite um endereço válido.");
       return;
     }
     const aviso = conferirTamanhoDaImagem(novoProjImg.trim(), "projetos");
@@ -429,7 +464,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                 ...p,
                 titulo: novoProjTitulo.trim(),
                 descricao: novoProjDesc.trim(),
-                link: novoProjLink.trim() || undefined,
+                link: linkNormalizado,
                 imagem: novoProjImg.trim() || undefined,
               }
             : p,
@@ -1184,7 +1219,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
         {/* A troca de senha sai pelo botão próprio do card de segurança
             (formAction={acaoSeguranca}); o "Salvar Todas as Alterações" não
             recebe estes campos de propósito. */}
-        <input type="hidden" name="projetos" value={JSON.stringify(projetos)} />
+        <input type="hidden" name="projetos" value={JSON.stringify(projetosParaEnviar)} />
         <input type="hidden" name="midias" value={JSON.stringify(midias)} />
         <input type="hidden" name="stickers" value={JSON.stringify(stickers)} />
         {/* Vídeo não é campo de presença, ao contrário da foto: o action lê o
@@ -1847,9 +1882,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                     <p>Nenhum projeto cadastrado ainda. Use o formulário abaixo para adicionar seu primeiro trabalho.</p>
                   </div>
                 ) : (
-                  <div className="grade-projetos-editor">
+                    <div className="grade-projetos-editor">
                     {projetos.map((proj) => (
-                      <div key={proj.id} className="card-projeto-item-editor">
+                      <div
+                        key={proj.id}
+                        className={`card-projeto-item-editor ${editandoProjId === proj.id ? "projeto-item-editando" : ""}`}
+                      >
                         {proj.imagem ? (
                           <div className="proj-thumb-wrap">
                             <img src={proj.imagem} alt={proj.titulo} className="proj-thumb-img" />
@@ -1914,7 +1952,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               {/* Adicionar ou Editar Criação */}
               <div className="painel-card" id="form-projeto-editor">
                 <header className="painel-card-topo">
-                  <h3>{editandoProjId ? "✏️ Editar Criação" : "+ Cadastrar Nova Criação"}</h3>
+                  <h3>{editandoProjId ? "Editar Criação" : "+ Cadastrar Nova Criação"}</h3>
                   <p>
                     {editandoProjId
                       ? "Atualize as informações, fotos ou links do seu projeto escolar selecionado"
@@ -2067,7 +2105,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                       onClick={salvarOuAdicionarProjeto}
                       disabled={enviando === "projeto"}
                     >
-                      <IconePlus tamanho={15} />
+                      {editandoProjId ? <IconeCheck tamanho={15} /> : <IconePlus tamanho={15} />}
                       <span>{editandoProjId ? "Salvar Alterações no Projeto" : "Adicionar Projeto à Lista"}</span>
                     </button>
                   </div>

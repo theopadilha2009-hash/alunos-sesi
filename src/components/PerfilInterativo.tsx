@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
-import { BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
+import { LinhaCargos } from "@/components/CargosBadges";
 import { CrachaModal } from "@/components/CrachaModal";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { Insignias } from "@/components/Insignias";
@@ -232,40 +232,40 @@ export function PerfilInterativo({
           overflow: "hidden",
         }}
       >
-        {/* Capa do topo. Sem imagem o CSS desenha um degradê da cor de destaque,
-            então o aluno que só escolheu a cor não fica com um buraco no lugar
-            da capa. Decorativa: quem descreve o perfil é o nome logo abaixo. */}
-        <div
-          className="perfil-capa"
-          aria-hidden="true"
-          style={
-            aluno.banner_url ? { backgroundImage: `url("${aluno.banner_url}")` } : undefined
-          }
-        />
-
-        {/* Stickers / GIFs Flutuantes posicionados estilo Canva no topo do perfil */}
-        {stickersBanner.map((st) => (
+        {/* Capa do topo com stickers perfeitamente contidos no enquadramento 3:1 */}
+        <div className="perfil-capa-wrap">
           <div
-            key={st.id}
-            className="sticker-flutuante-perfil"
-            style={{
-              position: "absolute",
-              left: `${st.x}%`,
-              top: `${st.y}%`,
-              width: `${st.tamanho || 64}px`,
-              transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
-              pointerEvents: "none",
-              zIndex: 3,
-            }}
-            title={st.rotulo || "Sticker"}
-          >
-            <img
-              src={st.url}
-              alt={st.rotulo || "Elemento visual"}
-              style={{ width: "100%", height: "auto", display: "block" }}
-            />
-          </div>
-        ))}
+            className="perfil-capa"
+            aria-hidden="true"
+            style={
+              aluno.banner_url ? { backgroundImage: `url("${aluno.banner_url}")` } : undefined
+            }
+          />
+
+          {/* Stickers / GIFs Flutuantes posicionados estilo Canva restritos ao banner */}
+          {stickersBanner.map((st) => (
+            <div
+              key={st.id}
+              className="sticker-flutuante-perfil"
+              style={{
+                position: "absolute",
+                left: `${st.x}%`,
+                top: `${st.y}%`,
+                width: `${st.tamanho || 64}px`,
+                transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
+                pointerEvents: "none",
+                zIndex: 3,
+              }}
+              title={st.rotulo || "Sticker"}
+            >
+              <img
+                src={st.url}
+                alt={st.rotulo || "Elemento visual"}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+          ))}
+        </div>
 
         <div className="perfil-topo">
           <div className="perfil-avatar-wrap">
@@ -284,11 +284,12 @@ export function PerfilInterativo({
           <div className="perfil-titulos">
             <h1>{aluno.nome}</h1>
             <div className="perfil-sub-linha">
-              {salaNome ? (
-                <BadgeTurma sala={salaNome} corSala={aluno.corSala} />
-              ) : null}
-              {aluno.fixado ? <BadgeFixado /> : null}
-              {aluno.destaque ? <BadgeDestaque /> : null}
+              <LinhaCargos
+                aluno={aluno}
+                role={(aluno as unknown as { role?: string }).role}
+                agruparExtras
+                tamanho="padrao"
+              />
               <Link
                 href={`/validar/${aluno.slug}`}
                 target="_blank"
@@ -506,36 +507,38 @@ export function PerfilInterativo({
         ) : null}
 
         <div className="perfil-grade-acoes">
-          <div className="perfil-links">
-            <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
-            <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
-            <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
-            <BadgeEmail email={aluno.email} nomeAluno={aluno.nome} />
+          <div className="perfil-coluna-redes">
+            <span className="perfil-label-secao">Redes Profissionais & Contato:</span>
+            <div className="perfil-links">
+              <BadgeLinkedIn url={aluno.linkedin} nomeAluno={aluno.nome} />
+              <BadgeGitHub username={aluno.github} nomeAluno={aluno.nome} />
+              <BadgeInstagram username={aluno.instagram} nomeAluno={aluno.nome} />
+              <BadgeEmail email={aluno.email} nomeAluno={aluno.nome} />
+            </div>
 
-            <button
-              type="button"
-              className="estrela botao-estrela-grande"
-              aria-pressed={estrelado}
-              disabled={carregandoVoto}
-              onClick={votarEstrela}
-              title="Dar estrela de reconhecimento ao aluno"
-            >
-              <IconeEstrela preenchida={estrelado} tamanho={16} />
-              <span>{estrelas} estrelas</span>
-            </button>
+            <div className="perfil-estrelas-linha">
+              <button
+                type="button"
+                className="estrela botao-estrela-grande"
+                aria-pressed={estrelado}
+                disabled={carregandoVoto}
+                onClick={votarEstrela}
+                title="Dar estrela de reconhecimento ao aluno"
+              >
+                <IconeEstrela preenchida={estrelado} tamanho={16} />
+                <span>{estrelas} estrelas recebidas</span>
+              </button>
 
-            {/* O rótulo já diz o estado, então não leva aria-pressed: um botão
-                que anuncia "pressionado" e ainda troca o texto vira ruído no
-                leitor de tela. O title diz o que o clique faz. */}
-            <button
-              type="button"
-              className="botao botao-fraco botao-som"
-              onClick={alternarSom}
-              title={comSom ? "Desligar som e confetes" : "Ligar som e confetes"}
-            >
-              {comSom ? <IconeSom tamanho={15} /> : <IconeSomMudo tamanho={15} />}
-              <span>{comSom ? "Som ligado" : "Som desligado"}</span>
-            </button>
+              <button
+                type="button"
+                className="botao-som-toggle"
+                onClick={alternarSom}
+                title={comSom ? "Efeitos sonoros e confetes ativos (clique para silenciar)" : "Efeitos sonoros e confetes desativados (clique para ativar)"}
+                aria-label={comSom ? "Desativar efeitos sonoros" : "Ativar efeitos sonoros"}
+              >
+                {comSom ? <IconeSom tamanho={15} /> : <IconeSomMudo tamanho={15} />}
+              </button>
+            </div>
           </div>
 
           {/* Cartão de Compartilhamento & Ações Oficiais */}
