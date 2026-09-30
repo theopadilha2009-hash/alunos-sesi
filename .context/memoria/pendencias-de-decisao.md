@@ -32,9 +32,10 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
 - **O que a mesma revisão achou e não pode voltar** (30/09, tudo no mesmo PR):
   (1) a senha mínima é **8**, não 4 — o comentário de `problemaDaSenha` diz que a
   divergência 4/8 era bug a corrigir, e baixar para 4 é reintroduzi-lo.
-  (2) `garantirSala` (`adm/acoes.ts`) e o passo 4 do login usam **`fold`/`eq` em
-  memória**, não `ilike`: `%` e `_` digitados viram curinga no `ilike`, e o
-  comentário do `auth.ts` registra isso — não "simplifique" de volta.
+  (2) `garantirSala` (`adm/acoes.ts`) e o passo 4 do login buscam **em memória**,
+  não por `ilike`: `%` e `_` digitados viram curinga no `ilike`, e o comentário do
+  `auth.ts` registra isso — não "simplifique" de volta. **Mas a chave é
+  `chaveDaSala`, não o `fold`** — ver o item (9).
   (3) `alunos.email` é o que o aluno **digitou** e passou em `sanitizarEmail`;
   `null` quer dizer "não informou" — não fabrique `username@estudante...`, que a
   vitrine exibe como prova de vínculo e que viola o CHECK quando o username tem
@@ -56,6 +57,16 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   (8) O cargo do crachá **só vem por prop**, nunca de `aluno`: `role` mora em
   `public.usuarios`, não em `alunos`. O cast que existia lia `undefined` sempre,
   e fica de fora de propósito porque buscá-lo publicaria quem é ADM.
+  (9) A chave de identidade de uma turma é **`chaveDaSala` (`cores.ts`) — `trim` +
+  caixa alta —, NÃO o `fold` de `busca.ts`**. Os dois parecem a mesma coisa e não
+  são: `fold` é equivalência de BUSCA (apaga `º`, `ª` e acento, para "3ºA", "3oA" e
+  "3A" acharem a mesma coisa quando alguém digita), e `salas.nome` é `unique` sem
+  `citext` — logo "3ºA" e "3A" são **duas linhas** no banco. A correção do `ilike`
+  em 30/09 usou `fold` na identidade e trocou um bug por outro: a planilha com "3A"
+  matriculava o aluno na turma "3ºA", agora sem nem o sintoma que o `ilike` dava.
+  `garantirSala` e `corDaSala` leem a mesma chave de propósito — a mesma turma tem
+  a mesma cor em qualquer tela e a mesma identidade no cadastro.
+  `tests/cores.test.mjs` guarda a diferença.
 
 
 - **Trava de foco nos 5 diálogos** — implementada em `src/lib/foco.ts` (o núcleo
@@ -485,27 +496,32 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
 
 - **Abertos pela revisão de 30/09, nenhum deles consertado** — todos medidos, e
   todos com o mesmo perfil: não são bug de tela hoje, são dívida com gatilho.
-  (1) **`retrato_salas` não filtra `aprovado`** (`001_schema.sql:143-163`,
-  `count(a.id)` cru): o pendente não aparece na vitrine mas **continua contando**
-  nos números de "retrato das turmas" da home e de `/alunos`. É DDL — não foi
-  tocado, e agora que o gate voltou isso volta a ser visível.
+  (1) ~~**`retrato_salas` não filtra `aprovado`**~~ — **fechado em 30/09** pela
+  migration `017_retrato_salas_aprovado.sql`. O filtro entrou na condição do JOIN
+  (no `where`, a turma sem nenhum aprovado sumiria do ranking inteiro) e o
+  `security_invoker = true` foi repetido, porque `create or replace view` **não
+  herda** a opção e sem ela a view passaria a furar a RLS de quem consulta.
+  **Falta aplicar em produção:** o código está no PR, o banco ainda não — até
+  aplicar, o ranking público continua contando os pendentes.
   (2) **`TURMAS_OFICIAIS` (`src/lib/turmas.ts`, 9 turmas hardcoded) não tem
   garantia de existir na tabela `salas`.** Antes, escolher uma turma não
   cadastrada caía calado em "DSM3"; agora o cadastro **falha** com "Sala não
   encontrada". É o comportamento honesto e é uma armadilha nova: **confira as 9
   contra `salas` antes do próximo deploy**, senão aluno legítimo não consegue se
   cadastrar.
-  (3) **Constantes duplicadas:** `MAX_CARACTERES_TITULO_PROJETO` (80),
-  `MAX_CARACTERES_DESCRICAO_PROJETO` (200) e `MAX_BYTES_CAPA` (10 MB, número de
-  julgamento) nasceram em `PaginaMeuPerfil.tsx` porque o contrato do lote não
-  deixava exportar de `seguranca.ts`. O lar é `src/lib/limites.ts` — mover é
-  mecânico e mata a divergência.
+  (3) ~~**Constantes duplicadas**~~ — **fechado em 30/09**: as três foram para
+  `src/lib/limites.ts` (`MAX_CARACTERES_TITULO_PROJETO`,
+  `MAX_CARACTERES_DESCRICAO_PROJETO`, `MAX_BYTES_CAPA`), o módulo-folha sem
+  `node:crypto` que o `seguranca.ts` já lia — era esse o motivo de a duplicação
+  ser evitável, e não inevitável.
   (4) **O dropzone de capa de projeto promete "até 4MB"** e o teto real de
   `projetos` é 2 MB de data URL (~1,5 MB de imagem). O texto discorda do
   comportamento.
-  (5) **`selo-adm` virou o nome da classe que marca `destaque`**, não papel: com
-  o ícone e o rótulo já corrigidos para "Destaque", só o nome ficou para trás.
-  Renomear custa tocar em CSS e no `tests/classes-css.test.mjs`.
+  (5) **Só o NOME da classe `selo-adm` ficou para trás.** O rótulo agora diz
+  "Destaque" nas duas telas — o `/validar/[slug]` dizia "Destaque ADM" e foi
+  corrigido em 30/09, porque o selo marca `aluno.destaque` e não um cargo. Fica
+  devendo só o nome: renomear custa tocar em CSS e no
+  `tests/classes-css.test.mjs`.
   (6) **`aprovarAluno` é check-then-set** (lê `aprovado`, grava o inverso): dois
   ADMs clicando junto podem não chegar ao estado esperado.
   (7) **A troca de turma que falha reverte em silêncio** no CRM: a revalidação
@@ -520,7 +536,12 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   mudam o desenho dos badges no tema claro, inclusive dentro do crachá e do
   cartão NFC), o upload de sticker pelo Blob e os dois guardas do banner foram
   verificados por cálculo, leitura e typecheck — não por olho na tela. Quem
-  abrir o app em cada tema prova.
+  abrir o app em cada tema prova. Em 30/09 entrou mais coisa no mesmo balde: os
+  números de contraste do endosso em `cracha-digital.css` foram **recalculados**
+  (o pior fundo claro é 5,36:1, não os 6,68:1 que o comentário dizia), a guarda
+  de `file.size` antes do `FileReader` no sticker, e o marcador "(linha atual)"
+  no seletor de turma. O pixel continua não visto, e os números novos são
+  aritmética conferida, não medição em tela.
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
