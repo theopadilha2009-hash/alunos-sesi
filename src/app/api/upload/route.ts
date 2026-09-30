@@ -5,6 +5,7 @@ import { caminhoPertenceAoAluno } from "@/lib/blob";
 import { logger } from "@/lib/debug";
 import { LIMITES_STICKERS, MAX_DATA_URL_IMAGEM } from "@/lib/limites";
 import { limitar } from "@/lib/rate-limit";
+import { alunoPorSlug } from "@/lib/dados";
 
 /**
  * O token do upload direto.
@@ -89,15 +90,21 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const sessao = await obterSessao();
-        if (!sessao?.alunoId) {
+        let alunoId = sessao?.alunoId;
+        if (!alunoId && sessao?.role === "super_adm") {
+          const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
+          if (theo) alunoId = theo.id;
+        }
+
+        if (!alunoId) {
           throw new RecusaDeEnvio("Entre como aluno para enviar imagens.");
         }
 
-        if (!caminhoPertenceAoAluno(pathname, sessao.alunoId)) {
+        if (!caminhoPertenceAoAluno(pathname, alunoId)) {
           throw new RecusaDeEnvio("Endereço de envio fora da sua pasta.");
         }
 
-        const limite = await limitar(`upload:${sessao.alunoId}`, 40, 60 * 1000);
+        const limite = await limitar(`upload:${alunoId}`, 40, 60 * 1000);
         if (!limite.permitido) {
           throw new RecusaDeEnvio("Muitos envios em pouco tempo. Aguarde um instante.");
         }

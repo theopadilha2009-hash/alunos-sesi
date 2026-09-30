@@ -75,37 +75,57 @@ export async function formatarEComprimirBanner(
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dim.w, dim.h);
+    try {
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, dim.w, dim.h);
+    } catch {
+      continue;
+    }
 
     for (const q of qualidades) {
-      const dataUrl = canvas.toDataURL("image/jpeg", q);
-      melhorDataUrl = dataUrl;
-      if (dataUrl.length <= MAX_DATA_URL_CAPA) {
-        // Encontrou tamanho seguro!
-        // Se alunoId foi informado, tenta upload direto no Vercel Blob
-        if (alunoId) {
-          try {
-            const arquivo = blobDoDataUrl(dataUrl);
-            const { url } = await upload(
-              caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
-              arquivo,
-              {
-                access: "public",
-                handleUploadUrl: "/api/upload",
-                clientPayload: JSON.stringify({ campo: "capa" }),
-              },
-            );
-            if (url) return url;
-          } catch {
-            // Em caso de falha de blob (ex: dev local sem token), usa o dataUrl seguro
-          }
+      try {
+        const dataUrl = canvas.toDataURL("image/jpeg", q);
+        melhorDataUrl = dataUrl;
+        if (dataUrl.length <= MAX_DATA_URL_CAPA) {
+          break;
         }
-        return dataUrl;
+      } catch {
+        // Ignora erro de extração de canvas
       }
+    }
+    if (melhorDataUrl && melhorDataUrl.length <= MAX_DATA_URL_CAPA) {
+      break;
     }
   }
 
-  // Fallback caso todas as tentativas excedam (retorna o menor obtido)
+  if (!melhorDataUrl) {
+    throw new Error("Não foi possível processar a imagem do banner.");
+  }
+
+  // Se alunoId foi informado, tenta upload direto no Vercel Blob com teto estrito de 8 segundos
+  if (alunoId && melhorDataUrl.startsWith("data:")) {
+    const controle = new AbortController();
+    const timeout = setTimeout(() => controle.abort(), 8000);
+    try {
+      const arquivo = blobDoDataUrl(melhorDataUrl);
+      const { url } = await upload(
+        caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
+        arquivo,
+        {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+          clientPayload: JSON.stringify({ campo: "capa" }),
+          abortSignal: controle.signal,
+        },
+      );
+      if (url) return url;
+    } catch {
+      // Em caso de falha, timeout ou offline do Blob, o dataUrl seguro é retornado imediatamente
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  // Fallback caso Blob não responda: dataUrl compactado
   return melhorDataUrl;
 }
 

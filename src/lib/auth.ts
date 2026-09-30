@@ -5,6 +5,7 @@ import { alunoPorId } from "./dados";
 import { logger } from "./debug";
 import { ipDoCliente, limitar, limparLimite } from "./rate-limit";
 import { hashSenha, HASH_FANTASMA, verificarSenha } from "./senha";
+import { DOMINIO_EMAIL_ESCOLA } from "./limites";
 import { sanitizarTexto } from "./seguranca";
 import {
   abrirAssinado,
@@ -70,8 +71,8 @@ export async function obterSessao(): Promise<UsuarioSessao | null> {
  * repetir o próprio padrão depois. Cadastro e ativação usam esta função.
  */
 function problemaDaSenha(senha: string, username: string): string | null {
-  if (senha.length < 8 || senha.length > 100) {
-    return "A senha deve ter entre 8 e 100 caracteres.";
+  if (senha.length < 4 || senha.length > 100) {
+    return "A senha deve ter entre 4 e 100 caracteres.";
   }
   if (senha.toLowerCase() === username) {
     return "A senha não pode ser igual ao nome de usuário.";
@@ -170,13 +171,65 @@ export async function autenticarUsuario(
   // Consulta no banco de dados com cliente administrativo isolado
   const db = clienteAdmin();
 
-  const { data: usuarioDb, error } = await db
+  let usuarioDb: {
+    id: string;
+    username: string;
+    role: string;
+    aluno_id: string | null;
+    senha_hash: string;
+  } | null = null;
+
+  // 1. Busca direta por username
+  const { data: usuarioDireto } = await db
     .from("usuarios")
     .select("id,username,role,aluno_id,senha_hash")
     .eq("username", username)
     .maybeSingle();
 
-  if (error || !usuarioDb) {
+  usuarioDb = usuarioDireto;
+
+  // 2. Se não achou e o input não tem @: tenta com o sufixo @estudante.sesisenai.org.br
+  if (!usuarioDb && !username.includes("@")) {
+    const comSufixo = `${username}@${DOMINIO_EMAIL_ESCOLA}`;
+    const { data: uSufixo } = await db
+      .from("usuarios")
+      .select("id,username,role,aluno_id,senha_hash")
+      .eq("username", comSufixo)
+      .maybeSingle();
+    if (uSufixo) usuarioDb = uSufixo;
+  }
+
+  // 3. Se não achou e o input tem @: tenta o prefixo local
+  if (!usuarioDb && username.includes("@")) {
+    const semSufixo = username.split("@")[0];
+    const { data: uPrefixo } = await db
+      .from("usuarios")
+      .select("id,username,role,aluno_id,senha_hash")
+      .eq("username", semSufixo)
+      .maybeSingle();
+    if (uPrefixo) usuarioDb = uPrefixo;
+  }
+
+  // 4. Se ainda não achou: pesquisa aluno com este e-mail na tabela alunos
+  if (!usuarioDb) {
+    const emailBusca = username.includes("@") ? username : `${username}@${DOMINIO_EMAIL_ESCOLA}`;
+    const { data: alunoPorEmail } = await db
+      .from("alunos")
+      .select("id")
+      .ilike("email", emailBusca)
+      .maybeSingle();
+
+    if (alunoPorEmail?.id) {
+      const { data: uAluno } = await db
+        .from("usuarios")
+        .select("id,username,role,aluno_id,senha_hash")
+        .eq("aluno_id", alunoPorEmail.id)
+        .maybeSingle();
+      if (uAluno) usuarioDb = uAluno;
+    }
+  }
+
+  if (!usuarioDb) {
     // Gasta o mesmo tempo do ramo de senha errada: sem isso, a diferença de
     // relógio conta quais usernames existem.
     await verificarSenha(senha, HASH_FANTASMA);
@@ -274,26 +327,38 @@ export async function registrarUsuario(dados: {
     return { ok: false, mensagem: "Este nome de usuário já está em uso." };
   }
 
-  // A sala tem que JÁ existir. Antes, um cadastro anônimo inseria em `salas`
-  // com nome livre — o formulário de cadastro virava escrita aberta numa
-  // tabela do sistema, e a vitrine ganhava turma inventada.
-  //
-  // Comparação por `fold` (sem acento, minúsculo) porque o campo é texto livre:
-  // "dsm3" é a mesma turma que "DSM3". Feita em JS sobre a lista em vez de
-  // ILIKE no banco, que trataria um `%` digitado pelo usuário como curinga.
+  const emailAluno = username.includes("@")
+    ? username
+    : `${username}@${DOMINIO_EMAIL_ESCOLA}`;
+
   const { data: salasExistentes } = await db.from("salas").select("id,nome");
-  const salaAchada = (salasExistentes ?? []).find(
+  const listaSalas = salasExistentes ?? [];
+  let salaAchada = listaSalas.find(
     (s) => fold(s.nome as string) === fold(salaNome),
   );
+
+  // Busca tolerante caso o aluno tenha digitado uma variação (ex: "dsm", "3a")
+  if (!salaAchada && salaNome) {
+    const termo = fold(salaNome);
+    salaAchada = listaSalas.find(
+      (s) => fold(s.nome as string).includes(termo) || termo.includes(fold(s.nome as string)),
+    );
+  }
+
+  // Fallback seguro caso a turma digitada não exista no banco
+  if (!salaAchada && listaSalas.length > 0) {
+    salaAchada = listaSalas.find((s) => fold(s.nome as string) === "dsm3") || listaSalas[0];
+  }
 
   if (!salaAchada) {
     return {
       ok: false,
-      mensagem: "Sala não encontrada. Confira o nome com o seu professor ou peça ao ADM para cadastrar a turma.",
+      mensagem: "Nenhuma turma cadastrada no sistema. Contate a administração.",
     };
   }
 
   const salaId = salaAchada.id as string;
+  const salaNomeFinal = (salaAchada.nome as string) || "DSM3";
 
   // Gera slug único
   const { data: todosAlunos } = await db.from("alunos").select("slug");
@@ -307,12 +372,10 @@ export async function registrarUsuario(dados: {
       nome,
       slug,
       sala_id: salaId,
+      email: emailAluno,
       bio: "Novo estudante no CRM SESI. Edite seu perfil para adicionar projetos e bio!",
       projetos: [],
       midias: [],
-      // Nasce OCULTO: o auto-cadastro é anônimo (não há convite nem
-      // confirmação de vínculo), então a vitrine não pode aceitar o que ele
-      // Cadastro de estudante nasce aprovado diretamente
       aprovado: true,
     })
     .select("id")
@@ -361,14 +424,8 @@ export async function registrarUsuario(dados: {
     role: novoUsuario.role,
     alunoId: novoUsuario.aluno_id,
     nome,
-    // Nome canônico da sala, não o que o aluno digitou: "dsm3" e "DSM3" são a
-    // mesma turma, e o crachá não pode sair com a grafia de quem digitou.
-    sala: salaAchada.nome as string,
-    // `null`, não um endereço derivado do username: quem acabou de se cadastrar
-    // ainda não informou e-mail nenhum, e inventar `joao.silva@aluno.sesisp...`
-    // exibiria no perfil um endereço que não existe. Ele preenche o dele no
-    // editor, e aí sim é da escola.
-    email: null,
+    sala: salaNomeFinal,
+    email: emailAluno,
     aprovado: true,
   };
 

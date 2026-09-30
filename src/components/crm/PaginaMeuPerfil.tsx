@@ -1975,6 +1975,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               nomeAluno={nome}
               fotoAluno={foto}
               salaAluno={sala}
+              capa={capa}
+              corPerfil={corPerfil}
               projetos={projetos}
               stickers={stickers}
               onChangeStickers={setStickers}
@@ -2450,7 +2452,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
       <ModalRecortarBanner
         aberto={modalRecorteAberto}
         imagemFonte={imagemParaRecorte}
-        alunoId={usuario.alunoId}
+        alunoId={alunoAtual?.id || usuario.alunoId || undefined}
         nomeAluno={nome}
         onFechar={() => setModalRecorteAberto(false)}
         onSalvar={handleSalvarBannerRecortado}

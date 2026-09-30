@@ -10,11 +10,14 @@ import {
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";
 import { Avatar } from "@/components/Avatar";
+import { corDoAluno } from "@/lib/cores";
 
 type Props = {
   nomeAluno: string;
   fotoAluno?: string | null;
   salaAluno: string;
+  capa?: string | null;
+  corPerfil?: string | null;
   projetos: ProjetoAluno[];
   stickers: StickerPerfil[];
   onChangeStickers: (novos: StickerPerfil[]) => void;
@@ -58,6 +61,8 @@ export function StickerCanvas({
   nomeAluno,
   fotoAluno,
   salaAluno,
+  capa,
+  corPerfil,
   projetos,
   stickers,
   onChangeStickers,
@@ -485,6 +490,17 @@ export function StickerCanvas({
             <div
               className={`canvas-banner-preview ${alvoAtivo === "banner" ? "canvas-ativo" : ""} ${stickerSelecionado ? "canvas-zona-destaque" : ""}`}
               onClick={handleCliqueCanvasBanner}
+              style={{
+                ...(capa
+                  ? {
+                      backgroundImage: `linear-gradient(180deg, rgba(6, 14, 24, 0.35) 0%, rgba(6, 14, 24, 0.82) 100%), url("${capa}")`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : {
+                      backgroundImage: `linear-gradient(135deg, ${corDoAluno(corPerfil, salaAluno)} 0%, #0d1926 70%)`,
+                    }),
+              }}
             >
               {/* Elementos/Stickers do Banner */}
               {stickersDoBanner.map((st) => {

@@ -132,12 +132,12 @@ export function LoginTela() {
             ) : null}
 
             <div className="campo">
-              <label htmlFor="login-user">Usuário</label>
+              <label htmlFor="login-user">E-mail da Escola ou Usuário</label>
               <input
                 id="login-user"
                 name="username"
                 type="text"
-                placeholder="Seu usuário ou e-mail"
+                placeholder="Ex.: theo ou theo@estudante.sesisenai.org.br"
                 required
                 autoComplete="username"
               />
@@ -149,7 +149,7 @@ export function LoginTela() {
                 id="login-pass"
                 name="senha"
                 type="password"
-                placeholder="Sua senha"
+                placeholder="Sua senha de acesso"
                 required
                 autoComplete="current-password"
               />
@@ -195,28 +195,23 @@ export function LoginTela() {
                 id="cad-sala"
                 name="sala"
                 type="text"
-                placeholder="Ex.: DSM3"
+                placeholder="Ex.: DSM3 ou 3ºA"
+                defaultValue="DSM3"
                 required
               />
-              {/* Só turma que já existe: sala nova quem cria é o ADM, pelo
-                  painel. Antes o cadastro inseria em `salas` com nome livre. */}
-              <span className="dica-campo">Use o nome de uma turma já cadastrada.</span>
+              <span className="dica-campo">Ex.: DSM3, 3ºA, ou a turma do seu curso no SESI.</span>
             </div>
 
             <div className="linha-campos">
               <div className="campo">
-                <label htmlFor="cad-user">Usuário de Login</label>
+                <label htmlFor="cad-user">E-mail da Escola ou Usuário</label>
                 <input
                   id="cad-user"
                   name="username"
                   type="text"
-                  placeholder="Seu usuário ou e-mail"
+                  placeholder="seu.nome ou seu e-mail"
                   required
                 />
-                {/* O e-mail institucional é o login natural do aluno, mas o
-                    cadastro o recusava — quem tentasse não entendia o motivo.
-                    O domínio vai escrito para o aluno não digitar o errado: o
-                    `alunos.email` do perfil exige exatamente este sufixo. */}
                 <span className="dica-campo">
                   Pode ser o seu e-mail da escola.{" "}
                   <button
@@ -230,12 +225,12 @@ export function LoginTela() {
               </div>
 
               <div className="campo">
-                <label htmlFor="cad-pass">Senha</label>
+                <label htmlFor="cad-pass">Senha (mínimo 4 caracteres)</label>
                 <input
                   id="cad-pass"
                   name="senha"
                   type="password"
-                  placeholder="Crie uma senha"
+                  placeholder="Crie sua senha"
                   required
                 />
               </div>
@@ -246,7 +241,7 @@ export function LoginTela() {
               className="botao botao-primario-grande w-full"
               disabled={carregandoCadastro}
             >
-              {carregandoCadastro ? "Criando conta..." : "Criar Conta & Personalizar Perfil →"}
+              {carregandoCadastro ? "Criando conta..." : "Criar Conta & Entrar no CRM →"}
             </button>
           </form>
         </div>
