@@ -21,6 +21,7 @@ import {
 import { parseLista, type ErroLinha } from "@/lib/importar";
 import { tomDaImportacao } from "@/lib/importacao";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
+import { alvoDaSala } from "@/lib/sala-do-aluno";
 import { SENHA_BLOQUEADA } from "@/lib/senha";
 import { sanitizarTexto } from "@/lib/seguranca";
 import { obterSessao } from "@/lib/auth";
@@ -519,10 +520,16 @@ export async function alternar(formData: FormData): Promise<void> {
  * autoridade sobre a lista de turmas — o oposto do cadastro anônimo, que agora
  * só aceita turma existente.
  *
- * Devolve `void` (e não `Estado`) porque é chamada direto como `action` de um
- * `<form>` no painel, igual a `alternar` e `removerAluno`: ação de formulário
- * simples recebe só o `FormData`, não o par `(estado, formData)` do
- * `useActionState`.
+ * Devolve `Estado` (e não `void`) porque o seletor de cada linha é um
+ * `useActionState`: é a resposta DESTA chamada que diz ao ADM se a troca foi
+ * gravada, e é ela que manda desfazer a pintura otimista da linha. Inferir isso
+ * da lista revalidada não fecha — qualquer outra ação do painel revalida o mesmo
+ * caminho, e uma revalidação que chega antes da resposta julga a troca contra um
+ * payload que ainda não a tem: a troca que vingou virava recusa na tela.
+ *
+ * Quem decide se o pedido é uma turma existente (id) ou um nome é o
+ * `alvoDaSala` (`src/lib/sala-do-aluno.ts`), a parte da troca que dá para testar
+ * sem banco.
  *
  * O cookie de sessão do próprio aluno continua com a sala antiga até ele logar
  * de novo — não dá para reescrever o cookie de outra pessoa daqui. A vitrine, o
@@ -530,58 +537,54 @@ export async function alternar(formData: FormData): Promise<void> {
  *
  * `revalidar()` roda também nos caminhos de FALHA, e isso não é zelo: quem
  * chamou já pintou a turma nova na linha (`handleMudarSalaAluno`, no CRM) antes
- * de a resposta chegar. Sem a revalidação, a lista local guarda a troca que o
- * banco recusou e não recebe prop nova nenhuma para desfazê-la — o painel fica
- * mostrando ao ADM uma turma que ninguém gravou.
+ * de a resposta chegar. O cliente desfaz a própria pintura quando lê a recusa
+ * (`onSalaRecusada`), mas quem manda o retrato de verdade da lista é esta
+ * revalidação — sem ela o painel mostraria ao ADM a turma que ninguém gravou até
+ * o próximo carregamento.
  */
-export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
+export async function mudarSalaDoAluno(
+  _estado: Estado,
+  formData: FormData,
+): Promise<Estado> {
   await exigirAdm();
 
   const alunoId = texto(formData, "alunoId");
-  const salaIdParam = texto(formData, "salaId");
-  const nomeSala = sanitizarTexto(texto(formData, "sala"), 30);
+  if (!alunoId) return { ok: false, mensagem: "Aluno inválido." };
 
-  if (!alunoId) return;
+  const alvo = alvoDaSala(texto(formData, "salaId"), sanitizarTexto(texto(formData, "sala"), 30));
+  if (alvo.tipo === "nada") {
+    revalidar();
+    return { ok: false, mensagem: "Escolha a turma para onde mover o aluno." };
+  }
 
   const db = clienteAdmin();
 
-  let salaIdFinal = "";
+  let salaIdFinal: string;
 
-  if (salaIdParam && RE_UUID.test(salaIdParam)) {
-    salaIdFinal = salaIdParam;
-  } else if (salaIdParam) {
-    const { data: s } = await db.from("salas").select("id").eq("id", salaIdParam).maybeSingle();
-    if (s?.id) {
-      salaIdFinal = s.id as string;
+  if (alvo.tipo === "id") {
+    salaIdFinal = alvo.salaId;
+  } else {
+    try {
+      salaIdFinal = await garantirSala(db, alvo.nome);
+    } catch (err) {
+      logger.error("ADM", `Falha ao garantir sala "${alvo.nome}"`, err);
+      revalidar();
+      return { ok: false, mensagem: `Não foi possível criar a turma "${alvo.nome}".` };
     }
-  }
-
-  if (!salaIdFinal) {
-    const nomeAlvo = nomeSala || (salaIdParam && !RE_UUID.test(salaIdParam) ? salaIdParam : "");
-    if (nomeAlvo.length >= 2) {
-      try {
-        salaIdFinal = await garantirSala(db, nomeAlvo);
-      } catch (err) {
-        logger.error("ADM", `Falha ao garantir sala "${nomeAlvo}"`, err);
-        revalidar();
-        return;
-      }
-    }
-  }
-
-  if (!salaIdFinal) {
-    revalidar();
-    return;
   }
 
   const { error } = await db.from("alunos").update({ sala_id: salaIdFinal }).eq("id", alunoId);
   if (error) {
     logger.error("ADM", `Falha ao atualizar sala do aluno ${alunoId}`, error);
     revalidar();
-    return;
+    return {
+      ok: false,
+      mensagem: "Não foi possível trocar a turma agora. Tente de novo em instantes.",
+    };
   }
 
   revalidar();
+  return { ok: true, mensagem: "Turma atualizada." };
 }
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
@@ -31,7 +31,7 @@ import { TemaToggle } from "@/components/TemaToggle";
 import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
-import { chaveDaSala, corDaSala, corDoAluno } from "@/lib/cores";
+import { corDaSala, corDoAluno } from "@/lib/cores";
 import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos } from "@/lib/ranking";
@@ -67,44 +67,6 @@ type Props = {
 
 type AbaAtiva = "portfolio" | "projetos" | "desafios" | "tabelas" | "perfil" | "adm";
 
-/** Troca de turma pedida pelo ADM e ainda não confirmada pelo servidor. */
-type TrocaDeTurma = { salaId: string; nomeSala: string | null };
-
-/**
- * A troca saiu do papel? Confere contra a linha que o servidor mandou.
- *
- * Duas provas, porque a troca viaja de duas formas: pelo `id` da sala, quando o
- * ADM escolhe uma que já existe, e pelo NOME, quando ele cria uma turma nova —
- * nesse caminho o formulário manda só o texto digitado. O nome é comparado por
- * `chaveDaSala`, a mesma identidade de turma do banco (caixa e espaço, nunca
- * acento), e não pela string crua: "dsm3" e "DSM3" são a mesma sala aqui como
- * são lá.
- */
-function trocaConfirmada(
-  aluno: Aluno,
-  pedido: TrocaDeTurma,
-  nomePorId: Map<string, string>,
-): boolean {
-  if (pedido.salaId && aluno.sala_id === pedido.salaId) return true;
-  if (!pedido.nomeSala) return false;
-  const nomeNoBanco = aluno.sala_id ? (nomePorId.get(aluno.sala_id) ?? aluno.sala) : aluno.sala;
-  return !!nomeNoBanco && chaveDaSala(nomeNoBanco) === chaveDaSala(pedido.nomeSala);
-}
-
-/**
- * A frase da recusa da troca de turma, no tom do CRM.
- *
- * Sem `error.message` do PostgREST: nome de coluna e código de constraint são
- * diagnóstico de log, não frase para o ADM que acabou de mexer no seletor.
- */
-function fraseDaRecusaDaTroca(nomes: string[]): string {
-  const quem =
-    nomes.length === 1
-      ? `a turma de ${nomes[0]}`
-      : `a turma de ${nomes.length} alunos`;
-  return `Não deu para trocar ${quem}: nada foi gravado e a lista voltou para a turma anterior.`;
-}
-
 export function CrmApp({
   usuario,
   alunosIniciais,
@@ -130,40 +92,9 @@ export function CrmApp({
 
   const [lista, setLista] = useState<Aluno[]>(alunosIniciais);
 
-  // Troca de turma em voo, por aluno. Fica em `useRef` e não em `useState`: o
-  // que o ADM escolheu não é para desenhar nada — a pintura otimista da linha já
-  // está na lista —, é para ser conferido quando a resposta do servidor chegar.
-  //
-  // atalho: uma troca em voo por aluno; dois pedidos seguidos na MESMA linha,
-  // antes de a primeira resposta chegar, são conferidos contra o estado do
-  // primeiro e o segundo pode ser lido como recusa. Revisitar se o seletor
-  // passar a disparar mais de uma troca por gesto (arrastar, multiseleção).
-  const trocasPendentes = useRef(new Map<string, TrocaDeTurma>());
-  /** Recusa da troca de turma, escrita acima da tabela do painel ADM. */
-  const [recadoSala, setRecadoSala] = useState<string | null>(null);
-
   // Sincroniza a lista local quando o servidor revalida e envia novas props
   useEffect(() => {
     setLista(alunosIniciais);
-
-    // A resposta da troca de turma chegou — e ela é a única resposta que existe:
-    // `mudarSalaDoAluno` devolve `void` (é `action` de `<form>`), então quem
-    // chamou não tem retorno nenhum para ler. O que o ADM viu pintado foi
-    // gravado? Se não foi, o `setLista` acima já devolveu a linha à turma do
-    // servidor, e a recusa vira frase na tela. Sem isto, o `revalidar()` dos
-    // caminhos de falha corrigia a lista em silêncio e a troca recusada ficava
-    // com cara de sucesso.
-    const pendentes = trocasPendentes.current;
-    if (pendentes.size === 0) return;
-
-    const nomePorId = new Map(salas.map((s) => [s.id, s.nome]));
-    const recusados: string[] = [];
-    for (const [alunoId, pedido] of pendentes) {
-      pendentes.delete(alunoId);
-      const aluno = alunosIniciais.find((a) => a.id === alunoId);
-      if (aluno && !trocaConfirmada(aluno, pedido, nomePorId)) recusados.push(aluno.nome);
-    }
-    if (recusados.length > 0) setRecadoSala(fraseDaRecusaDaTroca(recusados));
   }, [alunosIniciais]);
 
   const handleMudarSalaAluno = (alunoId: string, novaSalaId: string, nomeSala?: string) => {
@@ -178,14 +109,22 @@ export function CrmApp({
           : a,
       ),
     );
-    // A pintura acima vale como pedido: o que o ADM escolheu fica guardado até a
-    // revalidação chegar, para o efeito logo acima poder conferir se vingou. A
-    // recusa anterior sai da tela no mesmo gesto — ela é do pedido antigo.
-    trocasPendentes.current.set(alunoId, {
-      salaId: novaSalaId,
-      nomeSala: nomeSala?.trim() ?? null,
-    });
-    setRecadoSala(null);
+  };
+
+  /**
+   * A troca de turma que o servidor recusou volta atrás na linha.
+   *
+   * Quem chama é o `SeletorSala` daquela linha, no retorno da PRÓPRIA action
+   * (`useActionState`), com a frase que o servidor mandou. O caminho anterior
+   * disto era inferir a falha comparando a lista revalidada com a troca pedida —
+   * e qualquer outra ação do painel revalida o mesmo caminho: uma revalidação
+   * que chegasse antes da resposta julgava a troca contra um payload que ainda
+   * não a tinha, e a troca que vingou virava recusa na tela, para sempre.
+   */
+  const handleSalaRecusada = (alunoId: string) => {
+    const doServidor = alunosIniciais.find((a) => a.id === alunoId);
+    if (!doServidor) return;
+    setLista((antiga) => antiga.map((a) => (a.id === alunoId ? doServidor : a)));
   };
 
   const [meus, setMeus] = useState<string[]>(meusVotos);
@@ -1188,7 +1127,7 @@ export function CrmApp({
               onAbrirCracha={(a) => setAlunoCracha(a)}
               onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
               onMudarSalaAluno={handleMudarSalaAluno}
-              recadoSala={recadoSala}
+              onSalaRecusada={handleSalaRecusada}
             />
           </div>
         ) : null}

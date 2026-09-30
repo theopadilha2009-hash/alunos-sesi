@@ -39,6 +39,7 @@ import {
   MAX_TITULO,
 } from "@/lib/desafios";
 import { contarLacunas, filtrarPorLacuna, ROTULO_LACUNA, type Lacuna } from "@/lib/lacunas";
+import { SENTINELA_NOVA_TURMA } from "@/lib/sala-do-aluno";
 import { TURMAS_OFICIAIS } from "@/lib/turmas";
 import type { AlunoNaTela, SubmissaoDesafio } from "@/lib/tipos";
 
@@ -61,14 +62,13 @@ type Props = {
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
   onMudarSalaAluno?: (alunoId: string, novaSalaId: string, nomeSala: string) => void;
   /**
-   * A frase da troca de turma que o servidor recusou, montada em `CrmApp`.
+   * A troca de turma daquela linha foi recusada — desfaz a pintura otimista.
    *
-   * Vem de fora porque quem fala com o servidor é lá: `mudarSalaDoAluno` é
-   * `void`, e a única resposta é a lista revalidada — é o `CrmApp` que compara o
-   * que foi pedido com o que voltou. Aqui só se escreve o resultado, acima da
-   * tabela onde o ADM acabou de mexer no seletor.
+   * Quem chama é o `SeletorSala`, no retorno da action da própria linha: a lista
+   * é do `CrmApp`, e é ele que sabe qual era a turma de verdade antes da
+   * pintura.
    */
-  recadoSala?: string | null;
+  onSalaRecusada?: (alunoId: string) => void;
 };
 
 export function PainelAdmIntegrado({
@@ -80,7 +80,7 @@ export function PainelAdmIntegrado({
   onAbrirCracha,
   onSelecionarAluno,
   onMudarSalaAluno,
-  recadoSala,
+  onSalaRecusada,
 }: Props) {
   const [subAba, setSubAba] = useState<SubAba>(subAbaInicial);
   const [busca, setBusca] = useState("");
@@ -438,16 +438,6 @@ export function PainelAdmIntegrado({
             </p>
           ) : null}
 
-          {/* A troca de turma que o servidor recusou. Fica colada na tabela de
-              propósito: o ADM acabou de mexer no seletor da linha, e a recusa
-              precisa nascer no mesmo campo de visão dela — no topo do CRM ela
-              ficaria longe do que ele viu voltar sozinho. */}
-          {recadoSala ? (
-            <p className="recado recado-erro" role="alert">
-              {recadoSala}
-            </p>
-          ) : null}
-
           {/* Tabela Administrativa de Alunos */}
           <div className="tabela-container adm-tabela-wrap">
             <table className="tabela-alunos">
@@ -495,89 +485,13 @@ export function PainelAdmIntegrado({
 
                       {/* Sala: seletor direto e moderno de turmas com atualização otimista */}
                       <td>
-                        <form
-                          action={mudarSalaDoAluno}
-                          className="adm-form-sala"
-                          onSubmit={(e) => {
-                            const fd = new FormData(e.currentTarget);
-                            const chosenSalaId = fd.get("salaId") as string;
-                            const chosenSala = salas.find((s) => s.id === chosenSalaId);
-                            if (chosenSala) {
-                              onMudarSalaAluno?.(a.id, chosenSala.id, chosenSala.nome);
-                            }
-                          }}
-                        >
-                          <input type="hidden" name="alunoId" value={a.id} />
-                          <div className="adm-select-sala-wrap">
-                            <span
-                              className="adm-sala-dot-indicador"
-                              style={{ background: a.corSala || "var(--dim)" }}
-                              aria-hidden="true"
-                            />
-                            <select
-                              name="salaId"
-                              className="adm-select-sala"
-                              value={seletorPorAluno.get(a.id)?.valor ?? ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === "__nova__") {
-                                  const nomeNova = window.prompt("Nome da nova turma (ex: DSM3-25):");
-                                  if (!nomeNova || nomeNova.trim().length < 2) {
-                                    e.target.value = a.sala_id ?? "";
-                                    return;
-                                  }
-                                  const form = e.currentTarget.form;
-                                  if (form) {
-                                    let inputCustom = form.querySelector<HTMLInputElement>("input[name='sala']");
-                                    if (!inputCustom) {
-                                      inputCustom = document.createElement("input");
-                                      inputCustom.type = "hidden";
-                                      inputCustom.name = "sala";
-                                      form.appendChild(inputCustom);
-                                    }
-                                    inputCustom.value = nomeNova.trim();
-                                    onMudarSalaAluno?.(a.id, "", nomeNova.trim());
-                                    form.requestSubmit();
-                                  }
-                                  // O `<select>` é controlado por `a.sala_id`, e o React só
-                                  // mexe no DOM quando o `value` calculado MUDA: enquanto a
-                                  // resposta não re-renderiza, "+ Nova turma…" fica na tela como
-                                  // se fosse a turma do aluno. Devolve a seleção para a turma de
-                                  // verdade agora; a nova entra quando as props chegarem.
-                                  e.target.value = a.sala_id ?? "";
-                                  return;
-                                }
-                                const opt = opcoesTurmas.find((o) => o.id === val);
-                                if (opt) {
-                                  onMudarSalaAluno?.(a.id, opt.id, opt.nome);
-                                  const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-                                  if (!ehUuid) {
-                                    let inpSala = e.currentTarget.form?.querySelector<HTMLInputElement>("input[name='sala']");
-                                    if (!inpSala) {
-                                      inpSala = document.createElement("input");
-                                      inpSala.type = "hidden";
-                                      inpSala.name = "sala";
-                                      e.currentTarget.form?.appendChild(inpSala);
-                                    }
-                                    inpSala.value = opt.nome;
-                                  }
-                                }
-                                e.currentTarget.form?.requestSubmit();
-                              }}
-                              aria-label={`Trocar a turma de ${a.nome}`}
-                            >
-                              <option value="" disabled>
-                                Sem sala definida
-                              </option>
-                              {(seletorPorAluno.get(a.id)?.lista ?? opcoesTurmas).map((opt) => (
-                                <option key={opt.id} value={opt.id}>
-                                  {opt.nome}
-                                </option>
-                              ))}
-                              <option value="__nova__">+ Nova turma...</option>
-                            </select>
-                          </div>
-                        </form>
+                        <SeletorSala
+                          aluno={a}
+                          sala={seletorPorAluno.get(a.id)}
+                          opcoesTurmas={opcoesTurmas}
+                          onMudarSalaAluno={onMudarSalaAluno}
+                          onSalaRecusada={onSalaRecusada}
+                        />
                       </td>
 
                       <td>
@@ -1137,5 +1051,149 @@ export function PainelAdmIntegrado({
         </section>
       </div>
     </div>
+  );
+}
+
+// ── seletor de turma de UMA linha ────────────────────────────────────────
+
+type SeletorSalaProps = {
+  aluno: AlunoNaTela;
+  /** As turmas desta linha, quando ela prende um vínculo fora da lista canônica. */
+  sala?: { valor: string; lista: { id: string; nome: string }[] };
+  opcoesTurmas: { id: string; nome: string }[];
+  onMudarSalaAluno?: (alunoId: string, novaSalaId: string, nomeSala: string) => void;
+  onSalaRecusada?: (alunoId: string) => void;
+};
+
+/**
+ * O seletor de turma de UMA linha da tabela, com o resultado da própria troca.
+ *
+ * É componente — e não o `<form>` que ficava inline no `.map()` — porque o
+ * `useActionState` é por linha: a resposta da troca precisa chegar a quem a
+ * pediu. `mudarSalaDoAluno` devolve `Estado`, e é este retorno que diz se a
+ * turma foi gravada e que manda desfazer a pintura otimista da linha
+ * (`onSalaRecusada`, que mexe na lista do `CrmApp`).
+ *
+ * O caminho anterior era inferir a falha comparando a lista revalidada com a
+ * troca pedida, e ele não fecha: qualquer outra ação do painel revalida o mesmo
+ * caminho, então uma revalidação que chega antes da resposta julga a troca
+ * contra um payload que ainda não a tem — a troca que vingou virava recusa na
+ * tela, e a frase não saía mais, porque só um gesto novo a limpava.
+ */
+function SeletorSala({
+  aluno,
+  sala,
+  opcoesTurmas,
+  onMudarSalaAluno,
+  onSalaRecusada,
+}: SeletorSalaProps) {
+  const [estado, trocarTurma] = useActionState(mudarSalaDoAluno, ESTADO_INICIAL);
+
+  // O efeito depende só do `estado`. Ele é um objeto novo a cada resposta da
+  // action (é o que se quer), enquanto `onSalaRecusada` nasce de novo a cada
+  // render do `CrmApp`: colocá-lo nas dependências faria o efeito rodar a cada
+  // render, mexer na lista, renderizar de novo — laço.
+  useEffect(() => {
+    if (estado.ok || !estado.mensagem) return;
+    onSalaRecusada?.(aluno.id);
+  }, [estado]);
+
+  return (
+    <form
+      action={trocarTurma}
+      className="adm-form-sala"
+      onSubmit={(e) => {
+        const fd = new FormData(e.currentTarget);
+        const chosenSalaId = fd.get("salaId") as string;
+        const chosenSala = opcoesTurmas.find((s) => s.id === chosenSalaId);
+        if (chosenSala) {
+          onMudarSalaAluno?.(aluno.id, chosenSala.id, chosenSala.nome);
+        }
+      }}
+    >
+      <input type="hidden" name="alunoId" value={aluno.id} />
+      <div className="adm-select-sala-wrap">
+        <span
+          className="adm-sala-dot-indicador"
+          style={{ background: aluno.corSala || "var(--dim)" }}
+          aria-hidden="true"
+        />
+        <select
+          name="salaId"
+          className="adm-select-sala"
+          value={sala?.valor ?? ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === SENTINELA_NOVA_TURMA) {
+              const nomeNova = window.prompt("Nome da nova turma (ex: DSM3-25):");
+              if (!nomeNova || nomeNova.trim().length < 2) {
+                e.target.value = aluno.sala_id ?? "";
+                return;
+              }
+              const form = e.currentTarget.form;
+              if (form) {
+                let inputCustom = form.querySelector<HTMLInputElement>("input[name='sala']");
+                if (!inputCustom) {
+                  inputCustom = document.createElement("input");
+                  inputCustom.type = "hidden";
+                  inputCustom.name = "sala";
+                  form.appendChild(inputCustom);
+                }
+                inputCustom.value = nomeNova.trim();
+                onMudarSalaAluno?.(aluno.id, "", nomeNova.trim());
+                form.requestSubmit();
+              }
+              // O `<select>` é controlado pela turma que vem das props, e o React
+              // só mexe no DOM quando o `value` calculado MUDA: enquanto a
+              // resposta não re-renderiza, "+ Nova turma…" fica na tela como se
+              // fosse a turma do aluno. Devolve a seleção para a turma de verdade
+              // agora; a nova entra quando as props chegarem.
+              e.target.value = aluno.sala_id ?? "";
+              return;
+            }
+            const opt = opcoesTurmas.find((o) => o.id === val);
+            if (opt) {
+              onMudarSalaAluno?.(aluno.id, opt.id, opt.nome);
+              const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+              if (!ehUuid) {
+                let inpSala = e.currentTarget.form?.querySelector<HTMLInputElement>("input[name='sala']");
+                if (!inpSala) {
+                  inpSala = document.createElement("input");
+                  inpSala.type = "hidden";
+                  inpSala.name = "sala";
+                  e.currentTarget.form?.appendChild(inpSala);
+                }
+                inpSala.value = opt.nome;
+              }
+            }
+            e.currentTarget.form?.requestSubmit();
+          }}
+          aria-label={`Trocar a turma de ${aluno.nome}`}
+        >
+          <option value="" disabled>
+            Sem sala definida
+          </option>
+          {(sala?.lista ?? opcoesTurmas).map((opt) => (
+            <option key={opt.id} value={opt.id}>
+              {opt.nome}
+            </option>
+          ))}
+          <option value={SENTINELA_NOVA_TURMA}>+ Nova turma...</option>
+        </select>
+      </div>
+
+      {/* A recusa fica na célula da linha que o ADM acabou de mexer, e não num
+          aviso no topo da tabela: é a turma daquela linha que não mudou. O
+          estilo compacta o `.recado` porque a célula é estreita. */}
+      {!estado.ok && estado.mensagem ? (
+        <p
+          className="recado recado-erro"
+          role="alert"
+          style={{ margin: "0.4rem 0 0", padding: "0.3rem 0.5rem", fontSize: "0.78rem" }}
+        >
+          {estado.mensagem}
+        </p>
+      ) : null}
+    </form>
   );
 }
