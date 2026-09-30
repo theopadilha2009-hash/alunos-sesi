@@ -1,0 +1,40 @@
+-- 020_indice_votos_visitante.sql — `votosDoVisitante` para de varrer `votos` inteira.
+--
+-- `votosDoVisitante` (`src/lib/dados.ts:531`) filtra SÓ por `visitante_id`:
+--
+--   .from("votos").select("aluno_id").eq("visitante_id", visitante)
+--
+-- O único índice que `public.votos` tem é a primary key `(aluno_id, visitante_id)`
+-- (001:72), e a primeira coluna dela é `aluno_id`. Um filtro só por `visitante_id`
+-- não casa com o prefixo do índice, então o Postgres não o usa e a consulta vira
+-- seq scan — lê a tabela inteira para devolver, tipicamente, uma linha.
+--
+-- A leitura não é nova: a vitrine (`src/app/page.tsx`) já a fazia. O que mudou em
+-- 29/09/2026 foi a frequência. A mesma chamada passou a rodar também em TODA visita
+-- a perfil de quem tem o cookie de visitante (`src/app/alunos/[slug]/page.tsx`),
+-- o que multiplicou quantas vezes por requisição essa varredura acontece.
+--
+-- O índice em `visitante_id` é o que faltava: com ele, o filtro casa com o prefixo
+-- e a consulta deixa de ler a tabela inteira.
+--
+-- Por que `if not exists` e não `concurrently`:
+--
+--   repetível — a sequência 001..N é a fonte do banco e o CI a reproduz do zero
+--   (`scripts/checar-migrations.sh`). A migration precisa dar o mesmo resultado nos
+--   dois caminhos: num banco limpo (onde cria) e no que já está em produção (onde o
+--   índice pode já existir e é pulado).
+--
+--   o dry-run — migration aqui é aplicada pelo `scripts/db-query.sh`, cujo `--dry-run`
+--   roda tudo dentro de um `BEGIN` e desfaz no `ROLLBACK`. `create index concurrently`
+--   NÃO pode rodar dentro de transação, e quebraria o dry-run. O `create index` normal
+--   adquire um lock de escrita pelo tempo da construção; com 13 alunos isso é
+--   instantâneo, então `concurrently` (que troca o lock por uma construção em duas
+--   passadas, mais lenta e mais frágil) não traria nada.
+--
+-- Decisão de 30/09/2026. Hoje o ganho é NULO: numa base desse tamanho o seq scan é
+-- mais barato que consultar o próprio índice, então medir agora não mostraria
+-- diferença nenhuma. É dívida com gatilho, não otimização de agora — o índice fica
+-- pronto para o dia em que `votos` crescer, que é justamente quando a varredura
+-- começaria a doer e quando criá-lo já seria com a página no ar.
+
+create index if not exists votos_visitante_idx on public.votos (visitante_id);
