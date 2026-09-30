@@ -81,7 +81,7 @@ const VAZAMENTO = /NextResponse\.json\(\s*\{[^}]*\.message[^}]*\}/g;
 
 test("nenhuma rota de API devolve `.message` de erro no corpo", () => {
   const arquivos = rotas(API);
-  const relativos = arquivos.map((caminho) => relative(API, caminho));
+  const relativos = arquivos.map((caminho) => relative(API, caminho).replace(/\\/g, "/"));
 
   for (const esperada of ESPERADAS) {
     assert.ok(
@@ -191,7 +191,7 @@ const JARGAO = /throw new Error\(\s*`[^`]*\$\{[^}]*\.(?:message|details|hint|sta
 
 test("nenhum `throw new Error` carrega o texto cru do banco", () => {
   const arquivos = fontes(SRC);
-  const relativos = arquivos.map((caminho) => relative(SRC, caminho));
+  const relativos = arquivos.map((caminho) => relative(SRC, caminho).replace(/\\/g, "/"));
 
   for (const jardas of JARDAS) {
     assert.ok(

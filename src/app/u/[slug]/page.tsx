@@ -13,6 +13,7 @@ import {
 } from "@/components/Icones";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { VideoEmbed } from "@/components/VideoEmbed";
+import { BadgeDestaque, BadgeFixado } from "@/components/CargosBadges";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
 import { LIMITES_STICKERS, MAX_VIDEOS } from "@/lib/limites";
 
@@ -96,7 +97,18 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
         </header>
 
         {/* Hero Card do Estudante com Stickers / GIFs Flutuantes */}
-        <section className="nfc-hero-card">
+        <section
+          className="nfc-hero-card"
+          style={
+            aluno.banner_url
+              ? {
+                  backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.94) 100%), url("${aluno.banner_url}")`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+              : undefined
+          }
+        >
           {/* Stickers / GIFs decorativos posicionados estilo Canva */}
           {stickersDoBanner.map((st) => (
             <div
@@ -135,8 +147,8 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
               <IconeEstrela preenchida tamanho={13} />
               <strong>{aluno.estrelas}</strong> reconhecimentos
             </span>
-            {aluno.fixado ? <span className="selo selo-fixado">Estudante Fixado</span> : null}
-            {aluno.destaque ? <span className="selo selo-adm">Destaque ADM</span> : null}
+            {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
+            {aluno.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
           </div>
         </section>
 

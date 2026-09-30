@@ -438,15 +438,46 @@ body:has(.login-tela-container) {
 }
 
 .card-usuario-logado {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   padding: 0.75rem 0.9rem;
   border-radius: 14px;
   border: 1px solid var(--line);
   background: var(--surface-2);
   cursor: pointer;
   transition: all 0.2s var(--ease);
+}
+
+.card-usuario-banner-fundo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.card-usuario-banner-fundo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(11, 20, 24, 0.94) 0%,
+    rgba(11, 20, 24, 0.88) 55%,
+    rgba(11, 20, 24, 0.72) 100%
+  );
+}
+
+.card-usuario-conteudo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .card-usuario-logado:hover {
@@ -493,6 +524,14 @@ body:has(.login-tela-container) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.user-cargos-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
 }
 
 .user-sala {
@@ -2387,13 +2426,17 @@ body:has(.login-tela-container) {
 
 /* ── Hero Banner Institucional (Dark Navy da Imagem 4) ─────────────────── */
 .perfil-hero-banner {
-  background: linear-gradient(135deg, #0d1926 0%, #15273b 50%, #0e1e2f 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #0d1926;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 2.25rem 2.5rem;
   box-shadow: 0 16px 40px -15px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
+  min-height: 180px;
 }
 
 .perfil-hero-banner::before {
@@ -2404,12 +2447,40 @@ body:has(.login-tela-container) {
   width: 6px;
   height: 100%;
   background: var(--accent);
+  z-index: 3;
+}
+
+.perfil-hero-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(11, 20, 24, 0.94) 0%,
+    rgba(11, 20, 24, 0.82) 55%,
+    rgba(11, 20, 24, 0.52) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
 }
 
 .hero-banner-conteudo {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.hero-banner-acoes-flutuantes {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
@@ -3327,3 +3398,474 @@ body:has(.login-tela-container) {
   font-size: 0.72rem;
   color: var(--faint);
 }
+
+/* ── Hero Banner Integrado do Perfil do Aluno ────────────────────────────── */
+
+.perfil-hero-banner-wrap {
+  position: relative;
+  margin-bottom: 1.5rem;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+
+.perfil-hero-banner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3.5 / 1;
+  min-height: 160px;
+  max-height: 260px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+.perfil-hero-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(11, 20, 24, 0.4) 60%,
+    rgba(11, 20, 24, 0.85) 100%
+  );
+  pointer-events: none;
+}
+
+.perfil-hero-banner-acoes {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-hero-banner-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.48rem 0.88rem;
+  border-radius: 999px;
+  background: rgba(11, 20, 24, 0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s var(--ease);
+  user-select: none;
+}
+
+.btn-hero-banner-acao:hover {
+  background: rgba(11, 20, 24, 0.95);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-hero-banner-remover {
+  background: rgba(220, 38, 38, 0.25);
+  border-color: rgba(220, 38, 38, 0.45);
+  color: #fca5a5;
+}
+
+.btn-hero-banner-remover:hover {
+  background: rgba(220, 38, 38, 0.45);
+  border-color: var(--vermelho);
+  color: #ffffff;
+}
+
+.perfil-hero-identidade {
+  position: relative;
+  padding: 0 1.5rem 1.25rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+  margin-top: -2.75rem;
+  z-index: 5;
+}
+
+.perfil-hero-avatar-wrap {
+  flex: none;
+  position: relative;
+}
+
+.perfil-hero-avatar {
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 20px;
+  border: 3px solid var(--surface-2);
+  background: var(--surface-3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.perfil-hero-detalhes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.perfil-hero-nome-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.perfil-hero-nome {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.perfil-hero-cargos {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.perfil-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--dim);
+}
+
+.perfil-hero-email {
+  color: var(--dim);
+}
+
+.perfil-hero-estrelas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--amarelo);
+  font-weight: 700;
+}
+
+/* ── Modal de Recorte Interativo de Banner ────────────────────────────────── */
+
+.modal-recorte-backdrop {
+  z-index: 9999;
+}
+
+.modal-recortar-banner {
+  max-width: 760px;
+  width: 95%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  animation: modalSurgir 0.2s var(--ease);
+}
+
+.modal-recorte-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal-recorte-titulo-wrap h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0.2rem 0 0.25rem;
+  color: var(--text);
+}
+
+.modal-recorte-titulo-wrap p {
+  font-size: 0.82rem;
+  color: var(--dim);
+  margin: 0;
+}
+
+.modal-recorte-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.modal-recorte-corpo {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.viewport-recorte-wrap {
+  display: flex;
+  justify-content: center;
+  user-select: none;
+  cursor: grab;
+}
+
+.viewport-recorte-wrap:active {
+  cursor: grabbing;
+}
+
+.viewport-recorte-moldura {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  aspect-ratio: 3 / 1;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  background: #000;
+}
+
+.canvas-recorte-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.grade-guia-recorte {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.guia-linha-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
+.linha-h-1 {
+  top: 33.333%;
+}
+
+.linha-h-2 {
+  top: 66.666%;
+}
+
+.guia-linha-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
+.linha-v-1 {
+  left: 33.333%;
+}
+
+.linha-v-2 {
+  left: 66.666%;
+}
+
+.viewport-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.viewport-dica-arrasto {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.68rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.controles-recorte-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  background: var(--surface-2);
+  padding: 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+
+.controle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.controle-label-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.controle-val {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.zoom-botoes-atalho {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-micro {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface-3);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-micro:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.input-range-recorte {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 100%;
+}
+
+.controle-acoes-rapidas {
+  justify-content: flex-end;
+}
+
+.btn-ajuste-automatico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: 9px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+
+.btn-ajuste-automatico:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.modal-recorte-rodape {
+  padding: 1.1rem 1.5rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-recorte-cancelar {
+  padding: 0.62rem 1.2rem;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--dim);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+
+.btn-recorte-cancelar:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.btn-recorte-aplicar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.4rem;
+  border-radius: 9px;
+  border: 0;
+  background: var(--accent);
+  color: #0b1418;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+
+.btn-recorte-aplicar:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-recorte-aplicar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .perfil-hero-banner {
+    aspect-ratio: 2.8 / 1;
+    min-height: 130px;
+  }
+
+  .perfil-hero-identidade {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: -2.25rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .perfil-hero-avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .perfil-hero-nome {
+    font-size: 1.25rem;
+  }
+}
+

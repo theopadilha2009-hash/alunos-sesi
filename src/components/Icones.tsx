@@ -284,3 +284,18 @@ export const IconeSomMudo = ({ tamanho = 16, className = "" }: Props) => (
     <line x1="17" y1="9" x2="23" y2="15" />
   </Base>
 );
+
+export const IconePin = ({ tamanho = 14, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <line x1="12" y1="17" x2="12" y2="22" />
+    <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.89A2 2 0 0 1 15 10.77V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5.77a2 2 0 0 1-1.11 1.79l-1.78.89A2 2 0 0 0 5 15.24Z" />
+  </Base>
+);
+
+export const IconeCrop = ({ tamanho = 15, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+    <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+  </Base>
+);
+

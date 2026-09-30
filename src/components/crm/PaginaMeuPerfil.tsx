@@ -10,6 +10,7 @@ import {
   IconeCheck,
   IconeCopiar,
   IconeCracha,
+  IconeCrop,
   IconeDownload,
   IconeEscudo,
   IconeEstrela,
@@ -23,9 +24,11 @@ import {
   IconeUsuario,
   IconeVideo,
 } from "@/components/Icones";
+import { BadgeCargo, BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { ImportarGithub } from "@/components/crm/ImportarGithub";
 import { Insignias } from "@/components/Insignias";
+import { ModalRecortarBanner } from "@/components/crm/ModalRecortarBanner";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
@@ -56,6 +59,7 @@ type Props = {
   usuario: UsuarioSessao;
   alunoAtual: AlunoNaTela | null;
   salas: { id: string; nome: string }[];
+  onAtualizarAluno?: (dados: Partial<AlunoNaTela>) => void;
 };
 
 /**
@@ -84,7 +88,7 @@ function mensagemDeEnvio(erro: unknown): string {
   return "Não foi possível enviar a imagem. Tente de novo.";
 }
 
-export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
+export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }: Props) {
   const [estado, formAction, salvando] = useActionState(salvarPerfilAction, { ok: false });
   const [estadoSeguranca, acaoSeguranca, alterandoSenha] = useActionState(alterarSegurancaAction, {
     ok: false,
@@ -173,6 +177,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   );
   const [capa, setCapa] = useState(alunoAtual?.banner_url ?? "");
   const [avisoCapa, setAvisoCapa] = useState<string | null>(null);
+  const [modalRecorteAberto, setModalRecorteAberto] = useState(false);
+  const [imagemParaRecorte, setImagemParaRecorte] = useState<string | null>(null);
 
   // Lista de projetos / criações
   const [projetos, setProjetos] = useState<ProjetoAluno[]>(
@@ -577,27 +583,6 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
   }
 
   /**
-   * A capa é a faixa larga do topo do perfil, 3:1.
-   *
-   * O degrau de qualidade existe porque a saída é sempre 1280×427: sem ele, uma
-   * foto com muito detalhe (folhagem, multidão) estourava o teto e o aviso
-   * "escolha um arquivo menor" não tinha o que oferecer — reencodar o mesmo
-   * conteúdo em 0.82 dá exatamente o mesmo tamanho, então trocar de arquivo não
-   * resolvia. Cada degrau abaixo custa uma rasterização, e só acontece quando o
-   * anterior de fato não coube.
-   */
-  async function recortarCapa(file: File, largura = LADO_CAPA) {
-    let ultimo = "";
-    for (const qualidade of [0.82, 0.7, 0.6]) {
-      ultimo = await recortarFaixa(file, largura, PROPORCAO_CAPA, qualidade);
-      if (!conferirTamanhoDaImagem(ultimo, "capa")) return ultimo;
-    }
-    // Nem a 0.6 coube: devolve o último e deixa o aviso do chamador explicar o
-    // teto, em vez de a promessa ficar pendurada.
-    return ultimo;
-  }
-
-  /**
    * Sobe o data URL já comprimido para o Blob e devolve a URL pública.
    *
    * É aqui que a imagem sai do corpo do POST: o formulário passa a carregar
@@ -736,7 +721,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
       setAvisoFoto(aviso);
       // Recusou: a foto que já estava no perfil continua onde está. Apagá-la por
       // causa de um arquivo grande seria perder a foto duas vezes.
-      if (!aviso) setFoto(dataUrl);
+      if (!aviso) {
+        setFoto(dataUrl);
+        onAtualizarAluno?.({ foto_url: dataUrl });
+      }
     } catch {
       setAvisoFoto("Não foi possível ler esse arquivo. Tente uma imagem JPG ou PNG.");
     } finally {
@@ -751,19 +739,47 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
     const file = input.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await recortarCapa(file);
-      // Mesmo teto que o servidor aplica (`MAX_DATA_URL_CAPA`), conferido aqui
-      // para o aluno ver o motivo na hora em vez de o salvamento descartar a
-      // capa em silêncio lá na frente.
-      const aviso = conferirTamanhoDaImagem(dataUrl, "capa");
-      setAvisoCapa(aviso);
-      // Recusou: a capa que já estava no perfil continua onde está.
-      if (!aviso) setCapa(dataUrl);
+      const leitor = new FileReader();
+      leitor.onload = (ev) => {
+        const resultado = ev.target?.result as string;
+        if (resultado) {
+          setImagemParaRecorte(resultado);
+          setModalRecorteAberto(true);
+        }
+      };
+      leitor.onerror = () => {
+        setAvisoCapa("Não foi possível ler esse arquivo. Tente outra imagem.");
+      };
+      leitor.readAsDataURL(file);
     } catch {
       setAvisoCapa("Não foi possível ler esse arquivo. Tente uma imagem JPG ou PNG.");
     } finally {
       input.value = "";
     }
+  }
+
+  function handleSalvarBannerRecortado(bannerUrl: string) {
+    setCapa(bannerUrl);
+    setAvisoCapa(null);
+    onAtualizarAluno?.({ banner_url: bannerUrl });
+  }
+
+  function handleAbrirAjusteBannerExistente() {
+    if (capa) {
+      setImagemParaRecorte(capa);
+      setModalRecorteAberto(true);
+    }
+  }
+
+  function handleRemoverCapa() {
+    setCapa("");
+    setAvisoCapa(null);
+    onAtualizarAluno?.({ banner_url: null });
+  }
+
+  function handleMudarCorPerfil(novaCor: string) {
+    setCorPerfil(novaCor);
+    onAtualizarAluno?.({ cor_perfil: novaCor, cor: corDoAluno(novaCor, sala) });
   }
 
   const ehSuperAdm = usuario.role === "super_adm";
@@ -851,10 +867,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
         style={{
           position: "relative",
           overflow: "hidden",
-          // A capa que o aluno escolheu, aqui no editor também. Ela só era
-          // desenhada no perfil público (`PerfilInterativo`) e na prévia
-          // pequena do card de aparência — no topo, onde o aluno está olhando,
-          // continuava o degradê padrão, e a escolha parecia não ter pegado.
+          // A capa que o aluno escolheu, aqui no editor também.
           // O degradê por cima existe pelo texto: o hero é escrito em claro e
           // uma foto clara por baixo o deixaria ilegível.
           ...(capa
@@ -863,9 +876,48 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
-            : {}),
+            : {
+                backgroundImage: `linear-gradient(135deg, ${corDoAluno(corPerfil, sala)} 0%, #0d1926 70%)`,
+              }),
         }}
       >
+        {/* Ações no Banner: Trocar, Ajustar/Recortar, Remover */}
+        <div className="hero-banner-acoes-flutuantes">
+          <label className="btn-hero-banner-acao" title="Escolher uma nova imagem para o banner">
+            <IconeUpload tamanho={14} />
+            <span>{capa ? "Trocar Banner" : "Adicionar Banner"}</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleUploadCapa}
+            />
+          </label>
+
+          {capa ? (
+            <button
+              type="button"
+              className="btn-hero-banner-acao"
+              onClick={handleAbrirAjusteBannerExistente}
+              title="Recortar e ajustar enquadramento do banner"
+            >
+              <IconeCrop tamanho={14} />
+              <span>Recortar & Ajustar</span>
+            </button>
+          ) : null}
+
+          {capa ? (
+            <button
+              type="button"
+              className="btn-hero-banner-acao btn-hero-banner-remover"
+              onClick={handleRemoverCapa}
+              title="Remover banner do perfil"
+            >
+              <IconeLixeira tamanho={14} />
+              <span>Remover</span>
+            </button>
+          ) : null}
+        </div>
         {/* Stickers posicionados estilo Canva no banner */}
         {stickers.filter((s) => s.alvo !== "projeto").map((st) => (
           <div
@@ -894,12 +946,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
 
           <div className="hero-banner-textos">
             <div className="hero-banner-tag-linha">
-              <span className="hero-banner-tag-cargo">
-                {ehSuperAdm ? "SUPER ADM · GESTOR" : "ESTUDANTE · AUTOR"}
-              </span>
-              <span className="hero-banner-tag-sala">{sala}</span>
-              {alunoAtual?.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-              {alunoAtual?.destaque ? <span className="selo selo-adm">Destaque</span> : null}
+              <BadgeTurma sala={sala} corSala={corDoAluno(null, sala)} />
+              {ehSuperAdm ? (
+                <BadgeCargo role="super_adm" />
+              ) : usuario.role === "adm" ? (
+                <BadgeCargo role="adm" />
+              ) : null}
+              {alunoAtual?.fixado ? <BadgeFixado /> : null}
+              {alunoAtual?.destaque ? <BadgeDestaque /> : null}
             </div>
 
             <h2 className="hero-banner-nome">{nome}</h2>
@@ -1009,7 +1063,16 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
               <Avatar nome={nome} foto={foto} className="perfil-card-avatar" />
               <div className="perfil-card-identidade-info">
                 <h3>{nome}</h3>
-                <span className="perfil-card-sala-pill">{sala}</span>
+                <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
+                  <BadgeTurma sala={sala} corSala={corDoAluno(null, sala)} tamanho="pequeno" />
+                  {ehSuperAdm ? (
+                    <BadgeCargo role="super_adm" tamanho="pequeno" />
+                  ) : usuario.role === "adm" ? (
+                    <BadgeCargo role="adm" tamanho="pequeno" />
+                  ) : null}
+                  {alunoAtual?.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
+                  {alunoAtual?.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
+                </div>
               </div>
             </div>
 
@@ -1127,7 +1190,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                     value=""
                     className="sr-only"
                     checked={corPerfil === ""}
-                    onChange={() => setCorPerfil("")}
+                    onChange={() => handleMudarCorPerfil("")}
                   />
                   <span className="sr-only">Usar a cor da minha turma</span>
                   {corPerfil === "" ? <IconeCheck tamanho={14} /> : null}
@@ -1146,7 +1209,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                       value={c}
                       className="sr-only"
                       checked={corPerfil === c}
-                      onChange={() => setCorPerfil(c)}
+                      onChange={() => handleMudarCorPerfil(c)}
                     />
                     <span className="sr-only">{nomeDaCor(c)}</span>
                     {corPerfil === c ? <IconeCheck tamanho={14} /> : null}
@@ -1187,11 +1250,19 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                 {capa ? (
                   <button
                     type="button"
+                    className="edit-foto-botao"
+                    onClick={handleAbrirAjusteBannerExistente}
+                    title="Ajustar e recortar enquadramento do banner"
+                  >
+                    <IconeCrop tamanho={14} />
+                    <span>Recortar & Ajustar</span>
+                  </button>
+                ) : null}
+                {capa ? (
+                  <button
+                    type="button"
                     className="edit-foto-remover"
-                    onClick={() => {
-                      setCapa("");
-                      setAvisoCapa(null);
-                    }}
+                    onClick={handleRemoverCapa}
                   >
                     <IconeLixeira tamanho={15} />
                     <span>Remover capa</span>
@@ -1199,8 +1270,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
                 ) : null}
               </div>
               <span className="dica-campo">
-                A imagem vira uma faixa de {LADO_CAPA}×{Math.round(LADO_CAPA / PROPORCAO_CAPA)}{" "}
-                pixels, recortada pelo centro — o que ficar fora dessa faixa não aparece.
+                Enquadramento panorâmico oficial 3:1 ({LADO_CAPA}×{Math.round(LADO_CAPA / PROPORCAO_CAPA)}px).
+                Formatado automaticamente com opção de ajuste e recorte interativo.
               </span>
               {avisoCapa ? (
                 <span className="edit-foto-aviso" role="alert">
@@ -2258,6 +2329,16 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas }: Props) {
       {curriculoAberto && alunoAtual ? (
         <CurriculoImpressao aluno={alunoAtual} onFechar={() => setCurriculoAberto(false)} />
       ) : null}
+
+      {/* Modal de Recorte e Formatação do Banner */}
+      <ModalRecortarBanner
+        aberto={modalRecorteAberto}
+        imagemFonte={imagemParaRecorte}
+        alunoId={usuario.alunoId}
+        nomeAluno={nome}
+        onFechar={() => setModalRecorteAberto(false)}
+        onSalvar={handleSalvarBannerRecortado}
+      />
     </div>
   );
 }

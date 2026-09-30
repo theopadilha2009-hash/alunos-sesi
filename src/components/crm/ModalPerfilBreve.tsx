@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
+import { BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import {
@@ -145,7 +146,16 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
         >
           <header
             className="breve-topo"
-            style={{ ["--sala-cor" as string]: aluno.cor, position: "relative", overflow: "hidden" }}
+            style={{
+              ["--sala-cor" as string]: aluno.cor,
+              position: "relative",
+              overflow: "hidden",
+              backgroundImage: aluno.banner_url
+                ? `linear-gradient(to bottom, rgba(11, 20, 24, 0.45) 0%, rgba(11, 20, 24, 0.88) 100%), url("${aluno.banner_url}")`
+                : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           >
             {/* Stickers / GIFs Estilo Canva sobre o Header */}
             {stickersBanner.map((st) => (
@@ -199,12 +209,9 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
             <div className="breve-identificacao">
               <div className="breve-nome-linha">
                 <h2 id="perfil-breve-titulo">{aluno.nome}</h2>
-                {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-                {aluno.destaque ? (
-                  <span className="selo selo-adm">
-                    <IconeEscudo tamanho={11} /> ADM
-                  </span>
-                ) : null}
+                <BadgeTurma sala={aluno.sala} corSala={aluno.corSala} tamanho="pequeno" />
+                {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
+                {aluno.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
               </div>
 
               <div className="breve-meta-linha">

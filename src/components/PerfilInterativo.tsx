@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
+import { BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
 import { CrachaModal } from "@/components/CrachaModal";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { Insignias } from "@/components/Insignias";
@@ -274,17 +275,10 @@ export function PerfilInterativo({
             <h1>{aluno.nome}</h1>
             <div className="perfil-sub-linha">
               {salaNome ? (
-                <span className="sala-tag">
-                  <span className="ponto" style={{ background: aluno.corSala }} />
-                  {salaNome}
-                </span>
+                <BadgeTurma sala={salaNome} corSala={aluno.corSala} />
               ) : null}
-              {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-              {aluno.destaque ? (
-                <span className="selo selo-adm">
-                  <IconeEscudo tamanho={11} /> Destaque do ADM
-                </span>
-              ) : null}
+              {aluno.fixado ? <BadgeFixado /> : null}
+              {aluno.destaque ? <BadgeDestaque /> : null}
               <Link
                 href={`/validar/${aluno.slug}`}
                 target="_blank"

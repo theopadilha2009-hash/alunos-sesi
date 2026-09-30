@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { BadgeDestaque, BadgeFixado } from "@/components/CargosBadges";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
-import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
+import { IconeCracha, IconeEstrela } from "@/components/Icones";
 import { corHabilidade } from "@/lib/habilidades";
 import type { AlunoNaTela } from "@/lib/tipos";
 
@@ -58,12 +59,8 @@ export function CartaoAluno({
       ) : null}
 
       <div className="aluno-pes">
-        {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-        {aluno.destaque ? (
-          <span className="selo selo-adm">
-            <IconeEscudo tamanho={10} /> ADM
-          </span>
-        ) : null}
+        {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
+        {aluno.destaque ? <BadgeDestaque tamanho="pequeno" label="ADM" /> : null}
 
         {onAbrirCracha ? (
           <button

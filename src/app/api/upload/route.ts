@@ -36,6 +36,8 @@ const TETO_POR_CAMPO: Record<string, number> = {
   midia: MAX_DATA_URL_IMAGEM,
   projeto: MAX_DATA_URL_IMAGEM,
   sticker: LIMITES_STICKERS.maxDataUrlBytes,
+  capa: MAX_DATA_URL_IMAGEM,
+  foto: MAX_DATA_URL_IMAGEM,
 };
 
 /** Qual teto usar. Campo desconhecido cai no de mídia, que é o maior. */

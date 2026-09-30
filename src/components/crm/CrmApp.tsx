@@ -23,6 +23,7 @@ import {
   IconeTrofeu,
   IconeUsuario,
 } from "@/components/Icones";
+import { BadgeCargo, BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
@@ -329,6 +330,15 @@ export function CrmApp({
     }
   }
 
+  function handleAtualizarMeuAluno(dados: Partial<Aluno>) {
+    setLista((antiga) =>
+      antiga.map((a) => {
+        const meuId = usuario.alunoId || meuAlunoNaTela?.id;
+        return a.id === meuId ? { ...a, ...dados } : a;
+      }),
+    );
+  }
+
   const ehSuperAdm = usuario.role === "super_adm";
   const nomeExibicao = usuario.nome || usuario.username;
   const salaExibicao = usuario.sala || "SESI SP";
@@ -465,42 +475,66 @@ export function CrmApp({
             onClick={() => setAba("perfil")}
             title="Acessar meu perfil e editor completo"
           >
-            <div className="user-avatar-wrap">
-              <Avatar
-                nome={nomeExibicao}
-                foto={meuAlunoNaTela?.foto_url}
-                className="user-avatar"
+            {meuAlunoNaTela?.banner_url ? (
+              <div
+                className="card-usuario-banner-fundo"
+                style={{ backgroundImage: `url("${meuAlunoNaTela.banner_url}")` }}
+                aria-hidden="true"
               />
-              <span className="user-online-dot" />
-            </div>
+            ) : null}
 
-            <div className="user-info">
-              <span className="user-nome">{nomeExibicao}</span>
-              <span className="user-sala">
-                <span className="ponto" style={{ background: "var(--ciano)" }} />
-                {salaExibicao} {ehSuperAdm ? "· Super ADM" : ""}
-              </span>
-            </div>
+            <div className="card-usuario-conteudo">
+              <div className="user-avatar-wrap">
+                <Avatar
+                  nome={nomeExibicao}
+                  foto={meuAlunoNaTela?.foto_url}
+                  className="user-avatar"
+                />
+                <span className="user-online-dot" />
+              </div>
 
-            <button
-              type="button"
-              className="user-editar-btn"
-              title="Editar Perfil"
-              aria-label="Editar Perfil"
-              style={{
-                background: "none",
-                border: 0,
-                padding: 0,
-                color: "inherit",
-                cursor: "pointer",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setAba("perfil");
-              }}
-            >
-              <IconeEditar tamanho={14} />
-            </button>
+              <div className="user-info">
+                <span className="user-nome">{nomeExibicao}</span>
+                <div className="user-cargos-wrap">
+                  <BadgeTurma
+                    sala={meuAlunoNaTela?.sala || salaExibicao}
+                    corSala={meuAlunoNaTela?.corSala || "var(--ciano)"}
+                    tamanho="pequeno"
+                  />
+                  {ehSuperAdm ? (
+                    <BadgeCargo role="super_adm" tamanho="pequeno" />
+                  ) : usuario.role === "adm" ? (
+                    <BadgeCargo role="adm" tamanho="pequeno" />
+                  ) : null}
+                  {meuAlunoNaTela?.fixado ? (
+                    <BadgeFixado tamanho="pequeno" />
+                  ) : null}
+                  {meuAlunoNaTela?.destaque ? (
+                    <BadgeDestaque tamanho="pequeno" />
+                  ) : null}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="user-editar-btn"
+                title="Editar Perfil"
+                aria-label="Editar Perfil"
+                style={{
+                  background: "none",
+                  border: 0,
+                  padding: 0,
+                  color: "inherit",
+                  cursor: "pointer",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAba("perfil");
+                }}
+              >
+                <IconeEditar tamanho={14} />
+              </button>
+            </div>
           </div>
 
           <div className="sidebar-rodape-acoes">
@@ -1020,6 +1054,7 @@ export function CrmApp({
               usuario={usuario}
               alunoAtual={meuAlunoNaTela}
               salas={salas}
+              onAtualizarAluno={handleAtualizarMeuAluno}
             />
           </div>
         ) : null}

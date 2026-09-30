@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Roseta } from "@/components/Roseta";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
-import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { Avatar } from "@/components/Avatar";
+import { BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
+import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { copiarTexto } from "@/lib/clipboard";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { useTravaDeFoco } from "@/lib/foco";
@@ -165,13 +166,10 @@ export function CrachaModal({ aluno, onClose }: Props) {
               <h3 className="cracha-nome">{aluno.nome}</h3>
               <div className="cracha-linha-sala">
                 {aluno.sala ? (
-                  <span className="cracha-sala-pill" style={{ borderColor: aluno.corSala }}>
-                    <span className="ponto" style={{ background: aluno.corSala }} />
-                    {aluno.sala}
-                  </span>
+                  <BadgeTurma sala={aluno.sala} corSala={aluno.corSala} tamanho="pequeno" />
                 ) : null}
-                {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-                {aluno.destaque ? <span className="selo selo-adm">Destaque</span> : null}
+                {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
+                {aluno.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
               </div>
 
               {aluno.bio ? <p className="cracha-bio">{aluno.bio}</p> : null}
