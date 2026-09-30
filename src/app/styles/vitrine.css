@@ -385,7 +385,7 @@
   transition: all 0.16s var(--ease);
 }
 
-.selo-adm {
+.selo-destaque {
   background: rgba(245, 158, 11, 0.12);
   border: 1px solid rgba(245, 158, 11, 0.35);
   color: #fbbf24;
@@ -393,7 +393,7 @@
   text-shadow: none;
 }
 
-.selo-adm:hover {
+.selo-destaque:hover {
   background: rgba(245, 158, 11, 0.22);
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
@@ -416,12 +416,12 @@
    (a tinta sobre o branco), texto escuro. #92400e sobre #fef3e2 = 6,46:1 e
    #065f46 sobre #e2f7f0 = 6,88:1; no hover, #fdeac9 = 6,01:1 e #caf0e3 =
    6,25:1. No escuro nada muda, e as cores originais dão 7,06:1 e 6,24:1 lá. */
-:root[data-theme="light"] .selo-adm {
+:root[data-theme="light"] .selo-destaque {
   background: #fef3e2;
   color: #92400e;
 }
 
-:root[data-theme="light"] .selo-adm:hover {
+:root[data-theme="light"] .selo-destaque:hover {
   background: #fdeac9;
 }
 

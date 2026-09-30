@@ -103,7 +103,7 @@ export function TabelaAlunos({
                           <span className="selo selo-fixado">Fixado</span>
                         ) : null}
                         {aluno.destaque ? (
-                          <span className="selo selo-adm">
+                          <span className="selo selo-destaque">
                             <IconeEstrela tamanho={11} /> Destaque
                           </span>
                         ) : null}
