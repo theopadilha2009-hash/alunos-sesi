@@ -2463,11 +2463,14 @@ body:has(.login-tela-container) {
   content: "";
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(
-    90deg,
-    rgba(11, 20, 24, 0.94) 0%,
-    rgba(11, 20, 24, 0.82) 55%,
-    rgba(11, 20, 24, 0.52) 100%
+    to top,
+    rgba(6, 12, 20, 0.88) 0%,
+    rgba(6, 12, 20, 0.45) 45%,
+    rgba(6, 12, 20, 0.1) 80%,
+    transparent 100%
   );
   z-index: 1;
   pointer-events: none;
@@ -3510,6 +3513,18 @@ body:has(.login-tela-container) {
 .btn-hero-banner-remover:hover {
   background: rgba(220, 38, 38, 0.45);
   border-color: var(--vermelho);
+  color: #ffffff;
+}
+
+.btn-hero-banner-ajuste-auto {
+  background: rgba(56, 199, 189, 0.2);
+  border-color: rgba(56, 199, 189, 0.45);
+  color: #a7f3d0;
+}
+
+.btn-hero-banner-ajuste-auto:hover {
+  background: rgba(56, 199, 189, 0.35);
+  border-color: #38c7bd;
   color: #ffffff;
 }
 

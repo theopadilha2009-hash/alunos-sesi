@@ -29,7 +29,11 @@ import { BadgeCargo, BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { ImportarGithub } from "@/components/crm/ImportarGithub";
 import { Insignias } from "@/components/Insignias";
-import { ModalRecortarBanner } from "@/components/crm/ModalRecortarBanner";
+import {
+  ModalRecortarBanner,
+  formatarEComprimirBanner,
+  subirBannerBlob,
+} from "@/components/crm/ModalRecortarBanner";
 import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
@@ -823,6 +827,32 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     }
   }
 
+  function handleAjusteAutomaticoBanner() {
+    if (!capa) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const bannerAuto = formatarEComprimirBanner(img, { zoom: 1, panX: 0.5, panY: 0.5 });
+        handleSalvarBannerRecortado(bannerAuto);
+        const meuId = alunoAtual?.id || usuario.alunoId;
+        if (meuId && bannerAuto.startsWith("data:")) {
+          subirBannerBlob(bannerAuto, meuId).then((blobUrl) => {
+            if (blobUrl) handleSalvarBannerRecortado(blobUrl);
+          }).catch(() => {
+            // Mantém o banner formatado funcional
+          });
+        }
+      } catch {
+        handleAbrirAjusteBannerExistente();
+      }
+    };
+    img.onerror = () => {
+      handleAbrirAjusteBannerExistente();
+    };
+    img.src = capa;
+  }
+
   function handleRemoverCapa() {
     setCapa("");
     setAvisoCapa(null);
@@ -924,7 +954,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
           // uma foto clara por baixo o deixaria ilegível.
           ...(capa
             ? {
-                backgroundImage: `linear-gradient(180deg, rgba(6, 14, 24, 0.35) 0%, rgba(6, 14, 24, 0.82) 100%), url("${capa}")`,
+                backgroundImage: `url("${capa}")`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
@@ -933,7 +963,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               }),
         }}
       >
-        {/* Ações no Banner: Trocar, Ajustar/Recortar, Remover */}
+        {/* Ações no Banner: Trocar, Ajustar Automático, Recortar, Remover */}
         <div className="hero-banner-acoes-flutuantes">
           <label className="btn-hero-banner-acao" title="Escolher uma nova imagem para o banner">
             <IconeUpload tamanho={14} />
@@ -945,6 +975,18 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               onChange={handleUploadCapa}
             />
           </label>
+
+          {capa ? (
+            <button
+              type="button"
+              className="btn-hero-banner-acao btn-hero-banner-ajuste-auto"
+              onClick={handleAjusteAutomaticoBanner}
+              title="Ajuste automático e enquadramento oficial 3:1 do banner"
+            >
+              <IconeSparkles tamanho={14} />
+              <span>Ajuste Automático</span>
+            </button>
+          ) : null}
 
           {capa ? (
             <button
@@ -1299,6 +1341,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                     onChange={handleUploadCapa}
                   />
                 </label>
+                {capa ? (
+                  <button
+                    type="button"
+                    className="edit-foto-botao"
+                    onClick={handleAjusteAutomaticoBanner}
+                    title="Ajuste automático oficial 3:1"
+                  >
+                    <IconeSparkles tamanho={14} />
+                    <span>Ajuste Automático</span>
+                  </button>
+                ) : null}
                 {capa ? (
                   <button
                     type="button"

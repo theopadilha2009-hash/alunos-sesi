@@ -21,16 +21,18 @@ type Props = {
 
 /**
  * Recorta e comprime a imagem garantindo que o data URL caiba no limite de 220 KB,
- * reduzindo resolução e qualidade progressivamente se necessário.
+ * reduzindo resolução e qualidade progressivamente de forma instantânea.
  */
-export async function formatarEComprimirBanner(
+export function formatarEComprimirBanner(
   img: HTMLImageElement,
   crop: { zoom: number; panX: number; panY: number },
-  alunoId?: string | null,
-): Promise<string> {
+): string {
   const { zoom, panX, panY } = crop;
-  const imgW = img.naturalWidth;
-  const imgH = img.naturalHeight;
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  if (!imgW || !imgH) {
+    throw new Error("Imagem com dimensões inválidas.");
+  }
   const imgAspect = imgW / imgH;
 
   // Dimensões base do recorte com proporção 3:1
@@ -86,14 +88,11 @@ export async function formatarEComprimirBanner(
         const dataUrl = canvas.toDataURL("image/jpeg", q);
         melhorDataUrl = dataUrl;
         if (dataUrl.length <= MAX_DATA_URL_CAPA) {
-          break;
+          return melhorDataUrl;
         }
       } catch {
         // Ignora erro de extração de canvas
       }
-    }
-    if (melhorDataUrl && melhorDataUrl.length <= MAX_DATA_URL_CAPA) {
-      break;
     }
   }
 
@@ -101,32 +100,38 @@ export async function formatarEComprimirBanner(
     throw new Error("Não foi possível processar a imagem do banner.");
   }
 
-  // Se alunoId foi informado, tenta upload direto no Vercel Blob com teto estrito de 8 segundos
-  if (alunoId && melhorDataUrl.startsWith("data:")) {
-    const controle = new AbortController();
-    const timeout = setTimeout(() => controle.abort(), 8000);
-    try {
-      const arquivo = blobDoDataUrl(melhorDataUrl);
-      const { url } = await upload(
-        caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
-        arquivo,
-        {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          clientPayload: JSON.stringify({ campo: "capa" }),
-          abortSignal: controle.signal,
-        },
-      );
-      if (url) return url;
-    } catch {
-      // Em caso de falha, timeout ou offline do Blob, o dataUrl seguro é retornado imediatamente
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  // Fallback caso Blob não responda: dataUrl compactado
   return melhorDataUrl;
+}
+
+/**
+ * Envia o banner recortado para o Vercel Blob em background.
+ * Se der certo, retorna a URL pública; se der timeout ou offline, retorna null.
+ */
+export async function subirBannerBlob(
+  dataUrl: string,
+  alunoId: string,
+): Promise<string | null> {
+  if (!dataUrl.startsWith("data:")) return null;
+  const controle = new AbortController();
+  const timeout = setTimeout(() => controle.abort(), 6000);
+  try {
+    const arquivo = blobDoDataUrl(dataUrl);
+    const { url } = await upload(
+      caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
+      arquivo,
+      {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        clientPayload: JSON.stringify({ campo: "capa" }),
+        abortSignal: controle.signal,
+      },
+    );
+    return url || null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function ModalRecortarBanner({
@@ -141,7 +146,6 @@ export function ModalRecortarBanner({
   const [panX, setPanX] = useState(0.5);
   const [panY, setPanY] = useState(0.5);
   const [carregandoImg, setCarregandoImg] = useState(true);
-  const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -254,23 +258,31 @@ export function ModalRecortarBanner({
     setPanY(0.5);
   }
 
-  async function handleConfirmar() {
+  function handleConfirmar() {
     if (!imgRef.current) return;
-    setSalvando(true);
     setErro(null);
 
     try {
-      const bannerFormatado = await formatarEComprimirBanner(
+      const bannerFormatado = formatarEComprimirBanner(
         imgRef.current,
         { zoom, panX, panY },
-        alunoId,
       );
-      await onSalvar(bannerFormatado);
+      // Aplica imediatamente no perfil e fecha o modal sem qualquer espera
+      onSalvar(bannerFormatado);
       onFechar();
+
+      // Em segundo plano (sem travar a UI), tenta subir para o Vercel Blob se alunoId existir
+      if (alunoId && bannerFormatado.startsWith("data:")) {
+        subirBannerBlob(bannerFormatado, alunoId).then((blobUrl) => {
+          if (blobUrl) {
+            onSalvar(blobUrl);
+          }
+        }).catch(() => {
+          // Mantém o banner formatado funcional
+        });
+      }
     } catch {
-      setErro("Falha ao salvar banner. Tente novamente.");
-    } finally {
-      setSalvando(false);
+      setErro("Falha ao processar e recortar o banner. Tente novamente.");
     }
   }
 
@@ -429,7 +441,6 @@ export function ModalRecortarBanner({
             type="button"
             className="btn-recorte-cancelar"
             onClick={onFechar}
-            disabled={salvando}
           >
             Cancelar
           </button>
@@ -438,16 +449,10 @@ export function ModalRecortarBanner({
             type="button"
             className="btn-recorte-aplicar"
             onClick={handleConfirmar}
-            disabled={carregandoImg || salvando}
+            disabled={carregandoImg}
           >
-            {salvando ? (
-              <span>Processando & Salvando...</span>
-            ) : (
-              <>
-                <IconeCheck tamanho={16} />
-                <span>Aplicar e Salvar Banner</span>
-              </>
-            )}
+            <IconeCheck tamanho={16} />
+            <span>Aplicar e Salvar Banner</span>
           </button>
         </footer>
       </div>
