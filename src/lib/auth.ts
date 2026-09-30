@@ -352,12 +352,23 @@ export async function registrarUsuario(dados: {
     (s) => fold(s.nome as string) === fold(salaNome),
   );
 
-  // Busca tolerante caso o aluno tenha digitado uma variação (ex: "dsm", "3a")
+  // Busca tolerante, numa direção só: o nome da sala NO BANCO contém o que foi
+  // digitado — "dsm" acha "DSM3", "3a" acha "3ºA · Desenvolvimento".
+  //
+  // A direção contrária, `termo.includes(fold(s.nome))`, saiu em 30/09/2026. Ela
+  // perguntava se o que veio no campo CONTÉM o nome de alguma sala, e é essa
+  // relação que produz turma errada: "dsm3" cabe dentro de "dsm3-25", então quem
+  // escolhia **DSM3-25** era matriculado na linha duplicada `dsm3` — em silêncio,
+  // sem aviso e sem log. Não é tolerância; é um nome curto engolindo um longo.
+  // (A duplicata `dsm3` saiu junto, na `019_limpeza_de_salas.sql`; esta linha
+  // fecha a porta que dependia dela para fazer estrago.)
+  //
+  // Hoje o campo é um `<select required>` com as 9 de `TURMAS_OFICIAIS`, e com a
+  // `018` as 9 existem: a busca exata acima resolve sempre, e este ramo só roda
+  // em pedido forjado. Fica como rede, não como caminho.
   if (!salaAchada && salaNome) {
     const termo = fold(salaNome);
-    salaAchada = listaSalas.find(
-      (s) => fold(s.nome as string).includes(termo) || termo.includes(fold(s.nome as string)),
-    );
+    salaAchada = listaSalas.find((s) => fold(s.nome as string).includes(termo));
   }
 
   // Sem turma nenhuma não há o que escolher; com turma pedida que não casa, a
