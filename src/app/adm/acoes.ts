@@ -51,7 +51,9 @@ async function exigirAdm() {
     .eq("id", sessao.id)
     .maybeSingle();
 
-  if (data?.role !== "super_adm") throw new Error("Acesso restrito ao ADM.");
+  if (data?.role !== "super_adm" && data?.role !== "adm") {
+    throw new Error("Acesso restrito ao ADM.");
+  }
 }
 
 function revalidar() {
@@ -86,16 +88,17 @@ async function garantirSala(
   db: ReturnType<typeof clienteAdmin>,
   nome: string,
 ): Promise<string> {
+  const nomePadrao = nome.trim().toUpperCase();
   const { data: achada } = await db
     .from("salas")
     .select("id")
-    .eq("nome", nome)
+    .ilike("nome", nomePadrao)
     .maybeSingle();
   if (achada) return achada.id as string;
 
   const { data: criada, error } = await db
     .from("salas")
-    .insert({ nome })
+    .insert({ nome: nomePadrao })
     .select("id")
     .single();
 
@@ -104,14 +107,14 @@ async function garantirSala(
     const { data: deNovo } = await db
       .from("salas")
       .select("id")
-      .eq("nome", nome)
+      .ilike("nome", nomePadrao)
       .maybeSingle();
     if (deNovo) return deNovo.id as string;
     // O erro cru do PostgREST vai para o log; quem chamou recebe uma frase. A
     // mensagem antiga subia com o jargão embutido e, sem try/catch no laço da
     // importação, derrubava a colagem inteira levando o texto do banco junto.
-    logger.error("ADM", `Falha ao criar a turma "${nome}"`, error);
-    throw new Error(`Não foi possível criar a turma "${nome}".`);
+    logger.error("ADM", `Falha ao criar a turma "${nomePadrao}"`, error);
+    throw new Error(`Não foi possível criar a turma "${nomePadrao}".`);
   }
 
   return criada.id as string;
@@ -524,7 +527,14 @@ export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
 
   if (salaIdParam && RE_UUID.test(salaIdParam)) {
     salaIdFinal = salaIdParam;
-  } else if (nomeSala.length >= 2) {
+  } else if (salaIdParam) {
+    const { data: s } = await db.from("salas").select("id").eq("id", salaIdParam).maybeSingle();
+    if (s?.id) {
+      salaIdFinal = s.id as string;
+    }
+  }
+
+  if (!salaIdFinal && nomeSala.length >= 2) {
     try {
       salaIdFinal = await garantirSala(db, nomeSala);
     } catch (err) {

@@ -64,15 +64,16 @@
 /* ── Badge Turma (ex: DSM3) ─────────────────────────────────────────────── */
 
 .badge-cargo-turma {
-  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 12%, rgba(255, 255, 255, 0.04));
-  border: 1px solid color-mix(in srgb, var(--cor-turma, #38c7bd) 35%, rgba(255, 255, 255, 0.1));
-  color: #f1f5f9;
+  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 24%, rgba(15, 23, 42, 0.8));
+  border: 1px solid color-mix(in srgb, var(--cor-turma, #38c7bd) 55%, rgba(255, 255, 255, 0.25));
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .badge-cargo-turma:hover {
-  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 20%, rgba(255, 255, 255, 0.08));
-  border-color: color-mix(in srgb, var(--cor-turma, #38c7bd) 60%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--cor-turma, #38c7bd) 25%, transparent);
+  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 35%, rgba(15, 23, 42, 0.9));
+  border-color: var(--cor-turma, #38c7bd);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cor-turma, #38c7bd) 40%, transparent);
 }
 
 .badge-led-ponto {
@@ -96,57 +97,83 @@
 /* ── Badge Super ADM ─────────────────────────────────────────────────────── */
 
 .badge-cargo-super-adm {
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.24);
+  border: 1px solid rgba(245, 158, 11, 0.65);
+  color: #fef08a;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .badge-cargo-super-adm:hover {
-  background: rgba(245, 158, 11, 0.22);
-  border-color: rgba(245, 158, 11, 0.6);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.38);
+  border-color: #fbbf24;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
 }
 
 /* ── Badge ADM ───────────────────────────────────────────────────────────── */
 
 .badge-cargo-adm {
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.24);
+  border: 1px solid rgba(56, 189, 248, 0.65);
+  color: #bae6fd;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .badge-cargo-adm:hover {
-  background: rgba(56, 189, 248, 0.22);
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.38);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
 }
 
 /* ── Badge Fixado ────────────────────────────────────────────────────────── */
 
 .badge-cargo-fixado {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: rgba(16, 185, 129, 0.24);
+  border: 1px solid rgba(16, 185, 129, 0.65);
+  color: #a7f3d0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .badge-cargo-fixado:hover {
-  background: rgba(16, 185, 129, 0.22);
-  border-color: rgba(16, 185, 129, 0.6);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.38);
+  border-color: #34d399;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
 }
 
 /* ── Badge Destaque ──────────────────────────────────────────────────────── */
 
 .badge-cargo-destaque {
-  background: rgba(234, 179, 8, 0.12);
-  border: 1px solid rgba(234, 179, 8, 0.35);
-  color: #fde047;
+  background: rgba(234, 179, 8, 0.24);
+  border: 1px solid rgba(234, 179, 8, 0.65);
+  color: #fef08a;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .badge-cargo-destaque:hover {
-  background: rgba(234, 179, 8, 0.22);
-  border-color: rgba(234, 179, 8, 0.6);
-  box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+  background: rgba(234, 179, 8, 0.38);
+  border-color: #fde047;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.45);
+}
+
+/* ── Badge Extra (+ / Agrupamento de Honras) ─────────────────────────────── */
+
+.badge-cargo-extra {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #f1f5f9;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.badge-cargo-extra:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 /* ── Selos Legados (.selo) alinhados ao estilo Discord moderno ────────────── */

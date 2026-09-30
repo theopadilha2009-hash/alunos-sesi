@@ -10,6 +10,7 @@ import { Roseta } from "@/components/Roseta";
 import { TemaToggle } from "@/components/TemaToggle";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { DOMINIO_EMAIL_ESCOLA } from "@/lib/limites";
+import { TURMAS_OFICIAIS } from "@/lib/turmas";
 
 /**
  * Põe o domínio da escola no campo de usuário.
@@ -191,15 +192,20 @@ export function LoginTela() {
 
             <div className="campo">
               <label htmlFor="cad-sala">Sua Sala / Turma</label>
-              <input
+              <select
                 id="cad-sala"
                 name="sala"
-                type="text"
-                placeholder="Ex.: DSM3 ou 3ºA"
                 defaultValue="DSM3"
                 required
-              />
-              <span className="dica-campo">Ex.: DSM3, 3ºA, ou a turma do seu curso no SESI.</span>
+                className="select-sala"
+              >
+                {TURMAS_OFICIAIS.map((t) => (
+                  <option key={t} value={t}>
+                    {t} {t === "DSM3" ? "(Turma Principal)" : ""}
+                  </option>
+                ))}
+              </select>
+              <span className="dica-campo">Selecione sua turma oficial no SESI SENAI.</span>
             </div>
 
             <div className="linha-campos">

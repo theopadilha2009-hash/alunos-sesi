@@ -82,19 +82,19 @@
   position: relative;
   width: 100%;
   border-radius: 24px;
-  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border: 1.5px solid color-mix(in srgb, var(--sala-cor, #38c7bd) 45%, rgba(255, 255, 255, 0.25));
   background: linear-gradient(
-    145deg,
-    rgba(28, 44, 64, 0.95) 0%,
-    rgba(18, 30, 46, 0.96) 60%,
-    rgba(14, 24, 38, 0.98) 100%
+    155deg,
+    #111c2a 0%,
+    #0c141f 60%,
+    #080e16 100%
   );
   backdrop-filter: blur(20px);
   padding: 1.85rem 1.65rem;
   box-shadow:
-    0 25px 65px -10px rgba(0, 0, 0, 0.7),
-    0 0 35px -5px color-mix(in srgb, var(--sala-cor, #38c7bd) 40%, transparent),
-    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    0 25px 65px -10px rgba(0, 0, 0, 0.8),
+    0 0 30px -5px color-mix(in srgb, var(--sala-cor, #38c7bd) 35%, transparent),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25);
   overflow: hidden;
   will-change: transform;
   transform-style: preserve-3d;
@@ -117,19 +117,25 @@
   pointer-events: none;
   background: radial-gradient(
     circle at var(--glare-x, 50%) var(--glare-y, 50%),
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(56, 199, 189, 0.24) 25%,
-    rgba(245, 158, 11, 0.16) 50%,
-    transparent 75%
+    rgba(255, 255, 255, 0.25) 0%,
+    color-mix(in srgb, var(--sala-cor, #38c7bd) 25%, transparent) 35%,
+    transparent 65%
   );
-  mix-blend-mode: overlay;
-  opacity: 0.35;
+  opacity: 0.2;
   transition: opacity 0.2s ease;
-  z-index: 5;
+  z-index: 1;
 }
 
 .cracha-inspecionando .cracha-holografico-glare {
-  opacity: 0.95;
+  opacity: 0.55;
+}
+
+.cracha-furo,
+.cracha-cabecalho,
+.cracha-corpo,
+.cracha-rodape {
+  position: relative;
+  z-index: 2;
 }
 
 .cracha-card .cracha-nome {
@@ -137,6 +143,7 @@
   font-size: 1.35rem !important;
   font-weight: 800;
   letter-spacing: -0.02em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .cracha-card .cracha-logo-texto {
@@ -153,6 +160,7 @@
   color: #e2e8f0 !important;
   font-size: 0.85rem;
   line-height: 1.5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .cracha-card .cracha-sala-pill {
@@ -163,9 +171,11 @@
 }
 
 .cracha-card .tag-habilidade {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(15, 23, 42, 0.75) !important;
   color: #f1f5f9 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid color-mix(in srgb, var(--cor-tag, #38c7bd) 45%, rgba(255, 255, 255, 0.2)) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .cracha-card .cracha-estrela-badge {

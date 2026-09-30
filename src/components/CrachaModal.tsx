@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Roseta } from "@/components/Roseta";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Avatar } from "@/components/Avatar";
-import { BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
+import { LinhaCargos } from "@/components/CargosBadges";
 import { IconeCopiar, IconeDownload, IconeEstrela, IconeLinkExterno } from "@/components/Icones";
 import { copiarTexto } from "@/lib/clipboard";
 import { baixarCrachaPng } from "@/lib/exportar-cracha";
@@ -211,11 +211,12 @@ export function CrachaModal({ aluno, onClose }: Props) {
             <div className="cracha-dados">
               <h3 className="cracha-nome">{aluno.nome}</h3>
               <div className="cracha-linha-sala">
-                {aluno.sala ? (
-                  <BadgeTurma sala={aluno.sala} corSala={aluno.corSala} tamanho="pequeno" />
-                ) : null}
-                {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
-                {aluno.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
+                <LinhaCargos
+                  aluno={aluno}
+                  role={(aluno as unknown as { role?: string }).role}
+                  agruparExtras
+                  tamanho="pequeno"
+                />
               </div>
 
               {aluno.bio ? <p className="cracha-bio">{aluno.bio}</p> : null}

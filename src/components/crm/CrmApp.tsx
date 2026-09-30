@@ -23,7 +23,7 @@ import {
   IconeTrofeu,
   IconeUsuario,
 } from "@/components/Icones";
-import { BadgeCargo, BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
+import { LinhaCargos } from "@/components/CargosBadges";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
@@ -97,13 +97,13 @@ export function CrmApp({
     setLista(alunosIniciais);
   }, [alunosIniciais]);
 
-  const handleMudarSalaAluno = (alunoId: string, novaSalaId: string, nomeSala: string) => {
+  const handleMudarSalaAluno = (alunoId: string, novaSalaId: string) => {
     setLista((antiga) =>
       antiga.map((a) =>
         a.id === alunoId
           ? {
               ...a,
-              sala_id: novaSalaId || null,
+              sala_id: novaSalaId || a.sala_id,
             }
           : a,
       ),
@@ -219,15 +219,39 @@ export function CrmApp({
       ];
     }
 
-    // Se "Todas", agrupa por cada sala respeitando a ordem do banco
-    return salas
-      .map((s) => ({
-        id: s.id,
-        nome: s.nome,
-        cor: corDaSala(s.nome),
-        alunos: visiveis.filter((a) => a.sala_id === s.id || a.sala === s.nome),
-      }))
-      .filter((g) => g.alunos.length > 0);
+    // Se "Todas", agrupa por cada sala unificando variações de caixa (ex: "dsm3" e "DSM3" juntos em "DSM3")
+    const gruposMap = new Map<string, { id: string; nome: string; cor: string; alunos: AlunoNaTela[] }>();
+
+    for (const s of salas) {
+      const nomeCanonico = s.nome.trim().toUpperCase();
+      if (!gruposMap.has(nomeCanonico)) {
+        gruposMap.set(nomeCanonico, {
+          id: s.id,
+          nome: nomeCanonico,
+          cor: corDaSala(nomeCanonico),
+          alunos: [],
+        });
+      }
+    }
+
+    for (const a of visiveis) {
+      const nomeCanonico = (a.sala ?? "").trim().toUpperCase();
+      let grupo = gruposMap.get(nomeCanonico);
+      if (!grupo && nomeCanonico) {
+        grupo = {
+          id: a.sala_id || nomeCanonico,
+          nome: nomeCanonico,
+          cor: corDaSala(nomeCanonico),
+          alunos: [],
+        };
+        gruposMap.set(nomeCanonico, grupo);
+      }
+      if (grupo) {
+        grupo.alunos.push(a);
+      }
+    }
+
+    return Array.from(gruposMap.values()).filter((g) => g.alunos.length > 0);
   }, [salas, salaSelecionada, visiveis]);
 
   // Todas as criações/projetos agregados de todos os alunos
@@ -515,22 +539,17 @@ export function CrmApp({
               <div className="user-info">
                 <span className="user-nome">{nomeExibicao}</span>
                 <div className="user-cargos-wrap">
-                  <BadgeTurma
-                    sala={meuAlunoNaTela?.sala || salaExibicao}
-                    corSala={meuAlunoNaTela?.corSala || "var(--ciano)"}
+                  <LinhaCargos
+                    aluno={{
+                      sala: meuAlunoNaTela?.sala || salaExibicao,
+                      corSala: meuAlunoNaTela?.corSala || "var(--ciano)",
+                      fixado: meuAlunoNaTela?.fixado,
+                      destaque: meuAlunoNaTela?.destaque,
+                    }}
+                    role={ehSuperAdm ? "super_adm" : usuario.role}
+                    agruparExtras
                     tamanho="pequeno"
                   />
-                  {ehSuperAdm ? (
-                    <BadgeCargo role="super_adm" tamanho="pequeno" />
-                  ) : usuario.role === "adm" ? (
-                    <BadgeCargo role="adm" tamanho="pequeno" />
-                  ) : null}
-                  {meuAlunoNaTela?.fixado ? (
-                    <BadgeFixado tamanho="pequeno" />
-                  ) : null}
-                  {meuAlunoNaTela?.destaque ? (
-                    <BadgeDestaque tamanho="pequeno" />
-                  ) : null}
                 </div>
               </div>
 

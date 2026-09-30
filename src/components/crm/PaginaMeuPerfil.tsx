@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
@@ -25,7 +25,7 @@ import {
   IconeUsuario,
   IconeVideo,
 } from "@/components/Icones";
-import { BadgeCargo, BadgeDestaque, BadgeFixado, BadgeTurma } from "@/components/CargosBadges";
+import { LinhaCargos } from "@/components/CargosBadges";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
 import { ImportarGithub } from "@/components/crm/ImportarGithub";
 import { Insignias } from "@/components/Insignias";
@@ -238,6 +238,56 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
           : "https://alunos-sesi.vercel.app"
       }/alunos/${alunoAtual.slug}`
     : "";
+
+  // Rastreamento inteligente de alterações não salvas no perfil
+  const temAlteracoesNaoSalvas = useMemo(() => {
+    if (!alunoAtual) return false;
+    if (nome !== (alunoAtual.nome ?? usuario.nome ?? "")) return true;
+    if (email !== (alunoAtual.email ?? "")) return true;
+    if (bio !== (alunoAtual.bio ?? "")) return true;
+    if (linkedin !== (alunoAtual.linkedin ?? "")) return true;
+    if (github !== (alunoAtual.github ?? "")) return true;
+    if (instagram !== (alunoAtual.instagram ?? "")) return true;
+    if (foto !== (alunoAtual.foto_url ?? "")) return true;
+    if (capa !== (alunoAtual.banner_url ?? "")) return true;
+    const corSalvaLimpa = corSalva && (CORES_SALA as readonly string[]).includes(corSalva) ? corSalva : "";
+    if (corPerfil !== corSalvaLimpa) return true;
+    if (JSON.stringify(habilidades) !== JSON.stringify(alunoAtual.habilidades ?? [])) return true;
+    if (JSON.stringify(projetos) !== JSON.stringify(alunoAtual.projetos ?? [])) return true;
+    if (JSON.stringify(midias) !== JSON.stringify(alunoAtual.midias ?? [])) return true;
+    if (JSON.stringify(videos) !== JSON.stringify(alunoAtual.videos ?? [])) return true;
+    if (JSON.stringify(stickers) !== JSON.stringify(alunoAtual.stickers ?? [])) return true;
+    return false;
+  }, [
+    alunoAtual,
+    nome,
+    usuario.nome,
+    email,
+    bio,
+    linkedin,
+    github,
+    instagram,
+    foto,
+    capa,
+    corSalva,
+    corPerfil,
+    habilidades,
+    projetos,
+    midias,
+    videos,
+    stickers,
+  ]);
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (temAlteracoesNaoSalvas) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [temAlteracoesNaoSalvas]);
 
   async function copiarLink() {
     if (await copiarTexto(urlPerfil)) {
@@ -1040,14 +1090,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
 
           <div className="hero-banner-textos">
             <div className="hero-banner-tag-linha">
-              <BadgeTurma sala={sala} corSala={corDoAluno(null, sala)} />
-              {ehSuperAdm ? (
-                <BadgeCargo role="super_adm" />
-              ) : usuario.role === "adm" ? (
-                <BadgeCargo role="adm" />
-              ) : null}
-              {alunoAtual?.fixado ? <BadgeFixado /> : null}
-              {alunoAtual?.destaque ? <BadgeDestaque /> : null}
+              <LinhaCargos
+                aluno={{
+                  sala,
+                  corSala: corDoAluno(null, sala),
+                  fixado: alunoAtual?.fixado,
+                  destaque: alunoAtual?.destaque,
+                }}
+                role={ehSuperAdm ? "super_adm" : usuario.role}
+                agruparExtras
+                tamanho="padrao"
+              />
             </div>
 
             <h2 className="hero-banner-nome">{nome}</h2>
@@ -1067,6 +1120,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               {github ? (
                 <span className="meta-item meta-rede-ativa">
                   <IconeGitHub tamanho={14} /> GitHub Ativo
+                </span>
+              ) : null}
+              {temAlteracoesNaoSalvas ? (
+                <span className="badge-aviso-nao-salvo" title="Você possui alterações pendentes que ainda não foram salvas">
+                  ⚠️ Alterações não salvas
                 </span>
               ) : null}
             </div>
@@ -1157,16 +1215,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               <Avatar nome={nome} foto={foto} className="perfil-card-avatar" />
               <div className="perfil-card-identidade-info">
                 <h3>{nome}</h3>
-                <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.3rem" }}>
-                  <BadgeTurma sala={sala} corSala={corDoAluno(null, sala)} tamanho="pequeno" />
-                  {ehSuperAdm ? (
-                    <BadgeCargo role="super_adm" tamanho="pequeno" />
-                  ) : usuario.role === "adm" ? (
-                    <BadgeCargo role="adm" tamanho="pequeno" />
-                  ) : null}
-                  {alunoAtual?.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
-                  {alunoAtual?.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
-                </div>
+                <LinhaCargos
+                  aluno={{
+                    sala,
+                    corSala: corDoAluno(null, sala),
+                    fixado: alunoAtual?.fixado,
+                    destaque: alunoAtual?.destaque,
+                  }}
+                  role={ehSuperAdm ? "super_adm" : usuario.role}
+                  agruparExtras
+                  tamanho="pequeno"
+                />
               </div>
             </div>
 
@@ -2455,7 +2514,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
           </div>
 
           {/* ── BARRA FIXA DE SALVAMENTO ──────────────────────────────────── */}
-          <div className="perfil-barra-salvar" ref={barraSalvarRef}>
+          <div
+            className={`perfil-barra-salvar ${temAlteracoesNaoSalvas ? "barra-salvar-pendente" : ""}`}
+            ref={barraSalvarRef}
+          >
             <div className="salvar-textos">
               {/* A resposta aparece aqui, colada no botão que a provocou. O
                   banner do topo continua como eco para quem rola para cima. */}
@@ -2472,6 +2534,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                   {estado.ok ? <IconeCheck tamanho={16} /> : null}
                   <span>{estado.mensagem}</span>
                 </div>
+              ) : temAlteracoesNaoSalvas ? (
+                <span className="salvar-dica alerta-alteracoes-pendentes">
+                  ⚠️ Você possui alterações não salvas. Clique em salvar para atualizar seu perfil.
+                </span>
               ) : (
                 <span className="salvar-dica">
                   As alterações salvas são refletidas instantaneamente na vitrine da turma e no
@@ -2481,7 +2547,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
             </div>
             <button
               type="submit"
-              className="botao botao-primario btn-salvar-perfil-grande"
+              className={`botao botao-primario btn-salvar-perfil-grande ${temAlteracoesNaoSalvas ? "btn-salvar-destaque" : ""}`}
               disabled={salvando}
             >
               <IconeCheck tamanho={16} />

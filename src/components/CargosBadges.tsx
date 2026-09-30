@@ -112,6 +112,29 @@ export function BadgeDestaque({
   );
 }
 
+type BadgeExtraProps = {
+  tamanho?: TamanhoBadge;
+  className?: string;
+  label?: string;
+  title?: string;
+};
+
+export function BadgeExtra({
+  tamanho = "padrao",
+  className = "",
+  label = "+ Fixado / Destaque",
+  title = "Cargos e reconhecimentos adicionais",
+}: BadgeExtraProps) {
+  return (
+    <span
+      className={`badge-cargo badge-cargo-extra badge-${tamanho} ${className}`}
+      title={title}
+    >
+      <span className="badge-cargo-texto">{label}</span>
+    </span>
+  );
+}
+
 type LinhaCargosProps = {
   aluno?: {
     sala?: string | null;
@@ -123,6 +146,7 @@ type LinhaCargosProps = {
   showSala?: boolean;
   tamanho?: TamanhoBadge;
   className?: string;
+  agruparExtras?: boolean;
 };
 
 export function LinhaCargos({
@@ -131,8 +155,18 @@ export function LinhaCargos({
   showSala = true,
   tamanho = "padrao",
   className = "",
+  agruparExtras = true,
 }: LinhaCargosProps) {
   if (!aluno && !role) return null;
+
+  const ehSuper = role === "super_adm";
+  const ehAdm = role === "adm";
+  const temRole = ehSuper || ehAdm;
+  const temFixado = Boolean(aluno?.fixado);
+  const temDestaque = Boolean(aluno?.destaque);
+
+  // Quando agruparExtras estiver ativo e houver cargo principal mais múltiplos destaques:
+  const agrupar = agruparExtras && temRole && temFixado && temDestaque;
 
   return (
     <div className={`linha-cargos-container linha-cargos-${tamanho} ${className}`}>
@@ -146,9 +180,18 @@ export function LinhaCargos({
 
       {role ? <BadgeCargo role={role} tamanho={tamanho} /> : null}
 
-      {aluno?.fixado ? <BadgeFixado tamanho={tamanho} /> : null}
-
-      {aluno?.destaque ? <BadgeDestaque tamanho={tamanho} /> : null}
+      {agrupar ? (
+        <BadgeExtra
+          tamanho={tamanho}
+          label={tamanho === "pequeno" ? "+ 2" : "+ Fixado / Destaque"}
+          title="Aluno Fixado no Topo & Destaque Administrativo Oficial"
+        />
+      ) : (
+        <>
+          {temFixado ? <BadgeFixado tamanho={tamanho} /> : null}
+          {temDestaque ? <BadgeDestaque tamanho={tamanho} /> : null}
+        </>
+      )}
     </div>
   );
 }
