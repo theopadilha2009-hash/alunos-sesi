@@ -59,6 +59,7 @@ import {
   MAX_VIDEOS,
   PROPORCAO_CAPA,
   conferirTamanhoDaImagem,
+  tetoLegivelDoCampo,
 } from "@/lib/limites";
 import type { AlunoNaTela, MidiaAluno, ProjetoAluno, StickerPerfil, UsuarioSessao } from "@/lib/tipos";
 import { mesmoVideo, normalizarVideo, type VideoAluno } from "@/lib/video";
@@ -2100,7 +2101,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                             Arraste uma foto aqui ou <strong style={{ color: "var(--accent)" }}>escolha do seu computador / celular</strong>
                           </span>
                           <span className="dropzone-sub">
-                            PNG, JPG, WebP ou GIF animado de até 4MB
+                            PNG, JPG, WebP ou GIF animado de até {tetoLegivelDoCampo("projetos")}
                           </span>
                           <input
                             type="file"
