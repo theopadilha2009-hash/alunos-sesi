@@ -169,26 +169,6 @@ const ROTULO: Record<MotivoDescarte, string> = {
 };
 
 /**
- * O teto de cada campo, como ele aparece no aviso ao aluno.
- *
- * Os números dos irmãos são os do data URL; o da capa é o da imagem decodificada
- * (220 KB de base64 são ~165 KB de arquivo), a mesma unidade que
- * `conferirTamanhoDaImagem` mostra no editor na hora da escolha — e é ele que o
- * aluno tem como referência ao trocar de arquivo. Um texto que discordasse do
- * aviso local mandaria o aluno procurar um erro onde não há.
- */
-const TETO: Record<CampoPerfil, string> = {
-  midias: "2 MB por imagem",
-  projetos: "2 MB por imagem",
-  stickers: "512 KB por sticker",
-  foto: "120 KB por foto",
-  capa: "capa até 165 KB",
-  // Vídeo de embed não passa por nós e não tem teto de bytes — este texto
-  // nunca é lido por `descreverDescartes` (o motivo dele é `url-invalida`).
-  videos: "link de YouTube ou Vimeo",
-};
-
-/**
  * Substantivo do que ficou de fora, quando o motivo não é mais específico que o
  * campo. Um `Record` e não um ternário encadeado: com quatro campos o encadeado
  * vira uma linha que ninguém lê, e o compilador deixa de cobrar o campo novo —
@@ -350,7 +330,39 @@ export function conferirTamanhoDaImagem(url: string, campo: CampoPerfil): string
  * campo barrava em 1,5 MB: o aluno escolhia a foto que a tela dizia caber e ela
  * era descartada. É a terceira vez que o mesmo número digitado de novo diverge —
  * por isso ele não é digitado de novo.
+ *
+ * Não chame com `videos`: o teto de lá (2048) é o do LINK, não de arquivo, e o
+ * texto sairia "1 KB" — número que não descreve nada que o aluno veja no Finder.
  */
 export function tetoLegivelDoCampo(campo: CampoPerfil): string {
   return emTamanho(tetoEmBytesDeImagem(campo), false);
 }
+
+/**
+ * O teto de cada campo, como ele aparece no aviso ao aluno.
+ *
+ * Os irmãos saem de `tetoLegivelDoCampo`, a MESMA fonte que
+ * `conferirTamanhoDaImagem` usa para dizer "aceita até X" na hora da escolha:
+ * quem anuncia o teto e quem o aplica não podem discordar. Antes disto eles
+ * repetiam o valor do data URL (2 MB, 512 KB, 120 KB) enquanto o aviso local já
+ * falava em bytes de arquivo (1,5 MB, 384 KB, 90 KB) — o aluno lia que cabia
+ * mais do que o app aceita e só descobria no save.
+ *
+ * Fica no fim do arquivo, depois de `tetoLegivelDoCampo`, porque na
+ * inicialização do módulo ele lê `TETO_BYTES` por dentro dela: subir a
+ * declaração para junto de `ROTULO` cairia na zona morta do `const`.
+ *
+ * `videos` é a exceção, e literal de propósito: não tem teto de bytes (o vídeo
+ * de embed mora no YouTube ou no Vimeo, não no nosso banco), então derivá-lo de
+ * `tetoLegivelDoCampo("videos")` imprimiria "1 KB", o teto do LINK. Aqui o texto
+ * é descrição, e `descreverDescartes` não o lê — o motivo de vídeo é
+ * `url-invalida` ou `acima-do-limite`, nunca `grande-demais`.
+ */
+const TETO: Record<CampoPerfil, string> = {
+  midias: `${tetoLegivelDoCampo("midias")} por imagem`,
+  projetos: `${tetoLegivelDoCampo("projetos")} por imagem`,
+  stickers: `${tetoLegivelDoCampo("stickers")} por sticker`,
+  foto: `${tetoLegivelDoCampo("foto")} por foto`,
+  capa: `capa até ${tetoLegivelDoCampo("capa")}`,
+  videos: "link de YouTube ou Vimeo",
+};
