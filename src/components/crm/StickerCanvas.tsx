@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
 import {
   IconeLixeira,
   IconePlus,
@@ -11,7 +10,7 @@ import {
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";
 import { Avatar } from "@/components/Avatar";
-import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
+import { blobDoDataUrl, caminhoDaMidia, EnvioRecusado, enviarAoBlob, nomeDaImagem } from "@/lib/blob";
 import { corDoAluno } from "@/lib/cores";
 import { conferirTamanhoDaImagem, LIMITES_STICKERS } from "@/lib/limites";
 
@@ -231,14 +230,10 @@ export function StickerCanvas({
 
       try {
         const imagem = blobDoDataUrl(dataUrl);
-        const { url } = await upload(
+        const url = await enviarAoBlob(
           caminhoDaMidia(alunoId, nomeDaImagem(imagem.type)),
           imagem,
-          {
-            access: "public",
-            handleUploadUrl: "/api/upload",
-            clientPayload: JSON.stringify({ campo: "sticker" }),
-          },
+          { clientPayload: JSON.stringify({ campo: "sticker" }) },
         );
         const ehGif = arquivo.type.includes("gif") || arquivo.name.toLowerCase().endsWith(".gif");
         const novo: StickerPerfil = {
@@ -267,8 +262,16 @@ export function StickerCanvas({
         }
         onChangeStickers([...stickersRef.current, novo]);
         setStickerSelecionadoId(novo.id);
-      } catch {
-        setAvisoSticker("Não foi possível enviar o arquivo. Tente de novo.");
+      } catch (erro) {
+        // A recusa da rota ("Entre como aluno...", "Endereço de envio fora da
+        // sua pasta.", "Muitos envios...") é frase nossa e vem na frente: é a
+        // única que diz ao aluno o que fazer a respeito. O resto — rede,
+        // biblioteca — fica com a frase da casa.
+        setAvisoSticker(
+          erro instanceof EnvioRecusado
+            ? erro.message
+            : "Não foi possível enviar o arquivo. Tente de novo.",
+        );
       } finally {
         setEnviandoSticker(false);
       }

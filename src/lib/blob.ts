@@ -1,3 +1,5 @@
+import { put } from "@vercel/blob/client";
+
 /**
  * Ponte com o Vercel Blob.
  *
@@ -6,9 +8,11 @@
  * 4 MB do Server Action deixa de ser o teto real da edição — duas mídias no
  * limite já somavam os 4.194.304 B exatos e derrubavam o save inteiro.
  *
- * Sem imports do projeto de propósito. O editor no browser importa daqui, e
+ * Sem imports do PROJETO de propósito. O editor no browser importa daqui, e
  * `seguranca.ts` (que puxa `node:crypto`) não pode entrar no bundle do cliente;
- * mesma razão de `cores.ts` e `limites.ts` serem folha.
+ * mesma razão de `cores.ts` e `limites.ts` serem folha. O `@vercel/blob/client`
+ * é a exceção que não pesa: o upload já era feito com ele, e agora é por conta
+ * do `enviarAoBlob`.
  */
 
 /**
@@ -117,4 +121,96 @@ export function blobDoDataUrl(dataUrl: string): Blob {
   }
 
   return new Blob([bytes], { type: tipo });
+}
+
+/**
+ * A frase que a rota escreveu para quem está enviando.
+ *
+ * Existe porque o `upload()` do `@vercel/blob/client` não serve a esta rota: a
+ * resposta não sendo `ok`, ele lança `BlobError("Failed to retrieve the client
+ * token")` e **não lê o corpo** (`dist/client.js:398`, medido no pacote
+ * instalado). As três frases escritas em `api/upload/route.ts` — "Entre como
+ * aluno para enviar imagens.", "Endereço de envio fora da sua pasta.", "Muitos
+ * envios em pouco tempo. Aguarde um instante." — morriam no corpo HTTP, e quem
+ * enviava via o texto em inglês da biblioteca. Aqui elas voltam a aparecer: a
+ * classe separa "frase nossa, pode ir para a tela" de "diagnóstico de
+ * plataforma, não pode".
+ */
+export class EnvioRecusado extends Error {}
+
+/**
+ * Sem frase legível na resposta: a da casa — nunca o texto da plataforma.
+ *
+ * É a mesma frase que a rota devolve no 500, repetida de propósito: o cliente
+ * não pode importar de `app/api` (arrastaria `next/server` para o bundle), e o
+ * mesmo desenho já está em `lerRespostaEstrela`, que guarda do lado de cá a
+ * `RECUSA_PADRAO` da estrela.
+ */
+const FALHA_AO_ENVIAR = "Não deu para enviar a imagem agora. Tente de novo.";
+
+/**
+ * A frase da resposta, quando ela traz uma.
+ *
+ * O corpo de erro da rota é contrato: ou é uma das três recusas escritas lá, ou
+ * é a frase da casa do 500 — texto cru do banco nunca entra ali, e é o que
+ * trava `tests/erro-interno.test.mjs`. Fora desse formato (página de erro do
+ * Next, resposta de um proxy no caminho), fica a frase da casa.
+ */
+async function fraseDaResposta(resposta: Response): Promise<string> {
+  try {
+    const corpo = (await resposta.json()) as { error?: unknown };
+    if (typeof corpo?.error === "string" && corpo.error) return corpo.error;
+  } catch {
+    // Corpo que não é JSON: não há frase, e a da casa já serve.
+  }
+  return FALHA_AO_ENVIAR;
+}
+
+/**
+ * Sobe a imagem e devolve a URL pública.
+ *
+ * Quem faz a requisição é quem consegue ler a resposta, e é essa a razão de o
+ * POST do token ser daqui em vez de ficar com o `upload()`: ele descartava o
+ * corpo justamente quando havia uma frase para mostrar. O PUT continua com o
+ * `put()` da MESMA biblioteca, com o token de cliente que a rota devolveu — é
+ * o PUT que o `upload()` fazia por dentro, então o caminho de sucesso não muda.
+ *
+ * O `clientPayload` é o mesmo que a rota lê em `lerCampo` para escolher o teto
+ * do campo: o teto é decisão do servidor, e o cliente só diz onde a imagem vai
+ * ser usada.
+ */
+export async function enviarAoBlob(
+  caminho: string,
+  arquivo: Blob,
+  opcoes: { clientPayload: string; abortSignal?: AbortSignal },
+): Promise<string> {
+  const resposta = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    signal: opcoes.abortSignal,
+    body: JSON.stringify({
+      type: "blob.generate-client-token",
+      payload: {
+        pathname: caminho,
+        clientPayload: opcoes.clientPayload,
+        multipart: false,
+      },
+    }),
+  });
+
+  if (!resposta.ok) {
+    throw new EnvioRecusado(await fraseDaResposta(resposta));
+  }
+
+  const { clientToken } = (await resposta.json()) as { clientToken?: unknown };
+  if (typeof clientToken !== "string") {
+    throw new EnvioRecusado(FALHA_AO_ENVIAR);
+  }
+
+  const { url } = await put(caminho, arquivo, {
+    access: "public",
+    token: clientToken,
+    abortSignal: opcoes.abortSignal,
+  });
+  return url;
 }
