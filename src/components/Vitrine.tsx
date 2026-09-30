@@ -127,6 +127,11 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
 
   const salasRanqueadas = useMemo(() => rankingSalas(retrato), [retrato]);
 
+  // "Sala ativa" aqui é sala com aluno dentro, não linha da tabela `salas`: as
+  // turmas oficiais existem mesmo vazias desde a 018, e contá-las dizia à turma
+  // que havia 13 salas onde só 5 têm gente. É o mesmo corte do ranking abaixo.
+  const salasComAlunos = salasRanqueadas.filter((s) => s.alunos > 0).length;
+
   const total = naTela.length;
   const comLinkedin = naTela.filter((a) => a.linkedin).length;
   const comGithub = naTela.filter((a) => a.github).length;
@@ -224,7 +229,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
           <div className="metrica-barra" style={{ width: "100%", background: "var(--accent)" }} />
         </div>
         <div className="numero card-metrica">
-          <b>{salas.length}</b>
+          <b>{salasComAlunos}</b>
           <span>salas ativas</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--verde)" }} />
         </div>
