@@ -22,8 +22,16 @@ Verificado em 2026-09-17, depois do primeiro deploy de produção:
   integração, e estava errado.
 - **Repo**: https://github.com/theopadilha2009-hash/alunos-sesi (público).
 - **Supabase**: projeto `adzauecsqoxgnvidrcfm`, org `Templates`, região
-  `sa-east-1`. O schema vive em `src/sql/001_schema.sql` — o banco não tem
-  migration incremental, então mudança de schema vira arquivo novo em `src/sql/`.
+  `sa-east-1`. O schema é a sequência numerada de `src/sql/001…N`, e **cada
+  mudança de schema é um arquivo novo** nessa pasta — nunca editar um já aplicado,
+  porque o CI reproduz o banco do zero por ela (`scripts/checar-migrations.sh`) e
+  o resultado tem que ser o mesmo nos dois caminhos. Aplicar em produção é
+  `scripts/db-query.sh`: `--check` (lint offline), `--dry-run` (roda dentro de uma
+  transação e faz ROLLBACK), `--psql` (aplica de verdade). O script lê
+  `SUPABASE_DB_URL` do `.env.local` e passa a senha por variável de ambiente,
+  nunca por argv. Aplicado em 30/09/2026: **017, 018 e 019 estão em produção**.
+  A ordem é migration **antes** do deploy — o código novo pode depender da coluna
+  nova e a vitrine inteira cai (ver [[pendencias-de-decisao]]).
 - **O link do ADM** é `<produção>/adm/<ADM_CHAVE>`. O valor da `ADM_CHAVE` está no
   `.env.local` e nas env vars da Vercel; a rota não é linkada e não é indexada.
 - **As chaves do app** (Supabase URL, anon, service_role e `ADM_CHAVE`) estão

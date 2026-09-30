@@ -501,8 +501,10 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   (no `where`, a turma sem nenhum aprovado sumiria do ranking inteiro) e o
   `security_invoker = true` foi repetido, porque `create or replace view` **não
   herda** a opção e sem ela a view passaria a furar a RLS de quem consulta.
-  **Falta aplicar em produção:** o código está no PR, o banco ainda não — até
-  aplicar, o ranking público continua contando os pendentes.
+  **Aplicada em produção em 30/09/2026** (via `scripts/db-query.sh --psql`, depois
+  de `--check` e `--dry-run`) e conferida por `curl` no HTML renderizado: `DSM3`
+  aparece com 3 alunos e `2ºA` com 3 — os aprovados —, não 4, que é o total da
+  tabela. A view prova `da_view` pelo `aprovados`, ao vivo.
   (2) ~~**`TURMAS_OFICIAIS` não existia na tabela `salas`**~~ — **medido em
   30/09/2026 e corrigido pela migration `018_turmas_oficiais.sql`.** O que a
   medição achou foi pior que a suspeita: das 9 turmas que o `<select required>` do
@@ -514,8 +516,9 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   jogava tudo em "DSM3" — o aluno ia para a turma errada, calado. `registrarUsuario`
   **procura** a sala, não cria: é por isso que a lista do formulário e a tabela
   têm que casar. `tests/turmas.test.mjs` amarra as duas agora.
-  **Falta aplicar a 018 em produção** — o código está no PR, o banco não: até
-  aplicar, as 6 continuam sem conseguir se cadastrar.
+  **Aplicada em produção em 30/09/2026** (`--check`, `--dry-run`, `--psql`):
+  inseriu 7 das 9 — `DSM3` e `DS4-25` já existiam e foram puladas pelo
+  `on conflict`. As 9 opções do formulário agora se cadastram.
   (3) ~~**Constantes duplicadas**~~ — **fechado em 30/09**: as três foram para
   `src/lib/limites.ts` (`MAX_CARACTERES_TITULO_PROJETO`,
   `MAX_CARACTERES_DESCRICAO_PROJETO`, `MAX_BYTES_CAPA`), o módulo-folha sem
@@ -550,29 +553,32 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   no seletor de turma. O pixel continua não visto, e os números novos são
   aritmética conferida, não medição em tela.
 
-  (10) **Duas linhas de `salas` em produção esperam decisão**, e mexer nas duas é
-  destrutivo. Achadas na medição de 30/09 (leitura, via `scripts/db-query.sh`).
-  (a) Há um par duplicado: **`dsm3` e `DSM3`**, duas linhas para a mesma turma —
-  a `unique` de `salas.nome` é sensível a caixa, então as duas convivem. É essa
-  duplicata que fazia `DSM3-25` casar em `dsm3`. Unificar é merge de dados: mover
-  `alunos.sala_id` da linha perdedora e apagar a outra — e ninguém sabe ainda qual
-  das duas tem alunos. (b) Há uma sala chamada **`vai tomaar no cu`**, digitada
-  por alguém no `window.prompt` do "+ Nova turma" do painel, que só recusa texto
-  com menos de 2 caracteres — e ela aparece no **ranking público** da vitrine.
-  Apagar é `DELETE` em produção.
-  (11) **A busca tolerante do cadastro é a última porta do "turma errada em
-  silêncio"** — e ficou inalcançável pelo formulário, mas não impossível.
-  `registrarUsuario` procura a sala em duas passadas: igualdade por `fold` e, se
-  falhar, `fold(s.nome).includes(termo) || termo.includes(fold(s.nome))`
-  (`auth.ts`). Com a 018, as 9 opções do `<select>` casam na primeira passada, e a
-  segunda só roda em POST forjado — mas a direção `termo.includes(fold(s.nome))` é
-  exatamente a que casava "dsm3" dentro de "dsm3-25": ela pergunta se o nome da
-  sala cabe DENTRO do que veio no campo, e essa relação é a que produz turma errada.
-  **Recomendação: remover só essa direção**, mantendo
+  (10) ~~**Duas linhas de `salas` em produção**~~ — **fechado em 30/09/2026** pela
+  migration `019_limpeza_de_salas.sql`. As duas foram medidas por leitura
+  (`scripts/db-query.sh`) e **nenhuma tinha aluno**: `ac4f07c8-…` (`vai tomaar no
+  cu`) e `4f9e33a0-…` (`dsm3`). O `delete` é guardado por `not exists (select 1
+  from public.alunos where sala_id = s.id)` — se alguém tivesse matriculado nelas
+  entre a medição e a aplicação, a linha fica. Ids e horários estão no cabeçalho
+  da 019, para o caso de alguém precisar recriá-las. Com a `dsm3` fora, o par
+  duplicado `dsm3`/`DSM3` deixou de existir — sobrou só a canônica maiúscula.
+  (11) ~~**A busca tolerante do cadastro**~~ — **aplicada em 30/09/2026.** A
+  direção `termo.includes(fold(s.nome))` foi removida de `auth.ts`; ficou só
   `fold(s.nome).includes(termo)`, que é a tolerância de verdade ("dsm" → "DSM3").
-  Não foi aplicada de propósito: é mudança de comportamento no caminho de cadastro,
-  não tenho navegador para exercitar, e não é defeito vivo — a 018 tirou o alcance
-  dela pelo formulário.
+  Era ela que perguntava se o nome da sala cabia DENTRO do que veio no campo, e
+  essa é a relação que produzia turma errada em silêncio ("dsm3" dentro de
+  "dsm3-25"). O comentário no ponto explica o que saiu e por quê.
+
+  (12) **O contador "N salas ativas" da vitrine conta sala vazia — e a 018 o
+  inflou de 8 para 13.** É `{salas.length}` em `src/components/Vitrine.tsx:227`,
+  sobre a lista inteira de `listarSalas`; o ranking logo abaixo **não** sofre,
+  porque filtra `alunos > 0` (`:483`). O número subiu como efeito colateral de a
+  018 criar as 7 turmas oficiais que faltavam — e os 8 de antes incluíam a linha
+  `vai tomaar no cu`, então o valor nunca foi "salas em uso". **Não mexi de
+  propósito:** num cabeçalho de vitrine, "13 salas" (a escola tem 13 turmas) e "5
+  salas com alunos" são duas leituras defensáveis, e essa é decisão de produto.
+  Se for para mudar, é uma linha: contar `retrato.filter((r) => r.alunos > 0)` em
+  vez de `salas`. O `Vitrine` já trata `alunos > 0` como o corte do que vale
+  mostrar, vinte linhas abaixo — o que é o argumento a favor da mudança.
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
