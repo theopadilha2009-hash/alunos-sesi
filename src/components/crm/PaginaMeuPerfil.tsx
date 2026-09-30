@@ -51,6 +51,8 @@ import {
   DOMINIO_EMAIL_ESCOLA,
   FOTO_LADO,
   LADO_CAPA,
+  MAX_CARACTERES_DESCRICAO_PROJETO,
+  MAX_CARACTERES_TITULO_PROJETO,
   MAX_HABILIDADES,
   MAX_PROJETOS,
   MAX_VIDEOS,
@@ -76,18 +78,10 @@ type Props = {
  */
 const TETO_ENVIO_MS = 30 * 1000;
 
-/**
- * Tetos de título e descrição do projeto, os mesmos de `sanitizarProjetos`.
- *
- * Lá (`src/lib/seguranca.ts`) o corte é 80 e 200, e é calado: o excedente só
- * entra numa lista interna de descartes. Sem o `maxLength` daqui, o aluno colava
- * um parágrafo, via o texto inteiro na tela, salvava, reabria e encontrava o
- * texto encolhido. Os números moram nos dois lados porque `seguranca.ts` importa
- * `node:crypto` e não pode ser lido de um client component — o mesmo motivo pelo
- * qual `src/lib/limites.ts` existe.
- */
-const MAX_CARACTERES_TITULO_PROJETO = 80;
-const MAX_CARACTERES_DESCRICAO_PROJETO = 200;
+// Os tetos de título e descrição do projeto vêm de `@/lib/limites`: o corte
+// silencioso de `sanitizarProjetos` e o `maxLength` daqui leem o mesmo número.
+// Sem o `maxLength`, o aluno colava um parágrafo, via o texto inteiro na tela,
+// salvava, reabria e encontrava o texto encolhido.
 
 /**
  * Teto do arquivo de banner ANTES de ele virar data URL na memória.

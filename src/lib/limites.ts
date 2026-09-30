@@ -101,6 +101,20 @@ export const DOMINIO_EMAIL_ESCOLA = "estudante.sesisenai.org.br";
 /** Teto da parte antes do `@` (o RFC 5321 pede 64). */
 export const MAX_EMAIL_LOCAL = 64;
 
+/**
+ * Tetos do texto de um projeto, em caracteres.
+ *
+ * O formulário precisa deles para o `maxLength`, e `sanitizarProjetos` — quem de
+ * fato corta — vive em `seguranca.ts`, que importa `node:crypto` e por isso não
+ * pode ser lido de um client component. Ficam aqui pela mesma razão de
+ * `DOMINIO_EMAIL_ESCOLA`: com o número copiado dos dois lados, o `maxLength` da
+ * tela e o corte do servidor ficam livres para divergir em silêncio — e o corte
+ * é calado (o excedente só entra na lista de descartes), então a divergência
+ * apareceria como texto que o aluno digita, vê salvo e reencontra encolhido.
+ */
+export const MAX_CARACTERES_TITULO_PROJETO = 80;
+export const MAX_CARACTERES_DESCRICAO_PROJETO = 200;
+
 export const LIMITES_STICKERS = {
   max: 12,
   tamanhoMin: 16,

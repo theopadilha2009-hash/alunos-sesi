@@ -706,8 +706,8 @@
 }
 
 .btn-endorsement-add:hover {
-  /* Era #10b981, onde o branco do rótulo dá 2,56:1 nos DOIS temas. O #047857
-     é o mesmo verde um degrau abaixo e leva o branco a 5,55:1. */
+  /* Era #10b981, onde o branco do rótulo dá 2,54:1 nos DOIS temas. O #047857
+     é o mesmo verde um degrau abaixo e leva o branco a 5,48:1. */
   background: #047857;
   color: #ffffff;
   transform: scale(1.08);
@@ -722,9 +722,10 @@
   border-radius: 999px;
 }
 
-/* Mesmo caso dos dois acima, no mesmo componente: no claro o #10b981 fica em
-   1,83:1 (o botão) e 1,90:1 (o contador). O #065f46 dá 6,68:1 nos dois sobre
-   o pior fundo claro, e o escuro não muda. */
+/* Mesmo caso do botão acima, no mesmo componente: no tema claro o #10b981 cai
+   para 2,31:1 no --surface e 1,90:1 no --surface-3. O #065f46 sobre a pílula a
+   10% dá 6,56:1 / 6,02:1 / 5,36:1 (--surface, --surface-2, --surface-3) — o pior
+   fundo claro segue acima de 4,5:1. O escuro não muda. */
 :root[data-theme="light"] .btn-endorsement-add {
   color: #065f46;
   border-color: rgba(6, 95, 70, 0.35);

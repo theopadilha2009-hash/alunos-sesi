@@ -8,6 +8,8 @@ import {
   LIMITES_STICKERS,
   MAX_DATA_URL_CAPA,
   MAX_DATA_URL_FOTO,
+  MAX_CARACTERES_DESCRICAO_PROJETO,
+  MAX_CARACTERES_TITULO_PROJETO,
   MAX_DATA_URL_IMAGEM,
   MAX_EMAIL_LOCAL,
   MAX_HABILIDADES,
@@ -351,13 +353,13 @@ export function sanitizarProjetos(bruto: unknown[], descartes?: Descarte[]): Pro
     if (!item || typeof item !== "object") continue;
     const p = item as Record<string, unknown>;
 
-    const titulo = sanitizarTexto(p.titulo, 80);
+    const titulo = sanitizarTexto(p.titulo, MAX_CARACTERES_TITULO_PROJETO);
     if (!titulo) {
       descartes?.push({ motivo: "sem-titulo", campo: "projetos" });
       continue;
     }
 
-    const descricao = sanitizarTexto(p.descricao, 200);
+    const descricao = sanitizarTexto(p.descricao, MAX_CARACTERES_DESCRICAO_PROJETO);
     const link = urlSegura(p.link);
     const imagem = urlImagemSegura(p.imagem);
 

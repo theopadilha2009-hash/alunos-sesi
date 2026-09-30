@@ -45,15 +45,38 @@ export function nomeDaCor(hex: string): string {
   return NOME_DA_COR[hex] ?? hex;
 }
 
+/**
+ * A chave de identidade de uma turma: `trim` + caixa alta.
+ *
+ * É o que decide se o nome de sala vindo da planilha é uma turma que já existe.
+ *
+ * **Não confundir com o `fold` de `busca.ts`.** Aquele é equivalência de BUSCA, e
+ * apaga acento, `º`, `ª` e o "o" digitado no lugar do ordinal — tudo para que
+ * "3ºA", "3oA" e "3A" achem a mesma coisa quando alguém digita. Identidade é
+ * outra pergunta: `salas.nome` é `unique` sem `citext` (`001_schema.sql:18`),
+ * então "3ºA" e "3A" são duas linhas distintas no banco. Decidir existência por
+ * `fold` funde as duas em silêncio — e como "3ºA" é o formato de verdade, a
+ * planilha com "3A" matriculava o aluno na turma errada sem avisar ninguém.
+ *
+ * `toUpperCase` não depende de locale em JS (quem depende é o `toLocaleUpperCase`),
+ * então a chave é a mesma em qualquer máquina.
+ *
+ * Mora aqui, e não em `turmas.ts`, porque este arquivo é sem imports de propósito
+ * (lido cru pelo `node --test`) — e porque é daqui que a cor sai: a mesma chave
+ * que diz "é a mesma turma" é a que garante a mesma cor.
+ */
+export function chaveDaSala(nome: string): string {
+  return String(nome ?? "").trim().toUpperCase();
+}
+
 export function corDaSala(nome: string): string {
   // A normalização mora aqui dentro, e não em cada chamador: o contrato do
   // arquivo é "a mesma turma tem a mesma cor em qualquer tela", e com o `trim`
   // e a caixa só do lado de fora cada tela decidia por si — a vitrine passava o
   // nome cru do banco e o CRM o já achatado, e "dsm3" saía com duas cores na
-  // mesma página. `toUpperCase` não depende de locale em JS (quem depende é o
-  // `toLocaleUpperCase`), então o hash é o mesmo em qualquer máquina.
+  // mesma página.
   let h = 0;
-  for (const ch of String(nome ?? "").trim().toUpperCase()) {
+  for (const ch of chaveDaSala(nome)) {
     h = (h * 31 + (ch.codePointAt(0) ?? 0)) >>> 0;
   }
   return CORES_SALA[h % CORES_SALA.length];

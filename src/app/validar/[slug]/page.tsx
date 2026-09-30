@@ -96,7 +96,7 @@ export default async function PaginaValidarCracha({ params }: Props) {
                 <span className="validar-pill-sala">{sala}</span>
                 <span className="validar-pill-cidade">Joinville · SC</span>
                 {aluno.fixado ? <span className="selo selo-fixado">Fixado</span> : null}
-                {aluno.destaque ? <span className="selo selo-adm">Destaque ADM</span> : null}
+                {aluno.destaque ? <span className="selo selo-adm">Destaque</span> : null}
               </div>
             </div>
           </div>

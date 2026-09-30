@@ -198,6 +198,18 @@ export function StickerCanvas({
       return;
     }
 
+    // Mesma razão da guarda da capa: o `FileReader` monta o data URL inteiro em
+    // memória antes de qualquer recusa, então um arquivo de dezenas de MB é lido
+    // só para ser descartado. O teto aqui é o do data URL, e nenhum arquivo maior
+    // que ele caberia adiante (base64 é ~4/3 do arquivo) — a guarda não recusa
+    // nada que passaria, só evita a leitura do que já ia falhar.
+    if (arquivo.size > LIMITES_STICKERS.maxDataUrlBytes) {
+      setAvisoSticker(
+        `Essa imagem é grande demais para o sticker. O limite é ${LIMITES_STICKERS.maxDataUrlBytes / 1024} KB.`,
+      );
+      return;
+    }
+
     const leitor = new FileReader();
     leitor.onerror = () => {
       setAvisoSticker("Não foi possível ler esse arquivo. Tente outra imagem.");
@@ -241,6 +253,18 @@ export function StickerCanvas({
           alvo: alvoAtivo,
           projetoId: alvoAtivo === "projeto" ? (projetoAlvoId || (projetos[0]?.id ?? "")) : undefined,
         };
+        // A checagem do clique tem segundos de idade: entre escolher o arquivo e
+        // ele chegar, os presets e o "Adicionar" continuam habilitados, e a lista
+        // pode ter batido no teto nesse meio-tempo. Vale a lista de agora, não a
+        // do clique — é para isso que o `stickersRef` existe, e sem esta segunda
+        // olhada o 13º elemento entrava aqui e só era cortado no servidor, com o
+        // aviso genérico que o `noTetoDeElementos` veio evitar.
+        if (stickersRef.current.length >= LIMITES_STICKERS.max) {
+          setAvisoSticker(
+            `O perfil aceita no máximo ${LIMITES_STICKERS.max} elementos. Remova um para adicionar outro.`,
+          );
+          return;
+        }
         onChangeStickers([...stickersRef.current, novo]);
         setStickerSelecionadoId(novo.id);
       } catch {

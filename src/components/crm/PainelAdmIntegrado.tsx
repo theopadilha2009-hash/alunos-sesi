@@ -117,9 +117,22 @@ export function PainelAdmIntegrado({
       const salaId = a.sala_id;
       if (salaId && !opcoesTurmas.some((opt) => opt.id === salaId)) {
         const nomeNoBanco = salas.find((s) => s.id === salaId)?.nome ?? a.sala ?? salaId;
+        // O nome cru pode ser idêntico ao de uma opção canônica: a canônica de
+        // "DSM3" guarda o rótulo literal, e a linha que perdeu a vaga também se
+        // chama "DSM3" (diferem só na caixa). Sem dizer qual é qual, o ADM abre a
+        // select, vê dois "DSM3" e não tem como escolher o certo — o oposto do
+        // que esta opção extra existe para permitir. O marcador só aparece quando
+        // há de fato ambiguidade; para uma turma fora da lista oficial, o nome
+        // sozinho já basta.
+        const colide = opcoesTurmas.some(
+          (opt) => opt.nome.trim().toUpperCase() === nomeNoBanco.trim().toUpperCase(),
+        );
         porAluno.set(a.id, {
           valor: salaId,
-          lista: [{ id: salaId, nome: nomeNoBanco }, ...opcoesTurmas],
+          lista: [
+            { id: salaId, nome: colide ? `${nomeNoBanco} (linha atual)` : nomeNoBanco },
+            ...opcoesTurmas,
+          ],
         });
         continue;
       }

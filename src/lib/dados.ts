@@ -225,6 +225,29 @@ export async function apoiarHabilidade(
 ): Promise<{ ok: boolean; votos: Record<string, number> }> {
   const db = clienteAdmin();
 
+  // A mesma porta do voto de estrela, e pelo mesmo motivo: o botão de apoiar só
+  // existe na página de um perfil aprovado — a de um pendente dá 404 — mas o
+  // `alunoId` chega do cliente, e quem já tinha guardado o id endossava um perfil
+  // que ninguém deveria estar vendo. O apoio ficava gravado e aparecia pronto se
+  // o ADM aprovasse depois: crédito vindo de quem não podia ter visto o perfil.
+  //
+  // O gate mora aqui, não na action: assim vale para qualquer chamador novo. A
+  // mensagem é a mesma de aluno inexistente de propósito — de fora, "não existe"
+  // e "existe e está pendente" têm que ser indistinguíveis.
+  const { data: alvo, error: errAlvo } = await db
+    .from("alunos")
+    .select("aprovado")
+    .eq("id", alunoId)
+    .maybeSingle();
+
+  if (errAlvo) {
+    logger.error("DADOS", `Erro ao checar a moderação id=${alunoId}`, errAlvo);
+    throw new Error("Não foi possível registrar o apoio.");
+  }
+  if (alvo?.aprovado !== true) {
+    throw new Error("Aluno não encontrado para apoio de habilidade.");
+  }
+
   const { error: errInsert } = await db
     .from("endossos")
     .upsert(
