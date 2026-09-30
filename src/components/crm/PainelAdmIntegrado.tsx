@@ -58,6 +58,7 @@ type Props = {
   subAbaInicial?: SubAba;
   onAbrirCracha: (aluno: AlunoNaTela) => void;
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
+  onMudarSalaAluno?: (alunoId: string, novaSalaId: string, nomeSala: string) => void;
 };
 
 export function PainelAdmIntegrado({
@@ -68,6 +69,7 @@ export function PainelAdmIntegrado({
   subAbaInicial = "alunos",
   onAbrirCracha,
   onSelecionarAluno,
+  onMudarSalaAluno,
 }: Props) {
   const [subAba, setSubAba] = useState<SubAba>(subAbaInicial);
   const [busca, setBusca] = useState("");
@@ -403,50 +405,70 @@ export function PainelAdmIntegrado({
                         </div>
                       </td>
 
-                      {/* Sala: o pill diz a turma, o form é quem troca. O aluno
-                          não move a si mesmo — quem manda aqui é o ADM. */}
+                      {/* Sala: seletor direto e moderno de turmas com atualização otimista */}
                       <td>
-                        <form action={mudarSalaDoAluno} className="adm-form-sala">
-                          {a.sala ? (
-                            <span className="cracha-sala-pill" style={{ borderColor: a.corSala }}>
-                              <span className="ponto" style={{ background: a.corSala }} />
-                              {a.sala}
-                            </span>
-                          ) : (
-                            <span className="tabela-sem-dado">—</span>
-                          )}
+                        <form
+                          action={mudarSalaDoAluno}
+                          className="adm-form-sala"
+                          onSubmit={(e) => {
+                            const fd = new FormData(e.currentTarget);
+                            const chosenSalaId = fd.get("salaId") as string;
+                            const chosenSala = salas.find((s) => s.id === chosenSalaId);
+                            if (chosenSala) {
+                              onMudarSalaAluno?.(a.id, chosenSala.id, chosenSala.nome);
+                            }
+                          }}
+                        >
                           <input type="hidden" name="alunoId" value={a.id} />
-                          {/* `required` + `minLength` porque a action recusa
-                              calada: `mudarSalaDoAluno` tem
-                              `if (!alunoId || nomeSala.length < 2) return;` e
-                              devolve `void`, então o clique no "Mover" com o
-                              campo vazio não fazia NADA — sem aviso, sem erro,
-                              e quem clicou conclui que travou. Quem recusa antes
-                              do envio é o navegador, que explica o motivo.
-                              O piso é o mesmo da action (2 caracteres); ele
-                              conta a string crua, então um valor como " A" ainda
-                              passa daqui e morre no servidor — o servidor segue
-                              sendo a autoridade. */}
-                          <input
-                            type="text"
-                            name="sala"
-                            className="input-texto adm-input-sala"
-                            placeholder="Nova turma"
-                            maxLength={30}
-                            required
-                            minLength={2}
-                            /* `minLength` conta a string crua: " A " o passa e
-                               chega no servidor, que faz `.trim()` e devolve em
-                               silêncio — clique morto, que é o defeito que o
-                               `minLength` veio fechar. O `pattern` exige dois
-                               caracteres que não sejam espaço, que é a regra de
-                               `mudarSalaDoAluno`. */
-                            pattern="\s*\S[\s\S]*\S\s*"
-                            aria-label={`Trocar a turma de ${a.nome}`}
-                          />
-                          <button type="submit" className="btn-acao-tabela" title="Mover de turma">
-                            <span>Mover</span>
-                          </button>
+                          <div className="adm-select-sala-wrap">
+                            <span
+                              className="adm-sala-dot-indicador"
+                              style={{ background: a.corSala || "var(--dim)" }}
+                              aria-hidden="true"
+                            />
+                            <select
+                              name="salaId"
+                              className="adm-select-sala"
+                              value={salas.find((s) => s.id === a.sala_id || s.nome === a.sala)?.id ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "__nova__") {
+                                  const nomeNova = window.prompt("Nome da nova turma (ex: DSM4):");
+                                  if (!nomeNova || nomeNova.trim().length < 2) {
+                                    e.target.value = a.sala_id ?? "";
+                                    return;
+                                  }
+                                  const form = e.currentTarget.form;
+                                  if (form) {
+                                    const inputCustom = document.createElement("input");
+                                    inputCustom.type = "hidden";
+                                    inputCustom.name = "sala";
+                                    inputCustom.value = nomeNova.trim();
+                                    form.appendChild(inputCustom);
+                                    onMudarSalaAluno?.(a.id, "", nomeNova.trim());
+                                    form.requestSubmit();
+                                  }
+                                  return;
+                                }
+                                const nova = salas.find((s) => s.id === val);
+                                if (nova) {
+                                  onMudarSalaAluno?.(a.id, nova.id, nova.nome);
+                                }
+                                e.currentTarget.form?.requestSubmit();
+                              }}
+                              aria-label={`Trocar a turma de ${a.nome}`}
+                            >
+                              <option value="" disabled>
+                                Sem sala definida
+                              </option>
+                              {salas.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.nome}
+                                </option>
+                              ))}
+                              <option value="__nova__">+ Nova turma...</option>
+                            </select>
+                          </div>
                         </form>
                       </td>
 

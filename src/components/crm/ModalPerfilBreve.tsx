@@ -35,6 +35,8 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   const [curriculoAberto, setCurriculoAberto] = useState(false);
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
+  const [habilidadesApoiadas, setHabilidadesApoiadas] = useState<Set<string>>(new Set());
+  const [animandoMaisUm, setAnimandoMaisUm] = useState<string | null>(null);
   const [avisoApoio, setAvisoApoio] = useState<string | null>(null);
 
   const dialogoRef = useRef<HTMLDivElement>(null);
@@ -100,8 +102,11 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
   }
 
   async function handleApoiarCompetencia(hab: string) {
-    if (apoiandoHab) return;
+    if (apoiandoHab || habilidadesApoiadas.has(hab)) return;
     setApoiandoHab(hab);
+    setHabilidadesApoiadas((prev) => new Set(prev).add(hab));
+    setAnimandoMaisUm(hab);
+    setTimeout(() => setAnimandoMaisUm(null), 1000);
     setAvisoApoio(null);
 
     // Otimista, para a estrela responder na hora.
@@ -113,10 +118,20 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
         setVotos(res.votos); // contagem real, vinda do banco
       } else {
         desfazerApoio(hab);
+        setHabilidadesApoiadas((prev) => {
+          const next = new Set(prev);
+          next.delete(hab);
+          return next;
+        });
         setAvisoApoio(res.mensagem ?? "Não foi possível registrar o apoio.");
       }
     } catch {
       desfazerApoio(hab);
+      setHabilidadesApoiadas((prev) => {
+        const next = new Set(prev);
+        next.delete(hab);
+        return next;
+      });
       setAvisoApoio("Não foi possível registrar o apoio agora. Tente de novo.");
     } finally {
       setTimeout(() => setApoiandoHab(null), 400);
@@ -302,23 +317,31 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
                             sempre respondia "Competência não reconhecida" — o
                             CRM tinha ficado fora da PR #40, que fechou o perfil. */}
                         {habilidadePermitida(hab) ? (
-                          <button
-                            type="button"
-                            className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
-                            // Um apoio por vez: o `apoiandoHab` é um só, e sem o
-                            // disabled o clique no +1 de outra competência era
-                            // descartado pelo guard sem nenhum sinal na tela.
-                            disabled={apoiandoHab !== null}
-                            onClick={() => handleApoiarCompetencia(hab)}
-                            title={`Apoiar ${hab} de ${aluno.nome}`}
-                          >
-                            <IconePlus tamanho={11} />
-                            <span>1</span>
-                          </button>
+                          !habilidadesApoiadas.has(hab) ? (
+                            <button
+                              type="button"
+                              className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
+                              disabled={apoiandoHab !== null}
+                              onClick={() => handleApoiarCompetencia(hab)}
+                              title={`Apoiar ${hab} de ${aluno.nome}`}
+                            >
+                              <IconePlus tamanho={11} />
+                              <span>1</span>
+                            </button>
+                          ) : (
+                            <span className="endorsement-apoiado" title="Você apoiou esta competência">
+                              <IconeCheck tamanho={11} />
+                            </span>
+                          )
                         ) : null}
                         {count > 0 ? (
                           <span className="endorsement-count" title={`${count} colegas apoiaram esta competência`}>
                             {count}
+                          </span>
+                        ) : null}
+                        {animandoMaisUm === hab ? (
+                          <span className="anim-flutuante-mais-um" aria-hidden="true">
+                            +1
                           </span>
                         ) : null}
                       </div>

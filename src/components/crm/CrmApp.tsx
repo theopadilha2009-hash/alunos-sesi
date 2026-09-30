@@ -91,6 +91,25 @@ export function CrmApp({
   const queryAdiada = useDeferredValue(query);
 
   const [lista, setLista] = useState<Aluno[]>(alunosIniciais);
+
+  // Sincroniza a lista local quando o servidor revalida e envia novas props
+  useEffect(() => {
+    setLista(alunosIniciais);
+  }, [alunosIniciais]);
+
+  const handleMudarSalaAluno = (alunoId: string, novaSalaId: string, nomeSala: string) => {
+    setLista((antiga) =>
+      antiga.map((a) =>
+        a.id === alunoId
+          ? {
+              ...a,
+              sala_id: novaSalaId || null,
+            }
+          : a,
+      ),
+    );
+  };
+
   const [meus, setMeus] = useState<string[]>(meusVotos);
   const [ocupado, setOcupado] = useState<string | null>(null);
   /** Recusa do servidor no voto, escrita perto de quem clicou. */
@@ -1070,6 +1089,7 @@ export function CrmApp({
               subAbaInicial={subAbaAdm}
               onAbrirCracha={(a) => setAlunoCracha(a)}
               onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
+              onMudarSalaAluno={handleMudarSalaAluno}
             />
           </div>
         ) : null}

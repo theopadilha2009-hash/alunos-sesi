@@ -28,6 +28,39 @@ export function CrachaModal({ aluno, onClose }: Props) {
   const [erroCopiar, setErroCopiar] = useState(false);
   const [baixando, setBaixando] = useState(false);
 
+  // Efeito 3D de Inspeção Interativa com Mouse (Estilo Carta Colecionável Holográfica)
+  const [rotacao, setRotacao] = useState({ x: 0, y: 0 });
+  const [brilhoPos, setBrilhoPos] = useState({ x: 50, y: 50 });
+  const [estaInspecionando, setEstaInspecionando] = useState(false);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centroX = rect.width / 2;
+    const centroY = rect.height / 2;
+
+    const rotX = -((y - centroY) / centroY) * 14;
+    const rotY = ((x - centroX) / centroX) * 14;
+
+    setRotacao({ x: rotX, y: rotY });
+    setBrilhoPos({
+      x: Math.round((x / rect.width) * 100),
+      y: Math.round((y / rect.height) * 100),
+    });
+  }
+
+  function handleMouseEnter() {
+    setEstaInspecionando(true);
+  }
+
+  function handleMouseLeave() {
+    setEstaInspecionando(false);
+    setRotacao({ x: 0, y: 0 });
+    setBrilhoPos({ x: 50, y: 50 });
+  }
+
   const urlPerfil =
     typeof window !== "undefined"
       ? `${window.location.origin}/alunos/${aluno.slug}`
@@ -128,12 +161,25 @@ export function CrachaModal({ aluno, onClose }: Props) {
           <div className="cracha-gancho" />
         </div>
 
-        {/* Card do Crachá: Leve, nítido, sem bola holográfica pesada e com contraste impecável */}
+        {/* Card do Crachá: Iluminado, nítido e interativo em 3D como carta colecionável */}
         <div
           ref={cardRef}
-          className="cracha-card cracha-card-leve"
-          style={{ ["--sala-cor" as string]: aluno.cor }}
+          className={`cracha-card cracha-card-leve ${estaInspecionando ? "cracha-inspecionando" : ""}`}
+          style={{
+            ["--sala-cor" as string]: aluno.cor,
+            ["--glare-x" as string]: `${brilhoPos.x}%`,
+            ["--glare-y" as string]: `${brilhoPos.y}%`,
+            transform: estaInspecionando
+              ? `perspective(1000px) rotateX(${rotacao.x.toFixed(2)}deg) rotateY(${rotacao.y.toFixed(2)}deg) scale3d(1.025, 1.025, 1.025)`
+              : "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)",
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
+          {/* Camada Holográfica de Brilho Dinâmico estilo Carta Rara */}
+          <div className="cracha-holografico-glare" aria-hidden="true" />
+
           {/* Abertura do Passante de Cordão */}
           <div className="cracha-furo" aria-hidden="true" />
 

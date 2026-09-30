@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import type { Estado, EstadoCodigo } from "@/app/adm/estado";
 import { formatarCodigo, gerarCodigo, hashCodigo, VALIDADE_CODIGO_MS } from "@/lib/ativacao";
 import { fold } from "@/lib/busca";
-import { decidirSubmissao, idsDeDesafios, publicarDesafio } from "@/lib/dados";
+import { decidirSubmissao, idsDeDesafios, limparCacheDados, publicarDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
 import {
   MAX_DESCRICAO,
@@ -55,6 +55,7 @@ async function exigirAdm() {
 }
 
 function revalidar() {
+  limparCacheDados();
   revalidatePath("/");
   revalidatePath("/alunos");
   revalidatePath("/adm");
@@ -512,26 +513,33 @@ export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
   await exigirAdm();
 
   const alunoId = texto(formData, "alunoId");
+  const salaIdParam = texto(formData, "salaId");
   const nomeSala = sanitizarTexto(texto(formData, "sala"), 30);
 
-  if (!alunoId || nomeSala.length < 2) return;
+  if (!alunoId) return;
 
   const db = clienteAdmin();
 
-  const { data: aluno } = await db.from("alunos").select("id").eq("id", alunoId).maybeSingle();
-  if (!aluno) return;
+  let salaIdFinal = "";
 
-  // `void`: não há para onde devolver a falha, e a exceção subiria como erro
-  // genérico do Next. Silêncio aqui é o mesmo contrato dos outros `return`
-  // vazios desta ação — a turma continua a antiga e o painel não mente.
-  let salaId: string;
-  try {
-    salaId = await garantirSala(db, nomeSala);
-  } catch {
-    return;
+  if (salaIdParam && RE_UUID.test(salaIdParam)) {
+    salaIdFinal = salaIdParam;
+  } else if (nomeSala.length >= 2) {
+    try {
+      salaIdFinal = await garantirSala(db, nomeSala);
+    } catch (err) {
+      logger.error("ADM", `Falha ao garantir sala "${nomeSala}"`, err);
+      return;
+    }
   }
 
-  await db.from("alunos").update({ sala_id: salaId }).eq("id", alunoId);
+  if (!salaIdFinal) return;
+
+  const { error } = await db.from("alunos").update({ sala_id: salaIdFinal }).eq("id", alunoId);
+  if (error) {
+    logger.error("ADM", `Falha ao atualizar sala do aluno ${alunoId}`, error);
+    return;
+  }
 
   revalidar();
 }

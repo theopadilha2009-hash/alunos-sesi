@@ -2430,19 +2430,22 @@ body:has(.login-tela-container) {
   color: var(--accent);
 }
 
-/* ── Hero Banner Institucional (Dark Navy da Imagem 4) ─────────────────── */
 .perfil-hero-banner {
   background-color: #0d1926;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
-  padding: 2.25rem 2.5rem;
+  padding: 2.5rem 2.5rem;
   box-shadow: 0 16px 40px -15px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
-  min-height: 180px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-bottom: 2rem;
 }
 
 .perfil-hero-banner::before {
@@ -3416,44 +3419,53 @@ body:has(.login-tela-container) {
   color: var(--faint);
 }
 
-/* ── Hero Banner Integrado do Perfil do Aluno ────────────────────────────── */
+/* ── Seletor Moderno de Turmas no Painel Administrativo ─────────────────── */
 
-.perfil-hero-banner-wrap {
+.adm-select-sala-wrap {
+  display: inline-flex;
+  align-items: center;
   position: relative;
-  margin-bottom: 1.5rem;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  overflow: hidden;
-  box-shadow: var(--sombra);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 0 0.5rem 0 0.65rem;
+  transition: all 0.16s var(--ease);
 }
 
-.perfil-hero-banner {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3.5 / 1;
-  min-height: 160px;
-  max-height: 260px;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 1rem;
+.adm-select-sala-wrap:hover,
+.adm-select-sala-wrap:focus-within {
+  border-color: var(--accent, #38c7bd);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 10px rgba(56, 199, 189, 0.18);
 }
 
-.perfil-hero-banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.15) 0%,
-    rgba(11, 20, 24, 0.4) 60%,
-    rgba(11, 20, 24, 0.85) 100%
-  );
-  pointer-events: none;
+.adm-sala-dot-indicador {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.adm-select-sala {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text, #f1f5f9);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.32rem 0.2rem 0.32rem 0;
+  cursor: pointer;
+  min-width: 85px;
+}
+
+.adm-select-sala option {
+  background: #0f172a;
+  color: #f1f5f9;
+  font-weight: 500;
+  padding: 0.4rem;
 }
 
 .perfil-hero-banner-acoes {
@@ -3864,25 +3876,184 @@ body:has(.login-tela-container) {
 
 @media (max-width: 640px) {
   .perfil-hero-banner {
-    aspect-ratio: 2.8 / 1;
-    min-height: 130px;
+    padding: 1.5rem 1.25rem;
+    min-height: 180px;
   }
 
-  .perfil-hero-identidade {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    margin-top: -2.25rem;
-    padding: 0 1rem 1rem;
+  .hero-banner-acoes-flutuantes {
+    position: static;
+    margin-bottom: 1rem;
+    align-self: flex-start;
   }
 
-  .perfil-hero-avatar {
-    width: 4.5rem;
-    height: 4.5rem;
+  .hero-banner-conteudo {
+    gap: 1.2rem;
   }
 
-  .perfil-hero-nome {
-    font-size: 1.25rem;
+  .hero-banner-avatar {
+    width: 4.25rem;
+    height: 4.25rem;
   }
+
+  .hero-banner-nome {
+    font-size: 1.6rem;
+  }
+}
+
+/* ─── Upload de Capa de Projeto estilo Vitrine / OLX ─── */
+.projeto-dropzone-olx {
+  border: 2px dashed rgba(56, 199, 189, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.projeto-dropzone-olx:hover,
+.projeto-dropzone-olx.dropzone-arrastando {
+  border-color: #38c7bd;
+  background: rgba(56, 199, 189, 0.08);
+  box-shadow: 0 0 20px rgba(56, 199, 189, 0.15);
+}
+
+.dropzone-conteudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dropzone-label-area {
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.75rem 1rem;
+}
+
+.proj-acoes-editor {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.dropzone-icone-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(56, 199, 189, 0.15);
+  color: #38c7bd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+  transition: transform 0.2s ease;
+}
+
+.projeto-dropzone-olx:hover .dropzone-icone-wrap {
+  transform: scale(1.08);
+}
+
+.dropzone-titulo {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 0.2rem;
+}
+
+.dropzone-sub {
+  font-size: 0.76rem;
+  color: var(--dim, #94a3b8);
+}
+
+.dropzone-divisor-ou {
+  display: flex;
+  align-items: center;
+  margin: 0.85rem 0 0.5rem;
+  width: 100%;
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dropzone-divisor-ou::before,
+.dropzone-divisor-ou::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dropzone-divisor-ou span {
+  padding: 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--dim, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dropzone-input-url {
+  max-width: 480px;
+  margin: 0 auto;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.projeto-capa-preview-box {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #090d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.projeto-capa-preview-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.projeto-capa-overlay-acoes {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 2;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-trocar-capa-mini {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.btn-remover-capa-mini {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-remover-capa-mini:hover {
+  background: rgba(239, 68, 68, 0.35);
+  color: #fff;
 }
 

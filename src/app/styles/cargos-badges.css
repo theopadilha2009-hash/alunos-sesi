@@ -1,74 +1,78 @@
 /* ==========================================================================
-   cargos-badges.css — Distintivos, Cargos e Selos com Relevo e Formas Reais
+   cargos-badges.css — Cargos e Selos estilo Discord: planos, limpos e luminosos
    ========================================================================== */
 
 .linha-cargos-container {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.38rem;
 }
 
 .linha-cargos-pequeno {
-  gap: 0.3rem;
+  gap: 0.28rem;
 }
 
 .linha-cargos-grande {
-  gap: 0.55rem;
+  gap: 0.48rem;
 }
 
-/* ── Badges com formas tangíveis e relevo ─────────────────────────────────── */
+/* ── Badges com estética Discord: pílulas limpas, luminosas e sem relevo 3D ── */
 
 .badge-cargo {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
   border-radius: 999px;
   font-family: inherit;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
   user-select: none;
-  transition: transform 0.14s var(--ease), box-shadow 0.14s var(--ease);
+  letter-spacing: 0.02em;
+  transition: all 0.16s var(--ease);
+  position: relative;
+  text-decoration: none;
 }
 
 .badge-cargo:hover {
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
 }
 
 .badge-cargo-texto {
   display: inline-block;
+  line-height: 1.1;
 }
 
 .badge-pequeno {
-  padding: 0.14rem 0.48rem;
-  font-size: 0.65rem;
-  gap: 0.24rem;
+  padding: 0.16rem 0.5rem;
+  font-size: 0.68rem;
+  gap: 0.28rem;
 }
 
 .badge-padrao {
-  padding: 0.24rem 0.64rem;
-  font-size: 0.72rem;
-  gap: 0.32rem;
+  padding: 0.24rem 0.65rem;
+  font-size: 0.74rem;
+  gap: 0.35rem;
 }
 
 .badge-grande {
-  padding: 0.32rem 0.82rem;
-  font-size: 0.8rem;
+  padding: 0.32rem 0.85rem;
+  font-size: 0.82rem;
   gap: 0.42rem;
 }
 
 /* ── Badge Turma (ex: DSM3) ─────────────────────────────────────────────── */
 
 .badge-cargo-turma {
-  background: color-mix(in srgb, var(--cor-turma, var(--ciano)) 14%, rgba(255, 255, 255, 0.04));
-  border: 1px solid color-mix(in srgb, var(--cor-turma, var(--ciano)) 45%, rgba(255, 255, 255, 0.14));
-  color: var(--text);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 12%, rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--cor-turma, #38c7bd) 35%, rgba(255, 255, 255, 0.1));
+  color: #f1f5f9;
+}
+
+.badge-cargo-turma:hover {
+  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 20%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--cor-turma, #38c7bd) 60%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cor-turma, #38c7bd) 25%, transparent);
 }
 
 .badge-led-ponto {
@@ -76,7 +80,7 @@
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 6px var(--cor-turma, var(--ciano));
+  box-shadow: 0 0 6px var(--cor-turma, #38c7bd);
 }
 
 .badge-pequeno .badge-led-ponto {
@@ -92,84 +96,97 @@
 /* ── Badge Super ADM ─────────────────────────────────────────────────────── */
 
 .badge-cargo-super-adm {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.26) 0%, rgba(180, 83, 9, 0.18) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.6);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
   color: #fbbf24;
-  box-shadow:
-    0 2px 8px rgba(245, 158, 11, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.badge-cargo-super-adm:hover {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
 }
 
 /* ── Badge ADM ───────────────────────────────────────────────────────────── */
 
 .badge-cargo-adm {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(14, 165, 233, 0.14) 100%);
-  border: 1px solid rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   color: #38bdf8;
-  box-shadow:
-    0 2px 8px rgba(56, 189, 248, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.26);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.badge-cargo-adm:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
 }
 
 /* ── Badge Fixado ────────────────────────────────────────────────────────── */
 
 .badge-cargo-fixado {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.16) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
   color: #34d399;
-  box-shadow:
-    0 2px 8px rgba(16, 185, 129, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.26);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.badge-cargo-fixado:hover {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 }
 
 /* ── Badge Destaque ──────────────────────────────────────────────────────── */
 
 .badge-cargo-destaque {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.26) 0%, rgba(161, 98, 7, 0.16) 100%);
-  border: 1px solid rgba(234, 179, 8, 0.58);
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.35);
   color: #fde047;
-  box-shadow:
-    0 2px 8px rgba(234, 179, 8, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* ── Modernização dos selos legados (.selo) para terem profundidade real ─── */
+.badge-cargo-destaque:hover {
+  background: rgba(234, 179, 8, 0.22);
+  border-color: rgba(234, 179, 8, 0.6);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+}
+
+/* ── Selos Legados (.selo) alinhados ao estilo Discord moderno ────────────── */
 
 .selo {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.24rem 0.62rem;
+  gap: 0.32rem;
+  padding: 0.22rem 0.6rem;
   border-radius: 999px;
   font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   line-height: 1;
-  transition: transform 0.14s var(--ease);
+  transition: all 0.16s var(--ease);
 }
 
 .selo-adm {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(180, 83, 9, 0.15) 100%) !important;
-  border: 1px solid rgba(245, 158, 11, 0.55) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
   color: #fbbf24 !important;
-  box-shadow:
-    0 2px 8px rgba(245, 158, 11, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.selo-adm:hover {
+  background: rgba(245, 158, 11, 0.22) !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3) !important;
 }
 
 .selo-fixado {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.15) 100%) !important;
-  border: 1px solid rgba(16, 185, 129, 0.55) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
   color: #34d399 !important;
-  box-shadow:
-    0 2px 8px rgba(16, 185, 129, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.selo-fixado:hover {
+  background: rgba(16, 185, 129, 0.22) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3) !important;
 }

@@ -730,6 +730,55 @@
   100% { transform: scale(1); }
 }
 
+.endorsement-pill {
+  position: relative;
+}
+
+.endorsement-apoiado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+
+.anim-flutuante-mais-um {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #34d399;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.7);
+  pointer-events: none;
+  animation: subirMaisUm 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 30;
+}
+
+@keyframes subirMaisUm {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-50%, -10px) scale(1.25);
+  }
+  80% {
+    opacity: 0.9;
+    transform: translate(-50%, -24px) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px) scale(0.9);
+  }
+}
+
 .breve-secao-header-linha,
 .perfil-hab-topo-linha {
   display: flex;

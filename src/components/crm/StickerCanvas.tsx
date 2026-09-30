@@ -5,6 +5,7 @@ import {
   IconeLixeira,
   IconePlus,
   IconeProjetos,
+  IconeUpload,
   IconeUsuario,
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";
@@ -129,16 +130,62 @@ export function StickerCanvas({
     onChangeStickers(atualizados);
   }
 
-  // Permite clicar diretamente no canvas para mover o sticker selecionado
-  function handleCliqueCanvas(ev: React.MouseEvent<HTMLDivElement>) {
+  function handleUploadArquivoSticker(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0];
+    if (!arquivo) return;
+    const leitor = new FileReader();
+    leitor.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) return;
+      const ehGif = arquivo.type.includes("gif") || arquivo.name.toLowerCase().endsWith(".gif");
+      const novo: StickerPerfil = {
+        id: `st_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        url: dataUrl,
+        tipo: ehGif ? "gif" : "sticker",
+        rotulo: arquivo.name.replace(/\.[^/.]+$/, ""),
+        x: 50,
+        y: 50,
+        tamanho: 75,
+        rotacao: 0,
+        alvo: alvoAtivo,
+        projetoId: alvoAtivo === "projeto" ? (projetoAlvoId || (projetos[0]?.id ?? "")) : undefined,
+      };
+      onChangeStickers([...stickers, novo]);
+      setStickerSelecionadoId(novo.id);
+    };
+    leitor.readAsDataURL(arquivo);
+    e.target.value = "";
+  }
+
+  // Permite clicar diretamente no banner para posicionar ou retornar o sticker ao banner
+  function handleCliqueCanvasBanner(ev: React.MouseEvent<HTMLDivElement>) {
     if (!stickerSelecionado) return;
     const rect = ev.currentTarget.getBoundingClientRect();
     const x = Math.round(((ev.clientX - rect.left) / rect.width) * 100);
     const y = Math.round(((ev.clientY - rect.top) / rect.height) * 100);
     atualizarSticker(stickerSelecionado.id, {
+      alvo: "banner",
+      projetoId: undefined,
       x: Math.max(5, Math.min(95, x)),
       y: Math.max(5, Math.min(95, y)),
     });
+    setAlvoAtivo("banner");
+  }
+
+  // Permite clicar diretamente em um projeto para fixar o sticker nele
+  function handleCliqueCanvasProjeto(projId: string, ev: React.MouseEvent<HTMLDivElement>) {
+    if (!stickerSelecionado) return;
+    const rect = ev.currentTarget.getBoundingClientRect();
+    const x = Math.round(((ev.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((ev.clientY - rect.top) / rect.height) * 100);
+    atualizarSticker(stickerSelecionado.id, {
+      alvo: "projeto",
+      projetoId: projId,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+    });
+    setAlvoAtivo("projeto");
+    setProjetoAlvoId(projId);
   }
 
   const stickersDoBanner = stickers.filter((s) => s.alvo !== "projeto");
@@ -251,6 +298,32 @@ export function StickerCanvas({
                   <span>Adicionar</span>
                 </button>
               </div>
+
+              <div style={{ marginTop: "0.6rem" }}>
+                <label
+                  className="botao botao-secundario"
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.45rem",
+                    cursor: "pointer",
+                    padding: "0.55rem 0.85rem",
+                    borderRadius: "8px",
+                  }}
+                  title="Selecionar imagem ou GIF do seu dispositivo"
+                >
+                  <IconeUpload tamanho={15} />
+                  <span>Carregar GIF ou Imagem do PC</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleUploadArquivoSticker}
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
@@ -271,6 +344,55 @@ export function StickerCanvas({
               </div>
 
               <div className="propriedades-sliders">
+                {/* Alternador de Alvo: Permite mover o sticker entre Banner e Projetos livremente */}
+                <div className="slider-item">
+                  <div className="slider-label-linha">
+                    <span>Onde fixar este elemento:</span>
+                  </div>
+                  <div className="botoes-alvo-dupla" style={{ marginTop: "0.4rem" }}>
+                    <button
+                      type="button"
+                      className={`btn-alvo-opcao ${stickerSelecionado.alvo !== "projeto" ? "btn-alvo-ativo" : ""}`}
+                      onClick={() => {
+                        atualizarSticker(stickerSelecionado.id, { alvo: "banner", projetoId: undefined });
+                        setAlvoAtivo("banner");
+                      }}
+                    >
+                      <IconeUsuario tamanho={13} />
+                      <span>Banner</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn-alvo-opcao ${stickerSelecionado.alvo === "projeto" ? "btn-alvo-ativo" : ""}`}
+                      disabled={projetos.length === 0}
+                      onClick={() => {
+                        const pid = projetoAlvoId || (projetos[0]?.id ?? "");
+                        atualizarSticker(stickerSelecionado.id, { alvo: "projeto", projetoId: pid });
+                        setAlvoAtivo("projeto");
+                        setProjetoAlvoId(pid);
+                      }}
+                    >
+                      <IconeProjetos tamanho={13} />
+                      <span>Projeto</span>
+                    </button>
+                  </div>
+                  {stickerSelecionado.alvo === "projeto" && projetos.length > 0 ? (
+                    <select
+                      className="select-projeto-alvo"
+                      style={{ marginTop: "0.5rem" }}
+                      value={stickerSelecionado.projetoId || projetoAlvoId}
+                      onChange={(e) => {
+                        atualizarSticker(stickerSelecionado.id, { projetoId: e.target.value });
+                        setProjetoAlvoId(e.target.value);
+                      }}
+                    >
+                      {projetos.map((p) => (
+                        <option key={p.id} value={p.id}>{p.titulo}</option>
+                      ))}
+                    </select>
+                  ) : null}
+                </div>
+
                 <div className="slider-item">
                   <div className="slider-label-linha">
                     <span>Tamanho:</span>
@@ -352,10 +474,17 @@ export function StickerCanvas({
 
           {/* Canvas 1: Banner Principal do Perfil */}
           <div className="canvas-secao-wrap">
-            <span className="canvas-secao-titulo">Visualização: Banner do Perfil</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+              <span className="canvas-secao-titulo" style={{ margin: 0 }}>Visualização: Banner do Perfil</span>
+              {stickerSelecionado ? (
+                <span className="canvas-drop-hint" style={{ fontSize: "0.75rem", color: "var(--accent)", fontWeight: 700 }}>
+                  🎯 Clique no banner para fixar ou mover aqui
+                </span>
+              ) : null}
+            </div>
             <div
-              className={`canvas-banner-preview ${alvoAtivo === "banner" ? "canvas-ativo" : ""}`}
-              onClick={handleCliqueCanvas}
+              className={`canvas-banner-preview ${alvoAtivo === "banner" ? "canvas-ativo" : ""} ${stickerSelecionado ? "canvas-zona-destaque" : ""}`}
+              onClick={handleCliqueCanvasBanner}
             >
               {/* Elementos/Stickers do Banner */}
               {stickersDoBanner.map((st) => {
@@ -397,7 +526,14 @@ export function StickerCanvas({
           {/* Canvas 2: Projetos com Stickers Fixados por cima */}
           {projetos.length > 0 ? (
             <div className="canvas-secao-wrap" style={{ marginTop: "1.5rem" }}>
-              <span className="canvas-secao-titulo">Visualização: Projetos com Elementos Fixados</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                <span className="canvas-secao-titulo" style={{ margin: 0 }}>Visualização: Projetos com Elementos Fixados</span>
+                {stickerSelecionado ? (
+                  <span className="canvas-drop-hint" style={{ fontSize: "0.75rem", color: "#60a5fa", fontWeight: 700 }}>
+                    🎯 Clique em qualquer projeto para fixar o elemento sobre ele
+                  </span>
+                ) : null}
+              </div>
               <div className="canvas-projetos-grid">
                 {projetos.map((proj) => {
                   const projsStickers = stickersDoProjeto(proj.id);
@@ -406,22 +542,8 @@ export function StickerCanvas({
                   return (
                     <div
                       key={proj.id}
-                      className={`canvas-projeto-card ${isCurrentTarget ? "canvas-projeto-ativo" : ""}`}
-                      onClick={(e) => {
-                        if (stickerSelecionado) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-                          const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-                          atualizarSticker(stickerSelecionado.id, {
-                            alvo: "projeto",
-                            projetoId: proj.id,
-                            x: Math.max(5, Math.min(95, x)),
-                            y: Math.max(5, Math.min(95, y)),
-                          });
-                          setAlvoAtivo("projeto");
-                          setProjetoAlvoId(proj.id);
-                        }
-                      }}
+                      className={`canvas-projeto-card ${isCurrentTarget ? "canvas-projeto-ativo" : ""} ${stickerSelecionado ? "canvas-zona-destaque" : ""}`}
+                      onClick={(e) => handleCliqueCanvasProjeto(proj.id, e)}
                     >
                       {/* Stickers posicionados neste projeto */}
                       {projsStickers.map((st) => {

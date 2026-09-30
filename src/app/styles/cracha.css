@@ -76,22 +76,60 @@
 .cracha-card,
 .cracha-card-leve {
   --text: #ffffff !important;
-  --dim: #e2e8f0 !important;
-  --faint: #94a3b8 !important;
+  --dim: #f1f5f9 !important;
+  --faint: #cbd5e1 !important;
   color: #ffffff !important;
   position: relative;
   width: 100%;
   border-radius: 24px;
-  border: 2px solid color-mix(in srgb, var(--sala-cor, #38c7bd) 85%, rgba(255, 255, 255, 0.2));
-  background: linear-gradient(165deg, #101923 0%, #080d12 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(
+    145deg,
+    rgba(28, 44, 64, 0.95) 0%,
+    rgba(18, 30, 46, 0.96) 60%,
+    rgba(14, 24, 38, 0.98) 100%
+  );
+  backdrop-filter: blur(20px);
   padding: 1.85rem 1.65rem;
   box-shadow:
-    0 30px 70px -15px rgb(0 0 0 / 0.98),
-    0 0 40px -10px color-mix(in srgb, var(--sala-cor, #38c7bd) 40%, transparent);
+    0 25px 65px -10px rgba(0, 0, 0, 0.7),
+    0 0 35px -5px color-mix(in srgb, var(--sala-cor, #38c7bd) 40%, transparent),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
   overflow: hidden;
-  contain: layout style;
   will-change: transform;
-  transform: translateZ(0);
+  transform-style: preserve-3d;
+  cursor: grab;
+  transition: transform 0.08s ease-out, box-shadow 0.2s ease;
+}
+
+.cracha-card:not(.cracha-inspecionando) {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s ease;
+}
+
+.cracha-card:active {
+  cursor: grabbing;
+}
+
+.cracha-holografico-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--glare-x, 50%) var(--glare-y, 50%),
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(56, 199, 189, 0.24) 25%,
+    rgba(245, 158, 11, 0.16) 50%,
+    transparent 75%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+  z-index: 5;
+}
+
+.cracha-inspecionando .cracha-holografico-glare {
+  opacity: 0.95;
 }
 
 .cracha-card .cracha-nome {

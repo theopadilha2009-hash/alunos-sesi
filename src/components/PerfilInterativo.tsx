@@ -67,9 +67,11 @@ export function PerfilInterativo({
   // primeiro render do cliente.
   const [comSom, setComSom] = useState(true);
 
-  // Apoio de Competências (+1 estilo LinkedIn)
+  // Apoio de Competências (+1 estilo LinkedIn) com animação de +1 e bloqueio de cliques repetidos
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
   const [apoiandoHab, setApoiandoHab] = useState<string | null>(null);
+  const [habilidadesApoiadas, setHabilidadesApoiadas] = useState<Set<string>>(new Set());
+  const [animandoMaisUm, setAnimandoMaisUm] = useState<string | null>(null);
   const [recado, setRecado] = useState<string | null>(null);
 
   // A lista já vem resolvida da camada de dados (coluna `habilidades` ?? regex da
@@ -139,9 +141,12 @@ export function PerfilInterativo({
   }
 
   async function handleApoiarCompetencia(hab: string) {
-    if (apoiandoHab) return;
+    if (apoiandoHab || habilidadesApoiadas.has(hab)) return;
     const anterior = votos[hab] || 0;
     setApoiandoHab(hab);
+    setHabilidadesApoiadas((prev) => new Set(prev).add(hab));
+    setAnimandoMaisUm(hab);
+    setTimeout(() => setAnimandoMaisUm(null), 1000);
     setRecado(null);
     setVotos((prev) => ({ ...prev, [hab]: (prev[hab] || 0) + 1 }));
 
@@ -152,6 +157,11 @@ export function PerfilInterativo({
     } catch (erro) {
       // Desfaz o +1 otimista: sem isso o apoio fica na tela mesmo tendo falhado
       setVotos((prev) => ({ ...prev, [hab]: anterior }));
+      setHabilidadesApoiadas((prev) => {
+        const next = new Set(prev);
+        next.delete(hab);
+        return next;
+      });
       setRecado(erro instanceof Error ? erro.message : "Não deu para apoiar agora.");
     } finally {
       setTimeout(() => setApoiandoHab(null), 400);
@@ -316,19 +326,31 @@ export function PerfilInterativo({
                         o aluno que criou a própria competência vê o chip, sem
                         número e sem botão, e entende que ali não há apoio ainda. */}
                     {habilidadePermitida(hab) ? (
-                      <button
-                        type="button"
-                        className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
-                        onClick={() => handleApoiarCompetencia(hab)}
-                        title={`Apoiar ${hab} de ${aluno.nome}`}
-                      >
-                        <IconePlus tamanho={11} />
-                        <span>1</span>
-                      </button>
+                      !habilidadesApoiadas.has(hab) ? (
+                        <button
+                          type="button"
+                          className={`btn-endorsement-add ${apoiandoEste ? "anim-pulse" : ""}`}
+                          onClick={() => handleApoiarCompetencia(hab)}
+                          disabled={apoiandoHab !== null}
+                          title={`Apoiar ${hab} de ${aluno.nome}`}
+                        >
+                          <IconePlus tamanho={11} />
+                          <span>1</span>
+                        </button>
+                      ) : (
+                        <span className="endorsement-apoiado" title="Você apoiou esta competência">
+                          <IconeCheck tamanho={11} />
+                        </span>
+                      )
                     ) : null}
                     {count > 0 ? (
                       <span className="endorsement-count" title={`${count} apoios recebidos`}>
                         {count}
+                      </span>
+                    ) : null}
+                    {animandoMaisUm === hab ? (
+                      <span className="anim-flutuante-mais-um" aria-hidden="true">
+                        +1
                       </span>
                     ) : null}
                   </div>

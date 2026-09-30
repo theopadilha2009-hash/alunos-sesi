@@ -12,6 +12,7 @@ import {
   IconeCracha,
   IconeCrop,
   IconeDownload,
+  IconeEditar,
   IconeEscudo,
   IconeEstrela,
   IconeGaleria,
@@ -188,6 +189,8 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
   const [novoProjDesc, setNovoProjDesc] = useState("");
   const [novoProjLink, setNovoProjLink] = useState("");
   const [novoProjImg, setNovoProjImg] = useState("");
+  const [editandoProjId, setEditandoProjId] = useState<string | null>(null);
+  const [arrastandoImgProjeto, setArrastandoImgProjeto] = useState(false);
 
   // Lista de mídias (Imagens e GIFs da Galeria)
   const [midias, setMidias] = useState<MidiaAluno[]>(
@@ -329,33 +332,64 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     return null;
   }
 
-  function adicionarProjeto() {
-    // Cada recusa diz o motivo. Antes, o título vazio só desabilitava o botão —
-    // o clique não fazia nada e não havia nada na tela explicando por quê.
+  function iniciarEdicaoProjeto(proj: ProjetoAluno) {
+    setEditandoProjId(proj.id);
+    setNovoProjTitulo(proj.titulo);
+    setNovoProjDesc(proj.descricao || "");
+    setNovoProjLink(proj.link || "");
+    setNovoProjImg(proj.imagem || "");
+    setAvisoProjeto(null);
+    const elem = document.getElementById("form-projeto-editor");
+    if (elem) elem.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function cancelarEdicaoProjeto() {
+    setEditandoProjId(null);
+    setNovoProjTitulo("");
+    setNovoProjDesc("");
+    setNovoProjLink("");
+    setNovoProjImg("");
+    setAvisoProjeto(null);
+  }
+
+  function salvarOuAdicionarProjeto() {
     if (!novoProjTitulo.trim()) {
-      setAvisoProjeto("Dê um título ao projeto para adicioná-lo à lista.");
+      setAvisoProjeto("Dê um título ao projeto para salvá-lo.");
       return;
     }
     if (!linkAceitavel(novoProjLink)) {
       setAvisoProjeto("O link da criação precisa começar com http:// ou https://.");
       return;
     }
-    // Mesmo teto do `adicionarVideo`, e aqui o corte do servidor é silencioso:
-    // `sanitizarProjetos` faz `slice(0, MAX_PROJETOS)`, então o 11º projeto
-    // entraria na tela e sumiria no submit — junto com a capa, que já subiu
-    // para o Blob e não volta.
-    if (projetos.length >= MAX_PROJETOS) {
-      setAvisoProjeto(`O perfil aceita ${MAX_PROJETOS} projetos. Remova um para adicionar outro.`);
-      return;
-    }
-    // Mesma porta que a mídia. Aqui pesa mais: uma capa gigante na lista vai
-    // junta no POST, e com o bodySizeLimit de 4mb o servidor recusa a action
-    // inteira — o aluno perderia a edição toda, não só a capa.
     const aviso = conferirTamanhoDaImagem(novoProjImg.trim(), "projetos");
     if (aviso) {
       setAvisoProjeto(aviso);
       return;
     }
+
+    if (editandoProjId) {
+      setProjetos((prev) =>
+        prev.map((p) =>
+          p.id === editandoProjId
+            ? {
+                ...p,
+                titulo: novoProjTitulo.trim(),
+                descricao: novoProjDesc.trim(),
+                link: novoProjLink.trim() || undefined,
+                imagem: novoProjImg.trim() || undefined,
+              }
+            : p,
+        ),
+      );
+      cancelarEdicaoProjeto();
+      return;
+    }
+
+    if (projetos.length >= MAX_PROJETOS) {
+      setAvisoProjeto(`O perfil aceita ${MAX_PROJETOS} projetos. Remova um para adicionar outro.`);
+      return;
+    }
+
     const novo: ProjetoAluno = {
       id: `proj_${Date.now()}`,
       titulo: novoProjTitulo.trim(),
@@ -364,14 +398,13 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
       imagem: novoProjImg.trim() || undefined,
     };
     setProjetos([...projetos, novo]);
-    setNovoProjTitulo("");
-    setNovoProjDesc("");
-    setNovoProjLink("");
-    setNovoProjImg("");
-    setAvisoProjeto(null);
+    cancelarEdicaoProjeto();
   }
 
   function removerProjeto(id: string) {
+    if (editandoProjId === id) {
+      cancelarEdicaoProjeto();
+    }
     setProjetos(projetos.filter((p) => p.id !== id));
   }
 
@@ -692,9 +725,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     }
   }
 
-  async function handleUploadArquivoProjeto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function processarArquivoCapaProjeto(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setAvisoProjeto("Por favor, selecione uma imagem válida (PNG, JPG, WebP ou GIF).");
+      return;
+    }
+    setAvisoProjeto(null);
     try {
       const dataUrl = await comprimirImagemArquivo(file, 1000, 0.82);
       aceitarCapaProjeto(dataUrl);
@@ -705,6 +741,22 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
         if (result) aceitarCapaProjeto(result);
       };
       reader.readAsDataURL(file);
+    }
+  }
+
+  async function handleUploadArquivoProjeto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processarArquivoCapaProjeto(file);
+    e.target.value = "";
+  }
+
+  function handleDropArquivoProjeto(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setArrastandoImgProjeto(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processarArquivoCapaProjeto(file);
     }
   }
 
@@ -1709,25 +1761,53 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                             </a>
                           ) : null}
                         </div>
-                        <button
-                          type="button"
-                          className="btn-deletar-item"
-                          onClick={() => removerProjeto(proj.id)}
-                          title="Excluir projeto"
-                        >
-                          <IconeLixeira tamanho={15} />
-                        </button>
+                        <div className="proj-acoes-editor" style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            className="btn-acao-tabela"
+                            onClick={() => iniciarEdicaoProjeto(proj)}
+                            title="Editar informações deste projeto"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.3rem",
+                              padding: "0.35rem 0.65rem",
+                              borderRadius: "8px",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              background: "rgba(56, 199, 189, 0.12)",
+                              border: "1px solid rgba(56, 199, 189, 0.3)",
+                              color: "#38c7bd",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <IconeEditar tamanho={13} />
+                            <span>Editar</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-deletar-item"
+                            onClick={() => removerProjeto(proj.id)}
+                            title="Excluir projeto"
+                          >
+                            <IconeLixeira tamanho={15} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Adicionar Novo Projeto */}
-              <div className="painel-card">
+              {/* Adicionar ou Editar Criação */}
+              <div className="painel-card" id="form-projeto-editor">
                 <header className="painel-card-topo">
-                  <h3>+ Cadastrar Nova Criação</h3>
-                  <p>Adicione um projeto escolar com foto de capa e link externo</p>
+                  <h3>{editandoProjId ? "✏️ Editar Criação" : "+ Cadastrar Nova Criação"}</h3>
+                  <p>
+                    {editandoProjId
+                      ? "Atualize as informações, fotos ou links do seu projeto escolar selecionado"
+                      : "Adicione um projeto escolar com foto de capa e link externo"}
+                  </p>
                 </header>
 
                 <div className="formulario-corpo">
@@ -1745,10 +1825,6 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
 
                     <label className="campo-form">
                       <span className="label-texto">Link da Criação (GitHub, Vercel, Figma)</span>
-                      {/* `type="text"`, e não `url`: este campo vive num painel
-                          de aba e um valor fora do formato de URL bloqueava o
-                          salvamento do formulário inteiro, sem mensagem. Quem
-                          valida é `linkAceitavel`, com aviso na tela. */}
                       <input
                         type="text"
                         className="input-texto"
@@ -1774,73 +1850,113 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                     />
                   </label>
 
+                  {/* Upload de Imagem estilo Anúncio OLX (Drag & Drop + Arquivo + URL) */}
                   <div className="campo-form">
-                    <span className="label-texto">Imagem de Capa do Projeto</span>
-                    <div className="upload-linha-flex">
-                      <input
-                        type="text"
-                        className="input-texto"
-                        value={novoProjImg}
-                        onChange={(e) => {
-                          setNovoProjImg(e.target.value);
-                          setAvisoProjeto(conferirTamanhoDaImagem(e.target.value.trim(), "projetos"));
+                    <span className="label-texto">Foto de Capa do Projeto (Estilo Vitrine / OLX)</span>
+
+                    {novoProjImg ? (
+                      <div className="projeto-capa-preview-box">
+                        <img src={novoProjImg} alt="Capa do projeto" className="projeto-capa-preview-img" />
+                        <div className="projeto-capa-overlay-acoes">
+                          <label className="botao botao-secundario btn-trocar-capa-mini" style={{ cursor: "pointer" }}>
+                            <IconeUpload tamanho={13} />
+                            <span>Trocar Foto</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={handleUploadArquivoProjeto}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            className="botao btn-remover-capa-mini"
+                            onClick={() => setNovoProjImg("")}
+                          >
+                            ✕ Remover Foto
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`projeto-dropzone-olx ${arrastandoImgProjeto ? "dropzone-arrastando" : ""}`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setArrastandoImgProjeto(true);
                         }}
-                        placeholder="Cole a URL ou selecione uma imagem do dispositivo"
-                      />
-                      <label className="botao botao-secundario btn-upload-label">
-                        <IconeUpload tamanho={15} />
-                        <span>Arquivo</span>
+                        onDragLeave={() => setArrastandoImgProjeto(false)}
+                        onDrop={handleDropArquivoProjeto}
+                      >
+                        <label className="dropzone-label-area" style={{ cursor: "pointer", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", padding: "1.75rem 1rem" }}>
+                          <div className="dropzone-icone-wrap">
+                            <IconeUpload tamanho={24} />
+                          </div>
+                          <span className="dropzone-titulo">
+                            Arraste uma foto aqui ou <strong style={{ color: "var(--accent)" }}>escolha do seu computador / celular</strong>
+                          </span>
+                          <span className="dropzone-sub">
+                            PNG, JPG, WebP ou GIF animado de até 4MB
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={handleUploadArquivoProjeto}
+                          />
+                        </label>
+                        <div className="dropzone-divisor-ou">
+                          <span>ou cole o link direto da imagem</span>
+                        </div>
                         <input
-                          type="file"
-                          accept="image/*"
-                          className="sr-only"
-                          onChange={handleUploadArquivoProjeto}
+                          type="text"
+                          className="input-texto dropzone-input-url"
+                          value={novoProjImg}
+                          onChange={(e) => {
+                            setNovoProjImg(e.target.value);
+                            setAvisoProjeto(conferirTamanhoDaImagem(e.target.value.trim(), "projetos"));
+                          }}
+                          placeholder="https://exemplo.com/foto-do-robo.jpg"
                         />
-                      </label>
-                    </div>
+                      </div>
+                    )}
+
                     {enviando === "projeto" ? (
                       <span
                         role="status"
-                        style={{ color: "var(--dim)", fontSize: "0.82rem", fontWeight: 700 }}
+                        style={{ color: "var(--dim)", fontSize: "0.82rem", fontWeight: 700, marginTop: "0.4rem", display: "inline-block" }}
                       >
                         Enviando a imagem…
                       </span>
                     ) : null}
-                    {novoProjImg ? (
-                      <div className="preview-mini-wrap">
-                        <img src={novoProjImg} alt="Pré-visualização" className="preview-mini-img" />
-                        <button
-                          type="button"
-                          className="btn-limpar-preview"
-                          onClick={() => setNovoProjImg("")}
-                        >
-                          ✕ Remover imagem
-                        </button>
-                      </div>
-                    ) : null}
+
                     {avisoProjeto ? (
                       <span
                         role="alert"
-                        style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}
+                        style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700, marginTop: "0.4rem", display: "inline-block" }}
                       >
                         ⚠ {avisoProjeto}
                       </span>
                     ) : null}
                   </div>
 
-                  <div className="form-acoes-fim">
-                    {/* Só o upload da capa desabilita o botão. Ficar desabilitado
-                        com o título vazio — sem dizer o motivo — era o clique
-                        mudo que parecia travamento: agora ele clica, e a
-                        resposta aparece no aviso acima. */}
+                  <div className="form-acoes-fim" style={{ display: "flex", gap: "0.75rem", alignItems: "center", justifyContent: "flex-end" }}>
+                    {editandoProjId ? (
+                      <button
+                        type="button"
+                        className="botao botao-secundario"
+                        onClick={cancelarEdicaoProjeto}
+                      >
+                        Cancelar Edição
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       className="botao botao-primario"
-                      onClick={adicionarProjeto}
+                      onClick={salvarOuAdicionarProjeto}
                       disabled={enviando === "projeto"}
                     >
                       <IconePlus tamanho={15} />
-                      {enviando === "projeto" ? "Enviando a imagem…" : "Adicionar Projeto à Lista"}
+                      <span>{editandoProjId ? "Salvar Alterações no Projeto" : "Adicionar Projeto à Lista"}</span>
                     </button>
                   </div>
                 </div>
