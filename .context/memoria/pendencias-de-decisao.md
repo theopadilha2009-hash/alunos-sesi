@@ -503,12 +503,19 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   herda** a opção e sem ela a view passaria a furar a RLS de quem consulta.
   **Falta aplicar em produção:** o código está no PR, o banco ainda não — até
   aplicar, o ranking público continua contando os pendentes.
-  (2) **`TURMAS_OFICIAIS` (`src/lib/turmas.ts`, 9 turmas hardcoded) não tem
-  garantia de existir na tabela `salas`.** Antes, escolher uma turma não
-  cadastrada caía calado em "DSM3"; agora o cadastro **falha** com "Sala não
-  encontrada". É o comportamento honesto e é uma armadilha nova: **confira as 9
-  contra `salas` antes do próximo deploy**, senão aluno legítimo não consegue se
-  cadastrar.
+  (2) ~~**`TURMAS_OFICIAIS` não existia na tabela `salas`**~~ — **medido em
+  30/09/2026 e corrigido pela migration `018_turmas_oficiais.sql`.** O que a
+  medição achou foi pior que a suspeita: das 9 turmas que o `<select required>` do
+  cadastro oferece, existiam **duas** (`DSM3` e `DS4-25`). Seis delas
+  (`DS1-25`, `DS2-25`, `DS1-26`, `DS2-26`, `DS1-24`, `DS2-24`) **bloqueavam o
+  cadastro** com "Sala não encontrada", e `DSM3-25` matriculava o aluno em
+  silêncio na linha duplicada `dsm3`, porque a busca tolerante por substring casa
+  "dsm3" dentro de "dsm3-25". Nada disso aparecia antes porque o fallback antigo
+  jogava tudo em "DSM3" — o aluno ia para a turma errada, calado. `registrarUsuario`
+  **procura** a sala, não cria: é por isso que a lista do formulário e a tabela
+  têm que casar. `tests/turmas.test.mjs` amarra as duas agora.
+  **Falta aplicar a 018 em produção** — o código está no PR, o banco não: até
+  aplicar, as 6 continuam sem conseguir se cadastrar.
   (3) ~~**Constantes duplicadas**~~ — **fechado em 30/09**: as três foram para
   `src/lib/limites.ts` (`MAX_CARACTERES_TITULO_PROJETO`,
   `MAX_CARACTERES_DESCRICAO_PROJETO`, `MAX_BYTES_CAPA`), o módulo-folha sem
@@ -542,6 +549,17 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   de `file.size` antes do `FileReader` no sticker, e o marcador "(linha atual)"
   no seletor de turma. O pixel continua não visto, e os números novos são
   aritmética conferida, não medição em tela.
+
+  (10) **Duas linhas de `salas` em produção esperam decisão**, e mexer nas duas é
+  destrutivo. Achadas na medição de 30/09 (leitura, via `scripts/db-query.sh`).
+  (a) Há um par duplicado: **`dsm3` e `DSM3`**, duas linhas para a mesma turma —
+  a `unique` de `salas.nome` é sensível a caixa, então as duas convivem. É essa
+  duplicata que fazia `DSM3-25` casar em `dsm3`. Unificar é merge de dados: mover
+  `alunos.sala_id` da linha perdedora e apagar a outra — e ninguém sabe ainda qual
+  das duas tem alunos. (b) Há uma sala chamada **`vai tomaar no cu`**, digitada
+  por alguém no `window.prompt` do "+ Nova turma" do painel, que só recusa texto
+  com menos de 2 caracteres — e ela aparece no **ranking público** da vitrine.
+  Apagar é `DELETE` em produção.
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
