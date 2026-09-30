@@ -560,6 +560,19 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   por alguém no `window.prompt` do "+ Nova turma" do painel, que só recusa texto
   com menos de 2 caracteres — e ela aparece no **ranking público** da vitrine.
   Apagar é `DELETE` em produção.
+  (11) **A busca tolerante do cadastro é a última porta do "turma errada em
+  silêncio"** — e ficou inalcançável pelo formulário, mas não impossível.
+  `registrarUsuario` procura a sala em duas passadas: igualdade por `fold` e, se
+  falhar, `fold(s.nome).includes(termo) || termo.includes(fold(s.nome))`
+  (`auth.ts`). Com a 018, as 9 opções do `<select>` casam na primeira passada, e a
+  segunda só roda em POST forjado — mas a direção `termo.includes(fold(s.nome))` é
+  exatamente a que casava "dsm3" dentro de "dsm3-25": ela pergunta se o nome da
+  sala cabe DENTRO do que veio no campo, e essa relação é a que produz turma errada.
+  **Recomendação: remover só essa direção**, mantendo
+  `fold(s.nome).includes(termo)`, que é a tolerância de verdade ("dsm" → "DSM3").
+  Não foi aplicada de propósito: é mudança de comportamento no caminho de cadastro,
+  não tenho navegador para exercitar, e não é defeito vivo — a 018 tirou o alcance
+  dela pelo formulário.
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
