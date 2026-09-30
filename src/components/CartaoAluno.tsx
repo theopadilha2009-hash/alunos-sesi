@@ -60,7 +60,12 @@ export function CartaoAluno({
 
       <div className="aluno-pes">
         {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
-        {aluno.destaque ? <BadgeDestaque tamanho="pequeno" label="ADM" /> : null}
+        {/* `destaque` é reconhecimento que o ADM liga no painel — a mesma
+            estrela que o toggle de lá usa —, não papel de login. O rótulo
+            "ADM" que morava aqui dizia cargo onde a coluna diz destaque, e
+            ainda por cima com ícone de estrela. Fica o rótulo padrão do
+            badge, igual ao de `/u/[slug]` e ao do painel. */}
+        {aluno.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}
 
         {onAbrirCracha ? (
           <button

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { IconeCracha, IconeEscudo, IconeEstrela } from "@/components/Icones";
+import { IconeCracha, IconeEstrela } from "@/components/Icones";
 import { GrupoRedes } from "@/components/RedesBadges";
 import { motivoParaNaoEstrelar } from "@/lib/estrela";
 import type { AlunoNaTela } from "@/lib/tipos";
@@ -104,7 +104,7 @@ export function TabelaAlunos({
                         ) : null}
                         {aluno.destaque ? (
                           <span className="selo selo-adm">
-                            <IconeEscudo tamanho={11} /> ADM
+                            <IconeEstrela tamanho={11} /> Destaque
                           </span>
                         ) : null}
                       </div>

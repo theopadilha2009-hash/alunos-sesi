@@ -36,7 +36,6 @@ const CAMPOS_ALUNO =
 function resolverAluno(aluno: Aluno): Aluno {
   return {
     ...aluno,
-    aprovado: true,
     habilidades: aluno.habilidades ?? extrairHabilidades(aluno.bio),
   };
 }
@@ -79,16 +78,22 @@ export async function listarSalas(): Promise<Sala[]> {
  * aprovados), a home autenticada (a mesma lista) e o painel `/adm`, que precisa
  * justamente ver quem está esperando aprovação. Filtrar incondicionalmente
  * aqui esconderia do ADM a própria fila que ele tem que despachar.
+ *
+ * O `.eq` abaixo é o gate de verdade: a policy `alunos_leitura` do anon é
+ * `using (true)` (001_schema.sql:137), então a RLS entrega o pendente para quem
+ * pedir. Quem esconde é esta linha.
  */
 export async function listarAlunos(
-  _opcoes: { incluirPendentes?: boolean } = {},
+  opcoes: { incluirPendentes?: boolean } = {},
 ): Promise<Aluno[]> {
   const consulta = clientePublico()
     .from("alunos")
     .select(CAMPOS_ALUNO)
     .order("nome", { ascending: true });
 
-  const { data, error } = await consulta;
+  const { data, error } = await (opcoes.incluirPendentes
+    ? consulta
+    : consulta.eq("aprovado", true));
 
   if (error) {
     logger.error("DADOS", "Erro em listarAlunos", error);

@@ -98,6 +98,39 @@ export function PainelAdmIntegrado({
     return Array.from(mapa.values());
   }, [salas]);
 
+  // O seletor de turma de cada aluno — a lista dele e o que tem que aparecer
+  // escolhido.
+  //
+  // `opcoesTurmas` acima é a lista CANÔNICA, e duas linhas que só diferem na
+  // caixa viram uma opção só. O aluno preso na linha que perdeu a vaga (o banco
+  // tem "dsm3" e "DSM3") ficaria com a select mostrando a canônica: o `value`
+  // apontaria para ela, escolher a opção já escolhida não dispara `onChange` e o
+  // vínculo nunca sairia da linha antiga. Aqui a linha real do aluno entra na
+  // lista como opção própria, com o nome como está no banco, para o ADM ver a
+  // diferença e trocá-la pela canônica.
+  //
+  // Isto corrige só o vínculo do aluno. As linhas duplicadas em si continuam no
+  // banco: unificá-las seria merge de dados, e não é o que esta tela faz.
+  const seletorPorAluno = useMemo(() => {
+    const porAluno = new Map<string, { valor: string; lista: { id: string; nome: string }[] }>();
+    for (const a of alunos) {
+      const salaId = a.sala_id;
+      if (salaId && !opcoesTurmas.some((opt) => opt.id === salaId)) {
+        const nomeNoBanco = salas.find((s) => s.id === salaId)?.nome ?? a.sala ?? salaId;
+        porAluno.set(a.id, {
+          valor: salaId,
+          lista: [{ id: salaId, nome: nomeNoBanco }, ...opcoesTurmas],
+        });
+        continue;
+      }
+      const casada =
+        opcoesTurmas.find((opt) => opt.id === a.sala_id) ??
+        opcoesTurmas.find((opt) => opt.nome.toUpperCase() === (a.sala || "").trim().toUpperCase());
+      porAluno.set(a.id, { valor: casada?.id ?? "", lista: opcoesTurmas });
+    }
+    return porAluno;
+  }, [alunos, opcoesTurmas, salas]);
+
   // Ações de formulário com useActionState
   const [estadoImportar, formImportar, importando] = useActionState(importarLista, ESTADO_INICIAL);
   const [estadoCriar, formCriar, criando] = useActionState(criarAluno, ESTADO_INICIAL);
@@ -451,13 +484,7 @@ export function PainelAdmIntegrado({
                             <select
                               name="salaId"
                               className="adm-select-sala"
-                              value={
-                                opcoesTurmas.find(
-                                  (opt) =>
-                                    opt.id === a.sala_id ||
-                                    opt.nome.toUpperCase() === (a.sala || "").trim().toUpperCase(),
-                                )?.id ?? ""
-                              }
+                              value={seletorPorAluno.get(a.id)?.valor ?? ""}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 if (val === "__nova__") {
@@ -479,6 +506,12 @@ export function PainelAdmIntegrado({
                                     onMudarSalaAluno?.(a.id, "", nomeNova.trim());
                                     form.requestSubmit();
                                   }
+                                  // O `<select>` é controlado por `a.sala_id`, e o React só
+                                  // mexe no DOM quando o `value` calculado MUDA: enquanto a
+                                  // resposta não re-renderiza, "+ Nova turma…" fica na tela como
+                                  // se fosse a turma do aluno. Devolve a seleção para a turma de
+                                  // verdade agora; a nova entra quando as props chegarem.
+                                  e.target.value = a.sala_id ?? "";
                                   return;
                                 }
                                 const opt = opcoesTurmas.find((o) => o.id === val);
@@ -503,7 +536,7 @@ export function PainelAdmIntegrado({
                               <option value="" disabled>
                                 Sem sala definida
                               </option>
-                              {opcoesTurmas.map((opt) => (
+                              {(seletorPorAluno.get(a.id)?.lista ?? opcoesTurmas).map((opt) => (
                                 <option key={opt.id} value={opt.id}>
                                   {opt.nome}
                                 </option>

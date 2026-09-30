@@ -706,7 +706,9 @@
 }
 
 .btn-endorsement-add:hover {
-  background: #10b981;
+  /* Era #10b981, onde o branco do rótulo dá 2,56:1 nos DOIS temas. O #047857
+     é o mesmo verde um degrau abaixo e leva o branco a 5,55:1. */
+  background: #047857;
   color: #ffffff;
   transform: scale(1.08);
 }
@@ -718,6 +720,20 @@
   background: rgba(16, 185, 129, 0.1);
   padding: 0.1rem 0.4rem;
   border-radius: 999px;
+}
+
+/* Mesmo caso dos dois acima, no mesmo componente: no claro o #10b981 fica em
+   1,83:1 (o botão) e 1,90:1 (o contador). O #065f46 dá 6,68:1 nos dois sobre
+   o pior fundo claro, e o escuro não muda. */
+:root[data-theme="light"] .btn-endorsement-add {
+  color: #065f46;
+  border-color: rgba(6, 95, 70, 0.35);
+  background: rgba(6, 95, 70, 0.1);
+}
+
+:root[data-theme="light"] .endorsement-count {
+  color: #065f46;
+  background: rgba(6, 95, 70, 0.1);
 }
 
 .anim-pulse {
@@ -746,6 +762,14 @@
   color: #34d399;
 }
 
+/* No claro o #34d399 fica em 1,34:1 sobre a pílula (--surface-2) e o "+1" em
+   1,56:1 sobre a --surface-3: os dois somem. #065f46 dá 5,34:1 e 6,23:1 sobre
+   o pior fundo claro, e o escuro não muda (5,36:1 e 7,57:1). O halo verde do
+   "+1" sai no claro — ele existia para destacar o número contra o escuro. */
+:root[data-theme="light"] .endorsement-apoiado {
+  color: #065f46;
+}
+
 .anim-flutuante-mais-um {
   position: absolute;
   top: -10px;
@@ -758,6 +782,11 @@
   pointer-events: none;
   animation: subirMaisUm 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   z-index: 30;
+}
+
+:root[data-theme="light"] .anim-flutuante-mais-um {
+  color: #065f46;
+  text-shadow: none;
 }
 
 @keyframes subirMaisUm {

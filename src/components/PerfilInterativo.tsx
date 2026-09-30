@@ -284,9 +284,14 @@ export function PerfilInterativo({
           <div className="perfil-titulos">
             <h1>{aluno.nome}</h1>
             <div className="perfil-sub-linha">
+              {/* Sem `role`, de propósito. O perfil público mostra turma,
+                  fixação e destaque — colunas de `alunos`. O papel de login
+                  mora em `usuarios` e não entra aqui: ler a tabela de login
+                  para desenhar a vitrine custaria uma consulta por render e
+                  publicaria quem é ADM para qualquer visitante. Cargo é
+                  informação do painel, não da vitrine. */}
               <LinhaCargos
                 aluno={aluno}
-                role={(aluno as unknown as { role?: string }).role}
                 agruparExtras
                 tamanho="padrao"
               />

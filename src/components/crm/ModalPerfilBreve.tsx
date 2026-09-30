@@ -224,9 +224,13 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
             <div className="breve-identificacao">
               <div className="breve-nome-linha">
                 <h2 id="perfil-breve-titulo">{aluno.nome}</h2>
+                {/*
+                  Sem `role`: o papel mora em `public.usuarios` (tabela de login),
+                  não em `alunos` — este é o perfil de um aluno qualquer aberto
+                  pelo painel, e o papel de quem está olhando não é o dele.
+                */}
                 <LinhaCargos
                   aluno={aluno}
-                  role={(aluno as unknown as { role?: string }).role}
                   showSala={false}
                   agruparExtras
                   tamanho="pequeno"

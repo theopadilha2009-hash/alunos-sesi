@@ -176,44 +176,86 @@
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
-/* ── Selos Legados (.selo) alinhados ao estilo Discord moderno ────────────── */
+/* ── Tema claro: as cores acima foram escolhidas para fundo escuro — todas
+   carregam `text-shadow` preto. Na `.aluno` da vitrine (`--surface`, #ffffff)
+   o par reprovava AA com folga: o destaque dava 1,00:1 e o super-adm 1,03:1.
 
-.selo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.32rem;
-  padding: 0.22rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  line-height: 1;
-  transition: all 0.16s var(--ease);
+   Aqui a pílula fica OPACA, e não só o texto escurece. O motivo é que estes
+   badges aparecem em três ilhas que continuam escuras no tema claro — o crachá
+   (`.cracha-card`), o cartão NFC (`.nfc-hero-card`) e o banner de perfil
+   (`.perfil-hero-banner`). Com a tinta de .24 sobre um fundo daqueles, um
+   texto escuro ficaria entre 1,0:1 e 2,5:1 — medido nas três pílulas, com a
+   tinta composta sobre o gradiente do crachá, o do cartão NFC e o do banner.
+   Com fundo opaco o contraste é do badge
+   consigo mesmo e não depende de quem está atrás. Medido com a luminância
+   relativa do WCAG, no hover entre parênteses:
+
+     super-adm  #92400e sobre #fde8c4 = 5,91:1  (#fbdaa2 = 5,28:1)
+     adm        #075985 sobre #cfeffd = 6,27:1  (#b3e6fc = 5,63:1)
+     fixado     #065f46 sobre #c6eee1 = 6,12:1  (#a4e4cf = 5,33:1)
+     destaque   #92400e sobre #faedc4 = 6,07:1  (#f7e2a1 = 5,52:1)
+     extra      #475569 sobre #e7e8ea = 6,18:1  (#d9dadd = 5,42:1)
+
+   Cada fundo é a própria tinta sobre o branco, então sobre a vitrine clara o
+   desenho fica igual ao de antes — o que muda ali é o texto. No escuro nada
+   muda: as cores que reprovavam no claro dão 7,94 / 6,80 / 7,51 / 7,60 /
+   9,06 sobre o pior fundo escuro (--surface-3). O `text-shadow` preto sai no
+   claro porque era ele que dava alguma legibilidade ao pastel, e o AA não
+   credita sombra. */
+
+:root[data-theme="light"] .badge-cargo-super-adm {
+  background: #fde8c4;
+  color: #92400e;
+  text-shadow: none;
 }
 
-.selo-adm {
-  background: rgba(245, 158, 11, 0.12) !important;
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
-  color: #fbbf24 !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
+:root[data-theme="light"] .badge-cargo-super-adm:hover {
+  background: #fbdaa2;
 }
 
-.selo-adm:hover {
-  background: rgba(245, 158, 11, 0.22) !important;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3) !important;
+:root[data-theme="light"] .badge-cargo-adm {
+  background: #cfeffd;
+  color: #075985;
+  text-shadow: none;
 }
 
-.selo-fixado {
-  background: rgba(16, 185, 129, 0.12) !important;
-  border: 1px solid rgba(16, 185, 129, 0.35) !important;
-  color: #34d399 !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
+:root[data-theme="light"] .badge-cargo-adm:hover {
+  background: #b3e6fc;
 }
 
-.selo-fixado:hover {
-  background: rgba(16, 185, 129, 0.22) !important;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3) !important;
+:root[data-theme="light"] .badge-cargo-fixado {
+  background: #c6eee1;
+  color: #065f46;
+  text-shadow: none;
+}
+
+:root[data-theme="light"] .badge-cargo-fixado:hover {
+  background: #a4e4cf;
+}
+
+:root[data-theme="light"] .badge-cargo-destaque {
+  background: #faedc4;
+  color: #92400e;
+  text-shadow: none;
+}
+
+:root[data-theme="light"] .badge-cargo-destaque:hover {
+  background: #f7e2a1;
+}
+
+/* No claro a tinta branca do extra some sobre a superfície branca: sem fundo
+   nem borda, sobraria o texto solto. */
+:root[data-theme="light"] .badge-cargo-extra {
+  background: #e7e8ea;
+  border-color: #caccd0;
+  color: #475569;
+  text-shadow: none;
+}
+
+/* Sem esta regra o hover do extra não apareceria no claro (fundo e borda
+   brancos sobre branco). O texto continua o do bloco acima, que tem
+   especificidade maior que a cor branca do hover do tema escuro. */
+:root[data-theme="light"] .badge-cargo-extra:hover {
+  background: #d9dadd;
+  border-color: #b2b5bb;
 }

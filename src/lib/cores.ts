@@ -46,8 +46,14 @@ export function nomeDaCor(hex: string): string {
 }
 
 export function corDaSala(nome: string): string {
+  // A normalização mora aqui dentro, e não em cada chamador: o contrato do
+  // arquivo é "a mesma turma tem a mesma cor em qualquer tela", e com o `trim`
+  // e a caixa só do lado de fora cada tela decidia por si — a vitrine passava o
+  // nome cru do banco e o CRM o já achatado, e "dsm3" saía com duas cores na
+  // mesma página. `toUpperCase` não depende de locale em JS (quem depende é o
+  // `toLocaleUpperCase`), então o hash é o mesmo em qualquer máquina.
   let h = 0;
-  for (const ch of String(nome ?? "")) {
+  for (const ch of String(nome ?? "").trim().toUpperCase()) {
     h = (h * 31 + (ch.codePointAt(0) ?? 0)) >>> 0;
   }
   return CORES_SALA[h % CORES_SALA.length];

@@ -98,16 +98,11 @@
   overflow: hidden;
   will-change: transform;
   transform-style: preserve-3d;
-  cursor: grab;
   transition: transform 0.08s ease-out, box-shadow 0.2s ease;
 }
 
 .cracha-card:not(.cracha-inspecionando) {
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s ease;
-}
-
-.cracha-card:active {
-  cursor: grabbing;
 }
 
 .cracha-holografico-glare {

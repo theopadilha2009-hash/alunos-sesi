@@ -61,7 +61,7 @@ async function alunoVisivel(alunoId: string): Promise<boolean> {
   // também em silêncio, com o mesmo 404 de "perfil pendente" cobrindo "o banco
   // não respondeu a esta consulta".
   if (error) logger.error("estrela", "falha ao checar se o perfil está visível", error);
-  return Boolean(data);
+  return data?.aprovado === true;
 }
 
 export async function POST(request: Request) {

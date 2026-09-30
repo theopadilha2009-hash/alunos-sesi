@@ -126,14 +126,16 @@ export function CrmApp({
 
   // Mapeia alunos para a visualização na tela
   const naTela: AlunoNaTela[] = useMemo(() => {
-    const nomePorId = new Map(salas.map((s) => [s.id, s.nome.trim().toUpperCase()]));
+    // O mapa guarda o nome como ele está no banco: a cor sai de `corDaSala`, e
+    // quem normaliza é ela (`cores.ts`). A caixa alta daqui para baixo é só do
+    // que se lê na tela — enquanto ela também alimentava o hash, o CRM pintava
+    // "dsm3" de uma cor e a vitrine, que passa o nome cru, de outra.
+    const nomePorId = new Map(salas.map((s) => [s.id, s.nome]));
     return lista.map((a) => {
-      const nomeSala = a.sala_id
-        ? (nomePorId.get(a.sala_id) ?? a.sala?.trim().toUpperCase() ?? null)
-        : (a.sala?.trim().toUpperCase() ?? null);
+      const nomeSala = a.sala_id ? (nomePorId.get(a.sala_id) ?? a.sala ?? null) : (a.sala ?? null);
       return {
         ...a,
-        sala: nomeSala,
+        sala: nomeSala?.trim().toUpperCase() ?? null,
         cor: corDoAluno(a.cor_perfil, nomeSala),
         corSala: corDaSala(nomeSala ?? ""),
         habilidades: a.habilidades ?? [],
