@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import {
   IconeLixeira,
   IconePlus,
@@ -10,7 +11,9 @@ import {
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";
 import { Avatar } from "@/components/Avatar";
+import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
 import { corDoAluno } from "@/lib/cores";
+import { conferirTamanhoDaImagem, LIMITES_STICKERS } from "@/lib/limites";
 
 type Props = {
   nomeAluno: string;
@@ -20,19 +23,26 @@ type Props = {
   corPerfil?: string | null;
   projetos: ProjetoAluno[];
   stickers: StickerPerfil[];
+  /**
+   * Dono do perfil. O upload do arquivo do PC vai direto para o Vercel Blob, e o
+   * caminho é escopado pela pasta do aluno — a rota de token recusa qualquer
+   * outro. Sem ele não há como enviar; a mensagem explica isso ao aluno.
+   */
+  alunoId: string | null;
   onChangeStickers: (novos: StickerPerfil[]) => void;
 };
 
-// Galeria de Stickers e GIFs temáticos pré-configurados (Pixel Art, Robótica FLL, Spider-Man, Tech)
+// Galeria de Stickers e GIFs temáticos pré-configurados (Pixel Art, Spider-Man, Tech)
+//
+// Sem tema de robótica: o "Robô FLL Lego SESI" apontava para
+// `https://media.giphy.com/media/unQ3IJU2RG7DO/giphy.gif`, que responde 404 — a
+// galeria abria com um quadrado quebrado para todo aluno. O GIF saiu da lista em
+// 30/09/2026 e só volta com um id conferido no `curl`, porque um preset morto é
+// pior que preset nenhum: ele parece defeito do perfil, não de quem escolheu.
 const PRESETS_STICKERS: { rotulo: string; url: string; tipo: "gif" | "sticker" }[] = [
   {
     rotulo: "Homem-Aranha Pixel Art",
     url: "https://media.giphy.com/media/10bKPDUM5H7m7u/giphy.gif",
-    tipo: "gif",
-  },
-  {
-    rotulo: "Robô FLL Lego SESI",
-    url: "https://media.giphy.com/media/unQ3IJU2RG7DO/giphy.gif",
     tipo: "gif",
   },
   {
@@ -65,10 +75,13 @@ export function StickerCanvas({
   corPerfil,
   projetos,
   stickers,
+  alunoId,
   onChangeStickers,
 }: Props) {
   const [urlCustom, setUrlCustom] = useState("");
   const [rotuloCustom, setRotuloCustom] = useState("");
+  const [avisoSticker, setAvisoSticker] = useState<string | null>(null);
+  const [enviandoSticker, setEnviandoSticker] = useState(false);
   const [stickerSelecionadoId, setStickerSelecionadoId] = useState<string | null>(
     stickers.length > 0 ? stickers[0].id : null,
   );
@@ -77,9 +90,32 @@ export function StickerCanvas({
     projetos.length > 0 ? projetos[0].id : "",
   );
 
+  // O `stickers` lido de dentro do upload é o da hora do clique, e o envio leva
+  // segundos: um preset adicionado no meio do caminho seria apagado por uma
+  // lista velha quando o arquivo chegasse. A ref sempre aponta para a de agora.
+  const stickersRef = useRef(stickers);
+  useEffect(() => {
+    stickersRef.current = stickers;
+  });
+
   const stickerSelecionado = stickers.find((s) => s.id === stickerSelecionadoId) || null;
 
+  /**
+   * O perfil tem teto de elementos, e o servidor corta o excedente no save com
+   * aviso genérico — o contador da tela mostraria 13 e o aluno só saberia depois.
+   * Recusar no clique diz na hora, e o limite é o mesmo dos dois lados.
+   */
+  function noTetoDeElementos(): boolean {
+    if (stickers.length < LIMITES_STICKERS.max) return false;
+    setAvisoSticker(
+      `O perfil aceita no máximo ${LIMITES_STICKERS.max} elementos. Remova um para adicionar outro.`,
+    );
+    return true;
+  }
+
   function adicionarPreset(preset: { rotulo: string; url: string; tipo: "gif" | "sticker" }) {
+    if (noTetoDeElementos()) return;
+
     const novo: StickerPerfil = {
       id: `st_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       url: preset.url,
@@ -96,11 +132,13 @@ export function StickerCanvas({
     const atualizados = [...stickers, novo];
     onChangeStickers(atualizados);
     setStickerSelecionadoId(novo.id);
+    setAvisoSticker(null);
   }
 
   function adicionarPersonalizado() {
     const url = urlCustom.trim();
     if (!url) return;
+    if (noTetoDeElementos()) return;
 
     const tipo = url.toLowerCase().includes(".gif") ? "gif" : "sticker";
     const novo: StickerPerfil = {
@@ -120,6 +158,7 @@ export function StickerCanvas({
     setStickerSelecionadoId(novo.id);
     setUrlCustom("");
     setRotuloCustom("");
+    setAvisoSticker(null);
   }
 
   function removerSticker(id: string) {
@@ -135,31 +174,106 @@ export function StickerCanvas({
     onChangeStickers(atualizados);
   }
 
-  function handleUploadArquivoSticker(e: React.ChangeEvent<HTMLInputElement>) {
-    const arquivo = e.target.files?.[0];
-    if (!arquivo) return;
+  /**
+   * Arquivo do PC vai direto para o Vercel Blob, e o que entra no estado é a URL.
+   *
+   * Antes o data URL ia inteiro para o array de stickers, que vira o hidden
+   * input do formulário: um GIF de 3 MB virava ~4 MB de base64 e o
+   * `bodySizeLimit` de 4 MB do app recusava o corpo ANTES da action rodar — o
+   * save inteiro falhava (capa, mídias e projetos válidos junto), sem mensagem.
+   * É o mesmo caminho que mídias e capa de projeto já usam.
+   */
+  async function handleUploadArquivoSticker(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const arquivo = input.files?.[0];
+    // O input guarda o último arquivo escolhido: sem zerar, escolher o MESMO
+    // arquivo de novo não dispara onChange e o botão parece quebrado.
+    input.value = "";
+    if (!arquivo || enviandoSticker) return;
+    if (noTetoDeElementos()) return;
+    if (!alunoId) {
+      setAvisoSticker(
+        "Sua conta não está ligada a um perfil de aluno. Fale com o professor ou com o ADM.",
+      );
+      return;
+    }
+
+    // Mesma razão da guarda da capa: o `FileReader` monta o data URL inteiro em
+    // memória antes de qualquer recusa, então um arquivo de dezenas de MB é lido
+    // só para ser descartado. O teto aqui é o do data URL, e nenhum arquivo maior
+    // que ele caberia adiante (base64 é ~4/3 do arquivo) — a guarda não recusa
+    // nada que passaria, só evita a leitura do que já ia falhar.
+    if (arquivo.size > LIMITES_STICKERS.maxDataUrlBytes) {
+      setAvisoSticker(
+        `Essa imagem é grande demais para o sticker. O limite é ${LIMITES_STICKERS.maxDataUrlBytes / 1024} KB.`,
+      );
+      return;
+    }
+
     const leitor = new FileReader();
-    leitor.onload = (event) => {
+    leitor.onerror = () => {
+      setAvisoSticker("Não foi possível ler esse arquivo. Tente outra imagem.");
+    };
+    leitor.onload = async (event) => {
       const dataUrl = event.target?.result as string;
       if (!dataUrl) return;
-      const ehGif = arquivo.type.includes("gif") || arquivo.name.toLowerCase().endsWith(".gif");
-      const novo: StickerPerfil = {
-        id: `st_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        url: dataUrl,
-        tipo: ehGif ? "gif" : "sticker",
-        rotulo: arquivo.name.replace(/\.[^/.]+$/, ""),
-        x: 50,
-        y: 50,
-        tamanho: 75,
-        rotacao: 0,
-        alvo: alvoAtivo,
-        projetoId: alvoAtivo === "projeto" ? (projetoAlvoId || (projetos[0]?.id ?? "")) : undefined,
-      };
-      onChangeStickers([...stickers, novo]);
-      setStickerSelecionadoId(novo.id);
+
+      // O teto é medido sobre o data URL, que é o que `sanitizarStickers` mede no
+      // servidor. Recusar aqui é feedback: sem isso a rede sobe o arquivo inteiro
+      // para ele ser descartado depois, e o aluno fica sem saber por quê.
+      const aviso = conferirTamanhoDaImagem(dataUrl, "stickers");
+      if (aviso) {
+        setAvisoSticker(aviso);
+        return;
+      }
+      setAvisoSticker(null);
+      setEnviandoSticker(true);
+
+      try {
+        const imagem = blobDoDataUrl(dataUrl);
+        const { url } = await upload(
+          caminhoDaMidia(alunoId, nomeDaImagem(imagem.type)),
+          imagem,
+          {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            clientPayload: JSON.stringify({ campo: "sticker" }),
+          },
+        );
+        const ehGif = arquivo.type.includes("gif") || arquivo.name.toLowerCase().endsWith(".gif");
+        const novo: StickerPerfil = {
+          id: `st_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          url,
+          tipo: ehGif ? "gif" : "sticker",
+          rotulo: arquivo.name.replace(/\.[^/.]+$/, ""),
+          x: 50,
+          y: 50,
+          tamanho: 75,
+          rotacao: 0,
+          alvo: alvoAtivo,
+          projetoId: alvoAtivo === "projeto" ? (projetoAlvoId || (projetos[0]?.id ?? "")) : undefined,
+        };
+        // A checagem do clique tem segundos de idade: entre escolher o arquivo e
+        // ele chegar, os presets e o "Adicionar" continuam habilitados, e a lista
+        // pode ter batido no teto nesse meio-tempo. Vale a lista de agora, não a
+        // do clique — é para isso que o `stickersRef` existe, e sem esta segunda
+        // olhada o 13º elemento entrava aqui e só era cortado no servidor, com o
+        // aviso genérico que o `noTetoDeElementos` veio evitar.
+        if (stickersRef.current.length >= LIMITES_STICKERS.max) {
+          setAvisoSticker(
+            `O perfil aceita no máximo ${LIMITES_STICKERS.max} elementos. Remova um para adicionar outro.`,
+          );
+          return;
+        }
+        onChangeStickers([...stickersRef.current, novo]);
+        setStickerSelecionadoId(novo.id);
+      } catch {
+        setAvisoSticker("Não foi possível enviar o arquivo. Tente de novo.");
+      } finally {
+        setEnviandoSticker(false);
+      }
     };
     leitor.readAsDataURL(arquivo);
-    e.target.value = "";
   }
 
   // Permite clicar diretamente no banner para posicionar ou retornar o sticker ao banner
@@ -214,6 +328,10 @@ export function StickerCanvas({
       <div className="estudio-grid">
         {/* Painel Esquerdo: Biblioteca de Stickers & Controles */}
         <div className="estudio-painel-controles">
+          {avisoSticker ? (
+            <div className="alerta-banner alerta-erro">{avisoSticker}</div>
+          ) : null}
+
           {/* 1. Onde você quer colocar o Sticker? */}
           <div className="controle-secao">
             <span className="controle-rotulo">1. Onde fixar o sticker/GIF?</span>
@@ -320,11 +438,12 @@ export function StickerCanvas({
                   title="Selecionar imagem ou GIF do seu dispositivo"
                 >
                   <IconeUpload tamanho={15} />
-                  <span>Carregar GIF ou Imagem do PC</span>
+                  <span>{enviandoSticker ? "Enviando o arquivo…" : "Carregar GIF ou Imagem do PC"}</span>
                   <input
                     type="file"
                     accept="image/*"
                     className="sr-only"
+                    disabled={enviandoSticker}
                     onChange={handleUploadArquivoSticker}
                   />
                 </label>

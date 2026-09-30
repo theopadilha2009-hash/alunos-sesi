@@ -12,14 +12,28 @@ import { baixarCrachaPng } from "@/lib/exportar-cracha";
 import { useTravaDeFoco } from "@/lib/foco";
 import { corHabilidade } from "@/lib/habilidades";
 import { matriculaDe } from "@/lib/identidade";
-import type { AlunoNaTela } from "@/lib/tipos";
+import type { AlunoNaTela, UsuarioSessao } from "@/lib/tipos";
 
 type Props = {
   aluno: AlunoNaTela;
+  /**
+   * Papel de login de quem é o dono do crachá, quando quem abre o crachá é o
+   * próprio aluno no painel.
+   *
+   * Vem por prop, e nunca de `aluno`: o papel mora em `public.usuarios` — a
+   * tabela de LOGIN, ligada a `alunos` por `aluno_id`. `AlunoNaTela` descreve
+   * `public.alunos`, que não tem essa coluna. O cast que morava aqui
+   * (`(aluno as unknown as { role?: string }).role`) lia `undefined` sempre e
+   * existia só para calar o `tsc` — o compilador estava certo.
+   *
+   * Crachá aberto sobre outra pessoa (vitrine, perfil público) não recebe
+   * isto: o papel dela não é conhecido ali, e buscá-lo publicaria quem é ADM.
+   */
+  role?: UsuarioSessao["role"] | null;
   onClose: () => void;
 };
 
-export function CrachaModal({ aluno, onClose }: Props) {
+export function CrachaModal({ aluno, role, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogoRef = useRef<HTMLDivElement>(null);
   useTravaDeFoco(dialogoRef);
@@ -213,7 +227,7 @@ export function CrachaModal({ aluno, onClose }: Props) {
               <div className="cracha-linha-sala">
                 <LinhaCargos
                   aluno={aluno}
-                  role={(aluno as unknown as { role?: string }).role}
+                  role={role}
                   agruparExtras
                   tamanho="pequeno"
                 />

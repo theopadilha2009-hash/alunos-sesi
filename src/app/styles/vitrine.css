@@ -366,26 +366,72 @@
   margin-top: auto;
 }
 
+/* O `.selo` nasceu aqui e é reestilizado pelo estilo Discord novo dos cargos —
+   por isso as medidas dele são as do badge, e não as de antes. Era o que o
+   `cargos-badges.css` (importado no fim da cascata) fazia por fora; a regra
+   mora onde a classe vive. */
 .selo {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.22rem 0.5rem;
+  gap: 0.32rem;
+  padding: 0.22rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+  transition: all 0.16s var(--ease);
 }
 
 .selo-adm {
-  background: color-mix(in srgb, var(--amarelo) 20%, transparent);
-  color: var(--amarelo);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.selo-adm:hover {
+  background: rgba(245, 158, 11, 0.22);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
 .selo-fixado {
-  background: color-mix(in srgb, var(--verde) 20%, transparent);
-  color: var(--verde);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.selo-fixado:hover {
+  background: rgba(16, 185, 129, 0.22);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+/* No claro o #fbbf24 fica em 1,52:1 e o #34d399 em 1,72:1 sobre o branco da
+   `.aluno`, e o selo leva o mesmo tratamento dos badges de cargo: fundo opaco
+   (a tinta sobre o branco), texto escuro. #92400e sobre #fef3e2 = 6,46:1 e
+   #065f46 sobre #e2f7f0 = 6,88:1; no hover, #fdeac9 = 6,01:1 e #caf0e3 =
+   6,25:1. No escuro nada muda, e as cores originais dão 7,06:1 e 6,24:1 lá. */
+:root[data-theme="light"] .selo-adm {
+  background: #fef3e2;
+  color: #92400e;
+}
+
+:root[data-theme="light"] .selo-adm:hover {
+  background: #fdeac9;
+}
+
+:root[data-theme="light"] .selo-fixado {
+  background: #e2f7f0;
+  color: #065f46;
+}
+
+:root[data-theme="light"] .selo-fixado:hover {
+  background: #caf0e3;
 }
 
 /* ── links e estrela ───────────────────────────────────────────────────── */

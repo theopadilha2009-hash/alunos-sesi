@@ -8,12 +8,20 @@ import {
   IconeSparkles,
 } from "@/components/Icones";
 import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
+import { useTravaDeFoco } from "@/lib/foco";
 import { LADO_CAPA, MAX_DATA_URL_CAPA, PROPORCAO_CAPA } from "@/lib/limites";
 
 type Props = {
   aberto: boolean;
   imagemFonte: string | null;
   alunoId?: string | null;
+  /**
+   * O banner que está no perfil agora. O upload em segundo plano só troca o
+   * data URL pela URL do Blob se o banner aplicado ainda for este — sem isso,
+   * "Remover" (ou um recorte novo) logo depois do apply perderia a corrida
+   * para o upload, que resolveria por último e traria o banner de volta.
+   */
+  bannerAtual?: string | null;
   nomeAluno?: string;
   onFechar: () => void;
   onSalvar: (bannerUrl: string) => Promise<void> | void;
@@ -138,6 +146,7 @@ export function ModalRecortarBanner({
   aberto,
   imagemFonte,
   alunoId,
+  bannerAtual,
   nomeAluno,
   onFechar,
   onSalvar,
@@ -150,7 +159,23 @@ export function ModalRecortarBanner({
 
   const imgRef = useRef<HTMLImageElement | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dialogoRef = useRef<HTMLDivElement>(null);
+  useTravaDeFoco(dialogoRef);
   const draggingRef = useRef(false);
+
+  /**
+   * Cada sessão de recorte tem uma geração. O upload do banner roda em segundo
+   * plano e pode resolver até 6 s depois — tempo de sobra para o aluno fechar,
+   * reabrir e aplicar outro recorte. O número capturado no apply diz se aquele
+   * resultado ainda é o do banner vigente: se não for, ele é descartado em vez
+   * de chegar por último e sobrescrever o que o aluno escolheu depois.
+   */
+  const geracaoRef = useRef(0);
+
+  // O banner vigente, sempre fresco: o guarda da geração sozinho não vê a
+  // remoção (quem remove é a barra do herói, do lado de fora deste modal).
+  const bannerAtualRef = useRef(bannerAtual);
+  bannerAtualRef.current = bannerAtual;
   const dragStartRef = useRef<{ x: number; y: number; startPanX: number; startPanY: number }>({
     x: 0,
     y: 0,
@@ -161,6 +186,12 @@ export function ModalRecortarBanner({
   // Carrega imagem quando o modal abre ou a fonte muda
   useEffect(() => {
     if (!aberto || !imagemFonte) return;
+
+    // Sessão de recorte nova — abriu o modal ou trocou a imagem. O upload que
+    // ficou pendente da sessão anterior não pode mais escrever no perfil: o
+    // aluno já saiu daquele recorte (e o "Cancelar" também cai aqui, porque
+    // descartar e voltar depois é recomeçar).
+    geracaoRef.current++;
 
     setCarregandoImg(true);
     setErro(null);
@@ -262,6 +293,11 @@ export function ModalRecortarBanner({
     if (!imgRef.current) return;
     setErro(null);
 
+    // Um apply novo invalida o upload que ainda está no ar: o banner que o
+    // aluno quer é este, e o do recorte anterior chegando depois só o
+    // sobrescreveria com uma escolha que ele já abandonou.
+    const geracao = ++geracaoRef.current;
+
     try {
       const bannerFormatado = formatarEComprimirBanner(
         imgRef.current,
@@ -274,7 +310,10 @@ export function ModalRecortarBanner({
       // Em segundo plano (sem travar a UI), tenta subir para o Vercel Blob se alunoId existir
       if (alunoId && bannerFormatado.startsWith("data:")) {
         subirBannerBlob(bannerFormatado, alunoId).then((blobUrl) => {
-          if (blobUrl) {
+          // Duas condições, porque são duas correrias diferentes: a geração
+          // pega o recorte abandonado (outro apply ou reabrir o modal), e o
+          // banner atual pega o "Remover" feito por fora enquanto este subia.
+          if (blobUrl && geracao === geracaoRef.current && bannerAtualRef.current === bannerFormatado) {
             onSalvar(blobUrl);
           }
         }).catch(() => {
@@ -295,6 +334,8 @@ export function ModalRecortarBanner({
         role="dialog"
         aria-modal="true"
         aria-labelledby="recorte-titulo"
+        tabIndex={-1}
+        ref={dialogoRef}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="modal-recorte-header">

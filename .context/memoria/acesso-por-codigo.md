@@ -51,4 +51,8 @@ dois o desenho, e cada um tem um motivo medido.
 
 **How to apply:** ao mexer em acesso, confira se a mudança vale para os três caminhos
 (login, auto-cadastro, resgate). As regras de senha já divergiram uma vez — 4 caracteres
-no cadastro contra 8 na troca — e agora vivem em `problemaDaSenha`, uma só.
+no cadastro contra 8 na troca — e agora vivem em `problemaDaSenha`, uma só, e a regra é
+**8**. Ela caiu para 4 no lote de 30/09 e voltou no mesmo dia; o mínimo é 8, e baixar de
+novo é reabrir o bug, não afrouxar um limite. O `aprovado: false` do auto-cadastro também
+foi removido naquele lote e restaurado — ele é o gate de moderação inteiro (não há RLS
+que segure), então leia [[pendencias-de-decisao]] antes de mexer aqui.

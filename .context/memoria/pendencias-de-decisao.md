@@ -12,7 +12,62 @@ Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item
 identificado e medido. Os que sobraram esperam decisão; os que fecharam estão aqui
 pelo motivo inverso — parecem bug pra quem lê o código depois.
 
-**Já resolvido, não reabra sem falar com o Ruan:**
+**Já resolvido, não reabra sem falar com o Théo:**
+
+- **O gate de moderação de cadastro é intencional — e já foi removido uma vez.**
+  Em 30/09 o commit `705716c` ("remove exigência de aprovação") tirou o gate de
+  todos os pontos, e o lote de 8 commits entrou na `main` **por push direto, sem
+  PR** — então ninguém revisou. Restaurado no mesmo dia. O que a remoção faz, com
+  cenário: um anônimo cria conta (sem convite, sem confirmação de vínculo) e no
+  mesmo tick o perfil aparece em `/alunos`, em `/alunos/<slug>` (com `<title>`
+  indexável), em `/u/<slug>` e em **`/validar/<slug>`, que emite o documento
+  "MATRÍCULA VALIDADA · ESTUDANTE ATIVO"** para quem nenhum humano confirmou ser
+  aluno. A coluna é `aprovado boolean NOT NULL DEFAULT true` (`011:20`) e a
+  policy `alunos_leitura` do anon é `using (true)` (`001_schema.sql:137`):
+  **não há RLS nem `null` para segurar — o `.eq("aprovado", true)` de
+  `listarAlunos` e os `!aluno.aprovado` das três páginas são a barreira
+  inteira.** Se o atrito do cadastro incomodar, o caminho é verificação de
+  domínio de e-mail, não tirar o gate. O ADM criando aluno nasce aprovado pelo
+  `DEFAULT true` — isso é de propósito, é a aprovação.
+- **O que a mesma revisão achou e não pode voltar** (30/09, tudo no mesmo PR):
+  (1) a senha mínima é **8**, não 4 — o comentário de `problemaDaSenha` diz que a
+  divergência 4/8 era bug a corrigir, e baixar para 4 é reintroduzi-lo.
+  (2) `garantirSala` (`adm/acoes.ts`) e o passo 4 do login buscam **em memória**,
+  não por `ilike`: `%` e `_` digitados viram curinga no `ilike`, e o comentário do
+  `auth.ts` registra isso — não "simplifique" de volta. **Mas a chave é
+  `chaveDaSala`, não o `fold`** — ver o item (9).
+  (3) `alunos.email` é o que o aluno **digitou** e passou em `sanitizarEmail`;
+  `null` quer dizer "não informou" — não fabrique `username@estudante...`, que a
+  vitrine exibe como prova de vínculo e que viola o CHECK quando o username tem
+  dois `@` ou começa com `.`/`-`/`_`.
+  (4) `StickerCanvas` recebe `alunoId` **obrigatório** — o caminho no Blob é
+  escopado à pasta do aluno e a rota de token recusa outro; o upload de sticker
+  vai ao Blob como a mídia, e nunca em base64 no corpo do POST (é a classe do
+  teto de 4 MB).
+  (5) O upload do banner tem **dois** guardas: a geração pega o recorte
+  abandonado e o `bannerAtual` pega o "Remover" feito por fora do modal. Os dois
+  são necessários; remover um reabre a corrida.
+  (6) `corDaSala` normaliza **dentro do hash** (`cores.ts`) — CRM e vitrine
+  passam o nome cru de propósito, e normalizar por fora faz as duas telas
+  discordarem sobre a cor da mesma sala.
+  (7) No tema claro os badges de cargo são **pílulas opacas** de propósito: eles
+  vivem em três ilhas que continuam escuras (`cracha-card`, `nfc-hero-card`,
+  `perfil-hero-banner`), e uma cor escura translúcida sobre elas dava 1,03:1.
+  A conta está no comentário do CSS.
+  (8) O cargo do crachá **só vem por prop**, nunca de `aluno`: `role` mora em
+  `public.usuarios`, não em `alunos`. O cast que existia lia `undefined` sempre,
+  e fica de fora de propósito porque buscá-lo publicaria quem é ADM.
+  (9) A chave de identidade de uma turma é **`chaveDaSala` (`cores.ts`) — `trim` +
+  caixa alta —, NÃO o `fold` de `busca.ts`**. Os dois parecem a mesma coisa e não
+  são: `fold` é equivalência de BUSCA (apaga `º`, `ª` e acento, para "3ºA", "3oA" e
+  "3A" acharem a mesma coisa quando alguém digita), e `salas.nome` é `unique` sem
+  `citext` — logo "3ºA" e "3A" são **duas linhas** no banco. A correção do `ilike`
+  em 30/09 usou `fold` na identidade e trocou um bug por outro: a planilha com "3A"
+  matriculava o aluno na turma "3ºA", agora sem nem o sintoma que o `ilike` dava.
+  `garantirSala` e `corDaSala` leem a mesma chave de propósito — a mesma turma tem
+  a mesma cor em qualquer tela e a mesma identidade no cadastro.
+  `tests/cores.test.mjs` guarda a diferença.
+
 
 - **Trava de foco nos 5 diálogos** — implementada em `src/lib/foco.ts` (o núcleo
   `proximoFoco` é puro e tem teste; o resto é o efeito). O listener fica no
@@ -260,33 +315,33 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   wrapper que leia o corpo, ou trocar o client por `fetch` próprio — e é decisão
   de produto. Vale saber, antes de decidir, que o cliente já descarta o corpo
   hoje: ninguém perde nada que estivesse funcionando.
-- **`btn-ver-autor` é o único defeito de tela do cluster de classes sem CSS**
-  (medido em 29/09, no PR #61). O cluster inteiro agora está **medido e travado**:
-  são **32 classes órfãs em 760 usadas**, classificadas por motivo em
-  `tests/classes-css.test.mjs` (INLINE, BASE, TEXTO, CAIXA, SEM_ESTILO), e o
-  teste falha nas duas direções — órfã nova não classificada e classe da lista
-  que ganhou CSS. Das 32, **uma só é defeito visível**: `btn-ver-autor`
-  (`CrmApp.tsx:938`) é um `<button>` sem classe base nenhuma, então recebe o
-  visual default do navegador (fundo claro, borda, fonte do sistema) dentro de um
-  card escuro do CRM — mesma família do `textarea-bio`, que foi o bug que originou
-  a varredura. **O conserto é de design** (qual classe da casa ele usa), e por
-  isso não entrou; se for o caminho óbvio, precisa das **duas** classes:
-  `.botao-fraco` sozinha não dá padding nem borda (só cor), então
-  `className="botao botao-fraco btn-ver-autor"`. As outras 31 são cosméticas: 6
-  têm o visual em `style` inline, 4 acompanham classe viva que já estiliza, 9 são
-  texto que herda tipografia, e 12 são containers com filhos estilizados — esses
-  12 são o grupo que pede decisão de design, não conserto mecânico. O `vazio-suave`
-  é o mais visível deles, mas aparece em **três seções da mesma tela** (`Meu
-  Perfil`: criações, galeria e vídeos), não em três telas.
+- **`btn-ver-autor` fechou (30/09).** Ele era **o único defeito de tela** do
+  cluster de classes sem CSS: um `<button>` sem classe base nenhuma
+  (`CrmApp.tsx`), que recebia o visual default do navegador dentro de um card
+  escuro — mesma família do `textarea-bio`, o bug que originou a varredura.
+  Ganhou CSS real no lote de 30/09, junto de `criacao-rodape` e
+  `criacao-sem-link` (`crm.css:964,923,957`).
+- **O cluster de classes sem CSS está medido e travado** (PR #61). Hoje são
+  **29 classes órfãs em 809 usadas**, classificadas por motivo em
+  `tests/classes-css.test.mjs` (INLINE, BASE, TEXTO, CAIXA), e o teste falha nas
+  duas direções — órfã nova não classificada e classe da lista que ganhou CSS.
+  As 29 são cosméticas: 6 têm o visual em `style` inline, 4 acompanham classe
+  viva que já estiliza, 9 são texto que herda tipografia, e **12 são containers
+  com filhos estilizados — esses 12 são o grupo que pede decisão de design**,
+  não conserto mecânico. O `vazio-suave` é o mais visível deles, mas aparece em
+  **três seções da mesma tela** (`Meu Perfil`: criações, galeria e vídeos), não
+  em três telas.
 - **`/api/health` é público e sem rate limit** (29/09). Uma query no Supabase por
   chamada; não há `middleware.ts` e o `src/proxy.ts` não trata essa rota. Não
   apliquei `verificarRateLimit` de propósito: monitoramento bate nele em intervalo
   curto e um 429 derrubaria o próprio monitor. Decisão de infra, não fix.
-- **`role: "adm"` é inerte no gate** (29/09). O valor existe no schema
-  (`003_crm_auth.sql`) e no tipo, mas `podeAdmin` só aceita crachá válido ou
-  `super_adm` — quem tem `role="adm"` não abre `/adm` sem o cookie do crachá. Não
-  é regressão (é igual desde antes desta leva), mas é valor sem consumidor: quem
-  for usar `adm` de verdade precisa mexer no gate.
+- **`role: "adm"` ficou incoerente entre servidor e UI** (agravado em 30/09). O
+  valor existe no schema (`003_crm_auth.sql`) e no tipo. Desde o lote de 30/09,
+  `exigirAdm` (`adm/acoes.ts:54`) **aceita** `role === "adm"`, enquanto
+  `podeAdmin` (`lib/sessao.ts:119-123`) continua exigindo crachá válido ou
+  `super_adm` — então o servidor autoriza o que o cliente não desenha. Quem for
+  usar `adm` de verdade precisa alinhar os dois lados do gate; hoje o valor é
+  sem consumidor e a assimetria confunde.
 
 - **A estrela bloqueada não diz mais "carregando"** (fechado em 29/09). O `title`
   que nunca disparava **já tinha sido corrigido** no PR #56 (o motivo passou para
@@ -438,6 +493,86 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   distância, porque o título ao lado também diz "ALUNOS SESI". Medido por QA em
   29/09/2026. Ou vem um asset só com o wordmark (Daniel), ou o título perde o
   "SESI". Peça de design, não se resolve por conta.
+
+- **Abertos pela revisão de 30/09, nenhum deles consertado** — todos medidos, e
+  todos com o mesmo perfil: não são bug de tela hoje, são dívida com gatilho.
+  (1) ~~**`retrato_salas` não filtra `aprovado`**~~ — **fechado em 30/09** pela
+  migration `017_retrato_salas_aprovado.sql`. O filtro entrou na condição do JOIN
+  (no `where`, a turma sem nenhum aprovado sumiria do ranking inteiro) e o
+  `security_invoker = true` foi repetido, porque `create or replace view` **não
+  herda** a opção e sem ela a view passaria a furar a RLS de quem consulta.
+  **Falta aplicar em produção:** o código está no PR, o banco ainda não — até
+  aplicar, o ranking público continua contando os pendentes.
+  (2) ~~**`TURMAS_OFICIAIS` não existia na tabela `salas`**~~ — **medido em
+  30/09/2026 e corrigido pela migration `018_turmas_oficiais.sql`.** O que a
+  medição achou foi pior que a suspeita: das 9 turmas que o `<select required>` do
+  cadastro oferece, existiam **duas** (`DSM3` e `DS4-25`). Seis delas
+  (`DS1-25`, `DS2-25`, `DS1-26`, `DS2-26`, `DS1-24`, `DS2-24`) **bloqueavam o
+  cadastro** com "Sala não encontrada", e `DSM3-25` matriculava o aluno em
+  silêncio na linha duplicada `dsm3`, porque a busca tolerante por substring casa
+  "dsm3" dentro de "dsm3-25". Nada disso aparecia antes porque o fallback antigo
+  jogava tudo em "DSM3" — o aluno ia para a turma errada, calado. `registrarUsuario`
+  **procura** a sala, não cria: é por isso que a lista do formulário e a tabela
+  têm que casar. `tests/turmas.test.mjs` amarra as duas agora.
+  **Falta aplicar a 018 em produção** — o código está no PR, o banco não: até
+  aplicar, as 6 continuam sem conseguir se cadastrar.
+  (3) ~~**Constantes duplicadas**~~ — **fechado em 30/09**: as três foram para
+  `src/lib/limites.ts` (`MAX_CARACTERES_TITULO_PROJETO`,
+  `MAX_CARACTERES_DESCRICAO_PROJETO`, `MAX_BYTES_CAPA`), o módulo-folha sem
+  `node:crypto` que o `seguranca.ts` já lia — era esse o motivo de a duplicação
+  ser evitável, e não inevitável.
+  (4) **O dropzone de capa de projeto promete "até 4MB"** e o teto real de
+  `projetos` é 2 MB de data URL (~1,5 MB de imagem). O texto discorda do
+  comportamento.
+  (5) **Só o NOME da classe `selo-adm` ficou para trás.** O rótulo agora diz
+  "Destaque" nas duas telas — o `/validar/[slug]` dizia "Destaque ADM" e foi
+  corrigido em 30/09, porque o selo marca `aluno.destaque` e não um cargo. Fica
+  devendo só o nome: renomear custa tocar em CSS e no
+  `tests/classes-css.test.mjs`.
+  (6) **`aprovarAluno` é check-then-set** (lê `aprovado`, grava o inverso): dois
+  ADMs clicando junto podem não chegar ao estado esperado.
+  (7) **A troca de turma que falha reverte em silêncio** no CRM: a revalidação
+  corrige a lista, mas o ADM não recebe frase nenhuma. Dar a frase exige o form
+  de cada linha virar um componente com `useActionState` (hoje é um `.map()`
+  inline) — é peça nova, não remendo.
+  (8) **`/api/upload` resolve o dono com slug chumbado** —
+  `alunoPorSlug("theo-padilha") || alunoPorSlug("telor-de-espadilha")`
+  (`upload/route.ts:93-97`), dois round-trips por upload de super_adm e a pasta
+  amarrada a um perfil: se o slug for renomeado, o upload do ADM quebra.
+  (9) **Nada disto foi exercido em navegador.** As correções de contraste (que
+  mudam o desenho dos badges no tema claro, inclusive dentro do crachá e do
+  cartão NFC), o upload de sticker pelo Blob e os dois guardas do banner foram
+  verificados por cálculo, leitura e typecheck — não por olho na tela. Quem
+  abrir o app em cada tema prova. Em 30/09 entrou mais coisa no mesmo balde: os
+  números de contraste do endosso em `cracha-digital.css` foram **recalculados**
+  (o pior fundo claro é 5,36:1, não os 6,68:1 que o comentário dizia), a guarda
+  de `file.size` antes do `FileReader` no sticker, e o marcador "(linha atual)"
+  no seletor de turma. O pixel continua não visto, e os números novos são
+  aritmética conferida, não medição em tela.
+
+  (10) **Duas linhas de `salas` em produção esperam decisão**, e mexer nas duas é
+  destrutivo. Achadas na medição de 30/09 (leitura, via `scripts/db-query.sh`).
+  (a) Há um par duplicado: **`dsm3` e `DSM3`**, duas linhas para a mesma turma —
+  a `unique` de `salas.nome` é sensível a caixa, então as duas convivem. É essa
+  duplicata que fazia `DSM3-25` casar em `dsm3`. Unificar é merge de dados: mover
+  `alunos.sala_id` da linha perdedora e apagar a outra — e ninguém sabe ainda qual
+  das duas tem alunos. (b) Há uma sala chamada **`vai tomaar no cu`**, digitada
+  por alguém no `window.prompt` do "+ Nova turma" do painel, que só recusa texto
+  com menos de 2 caracteres — e ela aparece no **ranking público** da vitrine.
+  Apagar é `DELETE` em produção.
+  (11) **A busca tolerante do cadastro é a última porta do "turma errada em
+  silêncio"** — e ficou inalcançável pelo formulário, mas não impossível.
+  `registrarUsuario` procura a sala em duas passadas: igualdade por `fold` e, se
+  falhar, `fold(s.nome).includes(termo) || termo.includes(fold(s.nome))`
+  (`auth.ts`). Com a 018, as 9 opções do `<select>` casam na primeira passada, e a
+  segunda só roda em POST forjado — mas a direção `termo.includes(fold(s.nome))` é
+  exatamente a que casava "dsm3" dentro de "dsm3-25": ela pergunta se o nome da
+  sala cabe DENTRO do que veio no campo, e essa relação é a que produz turma errada.
+  **Recomendação: remover só essa direção**, mantendo
+  `fold(s.nome).includes(termo)`, que é a tolerância de verdade ("dsm" → "DSM3").
+  Não foi aplicada de propósito: é mudança de comportamento no caminho de cadastro,
+  não tenho navegador para exercitar, e não é defeito vivo — a 018 tirou o alcance
+  dela pelo formulário.
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil

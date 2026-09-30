@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
 
-  if (!aluno) {
+  if (!aluno || !aluno.aprovado) {
     return {
       title: "Cartão Estudantil NFC | SESI SC Joinville",
       robots: { index: false, follow: false },
@@ -45,7 +45,7 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
 
-  if (!aluno) {
+  if (!aluno || !aluno.aprovado) {
     notFound();
   }
 

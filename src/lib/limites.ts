@@ -101,6 +101,34 @@ export const DOMINIO_EMAIL_ESCOLA = "estudante.sesisenai.org.br";
 /** Teto da parte antes do `@` (o RFC 5321 pede 64). */
 export const MAX_EMAIL_LOCAL = 64;
 
+/**
+ * Tetos do texto de um projeto, em caracteres.
+ *
+ * O formulário precisa deles para o `maxLength`, e `sanitizarProjetos` — quem de
+ * fato corta — vive em `seguranca.ts`, que importa `node:crypto` e por isso não
+ * pode ser lido de um client component. Ficam aqui pela mesma razão de
+ * `DOMINIO_EMAIL_ESCOLA`: com o número copiado dos dois lados, o `maxLength` da
+ * tela e o corte do servidor ficam livres para divergir em silêncio — e o corte
+ * é calado (o excedente só entra na lista de descartes), então a divergência
+ * apareceria como texto que o aluno digita, vê salvo e reencontra encolhido.
+ */
+export const MAX_CARACTERES_TITULO_PROJETO = 80;
+export const MAX_CARACTERES_DESCRICAO_PROJETO = 200;
+
+/**
+ * Teto do arquivo de banner ANTES de ele virar data URL na memória.
+ *
+ * Não é o teto do que fica salvo: esse é o de `MAX_DATA_URL_CAPA` (~165 KB de
+ * arquivo), e o recorte do modal reencoda a faixa até caber nele — uma foto de
+ * celular de 3 MB é o caminho comum e precisa passar. Este é um teto de memória:
+ * o `FileReader` monta o data URL inteiro (4/3 do arquivo) antes de o recorte
+ * existir, e um arquivo de dezenas de MB travava a aba do aluno sem uma palavra.
+ *
+ * É número de julgamento, não um limite do produto — por isso mora aqui, junto
+ * do teto real, e não solto no componente que o aplica.
+ */
+export const MAX_BYTES_CAPA = 10 * 1024 * 1024;
+
 export const LIMITES_STICKERS = {
   max: 12,
   tamanhoMin: 16,

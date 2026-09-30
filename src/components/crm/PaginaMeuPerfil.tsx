@@ -51,6 +51,9 @@ import {
   DOMINIO_EMAIL_ESCOLA,
   FOTO_LADO,
   LADO_CAPA,
+  MAX_BYTES_CAPA,
+  MAX_CARACTERES_DESCRICAO_PROJETO,
+  MAX_CARACTERES_TITULO_PROJETO,
   MAX_HABILIDADES,
   MAX_PROJETOS,
   MAX_VIDEOS,
@@ -75,6 +78,11 @@ type Props = {
  * em "Enviando a imagem…" quando a rede morre no meio.
  */
 const TETO_ENVIO_MS = 30 * 1000;
+
+// Os tetos de título e descrição do projeto vêm de `@/lib/limites`: o corte
+// silencioso de `sanitizarProjetos` e o `maxLength` daqui leem o mesmo número.
+// Sem o `maxLength`, o aluno colava um parágrafo, via o texto inteiro na tela,
+// salvava, reabria e encontrava o texto encolhido.
 
 /**
  * A frase que o aluno lê quando o envio da imagem falha.
@@ -181,6 +189,15 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     corSalva && (CORES_SALA as readonly string[]).includes(corSalva) ? corSalva : "",
   );
   const [capa, setCapa] = useState(alunoAtual?.banner_url ?? "");
+
+  /**
+   * O banner vigente, lido de forma síncrona. O upload para o Blob roda em
+   * segundo plano e pode resolver segundos depois do apply; quem chega por
+   * último só pode escrever se o banner ainda for aquele que subiu — remover o
+   * banner ou aplicar outro recorte no meio do caminho invalida o pendente.
+   */
+  const capaRef = useRef(capa);
+  capaRef.current = capa;
   const [avisoCapa, setAvisoCapa] = useState<string | null>(null);
   const [modalRecorteAberto, setModalRecorteAberto] = useState(false);
   const [imagemParaRecorte, setImagemParaRecorte] = useState<string | null>(null);
@@ -880,6 +897,23 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     const file = input.files?.[0];
     if (!file) return;
     try {
+      // O `accept="image/*"` do input é sugestão do seletor de arquivos, não
+      // garantia: dá para trocar por "todos os arquivos" e escolher um PDF. E o
+      // `FileReader` abaixo monta o data URL inteiro em memória antes de o
+      // recorte existir, então as duas guardas são aqui, e não dentro do modal.
+      if (!file.type.startsWith("image/")) {
+        setAvisoCapa("Por favor, selecione uma imagem válida (PNG, JPG, WebP ou GIF).");
+        return;
+      }
+      if (file.size > MAX_BYTES_CAPA) {
+        setAvisoCapa(
+          `Essa imagem é grande demais para o banner. O limite é ${MAX_BYTES_CAPA / (1024 * 1024)} MB.`,
+        );
+        return;
+      }
+      // Passou: o aviso da escolha anterior (um PDF, um arquivo gigante) não
+      // pode ficar na tela enquanto o recorte da imagem nova abre.
+      setAvisoCapa(null);
       const leitor = new FileReader();
       leitor.onload = (ev) => {
         const resultado = ev.target?.result as string;
@@ -912,6 +946,20 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     }
   }
 
+  /**
+   * Fecha o recorte e solta a imagem que estava em edição.
+   *
+   * `imagemParaRecorte` é o data URL da fonte: uma foto de celular são dezenas
+   * de MB em base64, e sem esta limpeza ele ficaria referenciado até a página
+   * desmontar. Nada mais lê este estado — o banner do perfil usa o `capa` —, e
+   * quem reabre o recorte repõe a fonte: o `capa` salvo no "Recortar & Ajustar"
+   * ou o arquivo recém-escolhido no "Trocar Banner".
+   */
+  function fecharModalRecorte() {
+    setModalRecorteAberto(false);
+    setImagemParaRecorte(null);
+  }
+
   function handleAjusteAutomaticoBanner() {
     if (!capa) return;
     const img = new Image();
@@ -923,7 +971,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
         const meuId = alunoAtual?.id || usuario.alunoId;
         if (meuId && bannerAuto.startsWith("data:")) {
           subirBannerBlob(bannerAuto, meuId).then((blobUrl) => {
-            if (blobUrl) handleSalvarBannerRecortado(blobUrl);
+            // O mesmo guarda do modal: se o aluno removeu o banner ou aplicou
+            // outro recorte enquanto este subia, o resultado pendente morre em
+            // vez de ressuscitar a escolha abandonada.
+            if (blobUrl && capaRef.current === bannerAuto) {
+              handleSalvarBannerRecortado(blobUrl);
+            }
           }).catch(() => {
             // Mantém o banner formatado funcional
           });
@@ -1969,6 +2022,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                         className="input-texto"
                         value={novoProjTitulo}
                         onChange={(e) => setNovoProjTitulo(e.target.value)}
+                        maxLength={MAX_CARACTERES_TITULO_PROJETO}
                         placeholder="Ex: Robô Seguidor de Linha FLL"
                       />
                     </label>
@@ -1996,6 +2050,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                       rows={2}
                       value={novoProjDesc}
                       onChange={(e) => setNovoProjDesc(e.target.value)}
+                      maxLength={MAX_CARACTERES_DESCRICAO_PROJETO}
                       placeholder="Explique o objetivo do projeto, tecnologias utilizadas e resultados..."
                     />
                   </label>
@@ -2122,6 +2177,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
             style={{ display: abaAtiva === "estudio" ? "block" : "none" }}
           >
             <StickerCanvas
+              alunoId={alunoAtual?.id || usuario.alunoId || null}
               nomeAluno={nome}
               fotoAluno={foto}
               salaAluno={sala}
@@ -2597,7 +2653,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
 
       {/* Crachá Modal */}
       {crachaAberto && alunoAtual ? (
-        <CrachaModal aluno={alunoAtual} onClose={() => setCrachaAberto(false)} />
+        <CrachaModal
+          aluno={alunoAtual}
+          role={ehSuperAdm ? "super_adm" : usuario.role}
+          onClose={() => setCrachaAberto(false)}
+        />
       ) : null}
 
       {/* Mini-Currículo A4 Modal */}
@@ -2610,8 +2670,9 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
         aberto={modalRecorteAberto}
         imagemFonte={imagemParaRecorte}
         alunoId={alunoAtual?.id || usuario.alunoId || undefined}
+        bannerAtual={capa}
         nomeAluno={nome}
-        onFechar={() => setModalRecorteAberto(false)}
+        onFechar={fecharModalRecorte}
         onSalvar={handleSalvarBannerRecortado}
       />
     </div>

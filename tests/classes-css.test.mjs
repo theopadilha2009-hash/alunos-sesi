@@ -18,8 +18,9 @@ import { fileURLToPath } from "node:url";
  * ideia do `erro-interno.test.mjs`, do `endosso.test.mjs` e da varredura de
  * classe em `importacao.test.mjs`.
  *
- * A lista abaixo é a dívida conhecida, medida em 2026-09-29 (32 classes em 760
- * usadas). Cada item tem o motivo, e o motivo decide a prioridade:
+ * A lista abaixo é a dívida conhecida, medida em 2026-09-30 (29 classes em 809
+ * usadas; a medição de 29/09 tinha 32 em 760). Cada item tem o motivo, e o
+ * motivo decide a prioridade:
  *
  *   - `INLINE`     — o visual vem de `style={{...}}` no mesmo elemento; a classe
  *                    não faz falta hoje (os stickers, o aviso de senha).
@@ -31,15 +32,14 @@ import { fileURLToPath } from "node:url";
  *                    tipografia e não tem layout próprio.
  *   - `CAIXA`      — container sem estilo com filhos estilizados. **É o grupo
  *                    que pede decisão de design**, não conserto mecânico.
- *   - `SEM_ESTILO` — controle interativo sem classe base nenhuma: recebe o
- *                    visual default do navegador. É o único grupo que é defeito
- *                    de tela hoje, e é a mesma família do `textarea-bio`.
  *
- * Nenhuma destas 32 foi confirmada quebrada em tela, exceto o `btn-ver-autor` —
- * e ele por leitura, não por medição: um `<button>` sem classe viva nenhuma
- * recebe o estilo do navegador (fundo claro, borda, fonte do sistema) dentro de
- * um card escuro do CRM. O conserto é de design (que classe da casa ele usa),
- * e está em `.context/memoria/pendencias-de-decisao.md`.
+ * Nenhuma destas 29 foi confirmada quebrada em tela. A única que era defeito
+ * por leitura — o `btn-ver-autor`, um `<button>` sem classe viva nenhuma
+ * recebendo o estilo do navegador (fundo claro, borda, fonte do sistema) dentro
+ * de um card escuro do CRM — ganhou CSS real em `crm.css` e saiu da lista, junto
+ * com o `criacao-rodape` e o `criacao-sem-link`. Foi ela que aposentou o grupo
+ * `SEM_ESTILO`: sem um controle sem classe base na lista, o motivo ficou sem
+ * uso e saiu junto com a constante.
  *
  * O que esta varredura NÃO pega, e é bom saber:
  *
@@ -66,9 +66,8 @@ const INLINE = "visual vem de style inline";
 const BASE = "acompanha classe viva no mesmo className";
 const TEXTO = "texto que herda tipografia do pai";
 const CAIXA = "container sem estilo com filhos estilizados";
-const SEM_ESTILO = "controle interativo sem classe base: visual do navegador";
 
-/** As 32 órfãs medidas em 2026-09-29, com o motivo de cada uma. */
+/** As 29 órfãs medidas em 2026-09-30, com o motivo de cada uma. */
 const SEM_CSS = {
   "adm-header-info": CAIXA,
   "aviso-senha-invalida": INLINE,

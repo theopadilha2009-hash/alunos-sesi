@@ -6,7 +6,7 @@ import { logger } from "./debug";
 import { ipDoCliente, limitar, limparLimite } from "./rate-limit";
 import { hashSenha, HASH_FANTASMA, verificarSenha } from "./senha";
 import { DOMINIO_EMAIL_ESCOLA } from "./limites";
-import { sanitizarTexto } from "./seguranca";
+import { sanitizarEmail, sanitizarTexto } from "./seguranca";
 import {
   abrirAssinado,
   assinar,
@@ -64,15 +64,16 @@ export async function obterSessao(): Promise<UsuarioSessao | null> {
 }
 
 /**
- * As regras de senha, num lugar só.
+ * As regras de senha, num lugar só — e o mínimo é 8.
  *
- * Elas já divergiram uma vez: o cadastro aceitava 4 caracteres e a troca de
- * senha exigia 8, então quem se cadastrou com senha curta não conseguia nem
- * repetir o próprio padrão depois. Cadastro e ativação usam esta função.
+ * Uma regra, não uma por tela: o cadastro e a ativação chamam esta função, e a
+ * troca de senha (aba Conta) exige o mesmo 8 na mão. Já divergiram uma vez (o
+ * cadastro aceitava 4 enquanto a troca exigia 8), e quem se cadastrou com senha
+ * curta não conseguia nem repetir o próprio padrão depois.
  */
 function problemaDaSenha(senha: string, username: string): string | null {
-  if (senha.length < 4 || senha.length > 100) {
-    return "A senha deve ter entre 4 e 100 caracteres.";
+  if (senha.length < 8 || senha.length > 100) {
+    return "A senha deve ter entre 8 e 100 caracteres.";
   }
   if (senha.toLowerCase() === username) {
     return "A senha não pode ser igual ao nome de usuário.";
@@ -210,13 +211,20 @@ export async function autenticarUsuario(
     if (uPrefixo) usuarioDb = uPrefixo;
   }
 
-  // 4. Se ainda não achou: pesquisa aluno com este e-mail na tabela alunos
+  // 4. Se ainda não achou: pesquisa aluno com este e-mail na tabela alunos.
+  //
+  // `eq`, não `ilike`: o valor vem direto do que o aluno digitou, e ali `%` e `_`
+  // são curinga — `%` deixa de significar "este e-mail" e passa a casar qualquer
+  // linha, então o login procura numa conta que ninguém pediu. Não se perde nada
+  // em caixa: `username` já chega minúsculo e a coluna só guarda minúsculo (o
+  // sanitizador normaliza antes de gravar e o CHECK `alunos_email_forma` repete
+  // a regra), então comparar exato é comparar o mesmo endereço.
   if (!usuarioDb) {
     const emailBusca = username.includes("@") ? username : `${username}@${DOMINIO_EMAIL_ESCOLA}`;
     const { data: alunoPorEmail } = await db
       .from("alunos")
       .select("id")
-      .ilike("email", emailBusca)
+      .eq("email", emailBusca)
       .maybeSingle();
 
     if (alunoPorEmail?.id) {
@@ -327,9 +335,16 @@ export async function registrarUsuario(dados: {
     return { ok: false, mensagem: "Este nome de usuário já está em uso." };
   }
 
-  const emailAluno = username.includes("@")
-    ? username
-    : `${username}@${DOMINIO_EMAIL_ESCOLA}`;
+  // O e-mail do aluno é o que ELE digitou — e só se for um endereço da escola.
+  // Quem põe o e-mail institucional no campo de usuário já informou o dele;
+  // quem digita só o nome de usuário não informou e-mail nenhum, e derivar um
+  // (`nome@estudante.sesisenai.org.br`) gravava um endereço que não existe, que
+  // a vitrine exibe como "E-mail institucional". Pior: quando o username tinha
+  // dois `@` ou começava com `.`, o valor estourava o CHECK `alunos_email_forma`
+  // (`014_dominio_email_br.sql`) e o cadastro inteiro morria em "Não foi
+  // possível criar seu perfil agora". Sem endereço válido, grava `null` — ele
+  // preenche o seu no editor.
+  const emailAluno = sanitizarEmail(username);
 
   const { data: salasExistentes } = await db.from("salas").select("id,nome");
   const listaSalas = salasExistentes ?? [];
@@ -337,28 +352,49 @@ export async function registrarUsuario(dados: {
     (s) => fold(s.nome as string) === fold(salaNome),
   );
 
-  // Busca tolerante caso o aluno tenha digitado uma variação (ex: "dsm", "3a")
+  // Busca tolerante, numa direção só: o nome da sala NO BANCO contém o que foi
+  // digitado — "dsm" acha "DSM3", "3a" acha "3ºA · Desenvolvimento".
+  //
+  // A direção contrária, `termo.includes(fold(s.nome))`, saiu em 30/09/2026. Ela
+  // perguntava se o que veio no campo CONTÉM o nome de alguma sala, e é essa
+  // relação que produz turma errada: "dsm3" cabe dentro de "dsm3-25", então quem
+  // escolhia **DSM3-25** era matriculado na linha duplicada `dsm3` — em silêncio,
+  // sem aviso e sem log. Não é tolerância; é um nome curto engolindo um longo.
+  // (A duplicata `dsm3` saiu junto, na `019_limpeza_de_salas.sql`; esta linha
+  // fecha a porta que dependia dela para fazer estrago.)
+  //
+  // Hoje o campo é um `<select required>` com as 9 de `TURMAS_OFICIAIS`, e com a
+  // `018` as 9 existem: a busca exata acima resolve sempre, e este ramo só roda
+  // em pedido forjado. Fica como rede, não como caminho.
   if (!salaAchada && salaNome) {
     const termo = fold(salaNome);
-    salaAchada = listaSalas.find(
-      (s) => fold(s.nome as string).includes(termo) || termo.includes(fold(s.nome as string)),
-    );
+    salaAchada = listaSalas.find((s) => fold(s.nome as string).includes(termo));
   }
 
-  // Fallback seguro caso a turma digitada não exista no banco
-  if (!salaAchada && listaSalas.length > 0) {
-    salaAchada = listaSalas.find((s) => fold(s.nome as string) === "dsm3") || listaSalas[0];
-  }
-
+  // Sem turma nenhuma não há o que escolher; com turma pedida que não casa, a
+  // resposta é dizer QUAL foi o problema, não resolver por conta própria.
+  //
+  // Antes caía calado em "DSM3" (ou na primeira sala da lista) e matriculava o
+  // aluno numa turma que ele não pediu — ele só descobriria no crachá, e o ADM
+  // não ficava sabendo de nada. O `logger.warn` é o rastro para o ADM ver que
+  // existe turma sendo digitada que o sistema não conhece.
   if (!salaAchada) {
+    if (listaSalas.length === 0) {
+      return {
+        ok: false,
+        mensagem: "Nenhuma turma cadastrada no sistema. Contate a administração.",
+      };
+    }
+    logger.warn("AUTH", `Cadastro com turma inexistente: "${salaNome}"`);
     return {
       ok: false,
-      mensagem: "Nenhuma turma cadastrada no sistema. Contate a administração.",
+      mensagem:
+        "Sala não encontrada. Confira o nome com o seu professor ou peça ao ADM para cadastrar a turma.",
     };
   }
 
   const salaId = salaAchada.id as string;
-  const salaNomeFinal = (salaAchada.nome as string) || "DSM3";
+  const salaNomeFinal = salaAchada.nome as string;
 
   // Gera slug único
   const { data: todosAlunos } = await db.from("alunos").select("slug");
@@ -376,7 +412,14 @@ export async function registrarUsuario(dados: {
       bio: "Novo estudante no CRM SESI. Edite seu perfil para adicionar projetos e bio!",
       projetos: [],
       midias: [],
-      aprovado: true,
+      // Nasce PENDENTE: este é o autocadastro anônimo, sem convite nem
+      // confirmação de vínculo, então a vitrine não pode aceitar o que ele
+      // mandar. Quem libera é o ADM (`aprovarAluno`, em `adm/acoes.ts`), e
+      // as criações que JÁ SÃO dele — `criarAluno` e `importarLista` — ficam
+      // com o default `true` da coluna. Importa porque a policy de leitura de
+      // `alunos` é `using (true)`: este `false` é a única barreira que existe
+      // (`011_moderacao_cadastro.sql`).
+      aprovado: false,
     })
     .select("id")
     .single();
@@ -426,7 +469,10 @@ export async function registrarUsuario(dados: {
     nome,
     sala: salaNomeFinal,
     email: emailAluno,
-    aprovado: true,
+    // O mesmo `false` do insert, e não um `true` de otimismo: este campo é o
+    // retrato de `alunos.aprovado` dentro da sessão (`tipos.ts`), e o aluno que
+    // acabou de se cadastrar está pendente até o ADM liberar em `aprovarAluno`.
+    aprovado: false,
   };
 
   const jar = await cookies();

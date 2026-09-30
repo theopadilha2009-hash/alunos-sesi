@@ -3093,21 +3093,14 @@ body:has(.login-tela-container) {
   border-radius: 2px;
 }
 
-/* Painel do ADM: trocar a turma de um aluno na própria linha da tabela. O input
-   é estreito porque a coluna é apertada e nome de turma é curto. */
+/* Painel do ADM: trocar a turma de um aluno na própria linha da tabela. O
+   campo virou um `<select>` de turmas canônicas, e o `.adm-input-sala` que
+   estilizava o `<input name="sala">` saiu junto com ele. */
 .adm-form-sala {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-wrap: nowrap;
-}
-
-.adm-input-sala {
-  width: 6.8rem;
-  min-width: 5.5rem;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.78rem;
-  border-radius: 8px;
 }
 
 /* Os chips de competência do editor saíram daqui: viraram botões de escolha

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import type { Estado, EstadoCodigo } from "@/app/adm/estado";
 import { formatarCodigo, gerarCodigo, hashCodigo, VALIDADE_CODIGO_MS } from "@/lib/ativacao";
 import { fold } from "@/lib/busca";
+import { chaveDaSala } from "@/lib/cores";
 import { decidirSubmissao, idsDeDesafios, limparCacheDados, publicarDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
 import {
@@ -88,13 +89,29 @@ async function garantirSala(
   db: ReturnType<typeof clienteAdmin>,
   nome: string,
 ): Promise<string> {
-  const nomePadrao = nome.trim().toUpperCase();
-  const { data: achadas } = await db
-    .from("salas")
-    .select("id")
-    .ilike("nome", nomePadrao)
-    .limit(1);
-  if (achadas && achadas.length > 0) return achadas[0].id as string;
+  const nomePadrao = chaveDaSala(nome);
+
+  // A busca é por chave, sobre a lista em memória — não por `ilike` no banco. No
+  // `ilike`, o nome vindo da planilha ou digitado vira PADRÃO de busca: um `%`
+  // solto casa a primeira sala de qualquer nome e o aluno entra na turma errada
+  // em silêncio. `eq` sozinho também não serve: é sensível a caixa, e o "dsm3"
+  // da planilha precisa achar a linha "DSM3".
+  //
+  // A chave é `chaveDaSala` (`cores.ts`), NÃO o `fold` de `busca.ts`. A primeira
+  // versão desta correção usou `fold` e trocou um bug por outro: `fold` é
+  // equivalência de BUSCA e apaga `º`/`ª`/acento, então "3A" da planilha passou a
+  // casar a linha "3ºA" — que é o formato de verdade e uma linha DIFERENTE no
+  // banco (`unique` sem `citext`). O aluno era matriculado na turma errada, agora
+  // sem nem o sintoma que o `ilike` dava. Identidade de turma é caixa, não acento.
+  //
+  // atalho: varredura de `salas` inteira em memória (dezenas de linhas, e o
+  // `garantirSala` roda uma vez por linha colada); se a tabela passar de alguns
+  // milhares, criar uma coluna de nome normalizado com índice e voltar ao `eq`.
+  const { data: existentes } = await db.from("salas").select("id,nome");
+  const achada = (existentes ?? []).find(
+    (s) => chaveDaSala(s.nome as string) === nomePadrao,
+  );
+  if (achada) return achada.id as string;
 
   const { data: criada, error } = await db
     .from("salas")
@@ -104,12 +121,11 @@ async function garantirSala(
 
   if (error) {
     // Corrida: alguém criou a mesma sala entre o select e o insert.
-    const { data: deNovo } = await db
-      .from("salas")
-      .select("id")
-      .ilike("nome", nomePadrao)
-      .limit(1);
-    if (deNovo && deNovo.length > 0) return deNovo[0].id as string;
+    const { data: deNovo } = await db.from("salas").select("id,nome");
+    const mesma = (deNovo ?? []).find(
+      (s) => chaveDaSala(s.nome as string) === nomePadrao,
+    );
+    if (mesma) return mesma.id as string;
     // O erro cru do PostgREST vai para o log; quem chamou recebe uma frase. A
     // mensagem antiga subia com o jargão embutido e, sem try/catch no laço da
     // importação, derrubava a colagem inteira levando o texto do banco junto.
@@ -511,6 +527,12 @@ export async function alternar(formData: FormData): Promise<void> {
  * O cookie de sessão do próprio aluno continua com a sala antiga até ele logar
  * de novo — não dá para reescrever o cookie de outra pessoa daqui. A vitrine, o
  * crachá e a listagem leem do banco e já refletem a troca.
+ *
+ * `revalidar()` roda também nos caminhos de FALHA, e isso não é zelo: quem
+ * chamou já pintou a turma nova na linha (`handleMudarSalaAluno`, no CRM) antes
+ * de a resposta chegar. Sem a revalidação, a lista local guarda a troca que o
+ * banco recusou e não recebe prop nova nenhuma para desfazê-la — o painel fica
+ * mostrando ao ADM uma turma que ninguém gravou.
  */
 export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
   await exigirAdm();
@@ -541,16 +563,21 @@ export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
         salaIdFinal = await garantirSala(db, nomeAlvo);
       } catch (err) {
         logger.error("ADM", `Falha ao garantir sala "${nomeAlvo}"`, err);
+        revalidar();
         return;
       }
     }
   }
 
-  if (!salaIdFinal) return;
+  if (!salaIdFinal) {
+    revalidar();
+    return;
+  }
 
   const { error } = await db.from("alunos").update({ sala_id: salaIdFinal }).eq("id", alunoId);
   if (error) {
     logger.error("ADM", `Falha ao atualizar sala do aluno ${alunoId}`, error);
+    revalidar();
     return;
   }
 

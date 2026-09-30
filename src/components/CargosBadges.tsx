@@ -9,7 +9,7 @@ type BadgeTurmaProps = {
   className?: string;
 };
 
-export function BadgeTurma({
+function BadgeTurma({
   sala,
   corSala = "var(--ciano, #3FC2BC)",
   tamanho = "padrao",
@@ -36,7 +36,7 @@ type BadgeCargoProps = {
   className?: string;
 };
 
-export function BadgeCargo({
+function BadgeCargo({
   role,
   tamanho = "padrao",
   className = "",
@@ -119,7 +119,7 @@ type BadgeExtraProps = {
   title?: string;
 };
 
-export function BadgeExtra({
+function BadgeExtra({
   tamanho = "padrao",
   className = "",
   label = "+ Fixado / Destaque",

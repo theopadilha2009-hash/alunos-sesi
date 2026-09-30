@@ -61,7 +61,7 @@ async function alunoVisivel(alunoId: string): Promise<boolean> {
   // também em silêncio, com o mesmo 404 de "perfil pendente" cobrindo "o banco
   // não respondeu a esta consulta".
   if (error) logger.error("estrela", "falha ao checar se o perfil está visível", error);
-  return Boolean(data);
+  return data?.aprovado === true;
 }
 
 export async function POST(request: Request) {
@@ -136,6 +136,15 @@ export async function DELETE(request: Request) {
   const alunoId = await lerAlunoId(request);
   if (!alunoId) {
     return NextResponse.json({ erro: "Aluno inválido." }, { status: 400 });
+  }
+
+  // A mesma porta do POST. Faltava aqui, e o buraco era assimétrico: quem tinha
+  // guardado o `alunoId` de um perfil que o ADM despublicou levava 404 ao votar
+  // e 200 ao desvotar — com a contagem de estrelas de um perfil que, para todo
+  // mundo, não existe. Não conseguir tirar o voto de um perfil que não aparece
+  // em lugar nenhum não é perda: a página dele também dá 404.
+  if (!(await alunoVisivel(alunoId))) {
+    return NextResponse.json({ erro: "Perfil não disponível." }, { status: 404 });
   }
 
   const { error } = await clienteAdmin()

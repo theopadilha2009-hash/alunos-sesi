@@ -36,7 +36,6 @@ const CAMPOS_ALUNO =
 function resolverAluno(aluno: Aluno): Aluno {
   return {
     ...aluno,
-    aprovado: true,
     habilidades: aluno.habilidades ?? extrairHabilidades(aluno.bio),
   };
 }
@@ -79,16 +78,22 @@ export async function listarSalas(): Promise<Sala[]> {
  * aprovados), a home autenticada (a mesma lista) e o painel `/adm`, que precisa
  * justamente ver quem está esperando aprovação. Filtrar incondicionalmente
  * aqui esconderia do ADM a própria fila que ele tem que despachar.
+ *
+ * O `.eq` abaixo é o gate de verdade: a policy `alunos_leitura` do anon é
+ * `using (true)` (001_schema.sql:137), então a RLS entrega o pendente para quem
+ * pedir. Quem esconde é esta linha.
  */
 export async function listarAlunos(
-  _opcoes: { incluirPendentes?: boolean } = {},
+  opcoes: { incluirPendentes?: boolean } = {},
 ): Promise<Aluno[]> {
   const consulta = clientePublico()
     .from("alunos")
     .select(CAMPOS_ALUNO)
     .order("nome", { ascending: true });
 
-  const { data, error } = await consulta;
+  const { data, error } = await (opcoes.incluirPendentes
+    ? consulta
+    : consulta.eq("aprovado", true));
 
   if (error) {
     logger.error("DADOS", "Erro em listarAlunos", error);
@@ -219,6 +224,29 @@ export async function apoiarHabilidade(
   endossante: string,
 ): Promise<{ ok: boolean; votos: Record<string, number> }> {
   const db = clienteAdmin();
+
+  // A mesma porta do voto de estrela, e pelo mesmo motivo: o botão de apoiar só
+  // existe na página de um perfil aprovado — a de um pendente dá 404 — mas o
+  // `alunoId` chega do cliente, e quem já tinha guardado o id endossava um perfil
+  // que ninguém deveria estar vendo. O apoio ficava gravado e aparecia pronto se
+  // o ADM aprovasse depois: crédito vindo de quem não podia ter visto o perfil.
+  //
+  // O gate mora aqui, não na action: assim vale para qualquer chamador novo. A
+  // mensagem é a mesma de aluno inexistente de propósito — de fora, "não existe"
+  // e "existe e está pendente" têm que ser indistinguíveis.
+  const { data: alvo, error: errAlvo } = await db
+    .from("alunos")
+    .select("aprovado")
+    .eq("id", alunoId)
+    .maybeSingle();
+
+  if (errAlvo) {
+    logger.error("DADOS", `Erro ao checar a moderação id=${alunoId}`, errAlvo);
+    throw new Error("Não foi possível registrar o apoio.");
+  }
+  if (alvo?.aprovado !== true) {
+    throw new Error("Aluno não encontrado para apoio de habilidade.");
+  }
 
   const { error: errInsert } = await db
     .from("endossos")

@@ -231,7 +231,7 @@ export function LoginTela() {
               </div>
 
               <div className="campo">
-                <label htmlFor="cad-pass">Senha (mínimo 4 caracteres)</label>
+                <label htmlFor="cad-pass">Senha (mínimo 8 caracteres)</label>
                 <input
                   id="cad-pass"
                   name="senha"
