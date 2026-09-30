@@ -89,12 +89,12 @@ async function garantirSala(
   nome: string,
 ): Promise<string> {
   const nomePadrao = nome.trim().toUpperCase();
-  const { data: achada } = await db
+  const { data: achadas } = await db
     .from("salas")
     .select("id")
     .ilike("nome", nomePadrao)
-    .maybeSingle();
-  if (achada) return achada.id as string;
+    .limit(1);
+  if (achadas && achadas.length > 0) return achadas[0].id as string;
 
   const { data: criada, error } = await db
     .from("salas")
@@ -108,8 +108,8 @@ async function garantirSala(
       .from("salas")
       .select("id")
       .ilike("nome", nomePadrao)
-      .maybeSingle();
-    if (deNovo) return deNovo.id as string;
+      .limit(1);
+    if (deNovo && deNovo.length > 0) return deNovo[0].id as string;
     // O erro cru do PostgREST vai para o log; quem chamou recebe uma frase. A
     // mensagem antiga subia com o jargão embutido e, sem try/catch no laço da
     // importação, derrubava a colagem inteira levando o texto do banco junto.
@@ -534,12 +534,15 @@ export async function mudarSalaDoAluno(formData: FormData): Promise<void> {
     }
   }
 
-  if (!salaIdFinal && nomeSala.length >= 2) {
-    try {
-      salaIdFinal = await garantirSala(db, nomeSala);
-    } catch (err) {
-      logger.error("ADM", `Falha ao garantir sala "${nomeSala}"`, err);
-      return;
+  if (!salaIdFinal) {
+    const nomeAlvo = nomeSala || (salaIdParam && !RE_UUID.test(salaIdParam) ? salaIdParam : "");
+    if (nomeAlvo.length >= 2) {
+      try {
+        salaIdFinal = await garantirSala(db, nomeAlvo);
+      } catch (err) {
+        logger.error("ADM", `Falha ao garantir sala "${nomeAlvo}"`, err);
+        return;
+      }
     }
   }
 

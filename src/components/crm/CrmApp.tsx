@@ -97,13 +97,14 @@ export function CrmApp({
     setLista(alunosIniciais);
   }, [alunosIniciais]);
 
-  const handleMudarSalaAluno = (alunoId: string, novaSalaId: string) => {
+  const handleMudarSalaAluno = (alunoId: string, novaSalaId: string, nomeSala?: string) => {
     setLista((antiga) =>
       antiga.map((a) =>
         a.id === alunoId
           ? {
               ...a,
               sala_id: novaSalaId || a.sala_id,
+              ...(nomeSala ? { sala: nomeSala.trim().toUpperCase() } : {}),
             }
           : a,
       ),
@@ -125,17 +126,16 @@ export function CrmApp({
 
   // Mapeia alunos para a visualização na tela
   const naTela: AlunoNaTela[] = useMemo(() => {
-    const nomePorId = new Map(salas.map((s) => [s.id, s.nome]));
+    const nomePorId = new Map(salas.map((s) => [s.id, s.nome.trim().toUpperCase()]));
     return lista.map((a) => {
-      const nomeSala = a.sala_id ? (nomePorId.get(a.sala_id) ?? null) : null;
+      const nomeSala = a.sala_id
+        ? (nomePorId.get(a.sala_id) ?? a.sala?.trim().toUpperCase() ?? null)
+        : (a.sala?.trim().toUpperCase() ?? null);
       return {
         ...a,
         sala: nomeSala,
         cor: corDoAluno(a.cor_perfil, nomeSala),
         corSala: corDaSala(nomeSala ?? ""),
-        // `a.habilidades` já vem resolvida de `listarAlunos`. Redeclarar com o
-        // regex da bio aqui desfazia a resolução no único lugar em que a lista
-        // inteira é montada — e era isso que chegava em tags e chips.
         habilidades: a.habilidades ?? [],
       };
     });

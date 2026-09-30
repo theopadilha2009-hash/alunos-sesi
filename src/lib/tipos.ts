@@ -101,6 +101,8 @@ export type Aluno = {
   nome: string;
   slug: string;
   sala_id: string | null;
+  /** Nome da turma (resolvido via join ou otimisticamente) */
+  sala?: string | null;
   linkedin: string | null;
   github: string | null;
   instagram: string | null;

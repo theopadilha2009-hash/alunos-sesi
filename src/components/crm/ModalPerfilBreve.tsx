@@ -166,7 +166,7 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
               position: "relative",
               overflow: "hidden",
               backgroundImage: aluno.banner_url
-                ? `linear-gradient(to top, rgba(11, 20, 24, 0.92) 0%, rgba(11, 20, 24, 0.4) 45%, rgba(11, 20, 24, 0.05) 80%), url("${aluno.banner_url}")`
+                ? `linear-gradient(to top, rgba(11, 20, 24, 0.78) 0%, rgba(11, 20, 24, 0.25) 50%, transparent 100%), url("${aluno.banner_url}")`
                 : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",

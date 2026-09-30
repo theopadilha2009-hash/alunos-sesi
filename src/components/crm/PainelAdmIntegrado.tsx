@@ -39,6 +39,7 @@ import {
   MAX_TITULO,
 } from "@/lib/desafios";
 import { contarLacunas, filtrarPorLacuna, ROTULO_LACUNA, type Lacuna } from "@/lib/lacunas";
+import { TURMAS_OFICIAIS } from "@/lib/turmas";
 import type { AlunoNaTela, SubmissaoDesafio } from "@/lib/tipos";
 
 type SubAba = "alunos" | "importar" | "novo" | "salas" | "desafios";
@@ -75,6 +76,27 @@ export function PainelAdmIntegrado({
   const [busca, setBusca] = useState("");
   const [salaFiltro, setSalaFiltro] = useState<string>("todas");
   const [lacuna, setLacuna] = useState<Lacuna | null>(null);
+
+  // Unifica turmas oficiais padronizadas com turmas já salvas no banco
+  const opcoesTurmas = useMemo(() => {
+    const mapa = new Map<string, { id: string; nome: string }>();
+    // Prioriza turmas oficiais na ordem oficial
+    for (const t of TURMAS_OFICIAIS) {
+      const s = salas.find((item) => item.nome.trim().toUpperCase() === t.toUpperCase());
+      mapa.set(t.toUpperCase(), {
+        id: s ? s.id : t,
+        nome: t,
+      });
+    }
+    // Adiciona quaisquer outras turmas que existam no banco
+    for (const s of salas) {
+      const chave = s.nome.trim().toUpperCase();
+      if (!mapa.has(chave)) {
+        mapa.set(chave, { id: s.id, nome: s.nome });
+      }
+    }
+    return Array.from(mapa.values());
+  }, [salas]);
 
   // Ações de formulário com useActionState
   const [estadoImportar, formImportar, importando] = useActionState(importarLista, ESTADO_INICIAL);
@@ -429,30 +451,50 @@ export function PainelAdmIntegrado({
                             <select
                               name="salaId"
                               className="adm-select-sala"
-                              value={salas.find((s) => s.id === a.sala_id || s.nome === a.sala)?.id ?? ""}
+                              value={
+                                opcoesTurmas.find(
+                                  (opt) =>
+                                    opt.id === a.sala_id ||
+                                    opt.nome.toUpperCase() === (a.sala || "").trim().toUpperCase(),
+                                )?.id ?? ""
+                              }
                               onChange={(e) => {
                                 const val = e.target.value;
                                 if (val === "__nova__") {
-                                  const nomeNova = window.prompt("Nome da nova turma (ex: DSM4):");
+                                  const nomeNova = window.prompt("Nome da nova turma (ex: DSM3-25):");
                                   if (!nomeNova || nomeNova.trim().length < 2) {
                                     e.target.value = a.sala_id ?? "";
                                     return;
                                   }
                                   const form = e.currentTarget.form;
                                   if (form) {
-                                    const inputCustom = document.createElement("input");
-                                    inputCustom.type = "hidden";
-                                    inputCustom.name = "sala";
+                                    let inputCustom = form.querySelector<HTMLInputElement>("input[name='sala']");
+                                    if (!inputCustom) {
+                                      inputCustom = document.createElement("input");
+                                      inputCustom.type = "hidden";
+                                      inputCustom.name = "sala";
+                                      form.appendChild(inputCustom);
+                                    }
                                     inputCustom.value = nomeNova.trim();
-                                    form.appendChild(inputCustom);
                                     onMudarSalaAluno?.(a.id, "", nomeNova.trim());
                                     form.requestSubmit();
                                   }
                                   return;
                                 }
-                                const nova = salas.find((s) => s.id === val);
-                                if (nova) {
-                                  onMudarSalaAluno?.(a.id, nova.id, nova.nome);
+                                const opt = opcoesTurmas.find((o) => o.id === val);
+                                if (opt) {
+                                  onMudarSalaAluno?.(a.id, opt.id, opt.nome);
+                                  const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+                                  if (!ehUuid) {
+                                    let inpSala = e.currentTarget.form?.querySelector<HTMLInputElement>("input[name='sala']");
+                                    if (!inpSala) {
+                                      inpSala = document.createElement("input");
+                                      inpSala.type = "hidden";
+                                      inpSala.name = "sala";
+                                      e.currentTarget.form?.appendChild(inpSala);
+                                    }
+                                    inpSala.value = opt.nome;
+                                  }
                                 }
                                 e.currentTarget.form?.requestSubmit();
                               }}
@@ -461,9 +503,9 @@ export function PainelAdmIntegrado({
                               <option value="" disabled>
                                 Sem sala definida
                               </option>
-                              {salas.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.nome}
+                              {opcoesTurmas.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                  {opt.nome}
                                 </option>
                               ))}
                               <option value="__nova__">+ Nova turma...</option>

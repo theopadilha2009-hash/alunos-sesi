@@ -102,7 +102,7 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
           style={
             aluno.banner_url
               ? {
-                  backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.94) 100%), url("${aluno.banner_url}")`,
+                  backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.72) 100%), url("${aluno.banner_url}")`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }
