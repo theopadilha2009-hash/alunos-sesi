@@ -5,7 +5,6 @@ import { caminhoPertenceAoAluno } from "@/lib/blob";
 import { logger } from "@/lib/debug";
 import { LIMITES_STICKERS, MAX_DATA_URL_IMAGEM } from "@/lib/limites";
 import { limitar } from "@/lib/rate-limit";
-import { alunoPorSlug } from "@/lib/dados";
 
 /**
  * O token do upload direto.
@@ -19,6 +18,20 @@ import { alunoPorSlug } from "@/lib/dados";
  * reescrevê-lo — só recusá-lo. Daí a checagem de que ele cai dentro da pasta
  * de quem pediu: sem ela, qualquer aluno com sessão escreveria na pasta de
  * outro, ou na raiz do store.
+ *
+ * O dono do arquivo é o `alunoId` da SESSÃO, e só ele. Até 30/09 havia aqui um
+ * `alunoPorSlug("theo-padilha") || alunoPorSlug("telor-de-espadilha")` de
+ * emergência: a pasta do upload do ADM ficava amarrada a um slug, que é dado
+ * editável — renomear o perfil quebrava o upload — e o caminho ainda podia
+ * apontar para outro perfil, já que os dois slugs podiam ser duas linhas de
+ * `alunos`. O vínculo já existia e não precisava de consulta nenhuma:
+ * `usuarios.aluno_id` (003_crm_auth.sql:40) é o que `sessaoDe` copia para
+ * `sessao.alunoId` no login (`auth.ts`).
+ *
+ * Conferido no banco de produção antes de tirar o slug do meio: o único
+ * usuário que não é aluno é o `super_adm`, e o `aluno_id` dele aponta para o
+ * mesmo perfil que o slug resolvia (`theo-padilha`). Ou seja, a pasta
+ * `alunos/<id>/` dos arquivos que já estão no store NÃO muda com esta troca.
  */
 
 const TIPOS_IMAGEM = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -66,10 +79,10 @@ function lerCampo(clientPayload: string | null): string {
  *
  * Nota de leitura, medida no `@vercel/blob` instalado (`dist/client.js:398`):
  * o `upload()` do browser lança `BlobError` genérico quando a resposta não é
- * `ok`, sem ler o corpo — então hoje estas frases não chegam à tela de ninguém.
- * Elas continuam aqui porque são nossas (não são vazamento) e porque é o que a
- * rota devolve por contrato. Fazer a frase aparecer é mudança de comportamento
- * e está registrada em `.context/memoria/pendencias-de-decisao.md`.
+ * `ok`, sem ler o corpo — foi por isso que o cliente daqui passou a ser o
+ * `enviarAoBlob` (`lib/blob.ts`), que faz a pergunta do token e lê a resposta.
+ * O contrato desta rota não mudou: continua sendo esta classe a linha
+ * divisória, e é esta frase — e só ela — que vai para a tela de quem envia.
  */
 class RecusaDeEnvio extends Error {}
 
@@ -90,11 +103,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const sessao = await obterSessao();
-        let alunoId = sessao?.alunoId;
-        if (!alunoId && sessao?.role === "super_adm") {
-          const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
-          if (theo) alunoId = theo.id;
-        }
+        const alunoId = sessao?.alunoId;
 
         if (!alunoId) {
           throw new RecusaDeEnvio("Entre como aluno para enviar imagens.");

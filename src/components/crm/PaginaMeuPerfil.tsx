@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CrachaModal } from "@/components/CrachaModal";
@@ -38,7 +37,7 @@ import { StickerCanvas } from "@/components/crm/StickerCanvas";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { aoSetasDasAbas } from "@/lib/abas";
-import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
+import { blobDoDataUrl, caminhoDaMidia, EnvioRecusado, enviarAoBlob, nomeDaImagem } from "@/lib/blob";
 import { copiarTexto } from "@/lib/clipboard";
 import { CORES_SALA, corDoAluno, nomeDaCor } from "@/lib/cores";
 import {
@@ -93,6 +92,10 @@ const TETO_ENVIO_MS = 30 * 1000;
  * "não foi possível enviar" e o motivo real morreria no console.
  */
 function mensagemDeEnvio(erro: unknown): string {
+  // A frase da rota vem primeiro: é a única escrita para o aluno, e é a única
+  // que diz o que fazer a respeito ("Entre como aluno...", "Endereço de envio
+  // fora da sua pasta.", "Muitos envios em pouco tempo...", ou a falha da casa).
+  if (erro instanceof EnvioRecusado) return erro.message;
   if (erro instanceof Error && erro.message.includes("demorou demais")) {
     return "O envio demorou demais e foi cancelado. Verifique sua conexão e tente de novo.";
   }
@@ -746,12 +749,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     const relogio = setTimeout(() => controle.abort(), TETO_ENVIO_MS);
 
     try {
-      const { url } = await upload(
+      const url = await enviarAoBlob(
         caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
         arquivo,
         {
-          access: "public",
-          handleUploadUrl: "/api/upload",
           clientPayload: JSON.stringify({ campo }),
           abortSignal: controle.signal,
         },
