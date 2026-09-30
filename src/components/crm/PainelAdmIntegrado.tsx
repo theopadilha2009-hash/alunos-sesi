@@ -60,6 +60,15 @@ type Props = {
   onAbrirCracha: (aluno: AlunoNaTela) => void;
   onSelecionarAluno?: (aluno: AlunoNaTela) => void;
   onMudarSalaAluno?: (alunoId: string, novaSalaId: string, nomeSala: string) => void;
+  /**
+   * A frase da troca de turma que o servidor recusou, montada em `CrmApp`.
+   *
+   * Vem de fora porque quem fala com o servidor é lá: `mudarSalaDoAluno` é
+   * `void`, e a única resposta é a lista revalidada — é o `CrmApp` que compara o
+   * que foi pedido com o que voltou. Aqui só se escreve o resultado, acima da
+   * tabela onde o ADM acabou de mexer no seletor.
+   */
+  recadoSala?: string | null;
 };
 
 export function PainelAdmIntegrado({
@@ -71,6 +80,7 @@ export function PainelAdmIntegrado({
   onAbrirCracha,
   onSelecionarAluno,
   onMudarSalaAluno,
+  recadoSala,
 }: Props) {
   const [subAba, setSubAba] = useState<SubAba>(subAbaInicial);
   const [busca, setBusca] = useState("");
@@ -425,6 +435,16 @@ export function PainelAdmIntegrado({
           {estadoCodigo.mensagem ? (
             <p className="recado recado-erro" role="alert">
               {estadoCodigo.mensagem}
+            </p>
+          ) : null}
+
+          {/* A troca de turma que o servidor recusou. Fica colada na tabela de
+              propósito: o ADM acabou de mexer no seletor da linha, e a recusa
+              precisa nascer no mesmo campo de visão dela — no topo do CRM ela
+              ficaria longe do que ele viu voltar sozinho. */}
+          {recadoSala ? (
+            <p className="recado recado-erro" role="alert">
+              {recadoSala}
             </p>
           ) : null}
 
