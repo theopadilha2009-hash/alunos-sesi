@@ -51,6 +51,7 @@ import {
   DOMINIO_EMAIL_ESCOLA,
   FOTO_LADO,
   LADO_CAPA,
+  MAX_BYTES_CAPA,
   MAX_CARACTERES_DESCRICAO_PROJETO,
   MAX_CARACTERES_TITULO_PROJETO,
   MAX_HABILIDADES,
@@ -82,18 +83,6 @@ const TETO_ENVIO_MS = 30 * 1000;
 // silencioso de `sanitizarProjetos` e o `maxLength` daqui leem o mesmo número.
 // Sem o `maxLength`, o aluno colava um parágrafo, via o texto inteiro na tela,
 // salvava, reabria e encontrava o texto encolhido.
-
-/**
- * Teto do arquivo de banner ANTES de ele virar data URL na memória.
- *
- * Não é o teto do que fica salvo: esse é o de `MAX_DATA_URL_CAPA` (~165 KB de
- * arquivo), e o recorte do modal reencoda a faixa até caber nele — uma foto de
- * celular de 3 MB é o caminho comum e precisa passar. Este teto aqui é de
- * memória: o `FileReader` monta o data URL inteiro (4/3 do arquivo) antes de o
- * recorte existir, e um arquivo de dezenas de MB travava a aba do aluno sem uma
- * palavra.
- */
-const MAX_BYTES_CAPA = 10 * 1024 * 1024;
 
 /**
  * A frase que o aluno lê quando o envio da imagem falha.
