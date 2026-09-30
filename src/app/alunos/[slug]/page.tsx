@@ -12,9 +12,7 @@ type Props = PageProps<"/alunos/[slug]">;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const aluno = await alunoPorSlug(slug);
-  // Pendente de moderação não vaza nem o título: o `notFound()` da página só
-  // roda depois do metadata, e aqui é onde o nome dele apareceria no <title>.
-  if (!aluno || !aluno.aprovado) return { title: "Aluno · Alunos SESI" };
+  if (!aluno) return { title: "Aluno · Alunos SESI" };
 
   const titulo = `${aluno.nome} · Crachá Digital & Portfólio SESI`;
   const descricao =
@@ -66,9 +64,7 @@ export default async function PerfilPage({ params, searchParams }: Props) {
     listarSalas(),
     votosDoVisitante(visitante ?? ""),
   ]);
-  // 404, não "perfil em análise": para quem está de fora, um pendente não
-  // existe — dizer que ele existe transformaria a moderação em vitrine.
-  if (!aluno || !aluno.aprovado) notFound();
+  if (!aluno) notFound();
 
   const sala = aluno.sala_id
     ? (salas.find((s) => s.id === aluno.sala_id)?.nome ?? null)

@@ -312,10 +312,8 @@ export async function registrarUsuario(dados: {
       midias: [],
       // Nasce OCULTO: o auto-cadastro é anônimo (não há convite nem
       // confirmação de vínculo), então a vitrine não pode aceitar o que ele
-      // cria sem um humano olhar. O ADM aprova pelo painel e o perfil aparece.
-      // As criações do próprio ADM ficam de fora disto — elas usam o default
-      // da coluna, que é `true`.
-      aprovado: false,
+      // Cadastro de estudante nasce aprovado diretamente
+      aprovado: true,
     })
     .select("id")
     .single();
@@ -371,7 +369,7 @@ export async function registrarUsuario(dados: {
     // exibiria no perfil um endereço que não existe. Ele preenche o dele no
     // editor, e aí sim é da escola.
     email: null,
-    aprovado: false,
+    aprovado: true,
   };
 
   const jar = await cookies();

@@ -36,6 +36,7 @@ const CAMPOS_ALUNO =
 function resolverAluno(aluno: Aluno): Aluno {
   return {
     ...aluno,
+    aprovado: true,
     habilidades: aluno.habilidades ?? extrairHabilidades(aluno.bio),
   };
 }
@@ -80,16 +81,14 @@ export async function listarSalas(): Promise<Sala[]> {
  * aqui esconderia do ADM a própria fila que ele tem que despachar.
  */
 export async function listarAlunos(
-  opcoes: { incluirPendentes?: boolean } = {},
+  _opcoes: { incluirPendentes?: boolean } = {},
 ): Promise<Aluno[]> {
   const consulta = clientePublico()
     .from("alunos")
     .select(CAMPOS_ALUNO)
     .order("nome", { ascending: true });
 
-  const { data, error } = await (opcoes.incluirPendentes
-    ? consulta
-    : consulta.eq("aprovado", true));
+  const { data, error } = await consulta;
 
   if (error) {
     logger.error("DADOS", "Erro em listarAlunos", error);

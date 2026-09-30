@@ -2117,6 +2117,12 @@ body:has(.login-tela-container) {
   gap: 0.85rem;
 }
 
+.tabela-alunos {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
 .tabela-alunos th {
   padding: 1.15rem 1.4rem;
   background: var(--surface-2);
@@ -2869,6 +2875,8 @@ body:has(.login-tela-container) {
 .input-select,
 .input-textarea {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.75rem 1rem;
   border-radius: 12px;
   border: 1px solid var(--line);
@@ -2877,6 +2885,13 @@ body:has(.login-tela-container) {
   font-family: inherit;
   font-size: 0.92rem;
   transition: all 0.18s var(--ease);
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .input-texto:focus:not(:focus-visible),
@@ -2942,13 +2957,15 @@ body:has(.login-tela-container) {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .adm-input-sala {
-  width: 7.5rem;
-  padding: 0.3rem 0.5rem;
+  width: 6.8rem;
+  min-width: 5.5rem;
+  padding: 0.35rem 0.55rem;
   font-size: 0.78rem;
+  border-radius: 8px;
 }
 
 /* Os chips de competência do editor saíram daqui: viraram botões de escolha

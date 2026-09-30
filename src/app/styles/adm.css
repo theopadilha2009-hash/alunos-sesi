@@ -145,8 +145,10 @@
 
 .adm-tabela-wrap {
   border-radius: 18px;
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
   border: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch;
 }
 
 .btn-toggle-badge {
