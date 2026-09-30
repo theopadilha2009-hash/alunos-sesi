@@ -38,6 +38,12 @@ import { clienteAdmin } from "@/lib/supabase/admin";
  * então é um retrato da hora do login: um rebaixamento no banco ficaria sem
  * efeito por até 30 dias, que é a validade do cookie. Uma query por ação de
  * painel fecha essa janela — e o painel não é rota quente.
+ *
+ * O que passa aqui é exatamente o que `podeAdmin` (`sessao.ts`) deixa o painel
+ * desenhar: o crachá do link ou a sessão de `super_adm`. Antes o servidor
+ * aceitava também o papel `adm` — que nenhuma tela dá, porque a interface
+ * nunca deixa alguém chegar nele. Autorizar a mais no servidor é autorizar o
+ * que ninguém pediu; os dois gates dizem a mesma coisa de propósito.
  */
 async function exigirAdm() {
   const jar = await cookies();
@@ -52,7 +58,7 @@ async function exigirAdm() {
     .eq("id", sessao.id)
     .maybeSingle();
 
-  if (data?.role !== "super_adm" && data?.role !== "adm") {
+  if (data?.role !== "super_adm") {
     throw new Error("Acesso restrito ao ADM.");
   }
 }
@@ -461,46 +467,47 @@ export async function gerarCodigoAtivacao(
   };
 }
 
+/**
+ * Aprova ou desaprova — no estado que o cliente mandou, não no inverso do que
+ * está no banco.
+ *
+ * Com o servidor calculando o inverso, dois cliques simultâneos leem o mesmo
+ * `false`, os dois gravam `true`, e o segundo clique — que queria desaprovar —
+ * não desaprova nada. Recebendo o estado desejado (`aprovado=true|false`), o
+ * update é idempotente por construção: repetir o mesmo clique leva ao mesmo
+ * lugar, sem leitura no meio. Quem desenha o botão já sabe o estado da linha.
+ */
 export async function aprovarAluno(formData: FormData): Promise<void> {
   await exigirAdm();
 
   const id = texto(formData, "id");
-  if (!id) return;
+  const aprovado = texto(formData, "aprovado");
+  if (!id || (aprovado !== "true" && aprovado !== "false")) return;
 
-  const db = clienteAdmin();
-  const { data: atual } = await db
+  await clienteAdmin()
     .from("alunos")
-    .select("aprovado")
-    .eq("id", id)
-    .maybeSingle();
-  if (!atual) return;
-
-  await db
-    .from("alunos")
-    .update({ aprovado: !atual.aprovado })
+    .update({ aprovado: aprovado === "true" })
     .eq("id", id);
 
   revalidar();
 }
 
+/**
+ * Liga/desliga `fixado` ou `destaque`, pelo mesmo desenho de `aprovarAluno`:
+ * o valor desejado vem do formulário e o servidor só grava.
+ */
 export async function alternar(formData: FormData): Promise<void> {
   await exigirAdm();
 
   const id = texto(formData, "id");
   const campo = texto(formData, "campo");
+  const valor = texto(formData, "valor");
   if (!id || (campo !== "fixado" && campo !== "destaque")) return;
+  if (valor !== "true" && valor !== "false") return;
 
-  const db = clienteAdmin();
-  const { data: atual } = await db
+  await clienteAdmin()
     .from("alunos")
-    .select("fixado,destaque")
-    .eq("id", id)
-    .maybeSingle();
-  if (!atual) return;
-
-  await db
-    .from("alunos")
-    .update({ [campo]: !atual[campo as "fixado" | "destaque"] })
+    .update({ [campo]: valor === "true" })
     .eq("id", id);
 
   revalidar();

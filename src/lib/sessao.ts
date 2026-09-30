@@ -115,6 +115,12 @@ export function crachaValido(token: string | undefined | null): boolean {
  * de propósito, para fechar a janela do token de 30 dias. Aqui é o que dá para
  * decidir com o que veio no cookie, que é o suficiente para escolher o que
  * desenhar.
+ *
+ * As duas condições são as MESMAS de propósito — crachá ou `super_adm`. Se o
+ * servidor aceitar um papel a mais (era o caso do `adm`), ele autoriza um
+ * caminho que a interface não desenha: ninguém chega lá, e a divergência só
+ * esconde qual dos dois lados está certo. Quem muda de ideia sobre isso muda
+ * nos dois lugares.
  */
 export function podeAdmin(
   cracha: string | null | undefined,

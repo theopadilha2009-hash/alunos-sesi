@@ -43,6 +43,9 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
             <span className="acoes">
               <form action={aprovarAluno}>
                 <input type="hidden" name="id" value={a.id} />
+                {/* O clique leva ao inverso do que está na tela; o servidor
+                    grava este valor direto, sem reler a linha. */}
+                <input type="hidden" name="aprovado" value={String(!a.aprovado)} />
                 <button
                   type="submit"
                   className={`mini${a.aprovado ? "" : " botao-aprovar"}`}
@@ -63,6 +66,7 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
               <form action={alternar}>
                 <input type="hidden" name="id" value={a.id} />
                 <input type="hidden" name="campo" value="fixado" />
+                <input type="hidden" name="valor" value={String(!a.fixado)} />
                 <button
                   type="submit"
                   className="mini"
@@ -76,6 +80,7 @@ export function PainelAlunos({ alunos }: { alunos: AlunoNaTela[] }) {
               <form action={alternar}>
                 <input type="hidden" name="id" value={a.id} />
                 <input type="hidden" name="campo" value="destaque" />
+                <input type="hidden" name="valor" value={String(!a.destaque)} />
                 <button
                   type="submit"
                   className="mini"
