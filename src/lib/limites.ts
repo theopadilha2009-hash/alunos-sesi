@@ -338,3 +338,19 @@ export function conferirTamanhoDaImagem(url: string, campo: CampoPerfil): string
     `até ${emTamanho(tetoEmBytesDeImagem(campo), false)}. Escolha um arquivo menor.`
   );
 }
+
+/**
+ * O teto do campo como texto para a tela, na unidade do ARQUIVO.
+ *
+ * É o mesmo número que `conferirTamanhoDaImagem` mostra ao recusar, porque as
+ * duas frases saem de `emTamanho(tetoEmBytesDeImagem(campo))` — quem anuncia o
+ * teto e quem o aplica não podem discordar.
+ *
+ * Antes disto o dropzone de capa de projeto dizia "até 4MB" digitado à mão, e o
+ * campo barrava em 1,5 MB: o aluno escolhia a foto que a tela dizia caber e ela
+ * era descartada. É a terceira vez que o mesmo número digitado de novo diverge —
+ * por isso ele não é digitado de novo.
+ */
+export function tetoLegivelDoCampo(campo: CampoPerfil): string {
+  return emTamanho(tetoEmBytesDeImagem(campo), false);
+}
