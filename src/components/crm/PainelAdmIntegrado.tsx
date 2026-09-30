@@ -573,6 +573,7 @@ export function PainelAdmIntegrado({
                         <form action={alternar}>
                           <input type="hidden" name="id" value={a.id} />
                           <input type="hidden" name="campo" value="fixado" />
+                          <input type="hidden" name="valor" value={String(!a.fixado)} />
                           <button
                             type="submit"
                             className={`btn-toggle-badge ${a.fixado ? "toggle-ativo" : ""}`}
@@ -589,6 +590,7 @@ export function PainelAdmIntegrado({
                         <form action={alternar}>
                           <input type="hidden" name="id" value={a.id} />
                           <input type="hidden" name="campo" value="destaque" />
+                          <input type="hidden" name="valor" value={String(!a.destaque)} />
                           <button
                             type="submit"
                             className={`btn-toggle-badge ${a.destaque ? "toggle-destaque-ativo" : ""}`}
