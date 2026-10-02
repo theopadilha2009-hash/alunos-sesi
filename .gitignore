@@ -48,3 +48,8 @@ next-env.d.ts
 .context/runtime/
 .context/**/archive/
 
+# harness local ao clone: sessões criam worktrees em .claude/worktrees/, cada
+# um com a árvore inteira do repo e node_modules symlinkado. Um `git add -A`
+# ali dentro commitaria clones de si mesmo.
+.claude/
+
