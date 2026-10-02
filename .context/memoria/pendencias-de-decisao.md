@@ -553,7 +553,11 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   podem coexistir (a 019 limpou a de hoje, a coluna continua case-sensitive);
   o motivo do fracasso da v1 fica aqui porque é a armadilha da
   próxima tentativa: **identidade é `chaveDaSala`, e o que a tela pintou não é
-  prova de nada**. Não exercido em navegador.
+  prova de nada**. Uma proposta de endurecimento a mais (extrair `ehIdDeSala`
+  para o módulo e limpar o campo `sala` no ramo de turma real, para a submissão
+  nunca viajar com `salaId` da tela e `sala` resto de DOM juntos) foi avaliada e
+  **não aplicada**: o revisor mediu o desvio como sem impacto observável, e a v2
+  merged já fecha os flancos que importam. Não exercido em navegador.
   (8) ~~**`/api/upload` resolve o dono com slug chumbado**~~ — **fechado em
   02/10 pelo PR #76:** o dono agora vem da sessão (`sessao?.alunoId`), sem
   round-trip e sem perfil fixo. O slug chumbado **sobreviveu em outros pontos**,
