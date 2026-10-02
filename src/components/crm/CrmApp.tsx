@@ -111,6 +111,22 @@ export function CrmApp({
     );
   };
 
+  /**
+   * A troca de turma que o servidor recusou volta atrás na linha.
+   *
+   * Quem chama é o `SeletorSala` daquela linha, no retorno da PRÓPRIA action
+   * (`useActionState`), com a frase que o servidor mandou. O caminho anterior
+   * disto era inferir a falha comparando a lista revalidada com a troca pedida —
+   * e qualquer outra ação do painel revalida o mesmo caminho: uma revalidação
+   * que chegasse antes da resposta julgava a troca contra um payload que ainda
+   * não a tinha, e a troca que vingou virava recusa na tela, para sempre.
+   */
+  const handleSalaRecusada = (alunoId: string) => {
+    const doServidor = alunosIniciais.find((a) => a.id === alunoId);
+    if (!doServidor) return;
+    setLista((antiga) => antiga.map((a) => (a.id === alunoId ? doServidor : a)));
+  };
+
   const [meus, setMeus] = useState<string[]>(meusVotos);
   const [ocupado, setOcupado] = useState<string | null>(null);
   /** Recusa do servidor no voto, escrita perto de quem clicou. */
@@ -1111,6 +1127,7 @@ export function CrmApp({
               onAbrirCracha={(a) => setAlunoCracha(a)}
               onSelecionarAluno={(a) => setAlunoBreveSelecionado(a)}
               onMudarSalaAluno={handleMudarSalaAluno}
+              onSalaRecusada={handleSalaRecusada}
             />
           </div>
         ) : null}
