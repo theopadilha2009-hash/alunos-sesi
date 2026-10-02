@@ -2101,8 +2101,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                           <span className="dropzone-titulo">
                             Arraste uma foto aqui ou <strong style={{ color: "var(--accent)" }}>escolha do seu computador / celular</strong>
                           </span>
+                          {/* Os formatos não sentem o mesmo teto: PNG, JPG e WebP passam
+                              pelo canvas (1000px @ 0,82) ANTES da conferência — o original
+                              pode ser maior. Só o GIF viaja cru e é dele o número. */}
                           <span className="dropzone-sub">
-                            PNG, JPG, WebP ou GIF animado de até {tetoLegivelDoCampo("projetos")}
+                            GIF animado de até {tetoLegivelDoCampo("projetos")}; PNG, JPG e
+                            WebP são reduzidos automaticamente
                           </span>
                           <input
                             type="file"
