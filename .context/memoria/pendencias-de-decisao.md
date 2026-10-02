@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-09-29T23:27:10.000Z
+  modified: 2026-10-02T20:05:00.000Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -302,19 +302,18 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
 
 **Continua aberto:**
 
-- **As recusas do `/api/upload` não chegam à tela de quem envia** (achado de
-  29/09, ao consertar o vazamento). Medido no pacote instalado: o `upload()` do
-  `@vercel/blob/client` lança `BlobError("Failed to retrieve the client token")`
-  quando a resposta não é `ok` (`node_modules/@vercel/blob/dist/client.js:398`),
-  **sem ler o corpo** — então as três frases escritas para o aluno ("Entre como
-  aluno para enviar imagens.", "Endereço de envio fora da sua pasta.", "Muitos
-  envios em pouco tempo. Aguarde um instante.") morrem no corpo HTTP, e quem
-  envia vê o texto em inglês da biblioteca. O conserto do vazamento as manteve no
-  corpo: são nossas, não são detalhe interno, e são o contrato da rota. Fazê-las
-  aparecer é mudança de comportamento visível — ou envolver o `upload()` num
-  wrapper que leia o corpo, ou trocar o client por `fetch` próprio — e é decisão
-  de produto. Vale saber, antes de decidir, que o cliente já descarta o corpo
-  hoje: ninguém perde nada que estivesse funcionando.
+- **As recusas do `/api/upload` não chegavam à tela de quem envia** — **fechado
+  em 02/10 pelo PR #76.** Era assim: o `upload()` do `@vercel/blob/client` lança
+  `BlobError("Failed to retrieve the client token")` quando a resposta não é
+  `ok` (`node_modules/@vercel/blob/dist/client.js:398`), **sem ler o corpo** —
+  então as três frases escritas para o aluno ("Entre como aluno para enviar
+  imagens.", "Endereço de envio fora da sua pasta.", "Muitos envios em pouco
+  tempo. Aguarde um instante.") morriam no corpo HTTP, e quem enviava via o
+  inglês da biblioteca. O caminho escolhido foi o wrapper: `enviarAoBlob`
+  (`src/lib/blob.ts`) lê o corpo antes de lançar `EnvioRecusado`, e
+  `fraseDaResposta` faz a frase da rota aparecer na tela. No mesmo PR o dono do
+  envio passou a vir da sessão (`sessao?.alunoId`) e o slug chumbado saiu da
+  rota. Nada disso foi exercido em navegador; sobras abertas no bloco do lote.
 - **`btn-ver-autor` fechou (30/09).** Ele era **o único defeito de tela** do
   cluster de classes sem CSS: um `<button>` sem classe base nenhuma
   (`CrmApp.tsx`), que recebia o visual default do navegador dentro de um card
@@ -335,13 +334,13 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   chamada; não há `middleware.ts` e o `src/proxy.ts` não trata essa rota. Não
   apliquei `verificarRateLimit` de propósito: monitoramento bate nele em intervalo
   curto e um 429 derrubaria o próprio monitor. Decisão de infra, não fix.
-- **`role: "adm"` ficou incoerente entre servidor e UI** (agravado em 30/09). O
-  valor existe no schema (`003_crm_auth.sql`) e no tipo. Desde o lote de 30/09,
-  `exigirAdm` (`adm/acoes.ts:54`) **aceita** `role === "adm"`, enquanto
-  `podeAdmin` (`lib/sessao.ts:119-123`) continua exigindo crachá válido ou
-  `super_adm` — então o servidor autoriza o que o cliente não desenha. Quem for
-  usar `adm` de verdade precisa alinhar os dois lados do gate; hoje o valor é
-  sem consumidor e a assimetria confunde.
+- **`role: "adm"` ficou incoerente entre servidor e UI** — **o gate fechou em
+  02/10 (PR #73); sobrou o enum.** `exigirAdm` (`adm/acoes.ts`) passou a exigir
+  crachá válido ou `super_adm` — exatamente `podeAdmin` (`lib/sessao.ts`) —,
+  então o servidor voltou a autorizar só o que a tela desenha. O valor
+  `"adm"` continua no schema (`003_crm_auth.sql`), no tipo (`tipos.ts`) e em
+  `CargosBadges.tsx`, sem nenhum portador conhecido: removê-lo ou dar-lhe um
+  papel é decisão de design, não limpeza.
 
 - **A estrela bloqueada não diz mais "carregando"** (fechado em 29/09). O `title`
   que nunca disparava **já tinha sido corrigido** no PR #56 (o motivo passou para
@@ -370,12 +369,16 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   estrela justamente por não dizer o nome dela. **Fica aberto, como design:** o selo visível ao
   lado do nome (`pill-pendente`, `PainelAdmIntegrado.tsx:406`) — é o passo que
   faria o pendente saltar aos olhos, e adiciona elemento à tabela.
-- **`votos` não tem índice em `visitante_id`** (29/09). `votosDoVisitante`
-  filtra só por `visitante_id` (`dados.ts:488`) e o único índice é a PK
-  `(aluno_id, visitante_id)` (`001_schema.sql:72`), então é seq scan. A vitrine
-  já fazia essa leitura; o #54 a trouxe também para toda visita a perfil de
-  quem tem cookie. Irrelevante nos 13 alunos de hoje; vira dívida se `votos`
-  crescer — aí é `create index concurrently`.
+- **`votos` não tinha índice em `visitante_id`** — **fechado em 02/10 (PR #72).**
+  A leitura era `votosDoVisitante`, que filtra só por `visitante_id`
+  (`dados.ts:488`), e o único índice era a PK `(aluno_id, visitante_id)`
+  (`001_schema.sql:72`) — seq scan. A migration `020_indice_votos_visitante.sql`
+  criou `votos_visitante_idx`: **aplicada em produção em 01/10/2026** via
+  `scripts/db-query.sh --psql` (depois de `--check` e `--dry-run`) e conferida
+  em `pg_indexes`. Detalhe operacional que a próxima migration de índice vai
+  reencontrar: `create index concurrently` **não roda dentro de transação**,
+  então quebraria o `--dry-run` do script — o índice entrou sem `concurrently`,
+  aceitável no tamanho de `votos` hoje.
 - **O `useState(meusVotos)` do `CrmApp` não ressincroniza** (29/09) — **e não é
   alcançável, mas não pelo motivo que este arquivo dizia antes**. O prop *pode*
   ser reentregue ao componente montado: as Server Actions do CRM chamam
@@ -524,24 +527,37 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   `MAX_CARACTERES_DESCRICAO_PROJETO`, `MAX_BYTES_CAPA`), o módulo-folha sem
   `node:crypto` que o `seguranca.ts` já lia — era esse o motivo de a duplicação
   ser evitável, e não inevitável.
-  (4) **O dropzone de capa de projeto promete "até 4MB"** e o teto real de
-  `projetos` é 2 MB de data URL (~1,5 MB de imagem). O texto discorda do
-  comportamento.
-  (5) **Só o NOME da classe `selo-adm` ficou para trás.** O rótulo agora diz
-  "Destaque" nas duas telas — o `/validar/[slug]` dizia "Destaque ADM" e foi
-  corrigido em 30/09, porque o selo marca `aluno.destaque` e não um cargo. Fica
-  devendo só o nome: renomear custa tocar em CSS e no
-  `tests/classes-css.test.mjs`.
-  (6) **`aprovarAluno` é check-then-set** (lê `aprovado`, grava o inverso): dois
-  ADMs clicando junto podem não chegar ao estado esperado.
-  (7) **A troca de turma que falha reverte em silêncio** no CRM: a revalidação
-  corrige a lista, mas o ADM não recebe frase nenhuma. Dar a frase exige o form
-  de cada linha virar um componente com `useActionState` (hoje é um `.map()`
-  inline) — é peça nova, não remendo.
-  (8) **`/api/upload` resolve o dono com slug chumbado** —
-  `alunoPorSlug("theo-padilha") || alunoPorSlug("telor-de-espadilha")`
-  (`upload/route.ts:93-97`), dois round-trips por upload de super_adm e a pasta
-  amarrada a um perfil: se o slug for renomeado, o upload do ADM quebra.
+  (4) ~~**O dropzone de capa de projeto promete "até 4MB"**~~ — **fechado em
+  02/10 pelos PRs #71 e #77.** Primeiro `tetoLegivelDoCampo` (`limites.ts`)
+  passou a derivar o número de `MAX_BYTES_*` em vez de valor escrito na mão; depois o
+  texto passou a dizer a verdade **por formato**: só o GIF viaja cru e é dele o
+  número do aviso, e PNG, JPG e WebP passam pelo canvas (1000px @ 0,82)
+  **antes** da conferência — o original pode ser maior que o teto. Não foi
+  exercido em navegador.
+  (5) ~~**Só o NOME da classe `selo-adm` ficou para trás**~~ — **fechado em
+  02/10 pelo PR #70**, e o glossário, que ainda descrevia `selo-adm` em
+  `CartaoAluno.tsx`, foi corrigido pelo #78. A classe hoje é `selo-destaque`, o
+  rótulo é "Destaque", e quem renderiza é `TabelaAlunos.tsx` e
+  `validar/[slug]/page.tsx`.
+  (6) ~~**`aprovarAluno` é check-then-set**~~ — **fechado em 02/10 pelo PR #73.**
+  O form declara o destino (`name="aprovado"`, validado `"true"|"false"`) e a
+  action grava o valor declarado, idempotente; `alternar` recebeu `name="valor"`.
+  Dois ADMs clicando junto chegam ao mesmo estado.
+  (7) ~~**A troca de turma que falha reverte em silêncio**~~ — **fechado em
+  02/10 pelo PR #74**, exatamente pela peça nova que o item pedia: cada linha
+  virou form com `useActionState`, a recusa da action vira frase **na célula
+  daquela linha** (chave estável por aluno), e o desfazer sai do mesmo estado.
+  A decisão id-vs-nome é de `alvoDaSala` (`lib/sala-do-aluno.ts`, puro, 10
+  testes). A v1 do PR julgava pela lista revalidada inteira — falso positivo em
+  turma homônima — `salas.nome` é `unique` sem `citext`, então `DSM3` e `dsm3`
+  podem coexistir (a 019 limpou a de hoje, a coluna continua case-sensitive);
+  o motivo do fracasso da v1 fica aqui porque é a armadilha da
+  próxima tentativa: **identidade é `chaveDaSala`, e o que a tela pintou não é
+  prova de nada**. Não exercido em navegador.
+  (8) ~~**`/api/upload` resolve o dono com slug chumbado**~~ — **fechado em
+  02/10 pelo PR #76:** o dono agora vem da sessão (`sessao?.alunoId`), sem
+  round-trip e sem perfil fixo. O slug chumbado **sobreviveu em outros pontos**,
+  agora item aberto próprio no bloco do lote.
   (9) **Nada disto foi exercido em navegador.** As correções de contraste (que
   mudam o desenho dos badges no tema claro, inclusive dentro do crachá e do
   cartão NFC), o upload de sticker pelo Blob e os dois guardas do banner foram
@@ -551,7 +567,14 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   (o pior fundo claro é 5,36:1, não os 6,68:1 que o comentário dizia), a guarda
   de `file.size` antes do `FileReader` no sticker, e o marcador "(linha atual)"
   no seletor de turma. O pixel continua não visto, e os números novos são
-  aritmética conferida, não medição em tela.
+  aritmética conferida, não medição em tela. **O lote de 02/10 cai no mesmo
+  balde inteiro:** #69, #70, #73, #74, #76 e #77 foram provados por typecheck,
+  testes, CI e leitura — ninguém abriu o app. Os quatro cenários que só o olho
+  prova, todos do #74: (i) a frase de recusa cabe na célula da linha sem
+  empurrar o layout, (ii) o que a tela mostra durante o round trip da troca que
+  dá certo, (iii) o `window.prompt` do `+ Nova turma` montando e submetendo
+  certo, (iv) o desfecho no `error.tsx` quando `exigirAdm` lança (item aberto
+  do lote).
 
   (10) ~~**Duas linhas de `salas` em produção**~~ — **fechado em 30/09/2026** pela
   migration `019_limpeza_de_salas.sql`. As duas foram medidas por leitura
@@ -568,17 +591,38 @@ pelo motivo inverso — parecem bug pra quem lê o código depois.
   essa é a relação que produzia turma errada em silêncio ("dsm3" dentro de
   "dsm3-25"). O comentário no ponto explica o que saiu e por quê.
 
-  (12) **O contador "N salas ativas" da vitrine conta sala vazia — e a 018 o
-  inflou de 8 para 13.** É `{salas.length}` em `src/components/Vitrine.tsx:227`,
-  sobre a lista inteira de `listarSalas`; o ranking logo abaixo **não** sofre,
-  porque filtra `alunos > 0` (`:483`). O número subiu como efeito colateral de a
-  018 criar as 7 turmas oficiais que faltavam — e os 8 de antes incluíam a linha
-  `vai tomaar no cu`, então o valor nunca foi "salas em uso". **Não mexi de
-  propósito:** num cabeçalho de vitrine, "13 salas" (a escola tem 13 turmas) e "5
-  salas com alunos" são duas leituras defensáveis, e essa é decisão de produto.
-  Se for para mudar, é uma linha: contar `retrato.filter((r) => r.alunos > 0)` em
-  vez de `salas`. O `Vitrine` já trata `alunos > 0` como o corte do que vale
-  mostrar, vinte linhas abaixo — o que é o argumento a favor da mudança.
+  (12) ~~**O contador "N salas ativas" da vitrine conta sala vazia**~~ —
+  **fechado em 02/10 pelo PR #69**, pela linha que o próprio item apontava:
+  a contagem passou a usar `alunos > 0`, o mesmo corte do ranking vinte linhas
+  abaixo. A leitura que venceu foi "salas com alunos"; se o Théo quiser a
+  leitura "a escola tem N turmas", é reverter o #69, não ajustar.
+
+- **Abertos pelo lote de 02/10 — nenhum é bug hoje, todos têm gatilho:**
+  (a) **o slug chumbado sobreviveu fora da rota**: `acoes-crm.ts:116,409,545` e
+  `CrmApp.tsx:147-159` ainda resolvem dono por `alunoPorSlug` de perfil fixo
+  (`theo-padilha`/`telor-de-espadilha`); renomear um desses slugs quebra os
+  caminhos correspondentes, igual ao que o #76 matou no `/api/upload`.
+  (b) **`ModalRecortarBanner.tsx:127` ainda chama o `upload()` cru do client** —
+  a recusa do banner morre em `BlobError` de inglês, o oposto do que
+  `enviarAoBlob` faz no resto; é uma linha de adoção do wrapper.
+  (c) **`exigirAdm` lança em vez de devolver `Estado`**: no caminho da exceção
+  o `useActionState` não recebe resposta — ADM rebaixado de `super_adm` no banco
+  com cookie válido vê a pintura otimista sem frase nem desfazer. Herança
+  idêntica a `criarAluno` e às importações, não regressão do #74; o desfecho
+  exato no `error.tsx` é cenário (iv) do balde de navegador.
+  (d) **"Turma atualizada." é string morta** (`adm/acoes.ts`): retornada pela
+  action e nunca renderizada — a confirmação é a pintura. Se ninguém a quiser
+  na tela, sai do disco.
+  (e) **a pintura otimista do #74 é refém da revalidação** no caminho de
+  sucesso: uma revalidação concorrente entrega o payload anterior e apaga a
+  linha até a resposta chegar. Pré-existente, cosmético; o desfazer
+  determinístico vale só para a recusa.
+  (f) **sem teste de guarda para dois contratos que já morderam**: o corpo do
+  POST do `/api/upload` (as três frases que o #76 fez chegar à tela) e o
+  `name="aprovado"`/`name="valor"` que o #73 introduziu — rename silencioso em
+  quem os lê não acende nada hoje.
+  (g) **`seguranca.ts:61,88` repetem `2048` na mão** onde `limites.ts` já é a
+  fonte dos tetos — mesma classe da duplicação fechada no item (3).
 
 **Why:** os itens "resolvidos" acima parecem bugs para quem lê o código depois —
 trava de foco que prende o Tab, token claro demais, aba que não desmonta, perfil
