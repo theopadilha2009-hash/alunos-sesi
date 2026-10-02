@@ -22,7 +22,8 @@ done < <(awk '
 ' telas/*.html 2>/dev/null)
 
 say "── 2. classes órfãs (usadas em telas, ausentes nos sistemas)"
-defined=$(grep -hoE '\.[a-zA-Z][a-zA-Z0-9_-]*' sistemas/*.css 2>/dev/null | sed 's/^\.//' | sort -u)
+# definidas = sistemas + <style> local marcado /* no-sistema */ nas telas
+defined=$( (grep -hoE '\.[a-zA-Z][a-zA-Z0-9_-]*' sistemas/*.css; grep -hA20 'no-sistema' telas/*.html | grep -hoE '\.[a-zA-Z][a-zA-Z0-9_-]*') 2>/dev/null | sed 's/^\.//' | sort -u)
 used=$(grep -hoE 'class="[^"]*"' telas/*.html componentes/*.html 2>/dev/null | sed 's/class="//; s/"$//' | tr ' ' '\n' | grep -E '^[a-zA-Z][a-zA-Z0-9_-]*$' | sort -u)
 orfas=$(comm -23 <(echo "$used") <(echo "$defined"))
 if [ -n "$orfas" ]; then

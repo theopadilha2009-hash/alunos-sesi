@@ -1,0 +1,176 @@
+<!doctype html>
+<!--
+  Hub do showcase design/ — 17 peças + painel das 10 dívidas que este redesign
+  resolve. No espírito do hub de referência (Desktop/redesign-vamoo/index.html),
+  mas seguindo o esqueleto do PADROES: anti-FOUC, moldura, um DOM por tela.
+  Strings das rotas: src/app/page.tsx, alunos, alunos/[slug], u/[slug],
+  validar/[slug], adm — e "Escola SESI · Formando desenvolvedores para o futuro."
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redesign — alunos-sesi · todos os ambientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sistemas/base.css">
+<link rel="stylesheet" href="sistemas/sistema-a.css">
+<link rel="stylesheet" href="sistemas/sistema-b.css">
+<link rel="stylesheet" href="sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="00-hub">
+
+<header class="topo wrap">
+  <a class="marca-sesi" href="index.html"><img class="logo-modo-light" src="../public/logo-sesi.png" alt="SESI"><img class="logo-modo-dark" src="../public/logo-sesi-branco.png" alt="SESI"><span>SESI<small>alunos · showcase</small></span></a>
+  <nav class="linha">
+    <a href="componentes/galeria.html">Galeria</a>
+    <a href="PADROES.md">Contrato</a>
+    <a href="CONTEUDO.md">Elenco</a>
+  </nav>
+</header>
+
+<section class="hero wrap pilha">
+  <p class="eyebrow eyebrow--accent">Redesign completo · 16 telas + inventário · um DOM, dois conceitos</p>
+  <h1>Redesign — alunos-sesi <span class="vazado">todos os ambientes</span></h1>
+  <p class="lede">Escola SESI · Joinville–SC, turmas de Informática 2026. Toda tela existe em dois conceitos que vestem o mesmo HTML — a diferença é 100% CSS escopado. Clique numa tela e use a barra no canto para comparar na hora.</p>
+  <div class="linha">
+    <button type="button" class="btn btn--primario" data-toast="Use a barra no canto superior direito: A | B · Tema · Tela. O estado grava em localStorage e aceita ?conceito=a&tema=light&frame=mobile.">Como funciona o A|B</button>
+    <a class="btn btn--secundario" href="componentes/galeria.html">Ver a galeria de componentes</a>
+    <a class="btn btn--fantasma" href="#dividas">As 10 dívidas resolvidas ↓</a>
+  </div>
+</section>
+
+<div class="wrap pilha">
+  <h2>Os ambientes</h2>
+  <p class="eyebrow">Conceito A = disciplina VAMOO (papel, Plus Jakarta, 6px) · Conceito B = dark-first refinado (Bricolage/Manrope, ilha escura, tema claro finalmente desenhado). Padrão dos arquivos: B.</p>
+
+  <div class="grade">
+    <a class="cartao cartao--interativo cartao-clique" href="telas/01-login.html">
+      <p class="eyebrow">/ · código ditado em voz alta</p><h3>01 · Login</h3><p>Entrada única do aluno com o tema da casa.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/02-crm-portifolio.html">
+      <p class="eyebrow">/alunos · CRM</p><h3>02 · Portfólio (CRM)</h3><p>O que o aluno mostra: bio, capa, projetos e endereços.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/03-crm-projetos.html">
+      <p class="eyebrow">/alunos · CRM</p><h3>03 · Projetos (CRM)</h3><p>Portfólio da Turma, TriNet, GrêmioFlow e mais, em edição.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/04-crm-desafios.html">
+      <p class="eyebrow">/alunos · CRM</p><h3>04 · Mural de desafios</h3><p>Desafios da turma em mural — o DOM mais denso do app.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/05-crm-tabelas.html">
+      <p class="eyebrow">/alunos · CRM</p><h3>05 · Tabelas de alunos</h3><p>Tabela do professor: a família única substituindo as duas.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/06-crm-meu-perfil.html">
+      <p class="eyebrow">/alunos · CRM</p><h3>06 · Meu Perfil</h3><p>Seis abas, galeria de mídia e o estúdio do crachá.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/07-crm-painel-adm.html">
+      <p class="eyebrow">/alunos · CRM</p><h3>07 · Painel ADM</h3><p>Cinco sub-abas e a fila de aprovação com 3 pendentes.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/08-overlay-commandbar.html">
+      <p class="eyebrow">⌘K · overlay global</p><h3>08 · Command Bar</h3><p>Busca rápida por aluno, rota e ação.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/09-overlay-cracha.html">
+      <p class="eyebrow">/alunos · overlay</p><h3>09 · Crachá (modal)</h3><p>A ilha escura em tela cheia, com QR e filete de 4 cores.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/10-vitrine.html">
+      <p class="eyebrow">/alunos · público</p><h3>10 · Vitrine</h3><p>Os 10 portfólios aprovados, com cor de sala.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/11-cracha-digital.html">
+      <p class="eyebrow">/alunos/[slug]</p><h3>11 · Crachá digital</h3><p>Perfil interativo: estrelas, endossos, mídia e redes.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/12-cartao-nfc.html">
+      <p class="eyebrow">/u/[slug]</p><h3>12 · Cartão NFC</h3><p>Linktree do toque: header "SESI SC · Joinville".</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/13-validar.html">
+      <p class="eyebrow">/validar/[slug]</p><h3>13 · Validar matrícula</h3><p>Selo FIESC · HMAC e o hash de integridade visível.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/14-adm-standalone.html">
+      <p class="eyebrow">/adm</p><h3>14 · ADM standalone</h3><p>Secretaria sem CRM: fila, turmas e métricas da escola.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/15-estados.html">
+      <p class="eyebrow">not-found · error · global-error</p><h3>15 · Estados</h3><p>404 honesto, erro e vazio com a família .vazio.</p>
+    </a>
+    <a class="cartao cartao--interativo cartao-clique" href="telas/16-impressao.html">
+      <p class="eyebrow">currículo · window.print()</p><h3>16 · Impressão A4</h3><p>Mini-currículo: --papel/--tinta nos dois conceitos.</p>
+    </a>
+    <a class="cartao cartao--sala cartao--interativo cartao-clique" href="componentes/galeria.html">
+      <p class="eyebrow">design/componentes</p><h3>17 · Galeria de componentes</h3><p>O inventário vivo: cada classe em A e B na mesma página.</p>
+    </a>
+  </div>
+</div>
+
+<div class="wrap pilha" id="dividas" style="max-width:var(--content-texto, 1080px)">
+  <p class="eyebrow eyebrow--accent">Auditoria → sistema</p>
+  <h2>As 10 dívidas que este showcase resolve</h2>
+  <p class="lede">Cada item abaixo é um achado do app real (globals.css, tokens.css e componentes desenhando a mesma coisa duas, três, quatro vezes). O showcase não remenda: resolve na família de classes.</p>
+  <ol class="pilha" style="padding-left:1.4rem; gap:var(--sp-300)">
+    <li>
+      <b class="forte">Cor literal espalhada pelo CSS</b>
+      <p>Todo valor de cor hoje vive solto em regras de componente.</p>
+      <p class="eyebrow">Resolvido em: hex só nos blocos :root de sistemas/sistema-a.css e sistema-b.css; tela consome var()/color-mix() — gate 1 do scripts/verificar.sh caça literal fora de header/no-sistema.</p>
+    </li>
+    <li>
+      <b class="forte">9 tokens de cor de sala</b>
+      <p>destaque por sala, por turma, por tag, por filtro… todos a mesma coisa.</p>
+      <p class="eyebrow">Resolvido em: --cor-destaque único com aliases --destaque-sala/-turma/-tag/-filtro que só leem (sistema-b §1); a cor da sala entra pontual via inline (--cor / --cor-destaque), como .avatar/.metrica--destaque na galeria.</p>
+    </li>
+    <li>
+      <b class="forte">A paleta definida em 4 lugares</b>
+      <p>globals.css, tokens.css, props hardcoded e estilos inline.</p>
+      <p class="eyebrow">Resolvido em: sistemas/ é a fonte única do showcase (base + A + B + moldura); PADROES §Classes declara a galeria como referência viva do uso.</p>
+    </li>
+    <li>
+      <b class="forte">O vermelho institucional (E30613) sem token</b>
+      <p>40+ literais do vermelho da marca, impossível de auditar/rotacionar.</p>
+      <p class="eyebrow">Resolvido em: --vermelho-sesi no bloco "PALETA SESI COMO DADO" (sistema-b §1), usado p.ex. no filete da .ilha-escura; --azul/--azul-sesi idem.</p>
+    </li>
+    <li>
+      <b class="forte">Tema claro sem cobertura em 7 domínios</b>
+      <p>data-tema=light existia no toggle, mas o design não era desenhado.</p>
+      <p class="eyebrow">Resolvido em: sistema-b §4 (token-swap AA: --accent 177f77) + §24 light por componente; toggle Claro/Escuro da moldura só aparece no B porque o A é papel por definição.</p>
+    </li>
+    <li>
+      <b class="forte">Apelidos mortos (--fg, --border e afins)</b>
+      <p>Nomes de token que ninguém alimentava e divergiam do par real.</p>
+      <p class="eyebrow">Resolvido em: a família usa apenas pares bg/fg por tema (--ok-bg/--ok-fg, --aviso-*, --perigo-*, --info-*) e --line/--line-soft como única borda; nada de alias órfão nos sistemas.</p>
+    </li>
+    <li>
+      <b class="forte">4 famílias de botão e 3 de campo</b>
+      <p>botões reimplementados por tela, inputs com desenhos que brigavam entre si.</p>
+      <p class="eyebrow">Resolvido em: .btn única (primario/secundario/fantasma/perigo/perigo-leve-fantasma/pequeno/full/marketing + disabled + aria-busy) e .campo única (grupo no A, controle no B) — variantes lado a lado na galeria §1–2.</p>
+    </li>
+    <li>
+      <b class="forte">A tabela de alunos desenhada duas vezes</b>
+      <p>.tabela-alunos em um componente, linhas soltas .linha-adm em outro.</p>
+      <p class="eyebrow">Resolvido em: uma .tabela nos dois sistemas com thead, zebra (B), td.num tabular à direita, caption e tfoot — galeria §8 é o padrão que as telas 05/07/14 copiam.</p>
+    </li>
+    <li>
+      <b class="forte">Sem escala: 399 font-size soltos, z-index de 0 a 9999</b>
+      <p>Tamanho de letra e camada por intuição em cada arquivo.</p>
+      <p class="eyebrow">Resolvido em: --fs-100…900, --sp-50…800, --raio-sm/md/lg/full e --z em 6 degraus nomeados (sistema-b §2, sistema-a §1); nenhum número solto dentro de tela.</p>
+    </li>
+    <li>
+      <b class="forte">reduced-motion 1x no app inteiro e nenhum loading.tsx</b>
+      <p>Quem pede movimento zero continuava recebendo animação; carregamento não tinha esqueleto.</p>
+      <p class="eyebrow">Resolvido em: prefers-reduced-motion nos dois sistemas (gate 6) + base.css global; família .skeleton (titulo/linha/circulo/bloco-cartao) como padrão de carregamento demonstrado na galeria §12.</p>
+    </li>
+  </ol>
+</div>
+
+<footer class="rodape wrap">
+  <span>Escola SESI · Formando desenvolvedores para o futuro.</span>
+  <a href="componentes/galeria.html">galeria</a>
+  <a href="PADROES.md">PADROES.md</a>
+  <a href="CONTEUDO.md">CONTEUDO.md</a>
+  <span>Elenco e dados: pessoas e números fictícios de design/CONTEUDO.md · turmas 2026</span>
+</footer>
+
+</main>
+</div>
+<script src="sistemas/moldura.js" defer></script>
+</body>
+</html>

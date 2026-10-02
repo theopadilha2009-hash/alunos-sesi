@@ -1,0 +1,1523 @@
+/* ==========================================================================
+   sistema-b.css — CONCEITO B: o dark-first do alunos-sesi REFINADO + o tema
+   claro finalmente DESENHADO (os 7 domínios que hoje têm cobertura zero de
+   claro ganham override real em [data-theme="light"] — é este bloco que a
+   Etapa 2 porta para o app).
+
+   Contrato (design/PADROES.md):
+   • Todo seletor prefixado [data-conceito="b"]; a família de componentes tem
+     os MESMOS nomes do sistema A.
+   • Hex/rgba literais vivem SÓ nos blocos de token :root; componente consome
+     var() / color-mix().
+   • Uma família de botão, um campo, uma tabela — as dívidas da auditoria:
+     --cor-destaque ÚNICO + aliases de sala (matam os 9 tokens de cor de sala),
+     --vermelho-sesi tokenizado (eram 40+ literais), SEM --fg/--border,
+     escala --fs-*/--sp-*/--z com 6 degraus (o app tinha 399 font-size soltos
+     e z-index 0..9999 arbitrário).
+   • --papel/--tinta: a folha A4 é papel branco nos DOIS temas (impressão).
+   • .ilha-escura: crachá, cartão NFC e herói do perfil ficam escuros nos dois
+     temas (as 3 ilhas intencionais do app); badges sobre elas são opacos de
+     propósito porque .ilha-escura remapeia --surface/--line/--ok-* localmente.
+   • prefers-reduced-motion: presente (gate 6).
+   ========================================================================== */
+
+/* ── 1. PALETA SESI COMO DADO ─────────────────────────────────────────────
+   Os hex abaixo são a identidade institucional (a logo) + o vermelho da
+   marca (antes existia em 40+ literais espalhados). Não é escolha de tema:
+   nenhum bloco de tema redefine estas variáveis.                        */
+
+:root[data-conceito="b"] {
+  --ciano: #3fc2bc;
+  --verde: #38b95d;
+  --amarelo: #f3b544;
+  --vermelho: #d74d42;
+  --azul: #02609e;
+  --azul-claro: #4881ae;
+  --petroleo: #2d929e;
+  --vermelho-sesi: #e30613;
+  --creme: #f9e7cf;
+
+  /* cor do perfil/sala que estiver no escopo — os 9 tokens de cor de sala do
+     app colapsam aqui. Tela/inline define --cor-destaque pontualmente; os
+     aliases só leem, nunca divergem. */
+  --cor-destaque: var(--ciano);
+  --destaque-sala: var(--cor-destaque);
+  --destaque-turma: var(--cor-destaque);
+  --destaque-tag: var(--cor-destaque);
+  --destaque-filtro: var(--cor-destaque);
+
+  /* impressão: a folha A4 é papel branco SEMPRE, inclusive no tema escuro */
+  --papel: #ffffff;
+  --tinta: #101820;
+  --tinta-2: #3c4858;
+  --tinta-3: #68758a;
+
+  /* fontes do app (next/font em layout.tsx → nomes literais no showcase) */
+  --fonte-bricolage: "Bricolage Grotesque";
+  --fonte-manrope: "Manrope";
+  --fonte-titulo: var(--fonte-bricolage), system-ui, sans-serif;
+  --fonte-texto: var(--fonte-manrope), system-ui, sans-serif;
+  --fonte-mono: ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* ── 2. ESCALAS ─────────────────────────────────────────────────────────
+   --fs-100..900 substitui os 399 font-size avulsos; --sp-50..800 ordena o
+   espaçamento; --z tem 6 degraus nomeados (o app ia de 0 a 9999); raios com
+   sm/md/lg/full + os dois legados do app (--raio 16px card, --raio-p 10px
+   pill) herdados por nome para a cascata não mentir. */
+
+:root[data-conceito="b"] {
+  --fs-100: 0.72rem; /* eyebrow, selo, kbd — medido AA em --dim/--faint */
+  --fs-200: 0.8rem;
+  --fs-300: 0.88rem;
+  --fs-400: 1rem;    /* corpo */
+  --fs-500: 1.15rem;
+  --fs-600: 1.4rem;
+  --fs-700: 1.8rem;
+  --fs-800: 2.35rem;
+  --fs-900: 3.2rem;
+
+  --sp-50: 0.3rem;
+  --sp-100: 0.4rem;
+  --sp-200: 0.5rem;
+  --sp-300: 0.75rem;
+  --sp-400: 1rem;
+  --sp-500: 1.5rem;
+  --sp-600: 2rem;
+  --sp-700: 2.5rem;
+  --sp-800: 3.5rem;
+
+  --raio: 16px;        /* card (legado) */
+  --raio-p: 10px;      /* pill pequeno (legado) */
+  --raio-sm: 6px;
+  --raio-md: 12px;
+  --raio-lg: 20px;
+  --raio-full: 999px;
+
+  --z-conteudo: 1;
+  --z-sticky: 10;
+  --z-overlay: 30;
+  --z-modal: 50;
+  --z-toast: 70;
+  --z-moldura: 90;     /* a barra do showcase vive acima do app */
+
+  --dur-1: 140ms;
+  --dur-2: 240ms;
+  --dur-3: 380ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --lh-corpo: 1.6;
+  --lh-titulo: 1.08;
+  --lh-apertado: 1.25;
+
+  --section-x: clamp(1.25rem, 5vw, 4rem);
+  --content: 1320px;
+  --esp-palco: clamp(0px, 2vw, 28px);
+  --col-min: 16rem;
+  --sidebar-w: 18.5rem;
+  --ctrl-h: 2.75rem;
+}
+
+/* ── 3. TEMA ESCURO — default do conceito ───────────────────────────────
+   Herda as medições AA do tokens.css do app (o --faint #8291a8 é o menor
+   valor que passa 4,5:1 nos quatro fundos escuros — não "clareie" sem
+   re-rodar a conta). Refinos: anel de foco com glow, sombras em 3 alturas,
+   cor semântica de badge em par bg/fg por tema. */
+
+:root[data-conceito="b"],
+:root[data-conceito="b"][data-theme="dark"] {
+  --bg: #090d12;
+  --surface: #10161f;
+  --surface-2: #16202c;
+  --surface-3: #1e2a38;
+  --text: #f8fafc;
+  --dim: #94a3b8;
+  --faint: #8291a8;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.04);
+  --accent: #38c7bd;
+  --on-accent: #04211f;
+  --glow: rgba(56, 199, 189, 0.16);
+
+  --sombra: 0 20px 45px -20px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sombra-suave: 0 8px 20px -12px rgba(0, 0, 0, 0.65);
+  --sombra-alta: 0 25px 60px -15px rgba(0, 0, 0, 0.75);
+  --backdrop: rgba(4, 8, 13, 0.72);
+  --realce: color-mix(in oklab, var(--accent) 8%, transparent);
+  --pouso: color-mix(in oklab, var(--text) 4%, transparent); /* hover neutro */
+
+  --ok: var(--verde);
+  --aviso: var(--amarelo);
+  --perigo: var(--vermelho);
+  --info: var(--azul-claro);
+  --ok-bg: color-mix(in oklab, var(--verde) 15%, var(--surface));
+  --aviso-bg: color-mix(in oklab, var(--amarelo) 14%, var(--surface));
+  --perigo-bg: color-mix(in oklab, var(--vermelho) 16%, var(--surface));
+  --info-bg: color-mix(in oklab, var(--azul-claro) 16%, var(--surface));
+  --ok-fg: color-mix(in oklab, var(--verde) 72%, var(--text));
+  --aviso-fg: color-mix(in oklab, var(--amarelo) 70%, var(--text));
+  --perigo-fg: color-mix(in oklab, var(--vermelho) 68%, var(--text));
+  --info-fg: color-mix(in oklab, var(--azul-claro) 72%, var(--text));
+  /* fundo sólido de .btn--perigo: vermelho escurecido até o texto branco
+     passar em AA (o --vermelho puro dá 3,4:1 com branco) */
+  --perigo-btn: color-mix(in oklab, var(--vermelho) 52%, black);
+  --on-perigo-btn: #fff5f4;
+}
+
+/* ── 4. TEMA CLARO — o entregável que a Etapa 2 porta ───────────────────
+   Não é "o escuro invertido": --accent vira um ciano aprofundado (#177f77,
+   4,8:1 sobre --surface — o ciano #3fc2bc puro daria 2,1:1 e reprovaria em
+   todo link de 14px) em vez do azul institucional que o tokens.css atual
+   usa; as semânticas trocam o par bg/fg para escurecer em vez de clarear;
+   sombras viram névoa azulada. O refinamento por componente está na
+   seção 24, ao fim do arquivo. */
+
+:root[data-conceito="b"][data-theme="light"] {
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-2: #edf2f7;
+  --surface-3: #e2e8f0;
+  --text: #0f172a;
+  --dim: #475569;
+  --faint: #64748b;
+  --line: rgba(15, 23, 42, 0.1);
+  --line-soft: rgba(15, 23, 42, 0.05);
+  --accent: #177f77;
+  --on-accent: #ffffff;
+  --glow: rgba(23, 127, 119, 0.12);
+
+  --sombra: 0 12px 30px -14px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06);
+  --sombra-suave: 0 6px 16px -10px rgba(15, 23, 42, 0.12);
+  --sombra-alta: 0 24px 50px -18px rgba(15, 23, 42, 0.22);
+  --backdrop: rgba(15, 23, 42, 0.45);
+  --realce: color-mix(in oklab, var(--accent) 7%, transparent);
+  --pouso: color-mix(in oklab, var(--text) 4%, transparent);
+
+  --ok-bg: color-mix(in oklab, var(--verde) 13%, var(--surface));
+  --aviso-bg: color-mix(in oklab, var(--amarelo) 20%, var(--surface));
+  --perigo-bg: color-mix(in oklab, var(--vermelho) 11%, var(--surface));
+  --info-bg: color-mix(in oklab, var(--azul-claro) 13%, var(--surface));
+  --ok-fg: color-mix(in oklab, var(--verde) 58%, var(--text));
+  --aviso-fg: color-mix(in oklab, var(--amarelo) 42%, var(--text));
+  --perigo-fg: color-mix(in oklab, var(--vermelho) 55%, var(--text));
+  --info-fg: color-mix(in oklab, var(--azul-claro) 55%, var(--text));
+}
+
+/* ── 5. ILHAS ESCURAS — tokens fixos nos dois temas ──────────────────────
+   A roseta (bloco escuro) nunca troca com o tema: as 3 ilhas intencionais
+   do app (crachá, cartão NFC, herói do perfil) existem para serem a peça
+   física escura num produto que clareia. */
+
+:root[data-conceito="b"] {
+  --ilha-bg: #0b1219;
+  --ilha-surface: #131c27;
+  --ilha-surface-2: #1b2635;
+  --ilha-text: #f8fafc;
+  --ilha-dim: #9fb0c4;
+  --ilha-faint: #8291a8;
+  --ilha-line: rgba(255, 255, 255, 0.1);
+  --ilha-line-soft: rgba(255, 255, 255, 0.05);
+  --ilha-accent: #45d3c9;
+  --ilha-glow: rgba(69, 211, 201, 0.22);
+}
+
+/* ==========================================================================
+   MARCA
+   ========================================================================== */
+
+[data-conceito="b"] .marca-sesi {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: var(--text);
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: var(--fs-400);
+  letter-spacing: -0.02em;
+  line-height: var(--lh-apertado);
+}
+
+[data-conceito="b"] .marca-sesi img {
+  height: 2.1rem;
+  width: auto;
+  flex: none;
+}
+
+/* o DOM carrega os dois logos (público e branco, como no app) e o tema
+   escolhe; na ilha escura vale sempre o branco */
+[data-conceito="b"] .marca-sesi .logo-modo-light { display: block; }
+[data-conceito="b"] .marca-sesi .logo-modo-dark { display: none; }
+[data-conceito="b"][data-theme="light"] .marca-sesi .logo-modo-light { display: none; }
+[data-conceito="b"][data-theme="light"] .marca-sesi .logo-modo-dark { display: block; }
+[data-conceito="b"] .ilha-escura .marca-sesi .logo-modo-light { display: none; }
+[data-conceito="b"] .ilha-escura .marca-sesi .logo-modo-dark { display: block; }
+
+[data-conceito="b"] .marca-sesi small {
+  display: block;
+  font-family: var(--fonte-texto);
+  font-size: var(--fs-100);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* ==========================================================================
+   TOPO / RODAPÉ (público 10–16)
+   ========================================================================== */
+
+[data-conceito="b"] .topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-400);
+  padding-block: 1.1rem;
+  border-bottom: 1px solid var(--line-soft);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: color-mix(in oklab, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+[data-conceito="b"] .topo nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  flex-wrap: wrap;
+}
+
+[data-conceito="b"] .topo nav a {
+  color: var(--dim);
+  text-decoration: none;
+  font-size: var(--fs-300);
+  font-weight: 600;
+  padding: var(--sp-100) var(--sp-300);
+  border-radius: var(--raio-p);
+  transition: color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .topo nav a:hover { color: var(--text); background: var(--pouso); }
+
+[data-conceito="b"] .topo nav a[aria-current="page"] {
+  color: var(--accent);
+  background: var(--realce);
+}
+
+[data-conceito="b"] .rodape {
+  border-top: 1px solid var(--line);
+  padding-block: var(--sp-600) var(--sp-700);
+  margin-top: var(--sp-700);
+  color: var(--dim);
+  font-size: var(--fs-300);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-300);
+  text-align: center;
+}
+
+[data-conceito="b"] .rodape .linha { justify-content: center; }
+
+[data-conceito="b"] .rodape a { color: var(--dim); }
+[data-conceito="b"] .rodape a:hover { color: var(--accent); }
+
+/* ==========================================================================
+   BOTÃO — FAMÍLIA ÚNICA (o app desenha 4; aqui é uma)
+   ========================================================================== */
+
+[data-conceito="b"] .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  padding: 0.62em 1.15em;
+  min-height: 2.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--raio-md);
+  font-family: var(--fonte-texto);
+  font-size: var(--fs-300);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--surface-2);
+  transition:
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease),
+    box-shadow var(--dur-2) var(--ease),
+    transform var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .btn svg { flex: none; }
+
+[data-conceito="b"] .btn:hover { transform: translateY(-1px); }
+[data-conceito="b"] .btn:active { transform: translateY(0); }
+
+[data-conceito="b"] .btn[disabled],
+[data-conceito="b"] .btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+[data-conceito="b"] .btn--primario {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 40%, transparent),
+    0 10px 24px -14px var(--glow);
+}
+
+[data-conceito="b"] .btn--primario:hover {
+  background: color-mix(in oklab, var(--accent) 88%, var(--text));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 55%, transparent),
+    0 14px 30px -12px var(--glow);
+}
+
+[data-conceito="b"] .btn--secundario {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+[data-conceito="b"] .btn--secundario:hover {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
+  background: color-mix(in oklab, var(--accent) 7%, var(--surface-2));
+}
+
+[data-conceito="b"] .btn--fantasma {
+  background: transparent;
+  border-color: transparent;
+  color: var(--dim);
+}
+
+[data-conceito="b"] .btn--fantasma:hover { color: var(--text); background: var(--pouso); }
+
+[data-conceito="b"] .btn--perigo {
+  background: var(--perigo-btn);
+  color: var(--on-perigo-btn);
+  border-color: color-mix(in oklab, var(--vermelho) 55%, transparent);
+}
+
+[data-conceito="b"] .btn--perigo:hover {
+  background: color-mix(in oklab, var(--perigo-btn) 86%, white);
+}
+
+/* variante leve do perigo para ações em linha (tabela, ADM) */
+[data-conceito="b"] .btn--perigo-leve {
+  background: var(--perigo-bg);
+  color: var(--perigo-fg);
+  border-color: color-mix(in oklab, var(--vermelho) 35%, transparent);
+}
+
+[data-conceito="b"] .btn--pequeno {
+  padding: 0.34em 0.8em;
+  min-height: 1.9rem;
+  font-size: var(--fs-200);
+  border-radius: var(--raio-p);
+}
+
+[data-conceito="b"] .btn--full { width: 100%; }
+
+/* CTA de vitrine/marketing: maior, com o gradiente das 4 cores do símbolo
+   correndo na borda — a "assinatura" do B */
+[data-conceito="b"] .btn--marketing {
+  padding: 0.9em 1.7em;
+  min-height: 3.1rem;
+  font-size: var(--fs-400);
+  border-radius: var(--raio-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  position: relative;
+  border: none;
+  box-shadow: 0 16px 40px -16px var(--glow);
+}
+
+[data-conceito="b"] .btn--marketing::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--raio-md) + 2px);
+  padding: 2px;
+  background: linear-gradient(90deg, var(--ciano), var(--verde), var(--amarelo), var(--vermelho));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+[data-conceito="b"] .btn--marketing:hover {
+  box-shadow: 0 22px 50px -14px var(--glow);
+}
+
+/* ==========================================================================
+   CAMPO — FAMÍLIA ÚNICA (input / select / textarea no mesmo desenho)
+   ========================================================================== */
+
+[data-conceito="b"] .campo {
+  display: block;
+  width: 100%;
+  min-height: var(--ctrl-h);
+  padding: 0.6rem 0.9rem;
+  background: color-mix(in oklab, var(--bg) 55%, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--raio-md);
+  color: var(--text);
+  font-family: var(--fonte-texto);
+  font-size: var(--fs-300);
+  line-height: var(--lh-corpo);
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-2) var(--ease),
+    background var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .campo:hover:not([disabled]) { border-color: color-mix(in oklab, var(--accent) 35%, var(--line)); }
+
+[data-conceito="b"] .campo:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow);
+  background: var(--surface);
+}
+
+[data-conceito="b"] .campo::placeholder { color: var(--faint); }
+
+[data-conceito="b"] .campo[disabled],
+[data-conceito="b"] .campo[readonly] {
+  background: var(--surface-2);
+  color: var(--faint);
+  cursor: not-allowed;
+  border-color: var(--line-soft);
+}
+
+[data-conceito="b"] textarea.campo { min-height: 6.5rem; resize: vertical; }
+
+[data-conceito="b"] select.campo { font-size: var(--fs-300); }
+
+[data-conceito="b"] .campo--busca { padding-left: 2.4rem; }
+
+/* estado de erro por sinalização do DOM (o app usa aria-invalid) */
+[data-conceito="b"] .campo[aria-invalid="true"],
+[data-conceito="b"] .campo[aria-invalid="error"] {
+  border-color: color-mix(in oklab, var(--vermelho) 70%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--vermelho) 14%, transparent);
+}
+
+/* ==========================================================================
+   CHIP (filtro) + PILL-LIST
+   ========================================================================== */
+
+[data-conceito="b"] .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.34em 0.85em;
+  border-radius: var(--raio-full);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--dim);
+  font-size: var(--fs-200);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .chip:hover { color: var(--text); border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
+
+/* [aria-pressed="true"] vira ativo — moldura/JS do app fazem o resto */
+[data-conceito="b"] .chip[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--destaque-filtro) 20%, var(--surface));
+  border-color: var(--destaque-filtro);
+  color: color-mix(in oklab, var(--destaque-filtro) 55%, var(--text));
+}
+
+[data-conceito="b"] .chip[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+[data-conceito="b"] .chip small {
+  font-variant-numeric: tabular-nums;
+  color: var(--faint);
+  font-weight: 700;
+}
+
+[data-conceito="b"] .chip[aria-pressed="true"] small { color: inherit; }
+
+[data-conceito="b"] .pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-200);
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ==========================================================================
+   CARTÃO
+   ========================================================================== */
+
+[data-conceito="b"] .cartao {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+  padding: var(--sp-500);
+  position: relative;
+}
+
+[data-conceito="b"] .cartao h2,
+[data-conceito="b"] .cartao h3 {
+  font-size: var(--fs-500);
+  letter-spacing: -0.015em;
+  margin-bottom: var(--sp-200);
+}
+
+[data-conceito="b"] .cartao--plano { box-shadow: none; }
+
+[data-conceito="b"] .cartao--interativo { cursor: pointer; }
+
+[data-conceito="b"] .cartao--interativo:hover {
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--line));
+  box-shadow: var(--sombra);
+  transform: translateY(-2px);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
+}
+
+/* borda de 3px com a cor da sala no topo — a "porta" da vitrine, generalizada */
+[data-conceito="b"] .cartao--sala::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: var(--raio) var(--raio) 0 0;
+  background: linear-gradient(90deg, var(--ciano), var(--verde), var(--amarelo), var(--vermelho));
+}
+
+[data-conceito="b"] .cartao--destaque {
+  border-color: color-mix(in oklab, var(--destaque-sala) 45%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--destaque-sala) 25%, transparent), var(--sombra);
+}
+
+[data-conceito="b"] .cartao-cabeca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-300);
+  margin-bottom: var(--sp-400);
+}
+
+/* ==========================================================================
+   ABAS  (moldura.js troca aria-selected + [hidden])
+   ========================================================================== */
+
+[data-conceito="b"] .aba {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-100);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-500);
+}
+
+[data-conceito="b"] .aba [role="tab"],
+[data-conceito="b"] .aba button,
+[data-conceito="b"] .aba a {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0.65rem 1.05rem;
+  border-radius: var(--raio-md) var(--raio-md) 0 0;
+  font: inherit;
+  font-size: var(--fs-300);
+  font-weight: 700;
+  color: var(--dim);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .aba [role="tab"]:hover,
+[data-conceito="b"] .aba button:hover,
+[data-conceito="b"] .aba a:hover { color: var(--text); background: var(--pouso); }
+
+[data-conceito="b"] .aba [aria-selected="true"] { color: var(--accent); background: var(--realce); }
+
+[data-conceito="b"] .aba [aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+[data-conceito="b"] .painel-aba { display: block; }
+[data-conceito="b"] .painel-aba[hidden] { display: none; }
+
+/* ==========================================================================
+   SELO (institucional) — "MATRÍCULA VALIDADA", "SISTEMA FIESC · SESI SENAI"
+   ========================================================================== */
+
+[data-conceito="b"] .selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.95em;
+  border-radius: var(--raio-full);
+  border: 1px solid color-mix(in oklab, var(--destaque-sala) 55%, var(--line));
+  background: var(--surface);
+  color: color-mix(in oklab, var(--destaque-sala) 62%, var(--text));
+  font-size: var(--fs-100);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+[data-conceito="b"] .selo--validado {
+  border-color: color-mix(in oklab, var(--ok) 60%, transparent);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+
+[data-conceito="b"] .selo--fixado {
+  border-color: color-mix(in oklab, var(--aviso) 60%, transparent);
+  background: var(--aviso-bg);
+  color: var(--aviso-fg);
+}
+
+[data-conceito="b"] .selo--suave {
+  border-color: var(--line);
+  background: transparent;
+  color: var(--dim);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   BADGE — semântica (ok/aviso/perigo/info), opaca por construção sobre ilha
+   ========================================================================== */
+
+[data-conceito="b"] .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.22em 0.7em;
+  border-radius: var(--raio-full);
+  font-size: var(--fs-100);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--dim);
+}
+
+[data-conceito="b"] .badge--ok { background: var(--ok-bg); color: var(--ok-fg); border-color: color-mix(in oklab, var(--ok) 35%, transparent); }
+[data-conceito="b"] .badge--aviso { background: var(--aviso-bg); color: var(--aviso-fg); border-color: color-mix(in oklab, var(--aviso) 35%, transparent); }
+[data-conceito="b"] .badge--perigo { background: var(--perigo-bg); color: var(--perigo-fg); border-color: color-mix(in oklab, var(--perigo) 38%, transparent); }
+[data-conceito="b"] .badge--info { background: var(--info-bg); color: var(--info-fg); border-color: color-mix(in oklab, var(--info) 38%, transparent); }
+
+[data-conceito="b"] .badge--num { font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   BADGE-REDES — links de contato do perfil (github/linkedin/email/insta)
+   ========================================================================== */
+
+[data-conceito="b"] .badge-redes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-200);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[data-conceito="b"] .badge-redes a,
+[data-conceito="b"] .badge-github,
+[data-conceito="b"] .badge-linkedin,
+[data-conceito="b"] .badge-email,
+[data-conceito="b"] .badge-instagram,
+[data-conceito="b"] .badge-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.45em 0.9em;
+  border-radius: var(--raio-full);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--dim);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .badge-redes a:hover,
+[data-conceito="b"] .badge-github:hover,
+[data-conceito="b"] .badge-linkedin:hover,
+[data-conceito="b"] .badge-email:hover,
+[data-conceito="b"] .badge-instagram:hover,
+[data-conceito="b"] .badge-site:hover {
+  color: var(--text);
+  border-color: color-mix(in oklab, var(--accent) 50%, var(--line));
+  transform: translateY(-1px);
+}
+
+[data-conceito="b"] .badge-linkedin { border-color: color-mix(in oklab, var(--azul) 45%, var(--line)); }
+[data-conceito="b"] .badge-github { border-color: color-mix(in oklab, var(--dim) 30%, var(--line)); }
+
+/* ==========================================================================
+   TABELA — ÚNICA (o app desenha a de alunos duas vezes: .tabela-alunos e
+   .linha-adm com linhas soltas; aqui é uma só, sticky header, zebra, num)
+   ========================================================================== */
+
+[data-conceito="b"] .tabela {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-300);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+
+[data-conceito="b"] .tabela caption {
+  text-align: left;
+  padding: var(--sp-400) var(--sp-500);
+  color: var(--dim);
+  font-size: var(--fs-200);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+[data-conceito="b"] .tabela thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  text-align: left;
+  padding: 0.7rem var(--sp-500);
+  background: var(--surface-2);
+  color: var(--faint);
+  font-size: var(--fs-100);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+[data-conceito="b"] .tabela tbody td {
+  padding: 0.85rem var(--sp-500);
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+[data-conceito="b"] .tabela tbody tr:last-child td { border-bottom: none; }
+
+[data-conceito="b"] .tabela tbody tr { transition: background var(--dur-1) var(--ease); }
+[data-conceito="b"] .tabela tbody tr:hover { background: var(--pouso); }
+
+[data-conceito="b"] .tabela tbody tr:nth-child(even) { background: color-mix(in oklab, var(--surface-2) 45%, transparent); }
+[data-conceito="b"] .tabela tbody tr:nth-child(even):hover { background: var(--pouso); }
+
+[data-conceito="b"] .tabela td.num,
+[data-conceito="b"] .tabela th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-conceito="b"] .tabela td.forte,
+[data-conceito="b"] .tabela td b { font-weight: 700; }
+
+[data-conceito="b"] .tabela td small { color: var(--faint); font-size: var(--fs-200); }
+
+[data-conceito="b"] .tabela tfoot td {
+  padding: var(--sp-300) var(--sp-500);
+  background: var(--surface-2);
+  color: var(--dim);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   MODAL + TOAST (overlays)
+   ========================================================================== */
+
+[data-conceito="b"] .modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: none;
+  place-items: center;
+  padding: var(--sp-500);
+  background: var(--backdrop);
+  backdrop-filter: blur(6px);
+}
+
+[data-conceito="b"] .modal.modal-aberto { display: grid; }
+
+[data-conceito="b"] .modal-caixa,
+[data-conceito="b"] .modal .cartao {
+  width: min(100%, 560px);
+  max-height: calc(100vh - var(--sp-700) * 2);
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-alta), 0 0 0 1px var(--line-soft);
+  padding: var(--sp-600);
+  animation: b-elevar var(--dur-2) var(--ease);
+}
+
+[data-conceito="b"] .modal-caixa h2,
+[data-conceito="b"] .modal h2,
+[data-conceito="b"] .modal h3 {
+  font-size: var(--fs-600);
+  letter-spacing: -0.02em;
+}
+
+[data-conceito="b"] .toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.7rem 1.1rem;
+  border-radius: var(--raio-md);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-300);
+  font-weight: 600;
+  box-shadow: var(--sombra);
+  animation: b-elevar var(--dur-2) var(--ease);
+}
+
+[data-conceito="b"] .toast--ok { background: var(--ok-bg); border-color: color-mix(in oklab, var(--ok) 45%, transparent); color: var(--ok-fg); }
+[data-conceito="b"] .toast--aviso { background: var(--aviso-bg); border-color: color-mix(in oklab, var(--aviso) 45%, transparent); color: var(--aviso-fg); }
+[data-conceito="b"] .toast--perigo { background: var(--perigo-bg); border-color: color-mix(in oklab, var(--perigo) 45%, transparent); color: var(--perigo-fg); }
+[data-conceito="b"] .toast--info { background: var(--info-bg); border-color: color-mix(in oklab, var(--info) 45%, transparent); color: var(--info-fg); }
+
+/* pilha de toasts fixa no rodapé da tela */
+[data-conceito="b"] .toast.fila-toast,
+[data-conceito="b"] .tela > .toast:last-child { position: relative; }
+
+/* ==========================================================================
+   ESTADOS — VAZIO + SKELETON
+   ========================================================================== */
+
+[data-conceito="b"] .vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-300);
+  text-align: center;
+  padding: var(--sp-800) var(--sp-500);
+  border: 1.5px dashed color-mix(in oklab, var(--text) 16%, var(--line));
+  border-radius: var(--raio);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  color: var(--dim);
+}
+
+[data-conceito="b"] .vazio .olho,
+[data-conceito="b"] .vazio svg { color: var(--faint); }
+
+[data-conceito="b"] .vazio b { color: var(--text); font-family: var(--fonte-titulo); font-size: var(--fs-500); }
+
+[data-conceito="b"] .vazio p { max-width: 46ch; font-size: var(--fs-300); }
+
+[data-conceito="b"] .skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--raio-md);
+  background: linear-gradient(
+    100deg,
+    var(--surface-2) 30%,
+    var(--surface-3) 50%,
+    var(--surface-2) 70%
+  );
+  background-size: 200% 100%;
+  animation: b-brilho 1.5s linear infinite;
+  min-height: 1rem;
+}
+
+[data-conceito="b"] .skeleton--linha { height: 0.85rem; border-radius: var(--raio-sm); }
+[data-conceito="b"] .skeleton--titulo { height: 1.6rem; width: 60%; }
+[data-conceito="b"] .skeleton--circulo { border-radius: var(--raio-full); aspect-ratio: 1; width: 2.75rem; }
+[data-conceito="b"] .skeleton--cartao { height: 9rem; border-radius: var(--raio); }
+[data-conceito="b"] .skeleton--avatar { width: 2.75rem; height: 2.75rem; border-radius: var(--raio-full); }
+
+/* ==========================================================================
+   SIDEBAR + NAV (CRM 01–07/09)
+   ========================================================================== */
+
+[data-conceito="b"] .sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-400);
+  width: var(--sidebar-w);
+  min-height: 100%;
+  padding: var(--sp-600) var(--sp-500);
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+[data-conceito="b"] .sidebar .marca-sesi { margin-bottom: var(--sp-200); }
+
+[data-conceito="b"] .sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-100);
+  flex: 1;
+}
+
+[data-conceito="b"] .sidebar-sub {
+  font-size: var(--fs-100);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+[data-conceito="b"] .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.72rem 1rem;
+  border-radius: var(--raio-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: var(--fs-300);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+
+[data-conceito="b"] .nav-item:hover { background: var(--surface-2); color: var(--text); }
+
+[data-conceito="b"] .nav-item svg { flex: none; color: var(--faint); }
+
+[data-conceito="b"] .nav-ativo,
+[data-conceito="b"] .nav-item[aria-current="page"],
+[data-conceito="b"] .nav-item[aria-selected="true"] {
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface));
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  color: color-mix(in oklab, var(--accent) 70%, var(--text));
+}
+
+[data-conceito="b"] .nav-ativo svg,
+[data-conceito="b"] .nav-item[aria-current="page"] svg { color: var(--accent); }
+
+[data-conceito="b"] .sidebar-rodape {
+  margin-top: var(--sp-400);
+  padding-top: var(--sp-400);
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-200);
+}
+
+[data-conceito="b"] .kbd,
+[data-conceito="b"] .sidebar-kbd {
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--raio-sm);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-family: var(--fonte-mono);
+  font-size: var(--fs-100);
+  color: var(--faint);
+}
+
+/* ==========================================================================
+   MÉTRICA + HERO + EYEBROW (ajuste do B; a classe vive no base.css)
+   ========================================================================== */
+
+[data-conceito="b"] .metrica {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-100);
+  padding: var(--sp-500);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-suave);
+}
+
+[data-conceito="b"] .metrica b {
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: var(--fs-700);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-conceito="b"] .metrica span,
+[data-conceito="b"] .metrica small {
+  color: var(--faint);
+  font-size: var(--fs-100);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+[data-conceito="b"] .metrica--destaque b { color: var(--cor-destaque); }
+[data-conceito="b"] .metrica--ok b { color: var(--ok-fg); }
+
+[data-conceito="b"] .hero {
+  position: relative;
+  padding: clamp(2.5rem, 7vw, 5rem) 0 clamp(2rem, 5vw, 3.5rem);
+}
+
+[data-conceito="b"] .hero h1 {
+  font-size: clamp(var(--fs-700), 6.4vw, var(--fs-900));
+  line-height: var(--lh-titulo);
+  letter-spacing: -0.045em;
+  font-weight: 800;
+  margin-block: var(--sp-300) var(--sp-400);
+}
+
+[data-conceito="b"] .hero h1 .vazado {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--text);
+}
+
+[data-conceito="b"] .hero p.lede {
+  max-width: 46ch;
+  font-size: var(--fs-500);
+  color: var(--dim);
+}
+
+/* o brilho ciano que define o dark do app, agora como token de tema */
+[data-conceito="b"] .hero::before {
+  content: "";
+  position: absolute;
+  inset: -10% auto auto 55%;
+  width: 45vw;
+  max-width: 560px;
+  aspect-ratio: 1;
+  border-radius: var(--raio-full);
+  background: radial-gradient(circle at 30% 30%, var(--glow), transparent 65%);
+  pointer-events: none;
+}
+
+[data-conceito="b"] .eyebrow { color: var(--faint); }
+[data-conceito="b"] .eyebrow--accent { color: var(--accent); }
+
+/* ==========================================================================
+   AVATAR
+   ========================================================================== */
+
+[data-conceito="b"] .avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: var(--raio-full);
+  background: linear-gradient(135deg,
+    color-mix(in oklab, var(--cor-destaque) 65%, var(--surface)),
+    color-mix(in oklab, var(--cor-destaque) 25%, var(--surface-3)));
+  color: var(--surface);
+  font-family: var(--fonte-titulo);
+  font-weight: 800;
+  font-size: var(--fs-300);
+  border: 2px solid color-mix(in oklab, var(--cor-destaque) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--cor-destaque) 12%, transparent);
+  overflow: hidden;
+  line-height: 1;
+}
+
+[data-conceito="b"] .avatar--md { width: 3.5rem; height: 3.5rem; font-size: var(--fs-400); }
+[data-conceito="b"] .avatar--lg { width: 5.5rem; height: 5.5rem; font-size: var(--fs-600); }
+[data-conceito="b"] .avatar--xl { width: 7.5rem; height: 7.5rem; font-size: var(--fs-800); }
+
+[data-conceito="b"] .avatar-stack { display: flex; }
+[data-conceito="b"] .avatar-stack .avatar { margin-left: -0.6rem; border-color: var(--surface); }
+[data-conceito="b"] .avatar-stack .avatar:first-child { margin-left: 0; }
+
+/* ==========================================================================
+   ILHA ESCURA — bloco que permanece físico-escuro nos dois temas
+   (crachá tela 09, cartão NFC 12, heróis de perfil). Remapeia tokens locais:
+   qualquer componente aninhado (.badge, .btn, .campo, .tabela…) automaticamente
+   veste a versão escura — é por isso que os badges sobre ela são opacos de
+   propósito, sem regra por componente. */
+
+[data-conceito="b"] .ilha-escura {
+  --bg: var(--ilha-bg);
+  --surface: var(--ilha-surface);
+  --surface-2: var(--ilha-surface-2);
+  --surface-3: var(--ilha-surface-2);
+  --text: var(--ilha-text);
+  --dim: var(--ilha-dim);
+  --faint: var(--ilha-faint);
+  --line: var(--ilha-line);
+  --line-soft: var(--ilha-line-soft);
+  --accent: var(--ilha-accent);
+  --glow: var(--ilha-glow);
+  --ok-bg: color-mix(in oklab, var(--verde) 18%, var(--ilha-surface));
+  --aviso-bg: color-mix(in oklab, var(--amarelo) 16%, var(--ilha-surface));
+  --perigo-bg: color-mix(in oklab, var(--vermelho) 18%, var(--ilha-surface));
+  --info-bg: color-mix(in oklab, var(--azul-claro) 18%, var(--ilha-surface));
+  --ok-fg: color-mix(in oklab, var(--verde) 72%, var(--ilha-text));
+  --aviso-fg: color-mix(in oklab, var(--amarelo) 70%, var(--ilha-text));
+  --perigo-fg: color-mix(in oklab, var(--vermelho) 70%, var(--ilha-text));
+  --info-fg: color-mix(in oklab, var(--azul-claro) 72%, var(--ilha-text));
+  --sombra-suave: 0 10px 30px -14px rgba(0, 0, 0, 0.8);
+  --sombra-alta: 0 25px 60px -15px rgba(0, 0, 0, 0.85);
+  --pouso: color-mix(in oklab, var(--ilha-text) 5%, transparent);
+  --realce: color-mix(in oklab, var(--ilha-accent) 9%, transparent);
+
+  background: var(--ilha-bg);
+  color: var(--ilha-text);
+  border: 1px solid var(--ilha-line);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra);
+  position: relative;
+  isolation: isolate;
+}
+
+[data-conceito="b"] .ilha-escura :focus-visible { outline-color: var(--ilha-accent); }
+
+/* filete das 4 cores do símbolo — assinatura das peças "oficiais" (crachá/NFC) */
+[data-conceito="b"] .ilha-escura::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: var(--raio-lg) var(--raio-lg) 0 0;
+  background: linear-gradient(90deg, var(--ciano), var(--verde), var(--amarelo), var(--vermelho-sesi));
+}
+
+[data-conceito="b"] .ilha-escura .selo,
+[data-conceito="b"] .ilha-escura .eyebrow--accent { color: var(--ilha-accent); }
+
+[data-conceito="b"] .ilha-escura small,
+[data-conceito="b"] .ilha-escura .legenda { color: var(--ilha-faint); }
+
+/* ==========================================================================
+   CTA-BAND — faixa de conversão (vitrine/login/landing)
+   ========================================================================== */
+
+[data-conceito="b"] .cta-band {
+  position: relative;
+  display: grid;
+  gap: var(--sp-400);
+  place-items: center;
+  text-align: center;
+  padding: var(--sp-800) var(--section-x);
+  border-radius: var(--raio-lg);
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, var(--line));
+  background:
+    radial-gradient(120% 160% at 50% -30%, var(--glow), transparent 60%),
+    var(--surface);
+  overflow: hidden;
+}
+
+[data-conceito="b"] .cta-band h2 { font-size: var(--fs-700); letter-spacing: -0.03em; }
+[data-conceito="b"] .cta-band p { color: var(--dim); max-width: 52ch; }
+
+[data-conceito="b"] .cta-band--ilha {
+  background:
+    radial-gradient(120% 160% at 50% -30%, var(--ilha-glow), transparent 60%),
+    var(--ilha-bg);
+  border-color: var(--ilha-line);
+  color: var(--ilha-text);
+}
+
+/* ==========================================================================
+   DOMÍNIOS — ajuste fino por fatia do globals.css (sem classes novas:
+   o gancho é o data-tela da própria tela + seletores de elemento)
+   ========================================================================== */
+
+/* ── 10–13 · vitrine / crachá digital / NFC / validar ─────────────────── */
+
+[data-conceito="b"] .tela[data-tela^="10"] .topo { border-bottom-color: var(--line); }
+
+/* crachá (09 e 11): proporção de cartão físico, cantos maiores */
+[data-conceito="b"] .tela[data-tela^="09"] .ilha-escura,
+[data-conceito="b"] .tela[data-tela^="11"] .ilha-escura,
+[data-conceito="b"] .tela[data-tela^="12"] .ilha-escura {
+  border-radius: var(--raio-lg);
+  padding: var(--sp-700) var(--sp-600);
+}
+
+[data-conceito="b"] .tela[data-tela^="12"] .ilha-escura {
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+/* validar (13): o hash de integridade é mono e discreto */
+[data-conceito="b"] .tela[data-tela^="13"] { --fonte-mono-local: 1; }
+[data-conceito="b"] .tela[data-tela^="13"] code {
+  font-family: var(--fonte-mono);
+  font-size: var(--fs-200);
+  color: var(--dim);
+  word-break: break-all;
+}
+
+/* ── 01–07/09 · CRM (sidebar + conteúdo) ──────────────────────────────── */
+
+[data-conceito="b"] .tela[data-tela^="0"] .modal-caixa,
+[data-conceito="b"] .tela[data-tela^="0"] .modal .cartao { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* login (01): o container da aba central ocupa a moldura inteira */
+[data-conceito="b"] .tela[data-tela^="01"] .hero { padding-block: var(--sp-700); }
+
+/* tabelas do ADM (07/14): densidade menor */
+[data-conceito="b"] .tela[data-tela^="07"] .tabela tbody td,
+[data-conceito="b"] .tela[data-tela^="14"] .tabela tbody td {
+  padding-block: 0.6rem;
+}
+
+/* ── 06 · estúdio / meu perfil ────────────────────────────────────────── */
+[data-conceito="b"] .tela[data-tela^="06"] .aba { position: sticky; top: 0; background: var(--bg); z-index: var(--z-sticky); }
+
+/* ── 04 · desafios (mural) ────────────────────────────────────────────── */
+[data-conceito="b"] .tela[data-tela^="04"] .cartao--interativo:hover { transform: translateY(-3px) rotate(-0.4deg); }
+
+/* ── 08 · command bar ─────────────────────────────────────────────────── */
+[data-conceito="b"] .tela[data-tela^="08"] .modal { place-items: start center; padding-top: 12vh; }
+[data-conceito="b"] .tela[data-tela^="08"] .modal-caixa,
+[data-conceito="b"] .tela[data-tela^="08"] .modal .cartao { width: min(100%, 640px); padding: var(--sp-300); }
+[data-conceito="b"] .tela[data-tela^="08"] .modal .campo { border: none; box-shadow: none; background: transparent; }
+[data-conceito="b"] .tela[data-tela^="08"] .modal .campo:focus-visible { box-shadow: none; }
+
+/* ── 15 · estados ─────────────────────────────────────────────────────── */
+[data-conceito="b"] .tela[data-tela^="15"] .vazio { border-style: solid; }
+
+/* ==========================================================================
+   24 · LIGHT — refinamento por componente (o token-swap da seção 4 é a
+   base; aqui é o que só o papel branco pede — a Etapa 2 copia esta seção
+   para o tokens-2.css + overrides de domínio do app)
+   ========================================================================== */
+
+[data-conceito="b"][data-theme="light"] .topo {
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+}
+
+[data-conceito="b"][data-theme="light"] .cartao,
+[data-conceito="b"][data-theme="light"] .metrica {
+  box-shadow: var(--sombra);
+  border-color: color-mix(in oklab, var(--text) 6%, var(--line));
+}
+
+[data-conceito="b"][data-theme="light"] .btn--primario {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15), 0 10px 20px -12px var(--glow);
+}
+
+[data-conceito="b"][data-theme="light"] .btn--secundario {
+  background: var(--surface);
+}
+
+[data-conceito="b"][data-theme="light"] .campo {
+  background: var(--surface);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+[data-conceito="b"][data-theme="light"] .campo:focus-visible {
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05), 0 0 0 3px var(--glow);
+}
+
+[data-conceito="b"][data-theme="light"] .chip[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--destaque-filtro) 12%, var(--surface));
+}
+
+[data-conceito="b"][data-theme="light"] .tabela tbody tr:nth-child(even) {
+  background: color-mix(in oklab, var(--surface-2) 55%, transparent);
+}
+
+[data-conceito="b"][data-theme="light"] .tabela thead th {
+  background: var(--surface-2);
+}
+
+[data-conceito="b"][data-theme="light"] .aba [aria-selected="true"] {
+  background: color-mix(in oklab, var(--accent) 6%, var(--surface));
+}
+
+[data-conceito="b"][data-theme="light"] .modal-caixa,
+[data-conceito="b"][data-theme="light"] .modal .cartao {
+  box-shadow: var(--sombra-alta);
+}
+
+[data-conceito="b"][data-theme="light"] .vazio {
+  background: var(--surface);
+}
+
+[data-conceito="b"][data-theme="light"] .skeleton {
+  background: linear-gradient(100deg,
+    var(--surface-2) 30%,
+    color-mix(in oklab, var(--surface-3) 70%, var(--surface)) 50%,
+    var(--surface-2) 70%);
+}
+
+[data-conceito="b"][data-theme="light"] .hero::before {
+  background: radial-gradient(circle at 30% 30%, color-mix(in oklab, var(--accent) 7%, transparent), transparent 65%);
+}
+
+[data-conceito="b"][data-theme="light"] .cta-band {
+  background:
+    radial-gradient(120% 160% at 50% -30%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 60%),
+    var(--surface);
+}
+
+[data-conceito="b"][data-theme="light"] .kbd,
+[data-conceito="b"][data-theme="light"] .sidebar-kbd {
+  background: var(--surface-2);
+}
+
+/* a ilha não segue o tema: a reafirmação garante que nenhum override
+   "global de claro" acima vaze para dentro dela */
+[data-conceito="b"][data-theme="light"] .ilha-escura {
+  --bg: var(--ilha-bg);
+  --surface: var(--ilha-surface);
+  --text: var(--ilha-text);
+  --line: var(--ilha-line);
+}
+
+[data-conceito="b"][data-theme="light"] .nav-ativo,
+[data-conceito="b"][data-theme="light"] .nav-item[aria-current="page"] {
+  background: color-mix(in oklab, var(--accent) 8%, var(--surface));
+}
+
+/* ==========================================================================
+   MOBILE (data-frame="mobile" — moldura estreita o palco a 390px)
+   ========================================================================== */
+
+[data-conceito="b"][data-frame="mobile"] .sidebar {
+  width: 100%;
+  position: static;
+  min-height: 0;
+  border-right: none;
+  border-bottom: 1px solid var(--line);
+}
+
+[data-conceito="b"][data-frame="mobile"] .aba { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+[data-conceito="b"][data-frame="mobile"] .modal { padding: var(--sp-300); }
+[data-conceito="b"][data-frame="mobile"] .hero { padding-block: var(--sp-600); }
+
+/* ==========================================================================
+   IMPRESSÃO (tela 16) — resolvido por token: papel/tinta nos dois temas;
+   chrome (topo, rodapé, sidebar, toast, skeleton) some; o resto é o
+   componente vestindo --papel/--tinta.
+   ========================================================================== */
+
+@media print {
+  :root[data-conceito="b"],
+  :root[data-conceito="b"][data-theme="light"],
+  :root[data-conceito="b"][data-theme="dark"] {
+    --bg: var(--papel);
+    --surface: var(--papel);
+    --surface-2: color-mix(in oklab, var(--tinta) 5%, var(--papel));
+    --surface-3: color-mix(in oklab, var(--tinta) 8%, var(--papel));
+    --text: var(--tinta);
+    --dim: var(--tinta-2);
+    --faint: var(--tinta-3);
+    --line: color-mix(in oklab, var(--tinta) 22%, var(--papel));
+    --line-soft: color-mix(in oklab, var(--tinta) 10%, var(--papel));
+    --accent: #1a5c8a;
+    --on-accent: var(--papel);
+    --glow: transparent;
+    --sombra: none;
+    --sombra-suave: none;
+    --sombra-alta: none;
+    --backdrop: transparent;
+    --realce: color-mix(in oklab, var(--tinta) 6%, var(--papel));
+    --pouso: color-mix(in oklab, var(--tinta) 4%, var(--papel));
+    --ilha-bg: var(--papel);
+    --ilha-surface: var(--papel);
+    --ilha-surface-2: color-mix(in oklab, var(--tinta) 6%, var(--papel));
+    --ilha-text: var(--tinta);
+    --ilha-dim: var(--tinta-2);
+    --ilha-faint: var(--tinta-3);
+    --ilha-line: color-mix(in oklab, var(--tinta) 25%, var(--papel));
+    --ilha-line-soft: color-mix(in oklab, var(--tinta) 12%, var(--papel));
+    --ilha-accent: var(--tinta-2);
+    --ilha-glow: transparent;
+  }
+
+  [data-conceito="b"] .topo,
+  [data-conceito="b"] .rodape,
+  [data-conceito="b"] .sidebar,
+  [data-conceito="b"] .toast,
+  [data-conceito="b"] .skeleton,
+  [data-conceito="b"] .btn { display: none !important; }
+
+  /* modal estático aberto (estado demonstrado na tela) vira bloco normal da
+     folha: sai do fixed e perde o backdrop */
+  [data-conceito="b"] .modal.modal-aberto {
+    position: static;
+    display: block;
+    background: transparent;
+    backdrop-filter: none;
+    padding: 0;
+  }
+
+  [data-conceito="b"] .cartao,
+  [data-conceito="b"] .ilha-escura,
+  [data-conceito="b"] .tabela,
+  [data-conceito="b"] .metrica {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  [data-conceito="b"] .ilha-escura::before,
+  [data-conceito="b"] .cartao--sala::before {
+    background: var(--tinta);
+    height: 2px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  [data-conceito="b"] .tabela thead th { position: static; }
+  [data-conceito="b"] a { text-decoration: none; color: var(--tinta-2); }
+}
+
+/* ==========================================================================
+   MOVIMENTO REDUZIDO (gate 6) — base.css corta transition/animation em
+   cascade; aqui neutralizamos o que é *efeito* (shimmer, elevar, hover-lift)
+   no lugar da animação global.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-conceito="b"] .skeleton { animation: none; background: var(--surface-2); }
+  [data-conceito="b"] .btn:hover,
+  [data-conceito="b"] .cartao--interativo:hover,
+  [data-conceito="b"] .badge-redes a:hover { transform: none; }
+  [data-conceito="b"] .modal-caixa,
+  [data-conceito="b"] .modal .cartao,
+  [data-conceito="b"] .toast { animation: none; }
+}
+
+/* ==========================================================================
+   KEYFRAMES (prefixo b- para não colidir com o sistema A)
+   ========================================================================== */
+
+@keyframes b-brilho {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes b-elevar {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

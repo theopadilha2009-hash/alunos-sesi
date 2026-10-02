@@ -1,0 +1,553 @@
+<!doctype html>
+<!--
+  17 · galeria.html — O inventário vivo das classes (design/PADROES.md §Classes).
+  Cada família aparece em A e, logo abaixo, em B. As seções A usam o escape hatch
+  /* no-sistema */ para escopar os tokens do conceito A dentro de um html B
+  (os tokens vivem só em :root — registrado como dívida para o coordenador).
+  String reais de origem: "Buscar aluno…", "Aprovar e publicar", "Voltar",
+  "Nenhum projeto publicado ainda", "SISTEMA FIESC · SESI SENAI",
+  "MATRÍCULA VALIDADA · ESTUDANTE ATIVO", "3A26-0041-887", "Escola SESI ·
+  Formando desenvolvedores para o futuro.", "Feira de Profissões 2026",
+  "Alterações salvas." (src/components/adm, CrachaModal, PaginaMeuPerfil, ds.tsx).
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>17 · Galeria de componentes — Redesign alunos-sesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- ordem b→a (invertida de propósito): a página-mãe é B e as seções-aninhadas
+     A precisam ganhar os empates de especificidade — técnica do inventário -->
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<style>
+/* no-sistema */
+/* Aliases: os tokens que só :root[data-conceito="a"] define, recriados sobre as
+   constantes do B (--papel/--tinta/--tinta-2/--tinta-3/--azul/paleta/ilha-*) com
+   var()/color-mix() — nenhum valor de cor literal aqui. */
+section[data-conceito="a"] {
+  --papel-frio: color-mix(in oklab, var(--tinta) 2%, var(--papel));
+  --bg: var(--papel-frio); --surface: var(--papel);
+  --surface-2: color-mix(in oklab, var(--tinta) 4%, var(--papel));
+  --surface-3: color-mix(in oklab, var(--tinta) 8%, var(--papel));
+  --thead: color-mix(in oklab, var(--tinta) 3%, var(--papel));
+  --trilho: color-mix(in oklab, var(--tinta) 7%, var(--papel));
+  --text: var(--tinta); --dim: var(--tinta-2); --faint: var(--tinta-3);
+  --line: color-mix(in oklab, var(--tinta) 14%, transparent);
+  --line-soft: color-mix(in oklab, var(--tinta) 8%, transparent);
+  --cor-destaque: var(--azul); --accent: var(--azul);
+  --accent-fill: color-mix(in oklab, var(--azul) 82%, var(--tinta));
+  --accent-hover: color-mix(in oklab, var(--azul) 66%, var(--tinta));
+  --accent-soft: color-mix(in oklab, var(--azul) 8%, transparent);
+  --on-accent: var(--papel); --glow: color-mix(in oklab, var(--azul) 10%, transparent);
+  --link: color-mix(in oklab, var(--azul) 88%, var(--tinta));
+  --link-hover: color-mix(in oklab, var(--azul) 60%, var(--tinta));
+  --ok-fundo: color-mix(in oklab, var(--verde) 14%, var(--papel));
+  --ok-texto: color-mix(in oklab, var(--verde) 55%, var(--tinta));
+  --aviso-fundo: color-mix(in oklab, var(--amarelo) 22%, var(--papel));
+  --aviso-texto: color-mix(in oklab, var(--amarelo) 38%, var(--tinta));
+  --perigo-fundo: color-mix(in oklab, var(--vermelho) 12%, var(--papel));
+  --perigo-texto: color-mix(in oklab, var(--vermelho) 62%, var(--tinta));
+  --perigo-fill: color-mix(in oklab, var(--vermelho) 74%, var(--tinta));
+  --info-fundo: color-mix(in oklab, var(--azul-claro) 14%, var(--papel));
+  --info-texto: color-mix(in oklab, var(--azul-claro) 55%, var(--tinta));
+  --night: var(--ilha-bg); --ilha-texto: var(--ilha-text);
+  --ilha-fill: var(--ilha-surface);
+  --desab-fill: color-mix(in oklab, var(--tinta) 5%, var(--papel));
+  --desab-texto: var(--tinta-3);
+  --fonte-titulo: "Plus Jakarta Sans", system-ui, sans-serif;
+  --fonte-texto: "Plus Jakarta Sans", system-ui, sans-serif;
+  --fs-100: 0.7rem; --fs-200: 0.8rem; --fs-300: 0.875rem; --fs-400: 1rem;
+  --fs-500: clamp(1.05rem, 1.3vw, 1.25rem); --fs-600: clamp(1.35rem, 2.1vw, 1.75rem);
+  --fs-700: clamp(1.75rem, 3.6vw, 2.75rem); --fs-900: clamp(2.5rem, 5.4vw, 4rem);
+  --fs-gigante: var(--fs-900);
+  --lh-corpo: 1.5; --lh-titulo: 1;
+  --tracking-titulo: -0.05em; --tracking-sub: -0.03em; --tracking-micro: 0.14em;
+  --sp-50: 0.125rem; --sp-100: 0.25rem; --sp-200: 0.5rem; --sp-300: 0.75rem;
+  --sp-400: 1rem; --sp-500: 1.5rem; --sp-600: 2rem; --sp-700: 3rem;
+  --sp-800: clamp(4rem, 8vw, 7.5rem);
+  --raio-sm: 6px; --raio-md: 10px; --raio-lg: 16px; --raio-full: 100px;
+  --sombra: 0 1px 2px color-mix(in oklab, var(--tinta) 8%, transparent);
+  --sombra-elev: 0 24px 48px -24px color-mix(in oklab, var(--tinta) 45%, transparent);
+  --dur-1: 0.15s; --dur-2: 0.25s; --dur-3: 0.4s;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --z-conteudo: 1; --z-sticky: 20; --z-overlay: 100; --z-modal: 110; --z-toast: 130;
+  --topo-h: 64px; --sidebar-w: 240px; --medida-corpo: 64ch; --content-texto: 1080px;
+  --section-y: clamp(4rem, 10vw, 9.5rem);
+  background: var(--bg); color: var(--dim);
+}
+/* caixas de amostra por conceito (elemento+atributo — nenhuma classe nova) */
+section[data-conceito="a"], section[data-conceito="b"] {
+  display: flex; flex-direction: column; gap: var(--sp-500);
+  padding: var(--sp-600); border-radius: var(--raio-lg); margin-block: var(--sp-200);
+}
+section[data-conceito="a"] { border: 1px solid var(--line-soft); }
+section[data-conceito="b"] { background: var(--surface); border: 1px solid var(--line); }
+main.tela > header { padding: var(--sp-700) 0 var(--sp-500); }
+main.tela > div { padding-block: var(--sp-500); }
+main.tela h2 { font-size: var(--fs-600); letter-spacing: var(--tracking-sub, -0.02em); }
+/* desvazamento: regras do B sem par no A que vazariam p/ dentro da seção A */
+section[data-conceito="a"] .campo:not(input):not(select):not(textarea) {
+  padding: 0; min-height: 0; border: 0; background: transparent;
+}
+section[data-conceito="a"] .tabela tbody tr:nth-child(even):not(:hover) { background: transparent; }
+section[data-conceito="a"] .btn:hover, section[data-conceito="a"] .cartao--interativo:hover,
+section[data-conceito="a"] .badge-redes a:hover { transform: none; }
+section[data-conceito="a"] .marca-sesi img { display: block; }
+/* modal de exemplo preso numa caixa (transform cria containing block p/ fixed) */
+div[data-modal-demo] {
+  position: relative; transform: translateZ(0); overflow: hidden;
+  min-height: 480px; border-radius: var(--raio-md); border: 1px solid var(--line-soft);
+}
+section[data-conceito="b"] div[data-modal-demo] { border-color: var(--line); }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="17-galeria">
+<header class="wrap pilha">
+  <p class="eyebrow">17 · inventário vivo — PADROES.md §Classes</p>
+  <h1>Galeria de componentes</h1>
+  <p>Uma página por família de classes: cada componente aparece em A e, logo abaixo, em B, com o mesmo DOM sempre que o contrato permite. Se uma classe não está aqui nem em <code>sistemas/*.css</code>, ela não existe. A barra do canto troca o conceito da página inteira; as seções abaixo já mostram os dois juntas.</p>
+</header>
+
+<div class="wrap pilha">
+
+<section data-conceito="a" aria-label="botões, conceito A"><p class="eyebrow">.btn · conceito A — todas as variantes</p>
+<div class="linha">
+  <button type="button" class="btn btn--primario">Salvar</button>
+  <button type="button" class="btn btn--secundario">Cancelar</button>
+  <button type="button" class="btn btn--fantasma">Descartar</button>
+  <button type="button" class="btn btn--perigo">Recusar</button>
+  <button type="button" class="btn btn--perigo-fantasma">Remover endosso</button>
+  <button type="button" class="btn btn--pequeno">Filtrar</button>
+  <button type="button" class="btn btn--grande">Aprovar portfólio</button>
+  <button type="button" class="btn btn--icone" aria-label="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <button type="button" class="btn btn--marketing">Ver a vitrine</button>
+  <button type="button" class="btn btn--primario" disabled>Enviar</button>
+  <button type="button" class="btn btn--secundario" aria-busy="true">Enviando…</button>
+</div>
+<div class="pilha-apertada" style="max-width:280px"><p class="eyebrow">.btn--full</p>
+  <button type="button" class="btn btn--primario btn--full">Continuar</button></div>
+<p class="eyebrow">.btn com ícone (lucide, stroke currentColor)</p>
+<div class="linha"><button type="button" class="btn btn--secundario"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar CSV</button>
+  <button type="button" class="btn btn--primario"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>Aprovar e publicar</button></div>
+</section>
+
+<section aria-label="botões, conceito B" data-conceito="b"><p class="eyebrow eyebrow--accent">.btn · conceito B — a mesma família</p>
+<div class="linha">
+  <button type="button" class="btn btn--primario">Salvar</button>
+  <button type="button" class="btn btn--secundario">Cancelar</button>
+  <button type="button" class="btn btn--fantasma">Descartar</button>
+  <button type="button" class="btn btn--perigo">Recusar</button>
+  <button type="button" class="btn btn--perigo-leve">Despublicar</button>
+  <button type="button" class="btn btn--pequeno">Filtrar</button>
+  <button type="button" class="btn btn--marketing">Ver a vitrine</button>
+  <button type="button" class="btn btn--primario" disabled>Enviar</button>
+  <button type="button" class="btn btn--secundario" aria-disabled="true">Plano</button>
+</div>
+<p class="eyebrow">.btn--full</p>
+<button type="button" class="btn btn--primario btn--full">Continuar</button>
+<p class="eyebrow">.btn--marketing — borda com as 4 cores do símbolo</p>
+<div class="linha"><button type="button" class="btn btn--marketing">Conhecer a Escola SESI</button></div>
+</section>
+
+<section data-conceito="a" aria-label="campos, conceito A"><p class="eyebrow">.campo · conceito A — grupo com rótulo, erro e disabled</p>
+<div class="grade grade-2">
+  <div class="campo"><label for="g-a-email">E-mail institucional</label><input id="g-a-email" placeholder="nome@estudante.sesisenai.org.br"><small class="campo-dica">Só avisamos aprovação e pendências.</small></div>
+  <div class="campo campo--erro"><label for="g-a-err">Busca</label><input id="g-a-err" value="alice"><span class="campo-msg-erro">Informe um e-mail válido.</span></div>
+  <div class="campo"><label for="g-a-sel">Turma</label><select id="g-a-sel"><option>Todas</option><option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option></select></div>
+  <div class="campo"><label for="g-a-tx">Bio</label><textarea id="g-a-tx" placeholder="Conte sobre seu projeto em até 280 caracteres…"></textarea></div>
+  <div class="campo"><label for="g-a-dis">Matrícula</label><input id="g-a-dis" value="3A26-0041-887" disabled></div>
+  <div class="campo"><label class="campo-label" for="g-a-inp">Nome <small class="campo-dica">campo-label/campo-dica soltos também funcionam</small></label><input id="g-a-inp" placeholder="Alice Duarte"></div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="campos, conceito B"><p class="eyebrow eyebrow--accent">.campo · conceito B — a classe vive no controle</p>
+<div class="grade grade-2">
+  <label class="sr-only" for="g-b-1">Buscar</label>
+  <input id="g-b-1" class="campo" placeholder="Buscar aluno pelo nome…">
+  <input class="campo campo--busca" placeholder="Buscar em toda a turma…">
+  <select class="campo"><option>Todas as turmas</option><option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option></select>
+  <textarea class="campo" placeholder="Observações da aprovação…"></textarea>
+  <div>
+    <input class="campo" value="alice-duarte" aria-invalid="true">
+    <small class="campo-dica" style="display:block">O slug já existe — escolha outro.</small>
+  </div>
+  <input class="campo" value="3A26-0041-887" disabled>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="chips, conceito A"><p class="eyebrow">.chip · conceito A — filtro + segmentado sobre trilho</p>
+<div class="linha">
+  <button type="button" class="chip" aria-pressed="true">3ºA</button>
+  <button type="button" class="chip" aria-pressed="false">3ºB</button>
+  <button type="button" class="chip" aria-pressed="false">4ºA</button>
+  <button type="button" class="chip" aria-pressed="false">5ºA</button>
+  <button type="button" class="chip" disabled>Formandas</button>
+</div>
+<div class="chip-grupo" role="group" aria-label="Período">
+  <button type="button" class="chip" aria-pressed="true">Mês</button>
+  <button type="button" class="chip" aria-pressed="false">Trimestre</button>
+  <button type="button" class="chip" aria-pressed="false">Ano</button>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="chips, conceito B"><p class="eyebrow eyebrow--accent">.chip · conceito B — filtro com contagem</p>
+<div class="linha">
+  <button type="button" class="chip" aria-pressed="true">3ºA <small>4</small></button>
+  <button type="button" class="chip" aria-pressed="false">3ºB <small>2</small></button>
+  <button type="button" class="chip" aria-pressed="false">4ºA <small>2</small></button>
+  <button type="button" class="chip" aria-pressed="false">5ºA <small>2</small></button>
+  <button type="button" class="chip" disabled>Archivadas</button>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="cartões, conceito A"><p class="eyebrow">.cartao · conceito A — papel 6px, hover muda só a borda</p>
+<div class="grade">
+  <article class="cartao"><h3>Portfólio da Turma</h3><p>Next.js + Supabase, vitrine dos alunos.</p><p class="cartao-nota">Clique só troca a borda — sem elevação, sem escala.</p></article>
+  <article class="cartao cartao--clique" tabindex="0"><h3>TriNet</h3><p>App de trigonometria com placar, React Native.</p></article>
+  <article class="cartao cartao--plano"><h3>GrêmioFlow</h3><p>Automações n8n do grêmio.</p></article>
+  <article class="cartao cartao--cheio">
+    <div class="cartao-cabeca"><span class="eyebrow">Reel QR</span><span class="badge badge--info">Vídeo</span></div>
+    <div class="olho" style="aspect-ratio:16/9;border-radius:0;border:0;border-bottom:1px solid var(--line-soft)">capa — gradiente de tokens</div>
+    <div class="cartao-corpo"><h3>Portfólio em vídeo com QR</h3><p>Yasmin Rocha · 3ºB</p></div>
+    <div class="cartao-rodape"><button type="button" class="btn btn--pequeno btn--primario">Ver projeto</button><button type="button" class="btn btn--pequeno btn--fantasma">Endossar</button></div>
+  </article>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="cartões, conceito B"><p class="eyebrow eyebrow--accent">.cartao · conceito B — interativo, sala e destaque</p>
+<div class="grade">
+  <article class="cartao"><div class="cartao-cabeca"><h3>Portfólio da Turma</h3><span class="badge badge--ok">Publicado</span></div><p>Alice Duarte · 3ºA</p></article>
+  <article class="cartao cartao--interativo" tabindex="0"><h3>Painho de Resíduos</h3><p>Classificador de resíduos da cantina — Bruna, 4ºA.</p></article>
+  <article class="cartao cartao--sala"><h3>Rota Lab</h3><p>Rede do laboratório novo · Thales, 4ºA</p></article>
+  <article class="cartao cartao--destaque"><h3>Marina Kowalski</h3><p>13 ★ — segunda no Hall da Fama.</p></article>
+  <article class="cartao cartao--plano"><h3>Folha de ponto do lab</h3><p>Sem sombra: usado sobre outras superfícies.</p></article>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="abas, conceito A"><p class="eyebrow">.aba + .painel-aba · conceito A — underline 2px, funcional via moldura.js</p>
+<div data-aba-group>
+  <div class="aba-lista" role="tablist">
+    <button type="button" class="aba" role="tab" aria-selected="true" data-aba="a-vis">Visão geral</button>
+    <button type="button" class="aba" role="tab" aria-selected="false" data-aba="a-com">Competências</button>
+    <button type="button" class="aba" role="tab" aria-selected="false" data-aba="a-ins">Insígnias</button>
+  </div>
+  <div class="painel-aba" data-aba="a-vis"><p>Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p></div>
+  <div class="painel-aba" data-aba="a-com" hidden><ul class="pill-list"><li>React <strong>6</strong></li><li>Next.js</li><li>Excel</li></ul></div>
+  <div class="painel-aba" data-aba="a-ins" hidden><p>Primeira Estrela ✓ · Em Ascensão ✓ · Queridinha da Turma (8★ de 10)</p></div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="abas, conceito B"><p class="eyebrow eyebrow--accent">.aba + .painel-aba · conceito B — pílula com realce, mesma JS</p>
+<div data-aba-group>
+  <div class="aba" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-aba="b-vit">Vitrine</button>
+    <button type="button" role="tab" aria-selected="false" data-aba="b-pro">Projetos</button>
+    <button type="button" role="tab" aria-selected="false" data-aba="b-hall">Hall da Fama</button>
+  </div>
+  <div class="painel-aba" data-aba="b-vit"><p>10 alunos aprovados · 4 salas · 76 estrelas no total.</p></div>
+  <div class="painel-aba" data-aba="b-pro" hidden><p>Portfólio da Turma · Reel QR · TriNet · GrêmioFlow</p></div>
+  <div class="painel-aba" data-aba="b-hall" hidden><p><b class="forte">1º Alice (14★)</b> · 2º Marina (13★) · 3º Yasmin (12★)</p></div>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="selos, conceito A"><p class="eyebrow">.selo · conceito A — carimbo institucional (não é status)</p>
+<div class="linha">
+  <span class="selo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>Sistema FIESC · SESI SENAI</span>
+  <span class="selo selo--lacre">Matrícula validada<br>Estudante ativo</span>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="selos, conceito B"><p class="eyebrow eyebrow--accent">.selo · conceito B — base + variantes de situação</p>
+<div class="linha">
+  <span class="selo">Sistema FIESC · SESI SENAI</span>
+  <span class="selo selo--validado">Matrícula validada</span>
+  <span class="selo selo--fixado">Destaque da semana</span>
+  <span class="selo selo--suave">Rascunho</span>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="badges, conceito A"><p class="eyebrow">.badge · conceito A — pastel ok/aviso/perigo/info + ponto</p>
+<div class="linha">
+  <span class="badge">Neutro</span>
+  <span class="badge badge--ok">Publicado</span>
+  <span class="badge badge--aviso">Em revisão</span>
+  <span class="badge badge--perigo">Incompleto</span>
+  <span class="badge badge--info">Rascunho</span>
+  <span class="badge badge--ok"><span class="badge--ponto"></span>Ativo</span>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="badges, conceito B"><p class="eyebrow eyebrow--accent">.badge · conceito B — opaco por construção (funciona sobre a ilha)</p>
+<div class="linha">
+  <span class="badge">Filtro</span>
+  <span class="badge badge--ok">Aprovado</span>
+  <span class="badge badge--aviso">Pendente</span>
+  <span class="badge badge--perigo">Recusado</span>
+  <span class="badge badge--info">Vitrine</span>
+  <span class="badge badge--ok badge--num">14 ★</span>
+  <span class="badge badge--num">65%</span>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="tabela, conceito A"><p class="eyebrow">.tabela · conceito A — thead rasa, .num tabular à direita</p>
+<div class="corte">
+<table class="tabela">
+  <caption>Retrato da turma — vitrine 2026 (dados de CONTEUDO.md)</caption>
+  <thead><tr><th>Aluno</th><th>Sala</th><th>Bio</th><th class="num">Projetos</th><th class="num">★</th></tr></thead>
+  <tbody>
+    <tr><td class="forte">Alice Duarte</td><td>3ºA</td><td><span class="tabela-truncada">Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</span></td><td class="num">3</td><td class="num">14</td></tr>
+    <tr><td class="forte">Marina Kowalski</td><td>5ºA</td><td><span class="tabela-truncada">Produto. Documento tudo, prototipo rápido, testo com a turma inteira.</span></td><td class="num">2</td><td class="num">13</td></tr>
+    <tr><td class="forte">Yasmin Rocha</td><td>3ºB</td><td><span class="tabela-truncada">Vídeo e interação. Meu portfólio tem até QR code que abre reel.</span></td><td class="num">2</td><td class="num">12</td></tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="tabela, conceito B"><p class="eyebrow eyebrow--accent">.tabela · conceito B — a única (zebra, sticky, tfoot)</p>
+<div class="corte">
+<table class="tabela">
+  <caption>Ranking de salas</caption>
+  <thead><tr><th>Sala</th><th>Alunos</th><th class="num">Estrelas</th><th class="num">Completude</th></tr></thead>
+  <tbody>
+    <tr><td class="forte">3ºA</td><td>Alice · Luana · Pedro Ivo · Davi</td><td class="num">40</td><td class="num"><span class="badge badge--ok badge--num">75%</span></td></tr>
+    <tr><td class="forte">5ºA</td><td>Otávio · Marina</td><td class="num">20</td><td class="num"><span class="badge badge--aviso badge--num">50%</span></td></tr>
+    <tr><td class="forte">3ºB</td><td>Yasmin · Enzo</td><td class="num">20</td><td class="num"><span class="badge badge--aviso badge--num">50%</span></td></tr>
+    <tr><td class="forte">4ºA</td><td>Thales · Bruna</td><td class="num">15</td><td class="num"><span class="badge badge--ok badge--num">75%</span></td></tr>
+  </tbody>
+  <tfoot><tr><td>Total</td><td>10 alunos · 4 salas</td><td class="num">76</td><td class="num">65%</td></tr></tfoot>
+</table>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="modal, conceito A"><p class="eyebrow">.modal .modal-aberto · conceito A — painel branco sobre tinta 55%</p>
+<div data-modal-demo>
+  <div class="modal modal-aberto" role="dialog" aria-modal="true" aria-labelledby="gm-a">
+    <div class="modal-painel">
+      <div class="modal-cabeca"><h2 id="gm-a">Aprovar portfólio?</h2><button type="button" class="modal-x" aria-label="Fechar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="modal-corpo"><p>Alice Duarte vai entrar na vitrine pública com 14 ★, 3 projetos e a bio aprovada por ela.</p><label class="campo"><span class="campo-label">Observação (opcional)</span><input placeholder="Por exemplo: faltam redes sociais"></label></div>
+      <div class="modal-rodape"><button type="button" class="btn btn--secundario">Voltar</button><button type="button" class="btn btn--primario">Aprovar e publicar</button></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="modal, conceito B"><p class="eyebrow eyebrow--accent">.modal .modal-aberto · conceito B — .modal-caixa com blur</p>
+<div data-modal-demo>
+  <div class="modal modal-aberto" role="dialog" aria-modal="true" aria-labelledby="gm-b">
+    <div class="modal-caixa">
+      <div class="modal-cabeca"><h2 id="gm-b">Recusar submissão?</h2><button type="button" class="modal-x btn btn--fantasma btn--pequeno" aria-label="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <p>Rafael Kuntz continua fora da vitrine até reenviar com bio e capa. O aluno recebe o motivo por e-mail.</p>
+      <textarea class="campo" placeholder="Motivo visível para o aluno…"></textarea>
+      <div class="modal-rodape"><button type="button" class="btn btn--secundario">Voltar</button><button type="button" class="btn btn--perigo">Recusar</button></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="toast, conceito A"><p class="eyebrow">.toast · conceito A — filete semântico + gatilho real do moldura.js</p>
+<div class="linha">
+  <span class="toast">Alterações salvas.</span>
+  <span class="toast toast--ok">Aprovado: Alice Duarte<small>Entrou na vitrine às 14h02</small></span>
+  <span class="toast toast--erro">Não foi possível publicar.<small>Verifique a conexão e tente de novo.</small></span>
+  <button type="button" class="btn btn--secundario" data-toast="Exemplo: convite enviado para Enzo Marchiori.">Disparar toast</button>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="toast, conceito B"><p class="eyebrow eyebrow--accent">.toast · conceito B — pastel sólido + gatilho</p>
+<div class="linha">
+  <span class="toast">Alterações salvas.</span>
+  <span class="toast toast--ok">Aprovado: Alice Duarte</span>
+  <span class="toast toast--perigo">Não foi possível publicar.</span>
+  <span class="toast toast--info">3 pendências na fila do ADM</span>
+  <button type="button" class="btn btn--secundario" data-toast="Exemplo: convite enviado para Enzo Marchiori.">Disparar toast</button>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="vazio, conceito A"><p class="eyebrow">.vazio · conceito A</p>
+<div class="vazio">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/><path d="M3 8h6l1.5 2.5h3L15 8h6"/></svg>
+  <b>Nenhum projeto publicado ainda</b>
+  <p>Quando o aluno enviar, ele aparece aqui para aprovação.</p>
+  <button type="button" class="btn btn--pequeno btn--secundario">Convidar turma</button>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="vazio, conceito B"><p class="eyebrow eyebrow--accent">.vazio · conceito B</p>
+<div class="vazio">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/><path d="M3 8h6l1.5 2.5h3L15 8h6"/></svg>
+  <b>Nada por aqui</b>
+  <p>Nenhum aluno da sala 4ºA publicou ainda. O padrão honesto: sem fantasma de portfólio.</p>
+  <button type="button" class="btn btn--pequeno btn--secundario">Convidar turma</button>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="skeleton, conceito A"><p class="eyebrow">.skeleton · conceito A — shimmer no trilho</p>
+<div class="pilha-apertada" style="max-width:420px">
+  <div class="skeleton skeleton--titulo"></div>
+  <div class="skeleton skeleton--linha"></div>
+  <div class="skeleton skeleton--linha" style="--sk-h:0.9em;width:80%"></div>
+  <div class="skeleton skeleton--circulo"></div>
+  <div class="skeleton skeleton--bloco"></div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="skeleton, conceito B"><p class="eyebrow eyebrow--accent">.skeleton · conceito B — gradiente de surface</p>
+<div class="pilha-apertada" style="max-width:420px">
+  <div class="skeleton skeleton--titulo"></div>
+  <div class="skeleton skeleton--linha"></div>
+  <div class="skeleton skeleton--linha" style="width:70%"></div>
+  <div class="skeleton skeleton--avatar"></div>
+  <div class="skeleton skeleton--cartao"></div>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="pill-list e avatar, conceito A"><p class="eyebrow">.pill-list + .avatar · conceito A — cor do perfil via --cor (var, nunca hex)</p>
+<ul class="pill-list">
+  <li>React <strong>6</strong></li><li>Next.js <strong>4</strong></li><li>SQL <strong>3</strong></li><li>Figma <strong>2</strong></li><li>Documentação</li>
+</ul>
+<div class="linha">
+  <span class="avatar" style="--cor: var(--amarelo)">AD</span>
+  <span class="avatar avatar-sm" style="--cor: var(--ciano)">LF</span>
+  <span class="avatar avatar-lg" style="--cor: var(--azul-claro)">AD</span>
+  <span class="avatar avatar-anel" style="--cor: var(--petroleo)">AD</span>
+  <span class="avatar-pilha">
+    <span class="avatar avatar-sm" style="--cor: var(--ciano)">AD</span>
+    <span class="avatar avatar-sm" style="--cor: var(--verde)">PI</span>
+    <span class="avatar avatar-sm" style="--cor: var(--vermelho)">OR</span>
+  </span>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="pill-list e avatar, conceito B"><p class="eyebrow eyebrow--accent">.pill-list + .avatar · conceito B — gradiente via --cor-destaque</p>
+<ul class="pill-list">
+  <li class="chip" aria-pressed="false">React <small>6</small></li>
+  <li class="chip" aria-pressed="false">Next.js <small>4</small></li>
+  <li class="chip" aria-pressed="false">SQL <small>3</small></li>
+</ul>
+<div class="linha">
+  <span class="avatar" style="--cor-destaque: var(--amarelo)">AD</span>
+  <span class="avatar avatar--md" style="--cor-destaque: var(--azul-claro)">LF</span>
+  <span class="avatar avatar--lg" style="--cor-destaque: var(--verde)">MR</span>
+  <span class="avatar-stack">
+    <span class="avatar" style="--cor-destaque: var(--ciano)">AD</span>
+    <span class="avatar" style="--cor-destaque: var(--verde)">PI</span>
+    <span class="avatar" style="--cor-destaque: var(--vermelho)">OR</span>
+  </span>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="marca sesi, conceito A"><p class="eyebrow">.marca-sesi · conceito A — as duas logos de public/</p>
+<div class="linha">
+  <a class="marca-sesi marca-sesi-sm" href="#"><img src="../../public/logo-sesi.png" alt="SESI"></a>
+  <a class="marca-sesi" href="#"><img src="../../public/logo-sesi.png" alt="SESI"></a>
+  <a class="marca-sesi marca-sesi-lg" href="#"><img src="../../public/logo-sesi.png" alt="SESI"></a>
+</div>
+<div class="ilha-escura" style="padding:var(--sp-400)">
+  <p class="eyebrow">Sobre fundo escuro → logo-sesi-branco.png</p>
+  <a class="marca-sesi" href="#"><img src="../../public/logo-sesi-branco.png" alt="SESI"></a>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="marca sesi, conceito B"><p class="eyebrow eyebrow--accent">.marca-sesi · conceito B — o DOM carrega os dois logos e o tema escolhe</p>
+<div class="linha">
+  <a class="marca-sesi" href="#"><img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI"><img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI"><span>SESI<small>Joinville · Informática</small></span></a>
+</div>
+<p class="eyebrow">No tema claro (troque na barra) o .logo-modo-light dá lugar ao .logo-modo-dark — dentro da ilha é sempre o branco.</p>
+</section>
+
+<section data-conceito="a" aria-label="placeholder de mídia, conceito A"><p class="eyebrow">.olho · placeholder de imagem de conteúdo (gradiente de tokens, PADROES §Conteúdo)</p>
+<div class="grade">
+  <div class="olho" style="aspect-ratio:16/9">Feira de Profissões 2026</div>
+  <div class="olho" style="aspect-ratio:1">Deploy da vitrine</div>
+  <div class="olho" style="aspect-ratio:4/3">Laboratório novo</div>
+  <div class="olho" style="aspect-ratio:16/9">Gravação do reel</div>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="ilha escura, conceito A"><p class="eyebrow">.ilha-escura · conceito A — crachá/NFC continuam papel-escuros</p>
+<div class="ilha-escura">
+  <p class="eyebrow">Crachá · SESI SC · Joinville</p>
+  <img src="../../public/logo-sesi-branco.png" alt="SESI" style="height:32px;width:auto">
+  <h2>Alice Duarte</h2>
+  <p class="forte">3ºA · Matrícula 3A26-0041-887 · 14 ★</p>
+  <span class="badge badge--info">Estudante ativo</span>
+  <ul class="badge-redes">
+    <li><a href="https://github.com/aliceduarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>GitHub</a></li>
+    <li><a href="https://linkedin.com/in/aliceduarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a></li>
+  </ul>
+  <button type="button" class="btn btn--marketing">Abrir crachá digital</button>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="ilha escura, conceito B"><p class="eyebrow eyebrow--accent">.ilha-escura · conceito B — remapeia tokens: componentes escuros automaticamente</p>
+<div class="ilha-escura" style="padding:var(--sp-600)">
+  <p class="eyebrow eyebrow--accent">Cartão NFC · toque para abrir</p>
+  <a class="marca-sesi" href="#"><img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI"><img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI"><span>SESI<small>Joinville · Informática</small></span></a>
+  <h2>Enzo Marchiori</h2>
+  <p class="legenda">3ºB · Games e React Native · cor de perfil própria (petróleo)</p>
+  <div class="linha">
+    <span class="badge badge--ok">Vitrine ativa</span>
+    <span class="chip" aria-pressed="true">TriNet <small>4</small></span>
+    <button type="button" class="btn btn--secundario">Salvar contato</button>
+  </div>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="cta band, conceito A"><p class="eyebrow">.cta-band · conceito A — faixa noturna de bleed, uma ideia só</p>
+<div class="cta-band">
+  <p class="eyebrow">Vitrine pública 2026</p>
+  <h2>Escola SESI · Formando desenvolvedores para o futuro.</h2>
+  <p>10 portfólios de alunos de Informática, publicados e validados pela secretaria.</p>
+  <button type="button" class="btn btn--marketing">Ver a vitrine</button>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="cta band, conceito B"><p class="eyebrow eyebrow--accent">.cta-band · conceito B — glow na superfície; --ilha = variante noturna</p>
+<div class="cta-band">
+  <p class="eyebrow eyebrow--accent">Vitrine pública 2026</p>
+  <h2>Escola SESI · Formando desenvolvedores para o futuro.</h2>
+  <p>Portfólios, crachás digitais e matrícula validada num link só.</p>
+  <button type="button" class="btn btn--marketing">Ver a vitrine</button>
+</div>
+<div class="cta-band cta-band--ilha">
+  <h2>Feito no laboratório de informática.</h2>
+  <button type="button" class="btn btn--primario">Conhecer a escola</button>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="metrica, conceito A"><p class="eyebrow">.metrica sobre papel (--papel) · conceito A — rótulo, valor tabular, delta</p>
+<div class="grade">
+  <div class="cartao"><div class="metrica"><p class="metrica-label eyebrow">Alunos na vitrine</p><p class="metrica-valor">10</p><p class="metrica-delta"><span class="badge badge--ok">+2 este mês</span> desde março</p></div></div>
+  <div class="cartao"><div class="metrica"><p class="metrica-label eyebrow">Estrelas</p><p class="metrica-valor">76</p><p class="metrica-delta">4 salas · média 7,6</p></div></div>
+  <div class="cartao"><div class="metrica metrica--gigante"><p class="metrica-label eyebrow">Completude geral</p><p class="metrica-valor">65%</p></div></div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="metrica, conceito B"><p class="eyebrow eyebrow--accent">.metrica · conceito B — o número é Bricolage 800; --destaque usa --cor-destaque</p>
+<div class="grade">
+  <div class="metrica"><span>Alunos na vitrine</span><b>10</b><small>+2 este mês</small></div>
+  <div class="metrica metrica--destaque"><span>Estrelas · sala 3ºA</span><b>40</b><small>melhor taxa: 75%</small></div>
+  <div class="metrica metrica--ok"><span>Completude geral</span><b>65%</b><small>LinkedIn 7 · GitHub 6</small></div>
+</div>
+</section>
+
+<footer class="rodape">
+  <span>Inventário de <code>design/</code> — se a classe não está aqui nem nos sistemas, ela não existe.</span>
+  <a href="../index.html">← hub do showcase</a>
+  <a href="../PADROES.md">contrato (PADROES.md)</a>
+</footer>
+
+</div>
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>
