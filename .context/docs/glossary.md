@@ -276,9 +276,10 @@ mais o que o app usa.
 
 ## Selo
 
-Os rótulos de estado no cartão e no perfil: `selo-fixado` ("Fixado") e
-`selo-adm` ("★ Destaque do ADM"). Estilo em `src/app/styles/vitrine.css`, renderizado
-em `src/components/CartaoAluno.tsx` e `src/app/alunos/[slug]/page.tsx`.
+Os rótulos de estado na tabela de alunos e na tela de validação: `selo-fixado`
+("Fixado") e `selo-destaque` ("Destaque", com `IconeEstrela` na tabela). Estilo em
+`src/app/styles/vitrine.css`, renderizado em `src/components/TabelaAlunos.tsx` e
+`src/app/validar/[slug]/page.tsx`.
 
 ## Bio
 
