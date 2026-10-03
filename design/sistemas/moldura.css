@@ -19,8 +19,10 @@
 
 .barra-showcase {
   position: fixed;
-  top: 12px;
-  right: 12px;
+  /* canto INFERIOR-direito: em cima ela cobria botões do header das telas
+     (relato dos dois QAs da onda). some no print, ver @media abaixo. */
+  bottom: 14px;
+  right: 14px;
   z-index: 1300; /* acima de qualquer .modal/.toast dos sistemas */
   display: flex;
   flex-wrap: wrap;

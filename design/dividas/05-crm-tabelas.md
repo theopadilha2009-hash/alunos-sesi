@@ -89,3 +89,22 @@ correção deve portar. Nenhum escape hatch aqui inventa cor nem classe de conce
 - A soma das estrelas do elenco é 95 (40+20+15+20 por sala, o que o CONTEUDO.md
   detalha); o "76 estrelas no total" do mesmo arquivo não fecha com o quadro de
   salas. A tela mostra só o número por aluno — nenhum total é exibido.
+
+## 6. QA visual 02/10: tabela de 6 colunas estoura o container no B — P1-3 (hatch na tela)
+
+- **Onde:** no B a `.tabela` é `width:100% + overflow:hidden`; com as 6 colunas
+  da tela 05 (Redes ainda com `min-width: 16rem` inline no `<th>`), o layout
+  auto comprimia a coluna do aluno até a bio quebrar 1 palavra por linha e a
+  última coluna ("Crachá & Ações") sair cortada. O wrapper `.corte`
+  (`base.css: overflow-x:auto`) já estava no DOM, mas sem piso de largura na
+  tabela o scroll nunca tinha o que rolar.
+- **Como a tela resolveu (hatch local, sem classe nova):**
+  `.corte > .tabela { min-width: max(100%, 56rem) }` +
+  `:is(th, td):first-child { min-width: 14rem }` (piso da coluna do aluno —
+  o `minmax(220px,2fr)` do veredito é sintaxe de grid; aqui é `<table>`, o
+  equivalente honesto é o min-width) + truncamento da bio
+  (`.tabela .ocupada > small`, ellipsis em 34ch, string preservada no DOM).
+- **Regra proposta:** levar ao B o par `.tabela { min-width: … }` dentro de
+  `.corte` (ou `table-layout: fixed` com grid de colunas declarado por variante
+  `.tabela--6col`) — e a truncagem de célula longa como utilitário
+  compartilhado, fechando também a dívida 02 §5 (`.tabela-truncada` só no A).

@@ -122,6 +122,14 @@
 @media (prefers-reduced-motion: reduce) {
   [data-nfc-anel] { animation: none; }
 }
+/* no-sistema */
+/* QA P1-6 (B, 02/10): o B pinta as iniciais do .avatar em --surface — tinta
+   sobre tinta na ilha escura (espelho da dívida 06 §6 e do hatch da 11); o
+   avatar já injeta --cor-destaque: ciano inline, o fill fica no gradiente do
+   B. No A falta o tamanho --xl (nomenclatura do B) — ponte espelhada da 11.
+   Proposta em dividas/12-cartao-nfc.md §5. */
+[data-conceito="b"] .tela[data-tela="12-cartao-nfc"] .avatar { color: var(--text); }
+[data-conceito="a"] .tela[data-tela="12-cartao-nfc"] .avatar--xl { width: 5.5rem; height: 5.5rem; font-size: var(--fs-600); }
 </style>
 </head>
 <body>

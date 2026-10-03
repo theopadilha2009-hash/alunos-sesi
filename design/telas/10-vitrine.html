@@ -63,6 +63,16 @@
 /* 4) filete lateral no ranking de salas (o fonte pinta a borda pela cor da
       sala em .linha-adm; aqui é atributo para não criar classe órfã). */
 [data-conceito] [data-ranking] { border-left: 3px solid var(--cor, var(--line)); }
+/* no-sistema */
+/* 5) QA P1-5 (02/10): no A o <small> da marca é inline (sai "AlunosEscola
+      SESI" grudado) e o logo branco nunca deve aparecer no papel — espelho das
+      pontes da tela 06 (dividas/06-crm-meu-perfil.md §4/§7, que 10 e index
+      passam a repetir). */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-size: var(--fs-100); font-weight: 600;
+  letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint);
+}
 </style>
 </head>
 <body>
@@ -91,35 +101,35 @@
         <b class="metrica-valor">10</b>
         <span class="metrica-label">alunos na rede</span>
         <div class="barra" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Alunos na rede">
-          <span class="barra-fill" style="--pct: 100%; --accent: var(--ciano); --accent-fill: var(--ciano)"></span>
+          <span class="barra-fill" style="--pct: 100%; --accent: var(--ciano); --accent-fill: var(--ciano); --cor-destaque: var(--ciano)"></span>
         </div>
       </div>
       <div class="metrica">
         <b class="metrica-valor">4</b>
         <span class="metrica-label">salas ativas</span>
         <div class="barra" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Salas ativas">
-          <span class="barra-fill" style="--pct: 100%; --accent: var(--verde); --accent-fill: var(--verde)"></span>
+          <span class="barra-fill" style="--pct: 100%; --accent: var(--verde); --accent-fill: var(--verde); --cor-destaque: var(--verde)"></span>
         </div>
       </div>
       <div class="metrica">
         <b class="metrica-valor">70%</b>
         <span class="metrica-label">com LinkedIn</span>
         <div class="barra" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" aria-label="Com LinkedIn">
-          <span class="barra-fill" style="--pct: 70%; --accent: var(--azul-claro); --accent-fill: var(--azul-claro)"></span>
+          <span class="barra-fill" style="--pct: 70%; --accent: var(--azul-claro); --accent-fill: var(--azul-claro); --cor-destaque: var(--azul-claro)"></span>
         </div>
       </div>
       <div class="metrica">
         <b class="metrica-valor">60%</b>
         <span class="metrica-label">com GitHub</span>
         <div class="barra" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Com GitHub">
-          <span class="barra-fill" style="--pct: 60%; --accent: var(--amarelo); --accent-fill: var(--amarelo)"></span>
+          <span class="barra-fill" style="--pct: 60%; --accent: var(--amarelo); --accent-fill: var(--amarelo); --cor-destaque: var(--amarelo)"></span>
         </div>
       </div>
       <div class="metrica">
         <b class="metrica-valor" style="color: var(--amarelo)">★ 76</b>
         <span class="metrica-label">estrelas trocadas</span>
         <div class="barra" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Estrelas trocadas">
-          <span class="barra-fill" style="--pct: 100%; --accent: var(--amarelo); --accent-fill: var(--amarelo)"></span>
+          <span class="barra-fill" style="--pct: 100%; --accent: var(--amarelo); --accent-fill: var(--amarelo); --cor-destaque: var(--amarelo)"></span>
         </div>
       </div>
     </section>

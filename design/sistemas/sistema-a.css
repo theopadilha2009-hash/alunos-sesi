@@ -260,6 +260,13 @@
 [data-conceito="a"] .chip[aria-pressed="true"], [data-conceito="a"] .chip-ativo, [data-conceito="a"] .chip--ativo {
   background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill);
 }
+/* chip com a cor da sala da linha — lê --cor-destaque no elemento, não o alias
+   do :root (dividas/02 §6; par exato do B) */
+[data-conceito="a"] .chip-sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 45%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 62%, var(--text));
+}
 /* grupo segmentado sobre trilho (o "Período" do Painel medido) */
 [data-conceito="a"] .chip-grupo, [data-conceito="a"] .chip--grupo {
   display: inline-flex; gap: var(--sp-50); padding: 3px;
@@ -304,15 +311,20 @@
 [data-conceito="a"] [data-aba-group] { position: relative; }
 [data-conceito="a"] .aba-lista, [data-conceito="a"] .aba--lista {
   display: flex; flex-wrap: wrap; gap: var(--sp-400); border-bottom: 1px solid var(--line);
+  /* as 5 abas longas do Painel ADM estouravam os 1.320px (dividas/07 §1) */
+  overflow-x: auto; scrollbar-width: none;
 }
-[data-conceito="a"] .aba {
+/* contrato dos dois conceitos: .aba-lista régua + button.aba botão; .aba-item é
+   o alias do botão criado pela tela 06 (dividas/06 §1) */
+[data-conceito="a"] .aba, [data-conceito="a"] .aba-item {
   appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
   margin-bottom: -1px; padding: var(--sp-300) var(--sp-100);
   font: 600 var(--fs-300)/1 var(--fonte-texto); color: var(--dim); cursor: pointer;
   transition: color var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
 }
-[data-conceito="a"] .aba:hover { color: var(--text); }
-[data-conceito="a"] .aba[aria-selected="true"], [data-conceito="a"] .aba-ativa, [data-conceito="a"] .aba--ativa {
+[data-conceito="a"] .aba:hover, [data-conceito="a"] .aba-item:hover { color: var(--text); }
+[data-conceito="a"] .aba[aria-selected="true"], [data-conceito="a"] .aba-item[aria-selected="true"],
+[data-conceito="a"] .aba-ativa, [data-conceito="a"] .aba--ativa {
   color: var(--link); border-bottom-color: var(--accent-fill);
 }
 [data-conceito="a"] .painel-aba { padding-top: var(--sp-500); }
@@ -346,6 +358,14 @@
   flex-direction: column; border-radius: var(--raio-lg); padding: var(--sp-300) var(--sp-500);
   border-width: 2px; text-align: center; gap: var(--sp-100);
 }
+/* selo na COR DA SALA da linha: --cor-destaque lido no elemento onde a classe
+   aparece — os aliases --accent/--destaque-sala do :root não alcançam o style
+   pontual (dividas/05 §1, repetida em 07/14 como bug de contrato) */
+[data-conceito="a"] .selo--sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 55%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 52%, var(--text));
+}
 
 /* ---------- 9. .tabela — thead #f8fafc medido, td.num tabular ------------ */
 [data-conceito="a"] .tabela { width: 100%; border-collapse: collapse; font-size: var(--fs-300); }
@@ -369,6 +389,7 @@
 [data-conceito="a"] .tabela td.num, [data-conceito="a"] .tabela th.num {
   text-align: right; font-variant-numeric: tabular-nums; color: var(--text);
 }
+[data-conceito="a"] .forte { color: var(--text); font-weight: 600; }
 [data-conceito="a"] .tabela .forte { color: var(--text); font-weight: 600; }
 [data-conceito="a"] .tabela-truncada { display: block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -477,6 +498,20 @@
 [data-conceito="a"] .marca-sesi img { height: 36px; width: auto; }
 [data-conceito="a"] .marca-sesi-sm img { height: 26px; }
 [data-conceito="a"] .marca-sesi-lg img { height: 56px; }
+/* o A é papel: sempre a versão de tinta. O DOM canônico carrega os dois logos
+   (exigência do B) e sem estas regras as duas rosetas apareciam lado a lado —
+   cinco telas copiavam o hatch (dividas/01 §2, 03 §3, 05 §3, 06 §4, 14 §2).
+   Dentro da ilha escura do A vale sempre o branco, como no B. */
+[data-conceito="a"] .marca-sesi .logo-modo-dark { display: none; }
+[data-conceito="a"] .ilha-escura .marca-sesi .logo-modo-light { display: none; }
+[data-conceito="a"] .ilha-escura .marca-sesi .logo-modo-dark { display: block; }
+/* sub-marca em bloco debaixo do nome (par do B; 06 §7, 08 §6) */
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-weight: 600; font-size: var(--fs-100);
+  letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint);
+}
+/* respiro entre spans quando a marca é "Alunos" + "Escola SESI" em linha */
+[data-conceito="a"] .marca-texto span + span { margin-inline-start: 0.4rem; }
 
 [data-conceito="a"] .rodape {
   margin-top: var(--sp-800); padding: var(--sp-600) var(--section-x);
@@ -523,6 +558,18 @@
 }
 [data-conceito="a"] .sidebar-pe strong { font-size: var(--fs-200); color: var(--text); font-weight: 600; display: block; }
 [data-conceito="a"] .sidebar-pe small { font-size: var(--fs-100); color: var(--faint); }
+/* as duas metades do contrato de sidebar (dividas/02 §2): o A já tinha
+   marca/nav/pe — faltavam o rodapé de ações e as teclas, que eram só do B */
+[data-conceito="a"] .sidebar-rodape {
+  margin-top: var(--sp-200); padding-top: var(--sp-300); border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: var(--sp-200);
+}
+[data-conceito="a"] .sidebar-rodape .kbd { align-self: flex-start; }
+[data-conceito="a"] .kbd, [data-conceito="a"] .sidebar-kbd {
+  padding: 0.1rem 0.4rem; border-radius: var(--raio-sm);
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-family: var(--fonte-mono); font-size: var(--fs-100); color: var(--faint);
+}
 /* quadro de layout: sidebar + conteúdo */
 [data-conceito="a"] .quadro { display: flex; flex-wrap: wrap; gap: 0; min-height: 800px; background: var(--bg); }
 [data-conceito="a"] .quadro-corpo { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; }
@@ -584,19 +631,23 @@
   font-size: var(--fs-200); font-weight: 600; color: var(--dim);
 }
 [data-conceito="a"] .pill-list li strong { color: var(--link); font-variant-numeric: tabular-nums; }
-/* avatar: círculo de iniciais; cor do perfil entra via --cor (var, nunca hex) */
+/* avatar: círculo de iniciais. Token único dos dois conceitos: --cor-destaque,
+   com --cor como fallback legado (dividas/02 §3 — "o DOM não decide dois nomes";
+   o text-mix usa --text, que na folha é --tinta e na ilha é --ilha-texto) */
 [data-conceito="a"] .avatar {
   width: 36px; height: 36px; flex: none; border-radius: var(--raio-full);
   display: inline-flex; align-items: center; justify-content: center;
-  background: color-mix(in oklab, var(--cor, var(--accent-fill)) 12%, var(--surface));
-  color: color-mix(in oklab, var(--cor, var(--accent-fill)) 78%, var(--tinta));
+  background: color-mix(in oklab, var(--cor-destaque, var(--cor, var(--accent-fill))) 12%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque, var(--cor, var(--accent-fill))) 78%, var(--text));
   font: 700 var(--fs-200)/1 var(--fonte-texto); text-transform: uppercase;
   overflow: hidden;
 }
 [data-conceito="a"] .avatar img { width: 100%; height: 100%; object-fit: cover; }
-[data-conceito="a"] .avatar-sm { width: 28px; height: 28px; font-size: var(--fs-100); }
-[data-conceito="a"] .avatar-lg { width: 64px; height: 64px; font-size: var(--fs-500); }
-[data-conceito="a"] .avatar-anel { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in oklab, var(--cor, var(--accent)) 55%, var(--surface)); }
+[data-conceito="a"] .avatar-sm, [data-conceito="a"] .avatar--sm { width: 28px; height: 28px; font-size: var(--fs-100); }
+[data-conceito="a"] .avatar--md { width: 44px; height: 44px; font-size: var(--fs-300); }
+[data-conceito="a"] .avatar-lg, [data-conceito="a"] .avatar--lg { width: 64px; height: 64px; font-size: var(--fs-500); }
+[data-conceito="a"] .avatar--xl { width: 88px; height: 88px; font-size: var(--fs-600); }
+[data-conceito="a"] .avatar-anel { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in oklab, var(--cor-destaque, var(--cor, var(--accent))) 55%, var(--surface)); }
 [data-conceito="a"] .avatar-pilha { display: flex; }
 [data-conceito="a"] .avatar-pilha .avatar + .avatar { margin-left: calc(-1 * var(--sp-200)); }
 
@@ -605,7 +656,24 @@
    Na folha impressa (conceito A, tela 16) o papel continua --papel:
    a ilha é chrome de tela, não da A4. */
 [data-conceito="a"] .ilha-escura {
+  /* a ilha remapeia os tokens de superfície como o B faz (dividas/13 §8): sem
+     isso, qualquer componente dentro dela pintado com var(--surface/--line/
+     --text) saía em papel claro com texto claro — o "verso" do crachá (QA da
+     tela 09). position:relative ancora os stickers do estúdio (dividas/06 §5). */
+  --bg: var(--night);
+  --surface: var(--night);
+  --surface-2: color-mix(in oklab, var(--ilha-texto) 6%, var(--night));
+  --surface-3: color-mix(in oklab, var(--ilha-texto) 10%, var(--night));
+  --thead: color-mix(in oklab, var(--ilha-texto) 8%, var(--night));
+  --trilho: color-mix(in oklab, var(--ilha-texto) 10%, var(--night));
+  --text: var(--ilha-texto);
+  --dim: var(--ilha-faint);
+  --faint: var(--ilha-faint);
+  --line: var(--ilha-line);
+  --line-soft: color-mix(in oklab, var(--ilha-line) 50%, transparent);
+  position: relative;
   background: var(--night); color: var(--ilha-texto);
+  border: 1px solid var(--ilha-line);
   border-radius: var(--raio-lg); padding: var(--sp-600);
   display: flex; flex-direction: column; gap: var(--sp-400);
 }
@@ -637,7 +705,9 @@
 [data-conceito="a"] .cta-band p { color: var(--ilha-faint); max-width: 56ch; }
 [data-conceito="a"] .cta-band .eyebrow { color: var(--ilha-faint); }
 
-/* linktree/link social: cápsula contornada que vive na ilha escura */
+/* linktree/link social. FORA da ilha o cápsula usa tinta/link com borda (QA:
+   com os brancos translúcidos --ilha-* ela sumia no papel — sistema-a.css:641);
+   SOBRE a ilha, ou com o modificador --ilha, inverte para o branco. */
 [data-conceito="a"] .badge-redes {
   display: flex; flex-wrap: wrap; gap: var(--sp-200);
   list-style: none; margin: 0; padding: 0;
@@ -645,12 +715,18 @@
 [data-conceito="a"] .badge-redes a, [data-conceito="a"] .badge-redes li {
   display: inline-flex; align-items: center; gap: var(--sp-200);
   padding: var(--sp-200) var(--sp-400); border-radius: var(--raio-sm);
-  border: 1px solid var(--ilha-line); background: var(--ilha-fill);
-  color: var(--ilha-texto); font-size: var(--fs-300); font-weight: 600; text-decoration: none;
-  transition: background var(--dur-1) var(--ease);
+  border: 1px solid var(--line); background: var(--surface);
+  color: var(--link); font-size: var(--fs-300); font-weight: 600; text-decoration: none;
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
 }
-[data-conceito="a"] .badge-redes a:hover { background: color-mix(in oklab, var(--ilha-fill) 50%, var(--ilha-line)); }
+[data-conceito="a"] .badge-redes a:hover { border-color: var(--accent); background: var(--surface-2); }
 [data-conceito="a"] .badge-redes svg { width: 15px; height: 15px; flex: none; }
+/* sobre a ilha escura volta ao branco translúcido (o remape do §19 troca
+   --line/--surface, mas --link é institucional e não remapeia — daí a regra) */
+[data-conceito="a"] .ilha-escura .badge-redes a, [data-conceito="a"] .ilha-escura .badge-redes li {
+  border-color: var(--ilha-line); background: var(--ilha-fill); color: var(--ilha-texto);
+}
+[data-conceito="a"] .ilha-escura .badge-redes a:hover { background: color-mix(in oklab, var(--ilha-fill) 50%, var(--ilha-line)); }
 /* versão clara (fora da ilha): contorno no line, texto dim */
 [data-conceito="a"] .badge-redes-clara a, [data-conceito="a"] .badge-redes--clara a {
   background: var(--surface); border-color: var(--line); color: var(--dim);
@@ -680,7 +756,8 @@ html[data-frame="mobile"] [data-conceito="a"] .sidebar-nav {
 }
 html[data-frame="mobile"] [data-conceito="a"] .sidebar-nav .eyebrow { display: none; }
 html[data-frame="mobile"] [data-conceito="a"] .nav-item { height: 40px; flex: none; }
-html[data-frame="mobile"] [data-conceito="a"] .sidebar-pe { display: none; }
+html[data-frame="mobile"] [data-conceito="a"] .sidebar-pe,
+html[data-frame="mobile"] [data-conceito="a"] .sidebar-rodape { display: none; }
 html[data-frame="mobile"] [data-conceito="a"] .topo { padding: var(--sp-200) var(--sp-300); flex-wrap: wrap; }
 html[data-frame="mobile"] [data-conceito="a"] .grade { --col-min: 100%; }
 

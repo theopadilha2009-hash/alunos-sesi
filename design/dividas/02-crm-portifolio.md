@@ -86,3 +86,18 @@ no outro — a tela é um DOM só e os dois precisaram de ponte.
   `moldura.js`) em vez de inventar `.btn-modo`; no app o default é "tabela"
   (`CrmApp.tsx:213`), na tela o default demonstrado é "Cards" para o grid dos 10
   alunos ser o estado padrão do screenshot — mudança de ordem de abas, não de DOM.
+
+## 8. QA visual 02/10: `.cartao-cabeca` não é flex no A — P0-2 (hatch na tela)
+
+- **Onde:** `.cartao-cabeca` não existe em `sistema-a.css` §6 (só o padding do
+  B via `.cartao--cheio`, e ainda assim por hatch da própria tela). No grid de
+  cards do painel "Cards", o A empilhava avatar, nome e `.chip-estrela` no fluxo
+  do texto — no screenshot, "Alice Duar★14" com o chip sobre o nome.
+- **Como a tela resolveu (hatch local, só no A):** `[data-conceito="a"]
+  .tela[data-tela="02-crm-portifolio"] .cartao-cabeca { display: flex;
+  align-items: center; gap: var(--sp-200) }` + `flex: none` no avatar,
+  `min-width: 0` no `.ocupada`/`h3` e estrela com `margin-left: auto` (fora do
+  fluxo do texto).
+- **Regra proposta:** definir `.cartao-cabeca` nos dois sistemas como
+  `flex + align-items:center + gap --sp-200 + min-width:0 no filho ocupado`
+  (o cabeçalho do card é sempre isso; no B hoje é só fatia de padding).

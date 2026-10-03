@@ -100,6 +100,13 @@ html[data-frame="mobile"] [data-conceito="b"] .quadro { flex-direction: column; 
 .tela[data-tela="07-crm-painel-adm"] .aba { position: sticky; top: 0; z-index: var(--z-sticky); background: var(--bg); padding-block: var(--sp-200); }
 [data-conceito="b"] .tela[data-tela="07-crm-painel-adm"] code { font-family: var(--fonte-mono); font-size: var(--fs-200); color: var(--dim); }
 .tela[data-tela="07-crm-painel-adm"] .ilha-escura code { display: block; margin-block: var(--sp-200) var(--sp-100); font-size: var(--fs-600); font-weight: 700; letter-spacing: 0.06em; color: var(--ilha-accent); user-select: all; }
+/* no-sistema */
+/* QA P1-4 (A, 02/10): a regra acima lê --ilha-accent, token que só o B tem —
+   no A a cor cai no herda-da-ilha (quase-branco) e some dentro da pílula clara
+   que o §code do A pinta em --surface-2. Texto volta ao token de texto do A
+   sobre o fundo da pílula, como o B faz com o seu accent. Proposta em
+   dividas/07-crm-painel-adm.md §7. */
+[data-conceito="a"] .tela[data-tela="07-crm-painel-adm"] .ilha-escura code { color: var(--text); }
 </style>
 </head>
 <body>

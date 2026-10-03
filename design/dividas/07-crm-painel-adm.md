@@ -101,3 +101,19 @@ nova.
 tela fechar sozinha. Quando o coordenador portar aquelas, o bloco
 `/* no-sistema */` desta tela perde 10 das suas 18 regras; sobram só as desta dívida
 (itens 1–4: `.vazio--linha`, a costura da `.metrica`, os ajustes de `.aba`/`code`).
+
+## 7. QA visual 02/10: o código de ativação some no A — P1-4 (hatch na tela)
+
+- **Onde:** a ponte do `/* no-sistema */` desta tela pinta
+  `.ilha-escura code { color: var(--ilha-accent) }` — token que só existe no B
+  (`sistema-b.css` §ilha). No A a declaração fica inválida, a cor cai no herdado
+  da ilha (quase-branco) e o `SESI-7KQ2-M4VB` desaparece dentro da pílula clara
+  que o `code` do A (`--surface-2`) desenha: no screenshot, "input branco sem
+  texto".
+- **Como a tela resolveu (hatch local, só no A):** regra seguinte, mais
+  específica, devolvendo `color: var(--text)` ao code sobre o fundo da pílula —
+  mesmo contrato de tinta do B (accent legível sobre o fundo próprio).
+- **Regra proposta:** os tokens da ilha escura (`--ilha-accent`, `--ilha-bg`,
+  `--ilha-dim`…) pertencem só ao B; enquanto o A não os tiver, nenhum hatch
+  multi-conceito deve lê-los sem fallback — ou o A define `--ilha-accent` como
+  alias de `--accent` no bloco `:root[data-conceito="a"]`.

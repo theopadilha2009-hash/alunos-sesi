@@ -244,12 +244,15 @@
   flex: none;
 }
 
-/* o DOM carrega os dois logos (público e branco, como no app) e o tema
-   escolhe; na ilha escura vale sempre o branco */
-[data-conceito="b"] .marca-sesi .logo-modo-light { display: block; }
-[data-conceito="b"] .marca-sesi .logo-modo-dark { display: none; }
-[data-conceito="b"][data-theme="light"] .marca-sesi .logo-modo-light { display: none; }
-[data-conceito="b"][data-theme="light"] .marca-sesi .logo-modo-dark { display: block; }
+/* o DOM carrega os dois logos e o tema escolhe: no dark vai o branco
+   (.logo-modo-dark = logo-sesi-branco.png); no claro, a versão de tinta
+   (.logo-modo-light = logo-sesi.png). O swap anterior estava invertido e o
+   wordmark branco desaparecia no tema claro (QA da onda de correção). Na
+   ilha escura vale sempre o branco, inclusive no tema claro. */
+[data-conceito="b"] .marca-sesi .logo-modo-light { display: none; }
+[data-conceito="b"] .marca-sesi .logo-modo-dark { display: block; }
+[data-conceito="b"][data-theme="light"] .marca-sesi .logo-modo-light { display: block; }
+[data-conceito="b"][data-theme="light"] .marca-sesi .logo-modo-dark { display: none; }
 [data-conceito="b"] .ilha-escura .marca-sesi .logo-modo-light { display: none; }
 [data-conceito="b"] .ilha-escura .marca-sesi .logo-modo-dark { display: block; }
 
@@ -262,6 +265,9 @@
   text-transform: uppercase;
   color: var(--dim);
 }
+
+/* respiro quando a marca é montada em spans adjacentes ("Alunos" + "Escola SESI") */
+[data-conceito="b"] .marca-texto span + span { margin-inline-start: 0.4rem; }
 
 /* ==========================================================================
    TOPO / RODAPÉ (público 10–16)
@@ -280,6 +286,16 @@
   z-index: var(--z-sticky);
   background: color-mix(in oklab, var(--bg) 86%, transparent);
   backdrop-filter: blur(10px);
+}
+
+/* par do §14 do A: o slot de título do header de produto (dividas/05 §3) */
+[data-conceito="b"] .topo-titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: var(--fs-600);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 [data-conceito="b"] .topo nav {
@@ -364,6 +380,21 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* carregando: anel de 14px em currentColor (par do §3 do A — dividas/01 §3,
+   15 §5; base.css corta a animação em prefers-reduced-motion) */
+[data-conceito="b"] .btn[aria-busy="true"] { opacity: 0.8; pointer-events: none; transform: none; }
+
+[data-conceito="b"] .btn[aria-busy="true"]::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: var(--raio-full);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: b-girar 0.8s linear infinite;
 }
 
 [data-conceito="b"] .btn--primario {
@@ -508,6 +539,19 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--vermelho) 14%, transparent);
 }
 
+/* par do §4 do A (dividas/01 §4 + 17 §3): rótulo, dica e mensagem de erro do
+   campo — o B dava o erro só pelo aria-invalid no controle e o texto nu */
+[data-conceito="b"] .campo-label {
+  display: block;
+  font-size: var(--fs-300);
+  font-weight: 700;
+  color: var(--text);
+}
+
+[data-conceito="b"] .campo-dica { font-size: var(--fs-200); color: var(--faint); }
+
+[data-conceito="b"] .campo-msg-erro { font-size: var(--fs-200); font-weight: 700; color: var(--perigo-fg); }
+
 /* ==========================================================================
    CHIP (filtro) + PILL-LIST
    ========================================================================== */
@@ -546,6 +590,14 @@
 }
 
 [data-conceito="b"] .chip[aria-pressed="true"] small { color: inherit; }
+
+/* chip com a cor da sala da linha (--cor-destaque), espelho do .selo--sala
+   para os slots de contagem/filtro de sala (dividas/02 §6) */
+[data-conceito="b"] .chip-sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 45%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 62%, var(--text));
+}
 
 [data-conceito="b"] .pill-list {
   display: flex;
@@ -612,11 +664,39 @@
   margin-bottom: var(--sp-400);
 }
 
+/* gramática do §6 do A portada (dividas/02 §4): card cheio = capa sangrando +
+   fatias com respiro; fora do --cheio as fatias só estruturam (o .cartao do B
+   já tem padding próprio — sem duplicar) */
+[data-conceito="b"] .cartao--cheio {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+[data-conceito="b"] .cartao-corpo { display: flex; flex-direction: column; gap: var(--sp-400); }
+[data-conceito="b"] .cartao-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-300);
+  border-top: 1px solid var(--line-soft);
+}
+
+[data-conceito="b"] .cartao--cheio > .cartao-cabeca { padding: var(--sp-400) var(--sp-500) var(--sp-200); }
+[data-conceito="b"] .cartao--cheio > .cartao-corpo { padding: 0 var(--sp-500) var(--sp-400); }
+[data-conceito="b"] .cartao--cheio > .cartao-rodape { padding: var(--sp-300) var(--sp-500) var(--sp-400); }
+
 /* ==========================================================================
    ABAS  (moldura.js troca aria-selected + [hidden])
+   Contrato único dos dois conceitos (dividas/01 §1): .aba-lista é a régua,
+   button.aba[data-aba] é o botão, .painel-aba o painel. Os seletores antigos
+   — .aba como régua e .aba-item como botão — ficam como aliases de transição.
    ========================================================================== */
 
-[data-conceito="b"] .aba {
+[data-conceito="b"] .aba-lista,
+[data-conceito="b"] .aba[role="tablist"] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-100);
@@ -624,9 +704,12 @@
   margin-bottom: var(--sp-500);
 }
 
+[data-conceito="b"] .aba-lista .aba,
+[data-conceito="b"] .aba-lista .aba-item,
 [data-conceito="b"] .aba [role="tab"],
 [data-conceito="b"] .aba button,
-[data-conceito="b"] .aba a {
+[data-conceito="b"] .aba a,
+[data-conceito="b"] .aba-item {
   appearance: none;
   border: none;
   background: transparent;
@@ -638,15 +721,21 @@
   color: var(--dim);
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
   transition: color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
 }
 
+[data-conceito="b"] .aba-lista .aba:hover,
+[data-conceito="b"] .aba-lista .aba-item:hover,
 [data-conceito="b"] .aba [role="tab"]:hover,
 [data-conceito="b"] .aba button:hover,
-[data-conceito="b"] .aba a:hover { color: var(--text); background: var(--pouso); }
+[data-conceito="b"] .aba a:hover,
+[data-conceito="b"] .aba-item:hover { color: var(--text); background: var(--pouso); }
 
+[data-conceito="b"] .aba-lista [aria-selected="true"],
 [data-conceito="b"] .aba [aria-selected="true"] { color: var(--accent); background: var(--realce); }
 
+[data-conceito="b"] .aba-lista [aria-selected="true"]::after,
 [data-conceito="b"] .aba [aria-selected="true"]::after {
   content: "";
   position: absolute;
@@ -697,6 +786,14 @@
   background: transparent;
   color: var(--dim);
   font-weight: 700;
+}
+
+/* cor POR LINHA: lê --cor-destaque no elemento (linha/cap), não o alias do
+   :root — é o gancho do cores.ts (dividas/05 §1, repetido em 07/14) */
+[data-conceito="b"] .selo--sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 55%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 52%, var(--text));
 }
 
 /* ==========================================================================
@@ -833,8 +930,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* .forte: peso+cor do nome forte (par do §9 do A — dividas/05 §3); o seletor
+   aceita o link com .forte DENTRO do td, não só o td.marca (dividas/14 §5) */
+[data-conceito="b"] .forte { font-weight: 700; color: var(--text); }
+
 [data-conceito="b"] .tabela td.forte,
+[data-conceito="b"] .tabela td .forte,
 [data-conceito="b"] .tabela td b { font-weight: 700; }
+
+/* par do §9 do A: coluna larga que não pode quebrar a linha (dividas/02 §5) */
+[data-conceito="b"] .tabela-truncada {
+  display: block;
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 [data-conceito="b"] .tabela td small { color: var(--faint); font-size: var(--fs-200); }
 
@@ -882,6 +993,43 @@
 [data-conceito="b"] .modal h3 {
   font-size: var(--fs-600);
   letter-spacing: -0.02em;
+}
+
+/* fatias do modal — par do §10 do A (dividas/17 §1, reiterada em 03 §2 e 06 §3):
+   o mesmo DOM (.modal-cabeca/.modal-x/.modal-corpo/.modal-rodape) sai montado
+   nos dois conceitos */
+[data-conceito="b"] .modal-cabeca {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-300);
+}
+
+[data-conceito="b"] .modal-x {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--raio-md);
+  color: var(--faint);
+  cursor: pointer;
+}
+
+[data-conceito="b"] .modal-x:hover { background: var(--pouso); color: var(--text); }
+
+[data-conceito="b"] .modal-corpo { display: flex; flex-direction: column; gap: var(--sp-400); }
+
+[data-conceito="b"] .modal-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-300);
+  margin-top: var(--sp-500);
+  padding-top: var(--sp-400);
+  border-top: 1px solid var(--line-soft);
 }
 
 [data-conceito="b"] .toast {
@@ -977,7 +1125,30 @@
 
 [data-conceito="b"] .sidebar .marca-sesi { margin-bottom: var(--sp-200); }
 
-[data-conceito="b"] .sidebar nav {
+/* contrato único da sidebar (dividas/02 §2): marca/nav/pe/rodape/kbd existem nos
+   dois conceitos — o B veste com superfície de card, não com faixa Tabler */
+[data-conceito="b"] .sidebar-marca {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-100);
+  margin-bottom: var(--sp-200);
+}
+
+[data-conceito="b"] .sidebar-pe {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-300);
+  padding: var(--sp-300);
+  border: 1px solid var(--line);
+  border-radius: var(--raio-md);
+  background: var(--surface-2);
+}
+
+[data-conceito="b"] .sidebar-pe strong { display: block; font-size: var(--fs-200); font-weight: 700; color: var(--text); }
+[data-conceito="b"] .sidebar-pe small { font-size: var(--fs-100); color: var(--faint); }
+
+[data-conceito="b"] .sidebar nav,
+[data-conceito="b"] .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: var(--sp-100);
@@ -1045,6 +1216,35 @@
   font-size: var(--fs-100);
   color: var(--faint);
 }
+
+/* ==========================================================================
+   QUADRO — o frame do CRM (sidebar + corpo), par do §15 do A
+   (dividas/02 §1, 03 §1, 05 §2, 06 §2, 07 §6): é estrutura, como .wrap —
+   escopo de conceito, nunca de tela.
+   ========================================================================== */
+
+[data-conceito="b"] .quadro {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - var(--esp-palco));
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+
+[data-conceito="b"] .quadro-corpo {
+  flex: 1 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* mobile: empilha e a sidebar vira régua em largura total (QA achou a 390px
+   sem colapso — o hatch das telas fazia isso; a regra de .sidebar está no fim
+   do arquivo, esta é do contêiner) */
+[data-conceito="b"][data-frame="mobile"] .quadro { flex-direction: column; }
+[data-conceito="b"][data-frame="mobile"] .quadro > .sidebar { width: 100%; flex: none; position: static; }
 
 /* ==========================================================================
    MÉTRICA + HERO + EYEBROW (ajuste do B; a classe vive no base.css)
@@ -1134,10 +1334,11 @@
   height: 2.75rem;
   flex: none;
   border-radius: var(--raio-full);
-  background: linear-gradient(135deg,
-    color-mix(in oklab, var(--cor-destaque) 65%, var(--surface)),
-    color-mix(in oklab, var(--cor-destaque) 25%, var(--surface-3)));
-  color: var(--surface);
+  /* fill VISÍVEL da cor da sala com as iniciais derivadas do fundo — o gradiente
+     65% + tinta --surface deixava o "AD" ilegível no escuro e na folha (QA da
+     tela 12; dividas/06 §6 pedia contraste calculado como no .btn--primario) */
+  background: color-mix(in oklab, var(--cor-destaque) 22%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 62%, var(--text));
   font-family: var(--fonte-titulo);
   font-weight: 800;
   font-size: var(--fs-300);
@@ -1147,6 +1348,7 @@
   line-height: 1;
 }
 
+[data-conceito="b"] .avatar--sm { width: 1.9rem; height: 1.9rem; font-size: var(--fs-100); border-width: 1px; }
 [data-conceito="b"] .avatar--md { width: 3.5rem; height: 3.5rem; font-size: var(--fs-400); }
 [data-conceito="b"] .avatar--lg { width: 5.5rem; height: 5.5rem; font-size: var(--fs-600); }
 [data-conceito="b"] .avatar--xl { width: 7.5rem; height: 7.5rem; font-size: var(--fs-800); }
@@ -1245,6 +1447,34 @@
 }
 
 /* ==========================================================================
+   PROGRESSO — .barra/.barra-fill, par do §20 do A (dividas/17 §2, 06 §3,
+   11 §1): trilho --surface-3 e preenchimento na COR DA SALA (--cor-destaque,
+   nunca cinza fixo — QA da vitrine 10).
+   ========================================================================== */
+
+[data-conceito="b"] .barra {
+  height: 10px;
+  border-radius: var(--raio-full);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+[data-conceito="b"] .barra-fill,
+[data-conceito="b"] .barra--fill,
+[data-conceito="b"] .barra > span {
+  display: block;
+  height: 100%;
+  width: var(--pct, 0%);
+  border-radius: var(--raio-full);
+  background: var(--cor-destaque);
+  transition: width var(--dur-2) var(--ease);
+}
+
+[data-conceito="b"] .barra-fina { height: 6px; }
+
+[data-conceito="b"] .barra-ok .barra-fill { background: var(--ok-fg); }
+
+/* ==========================================================================
    DOMÍNIOS — ajuste fino por fatia do globals.css (sem classes novas:
    o gancho é o data-tela da própria tela + seletores de elemento)
    ========================================================================== */
@@ -1290,7 +1520,7 @@
 }
 
 /* ── 06 · estúdio / meu perfil ────────────────────────────────────────── */
-[data-conceito="b"] .tela[data-tela^="06"] .aba { position: sticky; top: 0; background: var(--bg); z-index: var(--z-sticky); }
+[data-conceito="b"] .tela[data-tela^="06"] :is(.aba, .aba-lista) { position: sticky; top: 0; background: var(--bg); z-index: var(--z-sticky); }
 
 /* ── 04 · desafios (mural) ────────────────────────────────────────────── */
 [data-conceito="b"] .tela[data-tela^="04"] .cartao--interativo:hover { transform: translateY(-3px) rotate(-0.4deg); }
@@ -1350,7 +1580,8 @@
   background: var(--surface-2);
 }
 
-[data-conceito="b"][data-theme="light"] .aba [aria-selected="true"] {
+[data-conceito="b"][data-theme="light"] .aba [aria-selected="true"],
+[data-conceito="b"][data-theme="light"] .aba-lista [aria-selected="true"] {
   background: color-mix(in oklab, var(--accent) 6%, var(--surface));
 }
 
@@ -1411,7 +1642,8 @@
   border-bottom: 1px solid var(--line);
 }
 
-[data-conceito="b"][data-frame="mobile"] .aba { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+[data-conceito="b"][data-frame="mobile"] .aba-lista,
+[data-conceito="b"][data-frame="mobile"] .aba[role="tablist"] { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 [data-conceito="b"][data-frame="mobile"] .modal { padding: var(--sp-300); }
 [data-conceito="b"][data-frame="mobile"] .hero { padding-block: var(--sp-600); }
 
@@ -1520,4 +1752,9 @@
 @keyframes b-elevar {
   from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* anel de .btn[aria-busy] — par do a-girar do A (dividas/01 §3) */
+@keyframes b-girar {
+  to { transform: rotate(360deg); }
 }

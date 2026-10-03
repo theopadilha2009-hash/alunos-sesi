@@ -60,6 +60,16 @@ html[data-frame="mobile"] [data-conceito="b"] .quadro { flex-direction: column; 
 [data-conceito="b"] .cartao p + .badge-redes { margin-top: var(--sp-300); }
 [data-conceito="b"] .quadro-corpo .wrap { padding-block: var(--sp-500) var(--sp-600); }
 [data-conceito="a"] .quadro-corpo .wrap { padding-block: var(--sp-500) var(--sp-600); }
+/* no-sistema */
+/* QA P0-2 (A, 02/10): o cabeçalho do card do grid não é flex no A — avatar,
+   nome e chip-estrela caem no fluxo do texto ("Alice Duar★14"). Flex local com
+   piso de largura no nome; estrela fora do fluxo. Proposta registrada em
+   dividas/02-crm-portifolio.md §8. */
+[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca { display: flex; align-items: center; gap: var(--sp-200); }
+[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .avatar { flex: none; }
+[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .ocupada { min-width: 0; }
+[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca .ocupada h3 { min-width: 0; }
+[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .chip-estrela { flex: none; margin-left: auto; }
 </style>
 </head>
 <body>

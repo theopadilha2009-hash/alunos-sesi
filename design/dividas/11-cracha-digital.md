@@ -54,3 +54,25 @@ tela 11 esbarra nas mesmas faltas.
   regra de ouro) — sem inventar variante local.
 - **Regra proposta:** no A, mapear `--fixado` para o par `--aviso-*` e
   `--validado` para o par `--ok-*` do pastel existente.
+
+## 5. QA visual 02/10: nome sobre a capa clara + redes fora da ilha (hatches na tela)
+
+- **Onde:** (A) a capa do perfil é um `.olho` — no conceito papel o `--surface-2`
+  é claro, e o bloco de nome sobe `margin-top: -sp-700` sobre a base da capa: o
+  branco `--ilha-texto` do h1 desaparecia ali. E o `ul.badge-redes` de "Redes
+  Profissionais & Contato", fora da ilha, vestia no A os tokens de ilha
+  (`--ilha-fill/--ilha-line/--ilha-texto` no `a`) → chip branco sobre papel,
+  bloco parecia vazio.
+- **Como a tela resolveu (hatch local):** scrim na base da capa
+  (`[data-conceito="a"] .ilha-escura > .olho::after`, gradiente
+  `color-mix(black)`, só no A — o B já tem a capa escura); lista de redes com a
+  variante `badge-redes--clara` que o A já define (o B ignora), com o `li` da
+  pílula-duplicada desvestido localmente; chips LinkedIn/GitHub/**Instagram** +
+  o e-mail institucional preservado (Instagram =
+  `https://instagram.com/aliceduarte`, o mesmo URL do linktree da tela 12 —
+  CONTEUDO.md não lista Instagram para o elenco).
+- **Regra proposta (onda de correção):** variante `.olho--capa` nos dois
+  sistemas com scrim escuro de base (uso: capa de perfil/crachá), e o
+  `.badge-redes` do A vestir tokens de ilha **somente** aninhado em
+  `.ilha-escura` — fora dela o default já é a versão clara, aposentando a
+  variante `--clara`.

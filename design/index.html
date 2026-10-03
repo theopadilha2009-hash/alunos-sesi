@@ -26,6 +26,17 @@
 <link rel="stylesheet" href="sistemas/sistema-b.css">
 <link rel="stylesheet" href="sistemas/moldura.css">
 <script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<style>
+/* no-sistema */
+/* Espelho das pontes 06/10 (propostas em dividas/06-crm-meu-perfil.md §4 e §7):
+   no A o logo branco nunca aparece e o <small> da marca é bloco — sem isto o
+   hub mostra os dois logos e "AlunosEscola SESI · showcase" grudado. */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-size: var(--fs-100); font-weight: 600;
+  letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint);
+}
+</style>
 </head>
 <body>
 <div class="palco">

@@ -57,3 +57,21 @@ O `BadgeTurma` do fonte é um pill com LED na cor da sala (`title
 por `--cor-destaque`; se a dívida 09 §3 (cartão físico/insígnias) portar o
 "ponto de cor da sala", isto sobra. Sem proposta nova — só não duplicar o
 atrito quando o port da 09 chegar.
+
+## 5. QA visual 02/10: avatar da ilha sem fill legível no B — P1-6 (hatch na tela)
+
+- **Onde:** o `.avatar` do B escreve as iniciais em `color: var(--surface)` —
+  dentro da `.ilha-escura`, `--surface` é re-mapeado para a tinta escura da
+  própria ilha: tinta sobre tinta, o "AD" de 7.5rem some do fill ciano
+  (dívida-irmã: `dividas/06-crm-meu-perfil.md` §6 e o espelho já aplicado na
+  tela 11). O anel pulsante e o fill por `--cor-destaque` estavam OK — o avatar
+  já injeta `--cor/--cor-destaque: var(--ciano)` inline (sala 3ºA).
+- **Como a tela resolveu (hatch local, 2 regras):** `[data-conceito="b"]
+  .tela[data-tela="12-cartao-nfc"] .avatar { color: var(--text) }` (na ilha,
+  `--text` é o claro do remapeamento — legível sobre o gradiente da sala) +
+  ponte de tamanho `[data-conceito="a"] .avatar--xl` espelhando a tela 11, que
+  faltava aqui e devolve o avatar grande no conceito papel.
+- **Regra proposta:** uma só — canonicar o par de tokens do avatar nos dois
+  sistemas (fecha 06 §6, 11 §2 e esta junto): `--cor-destaque` com fallback
+  `--cor`, e as iniciais em `--ilha-text`/`--on-accent` quando o avatar veste a
+  ilha, não em `--surface`.

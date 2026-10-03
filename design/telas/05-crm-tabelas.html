@@ -74,6 +74,18 @@
 /* O fonte centraliza a última coluna com textAlign inline (TabelaAlunos.tsx:52). */
 .tela[data-tela="05-crm-tabelas"] .tabela :is(th, td):last-child { text-align: center; }
 .tela[data-tela="05-crm-tabelas"] .tabela td:last-child > .linha { justify-content: center; }
+/* no-sistema */
+/* QA P1-3 (B, 02/10): a tabela de 6 colunas colapsava em min-content — bio em
+   1 palavra/linha e "Crachá & Ações" cortada. O wrapper .corte (base.css) já
+   está no DOM; aqui a tabela ganha piso de largura (o scroll horizontal passa a
+   valer), a coluna do aluno um mínimo de 14rem (piso equivalente ao
+   minmax(220px,2fr) do veredito — minmax() é grid, e o .tabela aqui é table),
+   e a bio trunca em reticências. Proposta em dividas/05-crm-tabelas.md §6. */
+.tela[data-tela="05-crm-tabelas"] .corte > .tabela { min-width: max(100%, 56rem); }
+.tela[data-tela="05-crm-tabelas"] .tabela :is(th, td):first-child { min-width: 14rem; }
+.tela[data-tela="05-crm-tabelas"] .tabela .ocupada > small {
+  display: block; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 </style>
 </head>
 <body>

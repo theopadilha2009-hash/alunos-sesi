@@ -95,3 +95,17 @@ Achados de quem desenhou a tela do Meu Perfil. Nenhum muda markup por conceito
   *estado* aberto continua demonstrável (um clique) e fechável por Esc/`data-fecha`.
 - `.btn--icone` é do A; no B o botão de ícone fica com padding padrão. Aceitável,
   mas se o contrato listar `--icone`, portar ao B.
+
+## 9. Espelho das pontes §4 e §7 nas telas 10 e index — QA P1-5 (02/10)
+
+- O hatch `/* no-sistema */` de `[data-conceito="a"] .logo-modo-dark { display:
+  none }` e `[data-conceito="a"] .marca-sesi small { display: block; … }` foi
+  repetido em `telas/10-vitrine.html` e no `<style>` novo de `index.html`
+  (hub, que não tinha nenhuma regra local) — o veredito de QA marcou "Alunos
+  Escola SESI" grudado na 10 e no hub; em A, sem o par, os dois logos apareciam
+  lado a lado. Não é dívida nova: quando §4 e §7 forem portadas para
+  `sistema-a.css` §14, esses dois hatches morrem junto.
+- Nota do round: em **B+light** a marca some nas telas 06/10 — a regra canônica
+  hoje é do sistema (`sistema-b.css` linhas do `.marca-sesi .logo-modo-*`:
+  claro mostra o branco). Não é classe de tela; quem porta é o dono dos
+  sistemas (registrado no report da onda, sem hatch para não brigar com ele).
