@@ -4,6 +4,7 @@ import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { NONCE_HEADER } from "@/lib/csp";
 import { URL_BASE } from "@/lib/links";
+import { TemaHidratacao } from "@/components/TemaHidratacao";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -56,6 +57,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       data-theme="dark"
       className={`${manrope.variable} ${bricolage.variable}`}
+      suppressHydrationWarning
     >
       <head>
         {/* Roda antes da primeira pintura: sem isso a página aparece escura
@@ -75,6 +77,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body>
+        <TemaHidratacao />
         {children}
         {/* Web Vitals e uso anônimo. Em produção o script é servido de
             /_vercel/insights (mesma origem), então passa no `script-src 'self'`

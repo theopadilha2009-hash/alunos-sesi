@@ -1,0 +1,91 @@
+/* ==========================================================================
+   skeleton-2026.css — Etapa 2, fatia 4: a família .esq que sustenta os
+   loading.tsx do app (o app não tinha NENHUM; o skeleton do showcase
+   15-estados era MELHORIA porque não havia o que melhorar).
+   Seletor novo, arquivo novo no FIM da cascata — o contrato do
+   globals.css para nascer aqui. Cores por token: vive bem nos dois temas.
+   ========================================================================== */
+
+.esq-pagina {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+.esq {
+  background:
+    linear-gradient(100deg, var(--surface-2) 30%, var(--surface-3) 45%, var(--surface-2) 60%)
+    200% 0 / 300% 100%;
+  border-radius: var(--raio-md);
+  animation: esq-brilho 1.5s ease-in-out infinite;
+}
+
+@keyframes esq-brilho {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Guarda EXPLÍCITA: o kill-switch global (crm.css:1511) já congela toda
+   animação em prefers-reduced-motion, mas skeleton aparece no momento mais
+   frágil da navegação — não depende do hack de outro arquivo para ficar
+   parado. */
+@media (prefers-reduced-motion: reduce) {
+  .esq {
+    animation: none;
+  }
+}
+
+.esq-linha {
+  height: 0.9rem;
+  width: 100%;
+}
+
+.esq-titulo {
+  height: 1.6rem;
+  width: 45%;
+}
+
+.esq-avatar {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+.esq-cartao {
+  min-height: 9rem;
+}
+
+.esq-bloco {
+  min-height: 14rem;
+}
+
+.esq-topo {
+  height: 4.5rem;
+}
+
+.esq-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+/* utilitários de composição do esqueleto — fileira com avatar + linhas,
+   pilha de linhas dentro do flex-item (min-width:0: a lição da tabela que
+   estourava o trilho flex) */
+.esq-fileira {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.esq-pilha {
+  display: grid;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}

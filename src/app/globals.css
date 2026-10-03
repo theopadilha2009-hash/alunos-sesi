@@ -49,3 +49,6 @@
    dialeto (campo x3, chip x2, botao-secundario orfao) sem renomear nada no
    JSX. Vem depois dos claros porque tambem carrega regras light proprias. */
 @import "./styles/primitivos-2026.css";
+/* Etapa 2, fatia 4 — família .esq dos loading.tsx (seletor novo; o app nunca
+   teve skeleton). */
+@import "./styles/skeleton-2026.css";
