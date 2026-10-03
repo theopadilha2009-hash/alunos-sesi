@@ -699,6 +699,14 @@ body:has(.login-tela-container) {
   background: color-mix(in srgb, var(--sala-cor, var(--accent)) 25%, var(--surface-2));
 }
 
+/* Chão do flex-item (P0 portado do showcase 02): sem min-width:0 um sobrenome
+   composto trava o item em min-width:auto e empurra a estrela para fora do
+   overflow:hidden do card (crm.css:668) — o clip corta o chip em vez de
+   rolar. O wrap de texto já existia; o que faltava era o piso. */
+.card-port-titulos {
+  min-width: 0;
+}
+
 .card-port-titulos h3 {
   font-size: 1.05rem;
   font-weight: 800;

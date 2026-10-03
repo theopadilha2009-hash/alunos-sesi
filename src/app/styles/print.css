@@ -61,6 +61,13 @@
   .tabela-alunos {
     border-collapse: collapse !important;
     width: 100% !important;
+    /* P0 portado do showcase 16: o piso min-width:680px (crm.css:2187) come a
+       área útil inteira do A4 (180mm ≈ 680px) e o wrapper overflow-x CLIPA o
+       resto na impressão — sem rolagem, é perda de dado. Em print o piso vai a
+       zero e o layout fixo distribui pelas larguras da primeira linha (os
+       minWidth inline do TabelaAlunos.tsx continuam válidos). */
+    min-width: 0 !important;
+    table-layout: fixed !important;
   }
 
   .tabela-alunos th,
@@ -69,6 +76,9 @@
     color: #111 !important;
     padding: 6pt 8pt !important;
     font-size: 9.5pt !important;
+    /* break-word, não anywhere: anywhere partiu nomes próprios no QA do
+       showcase 16 (rodada 4) — a quebra só onde não cabe inteiro. */
+    overflow-wrap: break-word !important;
   }
 
   .tabela-linha {
