@@ -43,16 +43,19 @@
        institucional do elenco. -->
 <style>
 /* no-sistema */
-/* 1) .barra de progresso no B: o primitivo só existe no A (§20). Mesmo port
-      das telas 06/11 (dívida 17 §2) — trilho surface-3, fill accent. */
-[data-conceito="b"] .barra { height: 10px; border-radius: var(--raio-full); background: var(--surface-3); overflow: hidden; }
-[data-conceito="b"] .barra-fill { display: block; height: 100%; width: var(--pct, 0%); border-radius: var(--raio-full); background: var(--accent); transition: width var(--dur-3) var(--ease); }
+/* 1) .barra de progresso: CONSOLIDADA nos dois sistemas (A §20, B §PROGRESSO —
+      fill = --cor-destaque, que o markup já seta inline). O hatch antigo
+      (trilho surface-3 + fill --accent) sobrescrevia o sistema e foi removido
+      no QA de 02/10 — dívida 17 §2 encerrada. */
 /* 2) filete do pódio: no fonte (Vitrine.tsx:273) cada lugar tem classe própria
       com metal; aqui o metal é tinta de token, via atributo — sem classe órfã.
       Dívida: primitivo .podio com 3 variações nos dois sistemas. */
-[data-conceito] [data-podio="1"] { border-top: 3px solid color-mix(in oklab, var(--amarelo) 70%, var(--line)); }
-[data-conceito] [data-podio="2"] { border-top: 3px solid color-mix(in oklab, var(--faint) 55%, var(--line)); }
-[data-conceito] [data-podio="3"] { border-top: 3px solid color-mix(in oklab, var(--vermelho) 50%, var(--amarelo)); }
+/* Rodada 4 (sweep): no tema claro, [data-conceito=b][data-theme=light] .cartao
+   pinta border-color com (0,3,0) e achatava os metais — o .cartao no seletor
+   sobe estes para (0,3,0)+ordem (o style da tela vem depois do link). */
+[data-conceito] .cartao[data-podio="1"] { border-top: 3px solid color-mix(in oklab, var(--amarelo) 70%, var(--line)); }
+[data-conceito] .cartao[data-podio="2"] { border-top: 3px solid color-mix(in oklab, var(--faint) 55%, var(--line)); }
+[data-conceito] .cartao[data-podio="3"] { border-top: 3px solid color-mix(in oklab, var(--vermelho) 50%, var(--amarelo)); }
 /* 3) ponto de cor de sala (o .ponto do fonte é aula, não showcase): usa --cor
       já definida pelos dois conceitos para avatar/badge. */
 [data-conceito] [data-sala-pt] { display: inline-flex; align-items: center; gap: var(--sp-200); }
@@ -62,7 +65,7 @@
 }
 /* 4) filete lateral no ranking de salas (o fonte pinta a borda pela cor da
       sala em .linha-adm; aqui é atributo para não criar classe órfã). */
-[data-conceito] [data-ranking] { border-left: 3px solid var(--cor, var(--line)); }
+[data-conceito] .cartao[data-ranking] { border-left: 3px solid var(--cor, var(--line)); }
 /* no-sistema */
 /* 5) QA P1-5 (02/10): no A o <small> da marca é inline (sai "AlunosEscola
       SESI" grudado) e o logo branco nunca deve aparecer no papel — espelho das
@@ -519,7 +522,7 @@
     <section class="pilha pilha-apertada" aria-labelledby="ranking-salas">
       <h2 id="ranking-salas" class="eyebrow" style="margin:0">Ranking das salas</h2>
       <div class="pilha pilha-apertada">
-        <div class="cartao linha" data-ranking style="--cor: var(--ciano); gap: var(--sp-400)">
+        <div class="cartao linha" data-ranking style="--cor: var(--ciano); --cor-destaque: var(--ciano); gap: var(--sp-400)">
           <span class="avatar" aria-hidden="true">1</span>
           <div class="pilha-apertada ocupada" style="align-items: flex-start">
             <b>3ºA</b>
@@ -527,7 +530,7 @@
           </div>
           <span class="badge badge--num">★ 40</span>
         </div>
-        <div class="cartao linha" data-ranking style="--cor: var(--vermelho); gap: var(--sp-400)">
+        <div class="cartao linha" data-ranking style="--cor: var(--vermelho); --cor-destaque: var(--vermelho); gap: var(--sp-400)">
           <span class="avatar" aria-hidden="true">2</span>
           <div class="pilha-apertada ocupada" style="align-items: flex-start">
             <b>5ºA</b>
@@ -535,7 +538,7 @@
           </div>
           <span class="badge badge--num">★ 20</span>
         </div>
-        <div class="cartao linha" data-ranking style="--cor: var(--verde); gap: var(--sp-400)">
+        <div class="cartao linha" data-ranking style="--cor: var(--verde); --cor-destaque: var(--verde); gap: var(--sp-400)">
           <span class="avatar" aria-hidden="true">3</span>
           <div class="pilha-apertada ocupada" style="align-items: flex-start">
             <b>3ºB</b>
@@ -543,7 +546,7 @@
           </div>
           <span class="badge badge--num">★ 20</span>
         </div>
-        <div class="cartao linha" data-ranking style="--cor: var(--amarelo); gap: var(--sp-400)">
+        <div class="cartao linha" data-ranking style="--cor: var(--amarelo); --cor-destaque: var(--amarelo); gap: var(--sp-400)">
           <span class="avatar" aria-hidden="true">4</span>
           <div class="pilha-apertada ocupada" style="align-items: flex-start">
             <b>4ºA</b>

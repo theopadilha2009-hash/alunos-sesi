@@ -109,3 +109,13 @@ Achados de quem desenhou a tela do Meu Perfil. Nenhum muda markup por conceito
   hoje é do sistema (`sistema-b.css` linhas do `.marca-sesi .logo-modo-*`:
   claro mostra o branco). Não é classe de tela; quem porta é o dono dos
   sistemas (registrado no report da onda, sem hatch para não brigar com ele).
+
+## §Fix rodada 4 (sweep 03/10) — stickers sobre a legenda
+
+Os stickers do estúdio (position:absolute inline, top 36/54/88%) caíam sobre a
+legenda do banner em ambos os conceitos — a ilha não tem "faixa de imagem"
+livre: ela É o banner com conteúdo. Reposicionados para a banda direita
+26/42/56% (espaço entre a régua de botões e o fim do bloco de identidade).
+Proposta p/ o port: o StickerCanvas real posiciona sobre o <img> do banner, que
+tem altura própria (3:1) — na Etapa 2 o hero precisa de um slot de banner com
+altura dedicada, não da ilha inteira como canvas.

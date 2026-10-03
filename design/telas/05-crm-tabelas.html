@@ -86,6 +86,11 @@
 .tela[data-tela="05-crm-tabelas"] .tabela .ocupada > small {
   display: block; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* QA P0 (B, 02/10 — 2ª rodada): o piso de 56rem estourava .wrap/.pilha (flex
+   items com min-width:auto) e o .quadro (overflow:hidden) cortava a tabela sem
+   o .corte chegar a overflow — sem barra nenhuma. Com min-width:0 na cadeia,
+   .corte vira o scroll container de verdade. */
+.tela[data-tela="05-crm-tabelas"] .quadro-corpo :is(.wrap, .pilha) { min-width: 0; }
 </style>
 </head>
 <body>

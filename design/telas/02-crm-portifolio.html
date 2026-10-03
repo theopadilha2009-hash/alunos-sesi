@@ -67,7 +67,10 @@ html[data-frame="mobile"] [data-conceito="b"] .quadro { flex-direction: column; 
    dividas/02-crm-portifolio.md §8. */
 [data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca { display: flex; align-items: center; gap: var(--sp-200); }
 [data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .avatar { flex: none; }
-[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .ocupada { min-width: 0; }
+/* QA P0-2 (rodada 3, laudo 02/10): com --col-min 13rem o slot do nome ficava
+   em 16px — o ink de "Kowalski" vazava por baixo do chip. Piso de 40% força o
+   flex-wrap nativo do A a deixar o chip cair para a 2ª linha. */
+[data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .ocupada { flex: 1 1 40%; min-width: 0; }
 [data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca .ocupada h3 { min-width: 0; }
 [data-conceito="a"] .tela[data-tela="02-crm-portifolio"] .cartao-cabeca > .chip-estrela { flex: none; margin-left: auto; }
 </style>

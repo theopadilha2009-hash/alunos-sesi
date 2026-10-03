@@ -50,12 +50,12 @@
 /* Espelhos de nomenclatura (dívidas 17/06 — não duplicar, consolidar lá):
    o A nomeia tamanhos de avatar com "-lg/-xl" e só ele define .cartao-nota e
    .barra; o B nomeia com "--lg/--xl" e pinta as iniciais do .avatar em
-   --surface — tinta sobre tinta na ilha escura. */
+   --surface — tinta sobre tinta na ilha escura. (.barra era só do A; hoje os
+   dois sistemas definem o primitivo — o hatch de B daqui foi removido no QA
+   02/10 e a barra de insignia lê --cor-destaque da ilha.) */
 [data-conceito="a"] .avatar--xl { width: 5.5rem; height: 5.5rem; font-size: var(--fs-600); }
 [data-conceito="a"] .logo-modo-dark { display: none; }
 [data-conceito="b"] .avatar { color: var(--text); }
-[data-conceito="b"] .barra { height: 10px; border-radius: var(--raio-full); background: var(--surface-3); overflow: hidden; }
-[data-conceito="b"] .barra-fill { display: block; height: 100%; width: var(--pct, 0%); border-radius: var(--raio-full); background: var(--accent); transition: width var(--dur-3) var(--ease); }
 [data-conceito="b"] .cartao-nota { margin-top: var(--sp-200); padding-top: var(--sp-300); border-top: 1px solid var(--line-soft); font-size: var(--fs-200); color: var(--faint); }
 /* no-sistema */
 /* Primitivos que os dois sistemas não têm (propostas em dividas/11-cracha-digital.md):
@@ -88,6 +88,11 @@
   border-radius: 0 0 var(--raio-md) var(--raio-md);
   background: linear-gradient(to top, color-mix(in oklab, black 88%, transparent), transparent);
 }
+/* Rodada 3 (laudo 02/10): o position:relative do .olho (necessário ao scrim)
+   fez a CAIXA inteira da capa pintar sobre o bloco de nome estático — hit-test
+   devolvia DIV.olho no topo do h1. A linha do hero sobe para a camada
+   posicionada; o scrim continua atrás do nome, como intenção original. */
+[data-conceito="a"] .ilha-escura > .linha { position: relative; z-index: var(--z-conteudo, 1); }
 /* QA P1 (redes vazias no A, 02/10): fora da ilha, o A pinta o par li+a com os
    tokens da ilha (texto quase-branco sobre papel) — a variante --clara já
    existe no sistema para o `a`; o li local só desveste a pílula duplicada. */

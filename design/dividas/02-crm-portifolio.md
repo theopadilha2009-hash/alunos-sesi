@@ -101,3 +101,11 @@ no outro — a tela é um DOM só e os dois precisaram de ponte.
 - **Regra proposta:** definir `.cartao-cabeca` nos dois sistemas como
   `flex + align-items:center + gap --sp-200 + min-width:0 no filho ocupado`
   (o cabeçalho do card é sempre isso; no B hoje é só fatia de padding).
+
+## §Fix rodada 3 (laudo 02/10) — o overlap era espaço, não fluxo
+
+A flex do §8 funcionava, mas com --col-min 13rem o slot do nome sobrava em 16px
+e o ink de sobrenomes longos vazava por baixo do chip (irmão posterior, fundo
+opaco). Fix: piso flex 1 1 40% no .ocupada do hatch — o wrap nativo do A deixa o
+chip cair na 2a linha. PENDENTE p/ Théo: subir o --col-min da grade p/ 16rem
+(cartão 309px, tudo em 1 linha) é alternativa de densidade.

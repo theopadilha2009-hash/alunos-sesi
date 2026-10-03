@@ -42,3 +42,10 @@ Achados de quem desenhou `telas/16-impressao.html`. Escape hatch usado com
   .logo-modo-dark { display: none }` de emprestado (12, agora 16).
 - **Proposta:** alias de tamanho no A (`.avatar--lg`) e regra de logo por tema
   no base.css, onde o DOM dos dois logos é decisão de contrato, não de conceito.
+
+## §Fix rodada 4 (sweep 03/10) — catálogo estourando o A4
+
+[data-folha] é flex-column e o .corte (flex item, min-width:auto) deixava a
+tabela de 5 colunas estourar os 210mm. Fix no hatch: min-width:0 no .corte +
+table-layout:fixed com larguras 28/8/24/26/14% + overflow-wrap anywhere.
+Vale impresso (PDF do Chrome) e em tela nos dois conceitos.

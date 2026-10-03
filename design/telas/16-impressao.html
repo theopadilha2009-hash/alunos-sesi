@@ -159,6 +159,31 @@
 [data-folha] .tabela tbody td { padding-block: var(--sp-300); }
 [data-folha] .tabela tbody tr { break-inside: avoid; }
 [data-folha] .tabela small { color: var(--faint); }
+/* Rodada 4 (sweep): o .corte como flex-item da folha (min-width:auto) estourava
+   os 210mm — header cortado na borda e ALUNO em 1 palavra/linha. min-width:0
+   devolve o recorte à folha; layout fixo + quebra em qualquer ponto fazem o
+   catálogo de 5 colunas caber em A4 nos dois conceitos. Proposta em dividas/16. */
+[data-folha] > .corte { min-width: 0; }
+[data-folha="cat"] .tabela { table-layout: fixed; }
+/* rodada 5 (laudo): o thead do B usa white-space:nowrap — overflow-wrap não tem
+   efeito com nowrap, e o header "Redes Profissionais (LinkedIn / GitHub)"
+   estourava a coluna invadindo "Estrelas". nowrap solto só no catálogo: em
+   papel, header quebra em 2 linhas. anywhere cortava nomes próprios ao meio
+   ("Bittencour/t") — break-word só quebra quando não cabe. Avatar de 72px
+   comia 1/3 da coluna ALUNO; na folha 2 é 44px. Salas voltam a ser 1 linha. */
+[data-folha="cat"] .tabela thead th { white-space: normal; }
+[data-folha="cat"] .tabela :is(th, td) { overflow-wrap: break-word; }
+/* rodada 6: no B o thead é caixa alta + tracking — nas colunas de 10/13% o
+   nowrap solto quebrou "SALA"/"ESTRELAS" no meio. th do catálogo respira com
+   tipo menor e tracking zero (td mantém --fs-200 do bloco acima). */
+[data-folha="cat"] .tabela thead th { font-size: var(--fs-100); letter-spacing: 0; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(1) { width: 30%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(2) { width: 10%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(3) { width: 22%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(4) { width: 25%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(5) { width: 13%; }
+[data-folha="cat"] .avatar { width: 44px; height: 44px; font-size: var(--fs-300); }
+[data-folha="cat"] [data-sala-chip] { white-space: nowrap; }
 [data-folha] .tabela tfoot td { border-top: 1px solid var(--line); padding: var(--sp-300) var(--sp-200); font-size: var(--fs-200); color: var(--faint); font-weight: 700; }
 /* chip da sala na COR DA SALA (mesma régua da tela 05 — dívida lá registrada) */
 [data-sala-chip] {

@@ -61,3 +61,23 @@ galeria contorna com tokens locais, e que a onda de correção deve portar para
 - `moldura.js` injeta `href="../index.html"` na barra — no próprio hub isso
   aponta para fora de `design/`. Chrome congelado; registrar só se o coordenador
   tocar no moldura.js (fora do meu escopo).
+
+## §Encerrado 02/10 (rodada 2) — .barra no B
+
+A §2 pedia o primitivo .barra no B; ele foi consolidado (§PROGRESSO, fill =
+--cor-destaque). O hatch da tela 10 (trilho surface-3 + fill --accent)
+sobrescrevia o sistema com specificity igual e ordem posterior — removido.
+Telas 06/11: conferir na re-QA se ainda dependem de hatch próprio do .barra.
+
+## §P0 02/10 (rodada 3) — comentário engolia o :root INTEIRO do sistema B
+
+Diagnóstico (laudo de dump CSSOM): o header de sistema-b.css continha o texto
+"--fs-*/--sp-*" — a sequência star-slash fechava o comentário na linha 15 e o
+parser descartava o bloco :root[data-conceito="b"] seguinte (paleta de sala,
+--papel/--tinta, fontes Bricolage/Manrope). B ficou sem tokens → base.css
+salvava com fallbacks (dark genérico) e tudo colorido (barra, filete de pódio,
+chip-sala) sumia. Fix: reescrito o texto do comentário. Lição p/ a Etapa 2 e
+para o gate do repo: verificar.sh agora deveria checar CSSOM real, não só texto
+— registrar como gate: 'grep -c ":root\\[data-conceito" == 1 e tokens-chave
+presentes'. Hatches equivalentes de 10/06/11 (.barra fill --accent) removidos;
+o fill lê --cor-destaque com fallback --accent.

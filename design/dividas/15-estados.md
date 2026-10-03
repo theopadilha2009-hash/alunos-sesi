@@ -89,3 +89,7 @@ Portfólios" (`not-found.tsx:41`) vão para `/alunos`, que no showcase é
 paralelo), então o gate 3 de `verificar.sh` acusa três links inexistentes nesta
 tela — e na 12, que faz o mesmo. Fecha sozinho quando a 10 aterrissar; não troque
 por `../index.html` na revisão, porque o hub não é a rota do app.
+
+## Cobertura (sweep 03/10): seções com min-height 65/78/100vh — nenhum
+screenshot único alcança os estados 04/05 abaixo da dobra; validados via
+tokens/estrutura, não por pixel. Browser real permanece a prova final.

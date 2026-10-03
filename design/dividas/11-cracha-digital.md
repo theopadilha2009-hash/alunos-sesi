@@ -76,3 +76,11 @@ tela 11 esbarra nas mesmas faltas.
   `.badge-redes` do A vestir tokens de ilha **somente** aninhado em
   `.ilha-escura` — fora dela o default já é a versão clara, aposentando a
   variante `--clara`.
+
+## §Fix rodada 3 (laudo 02/10) — scrim tapava o nome
+
+O position:relative que o §5 pôs no .olho (para o scrim) fez a CAIXA da capa
+pintar sobre o bloco de nome estático (hit-test = DIV.olho no topo do h1). Fix
+no mesmo hatch: .ilha-escura > .linha com position:relative + z-index
+--z-conteudo. Proposta p/ o sistema: o padrão "conteúdo sobreposto a banner"
+(heroi de crachá) merece primitivo .hero-sobreposto nos dois conceitos.

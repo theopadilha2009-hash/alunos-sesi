@@ -99,9 +99,9 @@
 [data-conceito="b"] .sidebar-pe { display: flex; align-items: center; gap: var(--sp-200); margin-top: var(--sp-400); padding-top: var(--sp-400); border-top: 1px solid var(--line-soft); }
 [data-conceito="b"] .sidebar-pe strong { display: block; font-size: var(--fs-200); color: var(--text); }
 [data-conceito="b"] .sidebar-pe small { font-size: var(--fs-100); color: var(--faint); }
-/* B: .barra de progresso (dívida 17 §2) — trilho surface-3, fill accent */
-[data-conceito="b"] .barra { height: 10px; border-radius: var(--raio-full); background: var(--surface-3); overflow: hidden; }
-[data-conceito="b"] .barra-fill { display: block; height: 100%; width: var(--pct, 0%); border-radius: var(--raio-full); background: var(--accent); transition: width var(--dur-3) var(--ease); }
+/* B: .barra de progresso — CONSOLIDADA no sistema-b §PROGRESSO (dívida 17 §2
+   encerrada no QA 02/10); o fill lê --cor-destaque, que o markup da aba
+   define. Hatch anterior (fill --accent) sobrescrevia o sistema: removido. */
 /* no-sistema */
 /* B: peças do .modal (dívida 17 §1) — mesmo DOM do A */
 [data-conceito="b"] .modal-cabeca { display: flex; align-items: center; gap: var(--sp-300); }
@@ -116,6 +116,12 @@
 [data-conceito="a"] .marca-sesi small { display: block; font-size: var(--fs-100); font-weight: 600; letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint); }
 /* primitivos desta tela: ponto de status do avatar e janela do recorte */
 [data-conceito] .ponto-status { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; border-radius: var(--raio-full); background: var(--verde); border: 3px solid var(--bg); box-sizing: border-box; }
+/* rodada 5 (laudo 06-A): mesmo com os stickers recolocados, o "Arcade" roçava o
+   pill "Alterações não salvas" — no A a régua de identidade fica a ~60% da
+   altura do herói. As duas .linha do herói sobem para a camada acima dos
+   stickers (que viram colagem de segundo plano) — zero colisão de texto em
+   qualquer conceito/tema, sem depender de posição percentual. */
+[data-conceito] .ilha-escura > .linha { position: relative; z-index: var(--z-conteudo, 1); }
 [data-conceito] .recorte-janela { position: absolute; inset: 10% 18%; border: 2px dashed color-mix(in oklab, var(--accent) 75%, transparent); border-radius: var(--raio-sm); pointer-events: none; }
 </style>
 </head>
@@ -230,9 +236,13 @@
         </div>
 
         <!-- stickers do estúdio posicionados sobre o herói (StickerCanvas) -->
-        <span class="olho" title="Foguete / Launch Pixel" style="position:absolute; left:88%; top:36%; width:84px; height:84px; aspect-ratio:1; transform:translate(-50%,-50%) rotate(8deg);">Foguete</span>
-        <span class="olho" title="Pixel Heart 8-bit" style="position:absolute; left:94%; top:54%; width:64px; height:64px; transform:translate(-50%,-50%) rotate(-6deg);">Pixel Heart</span>
-        <span class="olho" title="Retro Arcade / Code" style="position:absolute; left:70%; top:88%; width:72px; height:72px; transform:translate(-50%,-50%) rotate(4deg);">Arcade</span>
+        <!-- Rodada 4 (sweep): os stickers em top 36/54/88% caíam sobre a
+             legenda do banner (88% ≈ última linha da ilha) nos dois conceitos.
+             Banda direita livre entre a régua de botões e o bloco de identidade,
+             longe da caption. -->
+        <span class="olho" title="Foguete / Launch Pixel" style="position:absolute; left:90%; top:26%; width:72px; height:72px; aspect-ratio:1; transform:translate(-50%,-50%) rotate(8deg);">Foguete</span>
+        <span class="olho" title="Pixel Heart 8-bit" style="position:absolute; left:95%; top:42%; width:54px; height:54px; transform:translate(-50%,-50%) rotate(-6deg);">Pixel Heart</span>
+        <span class="olho" title="Retro Arcade / Code" style="position:absolute; left:85%; top:56%; width:60px; height:60px; transform:translate(-50%,-50%) rotate(4deg);">Arcade</span>
 
         <div class="linha" style="align-items: flex-end; gap: var(--sp-500)">
           <span class="linha" style="position: relative; width: fit-content">

@@ -108,3 +108,11 @@ correção deve portar. Nenhum escape hatch aqui inventa cor nem classe de conce
   `.corte` (ou `table-layout: fixed` com grid de colunas declarado por variante
   `.tabela--6col`) — e a truncagem de célula longa como utilitário
   compartilhado, fechando também a dívida 02 §5 (`.tabela-truncada` só no A).
+
+## §Fix 02/10 (rodada 2) — tabela B cortada sem scroll
+
+O piso de 56rem da tabela estourava `.wrap`/`.pilha` (flex items nascem com
+`min-width:auto`) e o `overflow:hidden` do `.quadro` (sistema B) cortava — o
+`.corte` nunca chegava a ter overflow, logo, sem barra. Fix no hatch:
+`min-width:0` na cadeia `.quadro-corpo :is(.wrap,.pilha)`. Proposta p/ o
+sistema: `.quadro-corpo > * { min-width: 0 }` nativo nos dois conceitos.

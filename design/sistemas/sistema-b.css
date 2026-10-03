@@ -12,7 +12,7 @@
    • Uma família de botão, um campo, uma tabela — as dívidas da auditoria:
      --cor-destaque ÚNICO + aliases de sala (matam os 9 tokens de cor de sala),
      --vermelho-sesi tokenizado (eram 40+ literais), SEM --fg/--border,
-     escala --fs-*/--sp-*/--z com 6 degraus (o app tinha 399 font-size soltos
+     escala de --fs, --sp e --z com 6 degraus (o app tinha 399 font-size soltos
      e z-index 0..9999 arbitrário).
    • --papel/--tinta: a folha A4 é papel branco nos DOIS temas (impressão).
    • .ilha-escura: crachá, cartão NFC e herói do perfil ficam escuros nos dois
@@ -1466,13 +1466,19 @@
   height: 100%;
   width: var(--pct, 0%);
   border-radius: var(--raio-full);
-  background: var(--cor-destaque);
+  /* sem --cor-destaque no ancestral (barra de insígnia fora da ilha, 06/11),
+     cai no acento global — barra invisível não é opção (QA 02/10). */
+  background: var(--cor-destaque, var(--accent));
   transition: width var(--dur-2) var(--ease);
 }
 
 [data-conceito="b"] .barra-fina { height: 6px; }
 
 [data-conceito="b"] .barra-ok .barra-fill { background: var(--ok-fg); }
+
+/* rodada 4 (sweep 05): scrollbar clara do WebKit sobre o dark — tinge o
+   polegar com tinta e some o trilho. */
+[data-conceito="b"] .corte { scrollbar-color: color-mix(in oklab, var(--text) 35%, transparent) transparent; }
 
 /* ==========================================================================
    DOMÍNIOS — ajuste fino por fatia do globals.css (sem classes novas:

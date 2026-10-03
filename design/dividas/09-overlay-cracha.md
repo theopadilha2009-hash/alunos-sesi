@@ -112,3 +112,14 @@ contorna **só com `var()`/`color-mix()`**, e que a onda de correção deve port
 - `.kbd` (o atalho "ESC" no cabeçalho e no cartão de estados) só existe no
   sistema-b; no A ele sairia como texto solto, então portei a regra com os
   tokens do A. Menos grave que a §1, mas é o mesmo formato de peça ausente.
+
+## §Fix 02/10 (rodada 2) — verso A "branco no branco"
+
+Causa real: o hatch `[data-conceito] [data-pass]` pinta `background` com
+`--ilha-bg/--ilha-surface-2`, que só o sistema B define. No A os nomes eram
+inexistentes → background IACVT (transparente) com `color: --ilha-texto`
+(branco) = texto branco sobre papel. Fix no SISTEMA (não no hatch):
+`sistema-a.css` recebeu os espelhos `--ilha-bg/-surface/-surface-2/-text/-dim/
+-line-soft/-accent/-glow`, `--z-conteudo` e aliases `--ok-fg/--ok-bg` — a
+família ilha agora existe nos dois conceitos, como o contrato exige. Proposta:
+na Etapa 2 esses aliases viram o bloco `.ilha` único do tokens.css.

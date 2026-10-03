@@ -70,6 +70,21 @@
   --ilha-faint: rgb(248 250 252 / 0.62);
   --ilha-line: rgb(255 255 255 / 0.12);
   --ilha-fill: rgb(255 255 255 / 0.07);
+  /* espelhos da família --ilha-* do B (QA 09-A: o filete/deck do crachá usam
+     estes nomes; sem eles, background/gradiente viravam IACVT → ilha
+     transparente com texto branco sobre papel = "verso branco no branco"). */
+  --ilha-bg: var(--night);
+  --ilha-surface: color-mix(in oklab, var(--ilha-texto) 7%, var(--night));
+  --ilha-surface-2: color-mix(in oklab, var(--ilha-texto) 12%, var(--night));
+  --ilha-text: var(--ilha-texto);
+  --ilha-dim: var(--ilha-faint);
+  --ilha-line-soft: rgb(255 255 255 / 0.05);
+  --ilha-accent: var(--accent-fill);
+  --ilha-glow: color-mix(in oklab, var(--accent) 30%, transparent);
+  --z-conteudo: 1;
+  /* aliases --ok-fg/--ok-bg (nomes do B; hatches 09/13 os referenciam) */
+  --ok-fg: var(--ok-texto);
+  --ok-bg: var(--ok-fundo);
 
   /* estado desabilitado */
   --desab-fill: #f0f2f5;
@@ -587,7 +602,10 @@
 /* número gigante da faixa escura: peso 800 na cor muted (spec §5) */
 [data-conceito="a"] .metrica-gigante, [data-conceito="a"] .metrica--gigante { gap: var(--sp-200); }
 [data-conceito="a"] .metrica-gigante .metrica-valor,
-[data-conceito="a"] .metrica--gigante .metrica-valor { font-size: var(--fs-gigante); font-weight: 800; line-height: 1; color: var(--ilha-faint); }
+/* rodade 4 (sweep galeria): --ilha-faint é branco-translúcido de ilha escura —
+   sobre o cartão de papel virava marca d'água invisível. No papel, o número
+   gigante é tinta. */
+[data-conceito="a"] .metrica--gigante .metrica-valor { font-size: var(--fs-gigante); font-weight: 800; line-height: 1; color: var(--text); }
 [data-conceito="a"] .facts {
   display: flex; flex-wrap: wrap; justify-content: center;
   border: 1px solid var(--line-soft); border-radius: var(--raio-md); overflow: hidden;
