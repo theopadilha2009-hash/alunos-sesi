@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Projetos & Criações (CRM) — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/components/crm/CrmApp.tsx:414-666 (shell, sidebar, header), 974-1049 (aba
+     Projetos); src/components/crm/ModalPerfilBreve.tsx (modal do autor);
+     src/app/styles/crm.css:820-962 (banner + grade do mural);
+     src/app/styles/desafios.css (contexto de mural) -->
+<style>
+/* no-sistema */
+/* 1) .quadro/.quadro-corpo só existem no sistema A (§15). O shell CRM em B
+      precisa do mesmo layout — idêntico ao do A, com os tokens do B.
+      Regra proposta em dividas/03-crm-projetos.md §1. */
+[data-conceito="b"] .quadro { display: flex; align-items: stretch; min-height: 100%; }
+[data-conceito="b"] .quadro-corpo { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; }
+[data-conceito="b"][data-frame="mobile"] .quadro { flex-direction: column; }
+/* 2) peças do .modal que só o §10 do A define — as mesmas regras da
+      dívida 17 §1 (idempotente se o port para o sistema-b acontecer). */
+[data-conceito="b"] .modal-cabeca { display: flex; align-items: center; gap: var(--sp-300); }
+[data-conceito="b"] .modal-x {
+  margin-left: auto; width: 36px; height: 36px; display: inline-flex; align-items: center;
+  justify-content: center; background: transparent; border: 0; border-radius: var(--raio-md);
+  color: var(--faint); cursor: pointer;
+}
+[data-conceito="b"] .modal-x:hover { background: var(--pouso); color: var(--text); }
+[data-conceito="b"] .modal-corpo { display: flex; flex-direction: column; gap: var(--sp-400); }
+[data-conceito="b"] .modal-rodape {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-300);
+  margin-top: var(--sp-500); padding-top: var(--sp-400); border-top: 1px solid var(--line-soft);
+}
+/* 3) o DOM comum carrega os dois logos (exigência do B em .marca-sesi); no
+      conceito A, de fundo claro, o branco é structural-hidden — senão a roseta
+      aparece duas vezes empilhadas. Proposta em dividas/03-crm-projetos.md §3. */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="a"] .ilha-escura .logo-modo-light { display: none; }
+[data-conceito="a"] .ilha-escura .logo-modo-dark { display: block; }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="03-crm-projetos">
+<div class="quadro">
+
+  <!-- ── SIDEBAR CRM (mesmo shell das telas 02–07) ─────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-marca">
+      <a class="marca-sesi" href="#">
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+        <span>ALUNOS SESI<small>WORKSPACE CRM</small></span>
+      </a>
+    </div>
+
+    <button type="button" class="btn btn--secundario btn--pequeno btn--full"
+      title="Buscar com Command Palette (⌘K)"
+      data-toast="Command Bar é a tela 08 do showcase.">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <span>Buscar...</span>
+      <kbd class="sidebar-kbd">⌘K</kbd>
+    </button>
+
+    <p class="sidebar-sub">Navegação</p>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        <span>Portfólio</span><span class="badge badge--num">10</span>
+      </a>
+      <a href="#" class="nav-item nav-ativo" aria-current="page">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+        <span>Projetos &amp; Criações</span><span class="badge badge--num">6</span>
+      </a>
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        <span>Mural de Desafios</span>
+      </a>
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+        <span>Tabelas &amp; Alunos</span>
+      </a>
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Meu Perfil</span>
+      </a>
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+        <span>Painel ADM</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-rodape">
+      <div class="linha">
+        <span class="avatar" style="--cor: var(--ciano); --cor-destaque: var(--ciano)">AD</span>
+        <div class="pilha-apertada ocupada">
+          <b>Alice Duarte</b>
+          <small>3ºA · Matrícula 3A26-0041-887</small>
+        </div>
+      </div>
+      <div class="linha">
+        <button type="button" class="btn btn--pequeno btn--secundario"
+          title="Visualizar e baixar meu crachá digital"
+          data-toast="Crachá é a tela 09 do showcase.">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+          <span>Meu Crachá</span>
+        </button>
+        <button type="button" class="btn btn--pequeno btn--fantasma"
+          title="Encerrar sessão no CRM" aria-label="Sair da conta">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          <span>Sair</span>
+        </button>
+      </div>
+      <p class="eyebrow"><span class="kbd">⌘K</span> abre a busca rápida</p>
+    </div>
+  </aside>
+
+  <!-- ── ÁREA CENTRAL ───────────────────────────────────────────────────── -->
+  <div class="quadro-corpo">
+    <header class="topo">
+      <div class="pilha-apertada ocupada">
+        <p class="eyebrow">Criações da Escola</p>
+        <h1 class="topo-titulo">Criações &amp; Projetos SESI</h1>
+      </div>
+      <div class="topo-acoes">
+        <button type="button" class="btn btn--pequeno btn--primario">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <span>Editar Meu Perfil</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="wrap pilha" style="padding-block: var(--sp-500) var(--sp-700)">
+
+      <div class="cartao pilha">
+        <h2>Mural de Projetos &amp; Inovações dos Estudantes</h2>
+        <p>Robótica, desenvolvimento de software, automação IoT e design criados pelos alunos do SESI.</p>
+      </div>
+
+      <div class="grade grade-2">
+
+        <!-- 1 · Portfólio da Turma — Alice, 3ºA (com link externo) -->
+        <article class="cartao cartao--interativo cartao--clique pilha-apertada" tabindex="0"
+          style="--cor-destaque: var(--ciano); --cor: var(--ciano)" data-abre="#perfil-autor">
+          <div class="olho" style="aspect-ratio: 16/9" role="img" aria-label="Capa indisponível">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/></svg>
+            <span>Projeto SESI</span>
+          </div>
+          <div class="linha">
+            <span class="avatar">AD</span>
+            <div class="pilha-apertada"><b>Alice Duarte</b><small>3ºA</small></div>
+            <span class="badge badge--ok badge--num" style="margin-left:auto">14 ★</span>
+          </div>
+          <h3>Portfólio da Turma</h3>
+          <p>Next.js + Supabase, vitrine dos alunos.</p>
+          <div class="linha linha-entre">
+            <a class="btn btn--pequeno btn--secundario" href="https://github.com/aliceduarte" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+              Acessar Criação ↗
+            </a>
+            <button type="button" class="btn btn--pequeno btn--primario" data-abre="#perfil-autor">Perfil do Autor →</button>
+          </div>
+        </article>
+
+        <!-- 2 · Painho de Resíduos — Bruna, 4ºA (sem link) -->
+        <article class="cartao cartao--interativo cartao--clique pilha-apertada" tabindex="0"
+          style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)" data-abre="#perfil-autor">
+          <div class="olho" style="aspect-ratio: 16/9" role="img" aria-label="Capa indisponível">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/><path d="M3 8h6l1.5 2.5h3L15 8h6"/></svg>
+            <span>Projeto SESI</span>
+          </div>
+          <div class="linha">
+            <span class="avatar">BS</span>
+            <div class="pilha-apertada"><b>Bruna Selming</b><small>4ºA</small></div>
+            <span class="badge badge--num" style="margin-left:auto">5 ★</span>
+          </div>
+          <h3>Painho de Resíduos</h3>
+          <p>Classificador de resíduos da cantina.</p>
+          <div class="linha linha-entre">
+            <span class="badge">Sem link externo</span>
+            <button type="button" class="btn btn--pequeno btn--primario" data-abre="#perfil-autor">Perfil do Autor →</button>
+          </div>
+        </article>
+
+        <!-- 3 · TriNet — Enzo, 3ºB (cor de perfil própria: petróleo) -->
+        <article class="cartao cartao--interativo cartao--clique pilha-apertada" tabindex="0"
+          style="--cor-destaque: var(--petroleo); --cor: var(--petroleo)" data-abre="#perfil-autor">
+          <div class="olho" style="aspect-ratio: 16/9" role="img" aria-label="Capa indisponível">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            <span>Projeto SESI</span>
+          </div>
+          <div class="linha">
+            <span class="avatar">EM</span>
+            <div class="pilha-apertada"><b>Enzo Marchiori</b><small>3ºB</small></div>
+            <span class="badge badge--num" style="margin-left:auto">8 ★</span>
+          </div>
+          <h3>TriNet</h3>
+          <p>App de trigonometria com placar, React Native.</p>
+          <div class="linha linha-entre">
+            <span class="badge">Sem link externo</span>
+            <button type="button" class="btn btn--pequeno btn--primario" data-abre="#perfil-autor">Perfil do Autor →</button>
+          </div>
+        </article>
+
+        <!-- 4 · GrêmioFlow — Pedro Ivo, 3ºA (sem link) -->
+        <article class="cartao cartao--interativo cartao--clique pilha-apertada" tabindex="0"
+          style="--cor-destaque: var(--ciano); --cor: var(--ciano)" data-abre="#perfil-autor">
+          <div class="olho" style="aspect-ratio: 16/9" role="img" aria-label="Capa indisponível">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4M5 5l2.8 2.8m8.4 8.4L19 19M19 5l-2.8 2.8M7.8 16.2 5 19"/></svg>
+            <span>Projeto SESI</span>
+          </div>
+          <div class="linha">
+            <span class="avatar">PI</span>
+            <div class="pilha-apertada"><b>Pedro Ivo Schmitt</b><small>3ºA</small></div>
+            <span class="badge badge--num" style="margin-left:auto">9 ★</span>
+          </div>
+          <h3>GrêmioFlow</h3>
+          <p>Automações n8n do grêmio.</p>
+          <div class="linha linha-entre">
+            <span class="badge">Sem link externo</span>
+            <button type="button" class="btn btn--pequeno btn--primario" data-abre="#perfil-autor">Perfil do Autor →</button>
+          </div>
+        </article>
+
+        <!-- 5 · Rota Lab — Thales, 4ºA (com LinkedIn) -->
+        <article class="cartao cartao--interativo cartao--clique pilha-apertada" tabindex="0"
+          style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)" data-abre="#perfil-autor">
+          <div class="olho" style="aspect-ratio: 16/9" role="img" aria-label="Capa indisponível">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span>Projeto SESI</span>
+          </div>
+          <div class="linha">
+            <span class="avatar">TW</span>
+            <div class="pilha-apertada"><b>Thales Wobeto</b><small>4ºA</small></div>
+            <span class="badge badge--num" style="margin-left:auto">10 ★</span>
+          </div>
+          <h3>Rota Lab</h3>
+          <p>Rede do laboratório novo (documentação + mapa).</p>
+          <div class="linha linha-entre">
+            <a class="btn btn--pequeno btn--secundario" href="https://linkedin.com/in/thaleswobeto" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+              Acessar Criação ↗
+            </a>
+            <button type="button" class="btn btn--pequeno btn--primario" data-abre="#perfil-autor">Perfil do Autor →</button>
+          </div>
+        </article>
+
+        <!-- 6 · Reel QR — Yasmin, 3ºB (sem link) -->
+        <article class="cartao cartao--interativo cartao--clique pilha-apertada" tabindex="0"
+          style="--cor-destaque: var(--verde); --cor: var(--verde)" data-abre="#perfil-autor">
+          <div class="olho" style="aspect-ratio: 16/9" role="img" aria-label="Capa indisponível">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 9 5 3-5 3Z"/></svg>
+            <span>Projeto SESI</span>
+          </div>
+          <div class="linha">
+            <span class="avatar">YR</span>
+            <div class="pilha-apertada"><b>Yasmin Rocha</b><small>3ºB</small></div>
+            <span class="badge badge--ok badge--num" style="margin-left:auto">12 ★</span>
+          </div>
+          <h3>Reel QR</h3>
+          <p>Portfólio em vídeo com QR.</p>
+          <div class="linha linha-entre">
+            <span class="badge">Sem link externo</span>
+            <button type="button" class="btn btn--pequeno btn--primario" data-abre="#perfil-autor">Perfil do Autor →</button>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL DO AUTOR (ModalPerfilBreve) — o estado aberto do "Perfil do Autor" ── -->
+<div class="modal modal-aberto" id="perfil-autor" role="dialog" aria-modal="true" aria-labelledby="perfil-autor-titulo">
+  <div class="modal-caixa">
+    <div class="modal-cabeca">
+      <h2 id="perfil-autor-titulo">Alice Duarte</h2>
+      <button type="button" class="modal-x" data-fecha aria-label="Fechar modal" title="Fechar">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-corpo">
+      <div class="linha">
+        <span class="avatar avatar--md" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">AD</span>
+        <div class="pilha-apertada ocupada">
+          <b>3ºA</b>
+          <small>Matrícula 3A26-0041-887</small>
+        </div>
+      </div>
+      <div class="linha">
+        <span class="badge badge--ok">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+          14 estrelas
+        </span>
+        <span class="selo selo--suave">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+          SESI Joinville · Validado
+        </span>
+      </div>
+      <p>Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p>
+      <ul class="badge-redes">
+        <li><a class="badge-github" href="https://github.com/aliceduarte" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>
+          GitHub</a></li>
+        <li><a class="badge-linkedin" href="https://linkedin.com/in/aliceduarte" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn</a></li>
+        <li><a class="badge-email" href="mailto:alice@estudante.sesisenai.org.br">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6L22 7"/></svg>
+          alice@estudante.sesisenai.org.br</a></li>
+      </ul>
+      <div class="linha">
+        <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Copiado!" title="Copiar link do portfólio">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copiar Link</span>
+        </button>
+        <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Cartão NFC — tela 12 do showcase." title="Abrir versão Cartão NFC / Linktree"><span>Cartão NFC</span></button>
+        <button type="button" class="btn btn--pequeno btn--fantasma" data-toast="Validar matrícula — tela 13 do showcase." title="Verificar autenticidade oficial da matrícula"><span>Validar SESI</span></button>
+      </div>
+      <div class="pilha pilha-apertada">
+        <p class="eyebrow">Competências Técnicas &amp; Apoios</p>
+        <small>Clique em +1 para apoiar uma competência</small>
+        <ul class="pill-list">
+          <li class="chip" aria-pressed="false">React <small>6</small></li>
+          <li class="chip" aria-pressed="false">Next.js <small>4</small></li>
+          <li class="chip" aria-pressed="false">Excel</li>
+          <li class="chip" aria-pressed="false">UI Design</li>
+        </ul>
+      </div>
+      <div class="pilha pilha-apertada">
+        <p class="eyebrow">Projetos &amp; Criações da Escola</p>
+        <div class="linha">
+          <b>Portfólio da Turma</b>
+          <small>Next.js + Supabase, vitrine dos alunos.</small>
+          <a class="btn btn--pequeno btn--secundario" href="https://github.com/aliceduarte" target="_blank" rel="noreferrer">Acessar Criação ↗</a>
+        </div>
+      </div>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn btn--secundario" data-toast="Mini-currículo A4 — tela 16 do showcase." title="Gerar mini-currículo A4 pronto para imprimir">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span>Mini-Currículo (A4)</span>
+      </button>
+      <button type="button" class="btn btn--primario" data-toast="Crachá digital — tela 09 do showcase.">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+        <span>Abrir Crachá Digital</span>
+      </button>
+      <button type="button" class="btn btn--fantasma" data-fecha>Fechar</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

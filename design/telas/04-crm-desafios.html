@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Mural de Desafios (CRM) — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/components/crm/MuralDesafios.tsx — banner: "SESI SENAI SC · UNIDADE JOINVILLE",
+       "TEMPORADA DE DESAFIOS TÉCNICOS 2026", "Mural de Desafios & Hackathons Escolares"
+       e o subtítulo literal (linhas 85-97); faixa da fila do ADM (linhas 104-125):
+       "{n} envios da turma esperam julgamento." / "Nenhum envio esperando julgamento." /
+       "Ver envios da turma"; filtros (127-142): "Filtrar por Área:", "Todos os Desafios"
+       + CATEGORIAS (src/lib/desafios.ts:26-32); cards (145-242): "Prazo: {prazo}",
+       "Requisitos & Critérios:", "Recompensa & Insígnia no Perfil:",
+       "{n} soluções enviadas por alunos" e os três estados "Submeter Projeto" /
+       "Corrigir e reenviar" / "Envio aprovado" / "Envio em análise" (com o title
+       "Seu envio: {tituloProjeto}"); modal de submissão (244-365): "SUBMISSÃO DE PROJETO
+       TÉCNICO", "Fechar formulário", os 3 labels + 3 placeholders literais,
+       "Cole o endereço completo, começando com https://", "Cancelar",
+       "Confirmar Envio ao SESI".
+     src/components/crm/CrmApp.tsx:414-666 (shell/sidebar CRM) e 1052-1072 (aba
+       "desafios"; onJulgarEnvios só existe para super_adm e salta para a sub-aba
+       "desafios" do Painel ADM → o botão "Ver envios da turma" aponta para 07).
+     src/app/styles/desafios.css e crm.css:820-962 — contexto visual do mural (banner,
+       grade de cards); os dados dos desafios são do banco, então títulos/prazos/
+       recompensas aqui são ilustrativos, montados sobre o elenco e os exemplos do
+       próprio fonte (placeholders do modal). -->
+<style>
+/* no-sistema */
+/* 1) .quadro/.quadro-corpo só existem no sistema A (§15). O shell CRM em B
+      precisa do mesmo port da tela 03 (dívida 03 §1) — sem ele, sidebar e área
+      central empilham no conceito B. */
+[data-conceito="b"] .quadro { display: flex; align-items: stretch; min-height: 100%; }
+[data-conceito="b"] .quadro-corpo { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; }
+[data-conceito="b"][data-frame="mobile"] .quadro { flex-direction: column; }
+/* 2) peças do .modal que só o §10 do A define — mesmas regras da dívida 17 §1
+      (idêntico ao port da tela 03). */
+[data-conceito="b"] .modal-cabeca { display: flex; align-items: center; gap: var(--sp-300); }
+[data-conceito="b"] .modal-x {
+  margin-left: auto; width: 36px; height: 36px; display: inline-flex; align-items: center;
+  justify-content: center; background: transparent; border: 0; border-radius: var(--raio-md);
+  color: var(--faint); cursor: pointer;
+}
+[data-conceito="b"] .modal-x:hover { background: var(--pouso); color: var(--text); }
+[data-conceito="b"] .modal-corpo { display: flex; flex-direction: column; gap: var(--sp-400); }
+[data-conceito="b"] .modal-rodape {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-300);
+  margin-top: var(--sp-500); padding-top: var(--sp-400); border-top: 1px solid var(--line-soft);
+}
+/* 3) o DOM comum carrega os dois logos; no A (fundo claro) o branco some —
+      port da dívida 03 §3. */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+/* 4) rótulo/dica de campo no B: .campo-label/.campo-dica só existem no A
+      (dívida 17 §3; o port é o mesmo das telas 01/06). */
+[data-conceito="b"] .campo-label { display: block; font-size: var(--fs-300); font-weight: 700; color: var(--text); }
+[data-conceito="b"] .campo-dica { color: var(--faint); font-size: var(--fs-200); }
+/* 5) peças do mural sem primitivo nos sistemas (dívidas propostas abaixo):
+      lista de critérios com visto e caixa de recompensa. Só var()/color-mix(). */
+[data-conceito] [data-criterios] {
+  list-style: none; margin: var(--sp-100) 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--sp-100);
+  font-size: var(--fs-200); color: var(--dim);
+}
+[data-criterios] li { display: flex; align-items: center; gap: var(--sp-200); }
+[data-criterios] svg { color: var(--ok-fg); flex: none; }
+[data-conceito] [data-recompensa] {
+  display: flex; align-items: center; gap: var(--sp-300);
+  padding: var(--sp-300) var(--sp-400);
+  border: 1px solid var(--line-soft); border-radius: var(--raio-md);
+  background: color-mix(in oklab, var(--amarelo) 8%, var(--surface-2));
+}
+[data-recompensa] svg { color: var(--amarelo); flex: none; }
+[data-conceito] [data-mural-sub] { max-width: 68ch; color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="04-crm-desafios">
+<div class="quadro">
+
+  <!-- ── SIDEBAR CRM (shell CrmApp.tsx:414-666; nav igual à das telas 03/06) ── -->
+  <aside class="sidebar" aria-label="Navegação do CRM">
+    <div class="sidebar-marca">
+      <a class="marca-sesi" href="../index.html">
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+        <span>Alunos<small>Escola SESI</small></span>
+      </a>
+    </div>
+    <p class="sidebar-sub eyebrow">Área do aluno</p>
+    <nav class="sidebar-nav">
+      <a href="02-crm-portifolio.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        Portfólio
+      </a>
+      <a href="03-crm-projetos.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+        Projetos &amp; Criações
+      </a>
+      <a href="04-crm-desafios.html" class="nav-item nav-ativo" aria-current="page">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        Mural de Desafios
+      </a>
+      <a href="05-crm-tabelas.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+        Tabelas &amp; Alunos
+      </a>
+      <a href="06-crm-meu-perfil.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Meu Perfil
+      </a>
+      <a href="07-crm-painel-adm.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+        Painel ADM
+      </a>
+    </nav>
+    <div class="sidebar-rodape">
+      <a href="09-overlay-cracha.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+        Meu Crachá
+      </a>
+      <p class="eyebrow"><span class="kbd">⌘K</span> abre a busca rápida</p>
+    </div>
+    <div class="sidebar-pe">
+      <span class="avatar" style="--cor: var(--ciano); --cor-destaque: var(--ciano)">AD</span>
+      <div><strong>Alice Duarte</strong><small>3ºA · Matrícula 3A26-0041-887</small></div>
+    </div>
+  </aside>
+
+  <!-- ── ÁREA CENTRAL (aba "desafios", CrmApp.tsx:1052-1072) ─────────────── -->
+  <div class="quadro-corpo">
+    <header class="topo">
+      <div class="pilha-apertada ocupada">
+        <p class="eyebrow">Workspace CRM · Mural</p>
+        <p class="topo-titulo" style="margin:0">Mural de Desafios</p>
+      </div>
+      <div class="topo-acoes">
+        <a href="08-overlay-commandbar.html" class="btn btn--pequeno btn--secundario"
+           title="Buscar com Command Palette (⌘K)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span>Buscar</span><kbd class="kbd">⌘K</kbd>
+        </a>
+      </div>
+    </header>
+
+    <div class="wrap pilha" style="padding-block: var(--sp-500) var(--sp-700)">
+
+      <!-- ── BANNER DO MURAL (MuralDesafios.tsx:85-97) ───────────────────── -->
+      <header class="ilha-escura" style="--cor-destaque: var(--ciano); padding: var(--sp-600)">
+        <div class="pilha pilha-apertada">
+          <div class="linha" style="gap: var(--sp-200)">
+            <span class="selo">SESI SENAI SC · UNIDADE JOINVILLE</span>
+            <span class="selo selo--suave">TEMPORADA DE DESAFIOS TÉCNICOS 2026</span>
+          </div>
+          <h1 style="margin:0; font-size: var(--fs-700); line-height: var(--lh-apertado)">Mural de Desafios &amp; Hackathons Escolares</h1>
+          <p data-mural-sub style="margin:0">
+            Resolva desafios de engenharia, programação e robótica propostos pela coordenação e professores do SESI Joinville.
+            Submeta seu projeto, conquiste insígnias exclusivas para o seu perfil e acelere seu portfólio profissional!
+          </p>
+        </div>
+      </header>
+
+      <!-- ── FAIXA DA FILA DO ADM (MuralDesafios.tsx:104-125) — os dois ramos
+            da string, como manda PADROES §Estados. Só aparece para super_adm. ── -->
+      <div class="grade grade-2" role="group" aria-label="Faixa da fila de julgamento — dois estados">
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow">Estado: fila com pendências</p>
+          <div class="cartao linha linha-entre" role="note">
+            <span class="linha" style="gap: var(--sp-200)">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--aviso-fg)"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+              <span><b>3 envios</b> da turma esperam julgamento.</span>
+            </span>
+            <a href="07-crm-painel-adm.html" class="btn btn--pequeno btn--secundario">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+              <span>Ver envios da turma</span>
+            </a>
+          </div>
+        </div>
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow">Estado: fila vazia</p>
+          <div class="cartao linha linha-entre" role="note">
+            <span>Nenhum envio esperando julgamento.</span>
+            <button type="button" class="btn btn--pequeno btn--fantasma" data-toast="O botão aparece igual, só sem contador.">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+              <span>Ver envios da turma</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FILTRO POR ÁREA (MuralDesafios.tsx:127-142 + lib/desafios.ts) ── -->
+      <div class="linha" role="group" aria-label="Filtrar por área">
+        <strong>Filtrar por Área:</strong>
+        <button type="button" class="chip" aria-pressed="true">Todos os Desafios</button>
+        <button type="button" class="chip" aria-pressed="false">Robótica FLL</button>
+        <button type="button" class="chip" aria-pressed="false">Desenvolvimento Web</button>
+        <button type="button" class="chip" aria-pressed="false">Inteligência Artificial</button>
+        <button type="button" class="chip" aria-pressed="false">Automação IoT</button>
+        <button type="button" class="chip" aria-pressed="false">Design &amp; UI/UX</button>
+      </div>
+
+      <!-- ── GRADE DE DESAFIOS (MuralDesafios.tsx:145-242) — os três estados
+            de envio da Alice nos cards, mais o botão de quem nunca enviou ── -->
+      <div class="grade" style="--col-min: 21rem">
+
+        <!-- 1 · Robótica FLL — Alice enviou e está em análise -->
+        <article class="cartao pilha-apertada" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)">
+          <div class="linha linha-entre">
+            <span class="badge">Robótica FLL</span>
+            <span class="badge badge--info">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Prazo: 07/11/2026
+            </span>
+          </div>
+          <div class="pilha-apertada">
+            <h2 style="margin:0; font-size: var(--fs-500)">Seguidor de Linha Autônomo</h2>
+            <p style="margin:0; color: var(--dim)">Do zero ao PID: o robô que atravessa a pista sem tocar na faixa.</p>
+          </div>
+          <p style="margin:0">Programe um robô FLL que percorre a pista de linha usando sensor óptico e controle PID. Vence quem completar o trajeto no menor tempo sem sair da faixa.</p>
+          <div>
+            <span class="eyebrow">Requisitos &amp; Critérios:</span>
+            <ul data-criterios>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Código do loop PID comentado</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Pista completa em menos de 30s</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Apresentação de 3 minutos à banca</span></li>
+            </ul>
+          </div>
+          <div data-recompensa>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+            <div class="pilha-apertada" style="gap:0">
+              <span class="eyebrow">Recompensa &amp; Insígnia no Perfil:</span>
+              <strong>Insígnia «Pioneiro da Robótica»</strong>
+            </div>
+          </div>
+          <div class="linha linha-entre">
+            <small class="legenda">6 soluções enviadas por alunos</small>
+            <span class="badge badge--aviso" title="Seu envio: Robô Seguidor de Linha PID SESI Joinville">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+              Envio em análise
+            </span>
+          </div>
+        </article>
+
+        <!-- 2 · Desenvolvimento Web — envio da Alice aprovado -->
+        <article class="cartao pilha-apertada" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+          <div class="linha linha-entre">
+            <span class="badge">Desenvolvimento Web</span>
+            <span class="badge badge--info">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Prazo: até o fim do bimestre
+            </span>
+          </div>
+          <div class="pilha-apertada">
+            <h2 style="margin:0; font-size: var(--fs-500)">A nova vitrine da Feira de Profissões</h2>
+            <p style="margin:0; color: var(--dim)">Uma página pública para os projetos da escola, feita por alunos.</p>
+          </div>
+          <p style="margin:0">Repense a página de apresentação da Feira: grade de projetos, filtros por sala e acesso rápido pelo QR do crachá. Vale o mesmo padrão da vitrine dos alunos.</p>
+          <div>
+            <span class="eyebrow">Requisitos &amp; Critérios:</span>
+            <ul data-criterios>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Funcionar no celular da banca</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Link do repositório no envio</span></li>
+            </ul>
+          </div>
+          <div data-recompensa>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+            <div class="pilha-apertada" style="gap:0">
+              <span class="eyebrow">Recompensa &amp; Insígnia no Perfil:</span>
+              <strong>Insígnia «Web Builder»</strong>
+            </div>
+          </div>
+          <div class="linha linha-entre">
+            <small class="legenda">4 soluções enviadas por alunos</small>
+            <span class="badge badge--ok" title="Seu envio: Portfólio da Turma">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              Envio aprovado
+            </span>
+          </div>
+        </article>
+
+        <!-- 3 · Inteligência Artificial — sem envio (botão "Submeter Projeto") -->
+        <article class="cartao pilha-apertada" style="--cor-destaque: var(--verde); --cor: var(--verde)">
+          <div class="linha linha-entre">
+            <span class="badge">Inteligência Artificial</span>
+            <span class="badge badge--info">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Prazo: 21/11/2026
+            </span>
+          </div>
+          <div class="pilha-apertada">
+            <h2 style="margin:0; font-size: var(--fs-500)">Classificador da Cantina</h2>
+            <p style="margin:0; color: var(--dim)">Visão computacional para separar reciclável de orgânico.</p>
+          </div>
+          <p style="margin:0">Treine um classificador que reconhece o resíduo na esteira da cantina e aciona a lixeira certa. Pode ser no computador ou com ESP32-CAM no laboratório.</p>
+          <div>
+            <span class="eyebrow">Requisitos &amp; Critérios:</span>
+            <ul data-criterios>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Base de imagens própria documentada</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Precisão medida, não estimada</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Demonstração em vídeo de até 2 min</span></li>
+            </ul>
+          </div>
+          <div data-recompensa>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+            <div class="pilha-apertada" style="gap:0">
+              <span class="eyebrow">Recompensa &amp; Insígnia no Perfil:</span>
+              <strong>Insígnia «IA Aplicada»</strong>
+            </div>
+          </div>
+          <div class="linha linha-entre">
+            <small class="legenda">12 soluções enviadas por alunos</small>
+            <button type="button" class="btn btn--primario btn--pequeno" data-abre="#submeter">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Submeter Projeto</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- 4 · Automação IoT — envio rejeitado → "Corrigir e reenviar" -->
+        <article class="cartao pilha-apertada" style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)">
+          <div class="linha linha-entre">
+            <span class="badge">Automação IoT</span>
+            <span class="badge badge--info">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Prazo: 05/12/2026
+            </span>
+          </div>
+          <div class="pilha-apertada">
+            <h2 style="margin:0; font-size: var(--fs-500)">Estufa Inteligente do Jardim Sensorial</h2>
+            <p style="margin:0; color: var(--dim)">Rega automática com sensor de umidade e alerta no celular.</p>
+          </div>
+          <p style="margin:0">Automatize a rega do jardim sensorial: leitura de umidade do solo, bomba controlada por relé e aviso quando o reservatório baixar. Energia e custo entram na nota.</p>
+          <div>
+            <span class="eyebrow">Requisitos &amp; Critérios:</span>
+            <ul data-criterios>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Funcionar 7 dias sem intervenção</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Esquema elétrico desenhado</span></li>
+            </ul>
+          </div>
+          <div data-recompensa>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+            <div class="pilha-apertada" style="gap:0">
+              <span class="eyebrow">Recompensa &amp; Insígnia no Perfil:</span>
+              <strong>Insígnia «Maker de IoT»</strong>
+            </div>
+          </div>
+          <div class="linha linha-entre">
+            <small class="legenda">5 soluções enviadas por alunos</small>
+            <button type="button" class="btn btn--primario btn--pequeno" data-abre="#submeter" title="Seu envio: Estufa Maker v1">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Corrigir e reenviar</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- 5 · Design & UI/UX — categoria que só existia em "todos" antes do
+              filtro derivado de CATEGORIAS (MuralDesafios.tsx:68-71) -->
+        <article class="cartao pilha-apertada" style="--cor-destaque: var(--azul-claro); --cor: var(--azul-claro)">
+          <div class="linha linha-entre">
+            <span class="badge">Design &amp; UI/UX</span>
+            <span class="badge badge--info">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Prazo: 28/11/2026
+            </span>
+          </div>
+          <div class="pilha-apertada">
+            <h2 style="margin:0; font-size: var(--fs-500)">Identidade da Feira de Profissões 2026</h2>
+            <p style="margin:0; color: var(--dim)">Cartaz, credenciamento e crachá falando o mesmo visual.</p>
+          </div>
+          <p style="margin:0">Crie o sistema visual da Feira: cartaz A2, tela de credenciamento e arte do crachá dos expositores. A banca vota no conjunto, não no cartaz sozinho.</p>
+          <div>
+            <span class="eyebrow">Requisitos &amp; Critérios:</span>
+            <ul data-criterios>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Paleta e tipografia documentadas</span></li>
+              <li><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Contraste legível na distância do corredor</span></li>
+            </ul>
+          </div>
+          <div data-recompensa>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+            <div class="pilha-apertada" style="gap:0">
+              <span class="eyebrow">Recompensa &amp; Insígnia no Perfil:</span>
+              <strong>Insígnia «Design que Comunica»</strong>
+            </div>
+          </div>
+          <div class="linha linha-entre">
+            <small class="legenda">2 soluções enviadas por alunos</small>
+            <button type="button" class="btn btn--primario btn--pequeno" data-abre="#submeter">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Submeter Projeto</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL DE SUBMISSÃO (MuralDesafios.tsx:244-365) — o estado aberto ──── -->
+<div class="modal modal-aberto" id="submeter" role="dialog" aria-modal="true" aria-labelledby="submeter-titulo">
+  <div class="modal-caixa" style="max-width: 38rem">
+    <div class="modal-cabeca">
+      <div class="pilha-apertada">
+        <span class="eyebrow">SUBMISSÃO DE PROJETO TÉCNICO</span>
+        <h2 id="submeter-titulo" style="margin:0">Seguidor de Linha Autônomo</h2>
+      </div>
+      <button type="button" class="modal-x" data-fecha aria-label="Fechar formulário" title="Fechar formulário">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form class="modal-corpo" onsubmit="return false">
+      <div class="pilha-apertada">
+        <label class="campo-label" for="sub-titulo">Título do seu Projeto / Criação *</label>
+        <input class="campo" id="sub-titulo" name="tituloProjeto" type="text" required
+               placeholder="Ex: Robô Seguidor de Linha PID SESI Joinville">
+      </div>
+      <div class="pilha-apertada">
+        <label class="campo-label" for="sub-link">Link do Repositório GitHub / Protótipo / Demonstração</label>
+        <input class="campo" id="sub-link" name="linkProjeto" type="text" inputmode="url"
+               placeholder="https://github.com/usuario/meu-robo-sesi">
+        <small class="campo-dica">Cole o endereço completo, começando com https://</small>
+      </div>
+      <div class="pilha-apertada">
+        <label class="campo-label" for="sub-desc">Descrição da Solução Desenvolvida *</label>
+        <textarea class="campo" id="sub-desc" name="descricao" rows="4" required
+                  placeholder="Explique como seu código/projeto resolve os critérios do desafio, tecnologias usadas (ex: Arduino, Python, ESP32) e diferenciais..."></textarea>
+      </div>
+      <div class="modal-rodape">
+        <button type="button" class="btn btn--secundario" data-fecha>Cancelar</button>
+        <button type="submit" class="btn btn--primario">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <span>Confirmar Envio ao SESI</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

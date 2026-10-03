@@ -3,12 +3,21 @@
   17 · galeria.html — O inventário vivo das classes (design/PADROES.md §Classes).
   Cada família aparece em A e, logo abaixo, em B. As seções A usam o escape hatch
   /* no-sistema */ para escopar os tokens do conceito A dentro de um html B
-  (os tokens vivem só em :root — registrado como dívida para o coordenador).
-  String reais de origem: "Buscar aluno…", "Aprovar e publicar", "Voltar",
-  "Nenhum projeto publicado ainda", "SISTEMA FIESC · SESI SENAI",
-  "MATRÍCULA VALIDADA · ESTUDANTE ATIVO", "3A26-0041-887", "Escola SESI ·
-  Formando desenvolvedores para o futuro.", "Feira de Profissões 2026",
-  "Alterações salvas." (src/components/adm, CrachaModal, PaginaMeuPerfil, ds.tsx).
+  (os tokens vivem só em :root — registrado como dívida para o coordenador), e o
+  mesmo bloco empresta ao B o layout das peças de .modal que só o §10 do A define
+  (dividas/17-galeria.md).
+  Strings reais de origem — "Buscar aluno pelo nome…" (TabelaAlunos/CommandBar),
+  "Aprovar e publicar", "Voltar" (PainelAdmIntegrado), "Nenhum projeto publicado
+  ainda" (ds.tsx Vazio), "SISTEMA FIESC · SESI SENAI", "MATRÍCULA VALIDADA ·
+  ESTUDANTE ATIVO", "3A26-0041-887" (cracha/validar), "Escola SESI · Formando
+  desenvolvedores para o futuro.", "Feita pela turma" (rodapé público),
+  "Alterações salvas." (adm), "Portfólio", "Projetos & Criações", "Mural de
+  Desafios", "Tabelas & Alunos", "Meu Perfil", "Painel ADM", "Meu Crachá",
+  "Sair" (src/components/crm/CrmApp.tsx:449-553), "Vitrine Profissional",
+  "Criações da Escola", "Gestão Tabular", "Configurações de Estudante",
+  "Administração" (CrmApp.tsx:629-650), "Alunos · Escola SESI" (ds.tsx Topo),
+  "Feito pela turma, para a turma." (ds.tsx Rodape), "Sua senha de acesso",
+  "SESI-XXXX-XXXX" (LoginTela.tsx:153,274).
 -->
 <html lang="pt-BR" data-conceito="b" data-theme="dark">
 <head>
@@ -99,12 +108,29 @@ section[data-conceito="a"] .tabela tbody tr:nth-child(even):not(:hover) { backgr
 section[data-conceito="a"] .btn:hover, section[data-conceito="a"] .cartao--interativo:hover,
 section[data-conceito="a"] .badge-redes a:hover { transform: none; }
 section[data-conceito="a"] .marca-sesi img { display: block; }
+section[data-conceito="a"] .quadro { min-height: 0; }
 /* modal de exemplo preso numa caixa (transform cria containing block p/ fixed) */
 div[data-modal-demo] {
   position: relative; transform: translateZ(0); overflow: hidden;
   min-height: 480px; border-radius: var(--raio-md); border: 1px solid var(--line-soft);
 }
 section[data-conceito="b"] div[data-modal-demo] { border-color: var(--line); }
+/* peças de .modal que só o §10 do A define — o DOM do inventário é o mesmo nos
+   dois conceitos (regra de ouro do PADROES), então o B recebe o esqueleto local
+   com os tokens dele. Proposta de portar para sistema-b em dividas/17-galeria.md */
+[data-conceito="b"] .modal-cabeca { display: flex; align-items: center; gap: var(--sp-300); }
+[data-conceito="b"] .modal-x {
+  margin-left: auto; width: 36px; height: 36px; display: inline-flex; align-items: center;
+  justify-content: center; background: transparent; border: 0; border-radius: var(--raio-md);
+  color: var(--faint); cursor: pointer;
+}
+[data-conceito="b"] .modal-x:hover { background: var(--pouso); color: var(--text); }
+[data-conceito="b"] .modal-corpo { display: flex; flex-direction: column; gap: var(--sp-400); }
+[data-conceito="b"] .modal-corpo + .modal-rodape,
+[data-conceito="b"] .modal-rodape {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-300);
+  margin-top: var(--sp-500); padding-top: var(--sp-400); border-top: 1px solid var(--line-soft);
+}
 </style>
 </head>
 <body>
@@ -173,13 +199,14 @@ section[data-conceito="b"] div[data-modal-demo] { border-color: var(--line); }
   <label class="sr-only" for="g-b-1">Buscar</label>
   <input id="g-b-1" class="campo" placeholder="Buscar aluno pelo nome…">
   <input class="campo campo--busca" placeholder="Buscar em toda a turma…">
+  <input class="campo" type="password" placeholder="Sua senha de acesso">
   <select class="campo"><option>Todas as turmas</option><option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option></select>
   <textarea class="campo" placeholder="Observações da aprovação…"></textarea>
   <div>
     <input class="campo" value="alice-duarte" aria-invalid="true">
-    <small class="campo-dica" style="display:block">O slug já existe — escolha outro.</small>
+    <small>O slug já existe — escolha outro.</small>
   </div>
-  <input class="campo" value="3A26-0041-887" disabled>
+  <input class="campo" value="SESI-XXXX-XXXX" disabled>
 </div>
 </section>
 
@@ -339,13 +366,12 @@ section[data-conceito="b"] div[data-modal-demo] { border-color: var(--line); }
 </div>
 </section>
 
-<section data-conceito="b" aria-label="modal, conceito B"><p class="eyebrow eyebrow--accent">.modal .modal-aberto · conceito B — .modal-caixa com blur</p>
+<section data-conceito="b" aria-label="modal, conceito B"><p class="eyebrow eyebrow--accent">.modal .modal-aberto · conceito B — .modal-caixa com blur, mesmo DOM de peças</p>
 <div data-modal-demo>
   <div class="modal modal-aberto" role="dialog" aria-modal="true" aria-labelledby="gm-b">
     <div class="modal-caixa">
-      <div class="modal-cabeca"><h2 id="gm-b">Recusar submissão?</h2><button type="button" class="modal-x btn btn--fantasma btn--pequeno" aria-label="Fechar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-      <p>Rafael Kuntz continua fora da vitrine até reenviar com bio e capa. O aluno recebe o motivo por e-mail.</p>
-      <textarea class="campo" placeholder="Motivo visível para o aluno…"></textarea>
+      <div class="modal-cabeca"><h2 id="gm-b">Recusar submissão?</h2><button type="button" class="modal-x" aria-label="Fechar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="modal-corpo"><p>Rafael Kuntz continua fora da vitrine até reenviar com bio e capa. O aluno recebe o motivo por e-mail.</p><textarea class="campo" placeholder="Motivo visível para o aluno…"></textarea></div>
       <div class="modal-rodape"><button type="button" class="btn btn--secundario">Voltar</button><button type="button" class="btn btn--perigo">Recusar</button></div>
     </div>
   </div>
@@ -529,6 +555,11 @@ section[data-conceito="b"] div[data-modal-demo] { border-color: var(--line); }
   <div class="cartao"><div class="metrica"><p class="metrica-label eyebrow">Estrelas</p><p class="metrica-valor">76</p><p class="metrica-delta">4 salas · média 7,6</p></div></div>
   <div class="cartao"><div class="metrica metrica--gigante"><p class="metrica-label eyebrow">Completude geral</p><p class="metrica-valor">65%</p></div></div>
 </div>
+<div class="pilha-apertada" style="max-width:420px">
+  <p class="eyebrow">.barra · progresso de insígnia — Queridinha da Turma, 8★ de 10 (sem par no B — dívida 17)</p>
+  <div class="barra"><span class="barra-fill" style="--pct:80%"></span></div>
+  <div class="barra barra-fina barra-ok"><span class="barra-fill" style="--pct:65%"></span></div>
+</div>
 </section>
 
 <section data-conceito="b" aria-label="metrica, conceito B"><p class="eyebrow eyebrow--accent">.metrica · conceito B — o número é Bricolage 800; --destaque usa --cor-destaque</p>
@@ -539,8 +570,90 @@ section[data-conceito="b"] div[data-modal-demo] { border-color: var(--line); }
 </div>
 </section>
 
+<section data-conceito="a" aria-label="chrome do app, conceito A"><p class="eyebrow">.quadro + .sidebar + .topo · conceito A — o layout do CRM (telas 01–07/09), branco Tabler</p>
+<div class="quadro">
+  <aside class="sidebar">
+    <div class="sidebar-marca"><a class="marca-sesi marca-sesi-sm" href="#"><img src="../../public/logo-sesi.png" alt="SESI"></a></div>
+    <nav class="sidebar-nav">
+      <p class="eyebrow">Navegação</p>
+      <a href="#" class="nav-item nav-ativo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Portfólio</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>Projetos & Criações</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Mural de Desafios</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Tabelas & Alunos</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Meu Perfil</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>Painel ADM</a>
+    </nav>
+    <div class="sidebar-pe">
+      <span class="avatar avatar-sm" style="--cor: var(--ciano)">AD</span>
+      <div><strong>Alice Duarte</strong><small>3ºA · Matrícula 3A26-0041-887</small></div>
+    </div>
+  </aside>
+  <div class="quadro-corpo">
+    <header class="topo">
+      <h1>Portfólio da Turma</h1>
+      <div class="topo-acoes">
+        <button type="button" class="btn btn--pequeno btn--secundario">Meu Crachá</button>
+        <button type="button" class="btn btn--pequeno btn--fantasma">Sair</button>
+      </div>
+    </header>
+    <div class="wrap pilha" style="padding-block:var(--sp-500)">
+      <p class="eyebrow">Vitrine Profissional</p>
+      <p>O conteúdo central do CRM vive em <code>.quadro-corpo</code>: as abas, os cartões e a tabela que as telas 02–07 compõem.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="chrome do app, conceito B"><p class="eyebrow eyebrow--accent">.sidebar + .topo · conceito B — nav escura com realce e o chrome público (telas 10–16)</p>
+<div style="display:flex; align-items:stretch; border:1px solid var(--line); border-radius:var(--raio); overflow:hidden">
+  <aside class="sidebar" style="min-height:0">
+    <a class="marca-sesi" href="#"><img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI"><img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI"><span>Alunos<small>Escola SESI</small></span></a>
+    <p class="sidebar-sub">Área do aluno</p>
+    <nav>
+      <a href="#" class="nav-item nav-ativo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>Portfólio</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/></svg>Projetos & Criações</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Tabelas & Alunos</a>
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Meu Perfil</a>
+    </nav>
+    <div class="sidebar-rodape">
+      <a href="#" class="nav-item"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>Meu Crachá</a>
+      <p class="eyebrow"><span class="kbd">⌘K</span> abre a busca rápida</p>
+    </div>
+  </aside>
+  <div class="ocupada">
+    <header class="topo">
+      <a class="marca-sesi" href="#"><img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI"><img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI"><span>Vitrine<small>2026</small></span></a>
+      <nav><a href="#" aria-current="page">Alunos</a><a href="#">Validar matrícula</a></nav>
+    </header>
+    <div class="pilha" style="padding:var(--sp-500)">
+      <p class="eyebrow eyebrow--accent">Gestão Tabular</p>
+      <p><code>.topo</code> no B é sticky translúcido com blur — o chrome público; <code>.sidebar-sub</code>, <code>.kbd</code> e o rodapé de ações são as peças só dele.</p>
+      <div class="linha"><span class="badge badge--info">⌘K</span><span class="chip" aria-pressed="false">Endosso</span><button type="button" class="btn btn--pequeno btn--primario">Aprovar e publicar</button></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section data-conceito="a" aria-label="hero, conceito A"><p class="eyebrow">.hero · conceito A — centrado, a onda azul é o único gradiente</p>
+<div class="hero">
+  <p class="eyebrow">Escola SESI · Joinville–SC</p>
+  <h1>Formando desenvolvedores para o futuro.</h1>
+  <p>10 portfólios de alunos de Informática, publicados e validados pela secretaria.</p>
+  <div class="hero-acoes"><button type="button" class="btn btn--marketing">Ver a vitrine</button><button type="button" class="btn btn--secundario">Conhecer a escola</button></div>
+</div>
+</section>
+
+<section data-conceito="b" aria-label="hero, conceito B"><p class="eyebrow eyebrow--accent">.hero · conceito B — glow radial e o título <span class="vazado">vazado</span></p>
+<div class="hero">
+  <p class="eyebrow">Sistema FIESC · SESI SENAI</p>
+  <h1>Vitrine <span class="vazado">Profissional</span></h1>
+  <p class="lede">Portfólios, crachá digital e matrícula validada num link só.</p>
+  <div class="linha"><button type="button" class="btn btn--marketing">Conhecer a Escola SESI</button></div>
+</div>
+</section>
+
 <footer class="rodape">
-  <span>Inventário de <code>design/</code> — se a classe não está aqui nem nos sistemas, ela não existe.</span>
+  <span>Inventário de <code>design/</code> — se a classe não está aqui nem nos sistemas, ela não existe. Feito pela turma, para a turma.</span>
   <a href="../index.html">← hub do showcase</a>
   <a href="../PADROES.md">contrato (PADROES.md)</a>
 </footer>

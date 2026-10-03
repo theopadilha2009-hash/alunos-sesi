@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Crachá (modal) — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/components/CrachaModal.tsx:152-331 — diálogo (aria-label "Crachá Digital de …"),
+     botão fechar ("Fechar crachá" / "Fechar (ESC)" / ✕), cordão (fita + gancho), furo,
+     cabeçalho ("ESCOLA SESI" / "STUDENT PASS · 2026"), chip, badge de estrelas
+     ("Estrelas recebidas"), bio, 3 habilidades, QR ("QR Code para o perfil de …",
+     "Aponte a câmera"), código de barras de 11 barras + matrícula, deck
+     ("Baixar Crachá (PNG)" / "Gerando PNG...", "Copiar Link" / "Link Copiado!" /
+     "Não deu para copiar", "Ver Página") e os titles dos três botões;
+     src/app/styles/cracha.css:1-530 — "SESI Pass" holográfico: gradiente 155deg,
+     glare radial em --glare-x/--glare-y (0,2 → 0,55 na inspeção), tilt
+     perspective(1000px) rotateX/rotateY ±14deg, fita/gancho/furo, chip dourado,
+     borda em color-mix(--sala-cor), sombra de halo da sala;
+     src/components/CargosBadges.tsx:1-32 — pill da turma com LED da cor da sala,
+     title "Turma escolar 3ºA"; src/components/RedesBadges.tsx:87-178 — "LinkedIn",
+     "GitHub" e o e-mail inteiro, com seus titles;
+     src/app/validar/[slug]/page.tsx:59-118 — verso: "SISTEMA FIESC · SESI SENAI",
+     "ESCOLA SESI JOINVILLE · SANTA CATARINA", "AUTENTICAÇÃO PÚBLICA DIGITAL",
+     "MATRÍCULA VALIDADA · ESTUDANTE ATIVO", "Número de Registro / Matrícula",
+     "Situação Escolar", "Regular · Frequência Ativa";
+     src/components/crm/CrmApp.tsx:605 — gatilho "Meu Crachá". -->
+<style>
+/* no-sistema */
+/* 1) Arena do overlay. .modal é position:fixed — aqui o wrapper ganha
+      containing block (mesma técnica do div[data-modal-demo] da galeria) para o
+      crachá ficar VISÍVEL dentro da folha sem engolir a página. O .modal-caixa
+      é neutralizado: o crachá do app flutua no backdrop, não dentro de uma
+      caixa de papel. Proposta em dividas/09-overlay-cracha.md §1/§2. */
+[data-arena] {
+  position: relative; transform: translateZ(0); overflow: hidden;
+  min-height: clamp(520px, 66vh, 760px);
+  display: grid; place-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--raio-lg);
+}
+[data-arena] .modal { position: absolute; inset: 0; padding: var(--sp-500) var(--sp-300); }
+[data-arena] .modal-caixa {
+  width: min(100%, 30rem); max-height: none; overflow: visible; padding: 0;
+  background: transparent; border: 0; box-shadow: none; animation: none;
+  display: flex; flex-direction: column; gap: 0;
+}
+[data-pass-topo] { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-200); }
+/* .modal-cabeca/.modal-corpo/.modal-rodape/.modal-x só existem no §10 do A —
+   reforte do port pedido em dividas/17-galeria.md §1 (idempotente se o port
+   acontecer); nesta tela só o .modal-x é usado. */
+[data-conceito="b"] .modal-x {
+  width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; border-radius: var(--raio-md); color: var(--faint); cursor: pointer;
+}
+[data-conceito="b"] .modal-x:hover { background: var(--pouso); color: var(--text); }
+/* sobre o backdrop o fonte do app pinta um circulo escuro contornado que vira
+   --vermelho no hover (.cracha-fechar) — aqui é o estado "nu" do botão. */
+[data-arena] .modal-x {
+  position: static; margin-left: auto; border-radius: var(--raio-full);
+  border: 1px solid var(--ilha-line); color: var(--ilha-text);
+  background: color-mix(in oklab, var(--ilha-bg) 70%, black);
+}
+[data-arena] .modal-x:hover {
+  background: color-mix(in oklab, var(--vermelho) 78%, black);
+  border-color: var(--vermelho); color: var(--ilha-text);
+}
+/* fechado, a arena não pode sobrar como caixa vazia: o rótulo reaparece só
+   enquanto o .modal não tem .modal-aberto. */
+[data-arena]:has(.modal:not(.modal-aberto))::after {
+  content: "overlay fechado — o botão Meu Crachá acima reabre (ESC fecha)";
+  position: absolute; inset: auto var(--sp-500) var(--sp-500); text-align: center;
+  font-size: var(--fs-200); color: var(--faint);
+}
+[data-pass-palco] { perspective: 1000px; padding: var(--sp-200) 0; }
+
+/* 2) O cartão físico (.ilha-escura é a base: filete de 4 cores no B, tokens
+      remapeados). Os quatro hooks abaixo só pagam a especificidade que o bloco
+      de domínio do sistema-b (§10–13) cobra do 09 — ver dívida §4, que pede a
+      folga menor no próprio sistema. */
+[data-conceito] [data-pass] {
+  width: min(100%, 28rem); margin-inline: auto; overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--cor-destaque) 45%, color-mix(in oklab, white 25%, transparent));
+  background:
+    linear-gradient(155deg, var(--ilha-surface-2), var(--ilha-bg) 58%, color-mix(in oklab, var(--ilha-bg) 72%, black));
+  box-shadow:
+    0 25px 65px -10px color-mix(in oklab, black 80%, transparent),
+    0 0 30px -5px color-mix(in oklab, var(--cor-destaque) 40%, transparent),
+    inset 0 1px 1px color-mix(in oklab, white 22%, transparent);
+  transform-style: preserve-3d;
+  transition: transform var(--dur-3) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+[data-pass-palco]:hover [data-pass] {
+  transform: rotateX(6deg) rotateY(-9deg) scale3d(1.025, 1.025, 1.025);
+  box-shadow:
+    0 34px 70px -12px color-mix(in oklab, black 82%, transparent),
+    0 0 46px -4px color-mix(in oklab, var(--cor-destaque) 52%, transparent),
+    inset 0 1px 1px color-mix(in oklab, white 26%, transparent);
+}
+[data-pass] > * { position: relative; z-index: var(--z-conteudo); }
+
+/* 3) Glare holográfico: DUAS camadas CSS puras (o fonte move --glare-x/--glare-y
+      no mousemove; sem JS aqui, o varrimento é a mesma geometria em loop). */
+[data-pass-holo], [data-pass-glare] {
+  position: absolute; inset: -20%; z-index: 1; pointer-events: none; border-radius: inherit;
+}
+[data-pass-holo] {
+  background: linear-gradient(115deg, transparent 14%,
+    color-mix(in oklab, var(--ciano) 30%, transparent) 28%,
+    color-mix(in oklab, var(--verde) 26%, transparent) 40%,
+    color-mix(in oklab, var(--amarelo) 26%, transparent) 52%,
+    color-mix(in oklab, var(--vermelho-sesi) 24%, transparent) 64%, transparent 82%);
+  mix-blend-mode: screen; opacity: 0.28;
+  animation: passa-varrer 9s var(--ease) infinite alternate;
+}
+[data-pass-glare] {
+  background: radial-gradient(circle at 34% 24%,
+    color-mix(in oklab, white 26%, transparent) 0%,
+    color-mix(in oklab, var(--cor-destaque) 24%, transparent) 35%, transparent 66%);
+  opacity: 0.2; transition: opacity var(--dur-2) var(--ease);
+}
+[data-pass-palco]:hover [data-pass-glare] { opacity: 0.55; }
+@keyframes passa-varrer {
+  from { transform: translate3d(-26%, -6%, 0) rotate(-4deg); }
+  to   { transform: translate3d(26%, 6%, 0) rotate(4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-pass-holo] { animation: none; opacity: 0.16; transform: none; }
+  [data-pass-palco]:hover [data-pass] { transform: none; }
+  [data-pass-glare] { opacity: 0.3; }
+}
+
+/* 4) Peças de documento que nenhum sistema tem (dívida §3): cordão, furo, chip
+      dourado, LED de sala, código de barras e slot de papel do QR. */
+[data-pass-cordao] { display: flex; flex-direction: column; align-items: center; margin-bottom: -10px; }
+[data-pass-cordao] span:first-child {
+  width: 44px; height: 24px; border-radius: var(--raio-sm) var(--raio-sm) 0 0;
+  border: 1px solid color-mix(in oklab, white 30%, transparent);
+  background: linear-gradient(90deg, var(--ilha-accent),
+    color-mix(in oklab, var(--azul-claro) 75%, var(--ilha-accent)), var(--ilha-accent));
+}
+[data-pass-cordao] span:last-child {
+  width: 26px; height: 12px; border-radius: 2px 2px 6px 6px;
+  border: 1px solid color-mix(in oklab, var(--ilha-faint) 70%, transparent);
+  background: color-mix(in oklab, var(--ilha-faint) 55%, var(--ilha-surface));
+}
+[data-pass-furo] {
+  width: 40px; height: 9px; margin: 0 auto var(--sp-400);
+  border: 1px solid var(--ilha-line); border-radius: var(--raio-full);
+  background: color-mix(in oklab, var(--ilha-bg) 55%, black);
+}
+[data-pass-cabecalho] {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-300);
+  border-bottom: 1px solid var(--ilha-line-soft); padding-bottom: var(--sp-300); margin-bottom: var(--sp-400);
+}
+[data-pass-cabecalho] .marca-sesi img { height: 26px; }
+[data-pass-cabecalho] .marca-sesi small {
+  display: block; font-size: var(--fs-100); font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ilha-accent);
+}
+[data-conceito="a"] [data-pass] .marca-sesi .logo-modo-light { display: none; }
+[data-conceito="a"] [data-pass] .marca-sesi .logo-modo-dark { display: block; }
+[data-pass-chip] {
+  width: 32px; height: 24px; flex: none; padding: 3px; border-radius: var(--raio-sm);
+  border: 1px solid color-mix(in oklab, var(--amarelo) 55%, black);
+  background: linear-gradient(135deg,
+    color-mix(in oklab, var(--amarelo) 70%, white), var(--amarelo) 48%, color-mix(in oklab, var(--amarelo) 55%, black));
+  display: flex; flex-direction: column; justify-content: space-evenly;
+}
+[data-pass-chip] span { display: block; height: 1px; background: color-mix(in oklab, var(--amarelo) 40%, black); }
+[data-pass-corpo] { display: flex; gap: var(--sp-400); margin-bottom: var(--sp-400); }
+[data-pass-foto] { position: relative; flex: none; }
+[data-pass-foto] .avatar {
+  width: 4.8rem; height: 4.8rem; border-radius: var(--raio-lg); font-size: var(--fs-600);
+  border: 2px solid var(--cor-destaque);
+  box-shadow: 0 0 20px -5px var(--cor-destaque), 0 0 0 3px color-mix(in oklab, var(--cor-destaque) 12%, transparent);
+}
+[data-pass-foto] .badge {
+  position: absolute; bottom: -0.45rem; left: 50%; transform: translateX(-50%);
+  background: var(--amarelo); color: var(--ilha-bg); border-color: transparent; font-weight: 800;
+}
+[data-pass-dados] { flex: 1; min-width: 0; }
+[data-pass-nome] {
+  margin: 0 0 var(--sp-200); font-size: var(--fs-600); font-weight: 800;
+  letter-spacing: -0.02em; line-height: 1.15; color: var(--ilha-text);
+  text-shadow: 0 1px 4px color-mix(in oklab, black 70%, transparent);
+}
+[data-pass-sala] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-100); margin-bottom: var(--sp-200); }
+[data-pass-led] {
+  width: 7px; height: 7px; flex: none; border-radius: var(--raio-full);
+  background: var(--cor-destaque); box-shadow: 0 0 6px var(--cor-destaque);
+}
+[data-pass-bio] {
+  margin: 0 0 var(--sp-200); font-size: var(--fs-200); line-height: 1.45; color: var(--ilha-dim);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+[data-pass-tags] { display: flex; flex-wrap: wrap; gap: var(--sp-100); }
+[data-pass-tags] .chip {
+  background: color-mix(in oklab, var(--ilha-bg) 62%, black); color: var(--ilha-text);
+  border-color: color-mix(in oklab, var(--cor-destaque) 45%, var(--ilha-line));
+}
+[data-pass-rodape] {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-400);
+  border-top: 1px solid var(--ilha-line-soft); padding-top: var(--sp-300);
+}
+[data-pass-qr-area] { display: flex; flex-direction: column; align-items: center; }
+[data-pass-qr] {
+  width: 76px; height: 76px; padding: 2px; border: 2px solid var(--papel);
+  border-radius: var(--raio-p); background: var(--papel); color: var(--tinta);
+}
+[data-pass-dica] {
+  margin-top: var(--sp-100); font-size: var(--fs-100); text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ilha-faint);
+}
+[data-pass-mat-area] { display: flex; flex-direction: column; align-items: flex-end; }
+[data-pass-codigo] { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin-bottom: var(--sp-100); }
+[data-pass-codigo] span {
+  display: block; width: 2px; height: 100%;
+  background: color-mix(in oklab, var(--ilha-text) 88%, transparent);
+}
+[data-pass-codigo] span:nth-child(3n) { width: 4px; }
+[data-pass-codigo] span:nth-child(5n) { width: 1px; height: 82%; }
+[data-pass-matricula] {
+  font-family: var(--fonte-mono); font-size: var(--fs-200); letter-spacing: 0.12em;
+  color: var(--ilha-dim); text-align: right;
+}
+[data-pass-deck] { display: flex; flex-direction: column; gap: var(--sp-300); width: 100%; margin-top: var(--sp-500); }
+[data-pass-deck] .linha { width: 100%; }
+[data-pass-deck] .btn { flex: 1 1 auto; }
+[data-pass-deck] .btn--primario { flex: 1.4 1 auto; }
+[data-pass-redes] { justify-content: center; }
+
+/* 5) Verso: o mesmo DOM do cartão, sem o varrimento (peça impressa não brilha
+      sozinha) e com a ficha cadastral do /validar. */
+[data-verso-notas] { display: grid; gap: var(--sp-200); margin-bottom: var(--sp-400); }
+[data-verso-linha] { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-300); }
+[data-verso-linha] .eyebrow { color: var(--ilha-faint); }
+[data-verso-linha] b { font-family: var(--fonte-mono); font-size: var(--fs-300); letter-spacing: 0.08em; color: var(--ilha-text); font-weight: 700; }
+.ilha-escura[data-pass-verso] .selo--validado {
+  color: var(--ok-fg); border-color: color-mix(in oklab, var(--ok) 60%, transparent); background: var(--ok-bg);
+}
+[data-pass-lacre] {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-100);
+  border-top: 1px solid var(--ilha-line-soft); padding-top: var(--sp-300); text-align: center;
+}
+[data-pass-lacre] code {
+  font-family: var(--fonte-mono); font-size: var(--fs-100); color: var(--ilha-faint);
+  word-break: break-all; background: transparent;
+}
+
+/* 6) Estados do deck (fora do overlay): o app tem três transitórios reais — o
+      QR ainda sem dataURL, o PNG gerando e o clipboard que recusa. */
+[data-estado] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-200); }
+[data-estado] .btn, [data-estado] .toast { flex: none; }
+.skeleton[data-pass-qr-vazio] {
+  width: 76px; height: 76px; min-height: 76px; --sk-h: 76px; border-radius: var(--raio-p);
+}
+/* .kbd só existe no B; o A recebe o mesmo chrome com os tokens dele. */
+[data-conceito="a"] .kbd {
+  padding: 0.15rem 0.45rem; border: 1px solid var(--line); border-radius: var(--raio-sm);
+  background: var(--surface-2); color: var(--faint);
+  font-family: var(--fonte-mono); font-size: var(--fs-100);
+}
+
+/* 7) O filete de 4 cores é nativo da .ilha-escura do B; no A a ilha é preta
+      lisa — recriado aqui porque o contrato exige um DOM só (dívida §6). */
+[data-conceito="a"] [data-pass]::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; z-index: 2;
+  background: linear-gradient(90deg, var(--ciano), var(--verde), var(--amarelo), var(--vermelho-sesi));
+}
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="09-overlay-cracha">
+
+<header class="wrap pilha" style="padding-block: var(--sp-600) var(--sp-400)">
+  <p class="eyebrow eyebrow--accent">09 · overlay do CRM · Meu Crachá</p>
+  <h1>SESI Pass, o crachá holográfico</h1>
+  <p>O <code>CrachaModal</code> é o único lugar do app em que a identidade do aluno vira <b>objeto</b>: cartão de 28rem pendurado num cordão, com chip, furo, código de barras, glare que segue o mouse e o tilt de ±14° da inspeção. O redesenho mantém o objeto e troca o que era cor solta por tokens — o halo, a borda e o LED da sala saem todos de <code>--cor-destaque</code> da turma.</p>
+  <div class="linha">
+    <button type="button" class="btn btn--primario" data-abre="#sesi-pass">Meu Crachá</button>
+    <span class="kbd">ESC</span>
+    <p class="eyebrow">o overlay abaixo está aberto por contrato (PADROES §Abas, overlays e estados) — o ✕ fecha e o botão reabre</p>
+  </div>
+</header>
+
+<section class="wrap pilha" aria-label="frente do crachá" style="padding-block: var(--sp-400)">
+  <div class="linha linha-entre">
+    <p class="eyebrow">estado aberto · frente — perspectiva(1000px) em CSS puro</p>
+    <p class="eyebrow">passe o cursor sobre o cartão para a inspeção 3D</p>
+  </div>
+
+  <div data-arena>
+    <div class="modal modal-aberto" id="sesi-pass" role="dialog" aria-modal="true" aria-label="Crachá Digital de Alice Duarte">
+      <div class="modal-caixa">
+        <div data-pass-topo>
+          <button type="button" class="modal-x" data-fecha aria-label="Fechar crachá" title="Fechar (ESC)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div data-pass-cordao aria-hidden="true"><span></span><span></span></div>
+
+        <div data-pass-palco>
+          <div class="ilha-escura" data-pass style="--cor-destaque: var(--ciano); padding: var(--sp-500) var(--sp-400); border-radius: var(--raio-lg)">
+            <div data-pass-holo aria-hidden="true"></div>
+            <div data-pass-glare aria-hidden="true"></div>
+            <div data-pass-furo aria-hidden="true"></div>
+
+            <header data-pass-cabecalho>
+              <div class="marca-sesi">
+                <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+                <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+                <span>ESCOLA SESI<small>STUDENT PASS · 2026</small></span>
+              </div>
+              <div data-pass-chip aria-hidden="true"><span></span><span></span><span></span></div>
+            </header>
+
+            <div data-pass-corpo>
+              <div data-pass-foto>
+                <span class="avatar avatar--lg" style="--cor-destaque: var(--ciano)">AD</span>
+                <span class="badge" title="Estrelas recebidas">
+                  <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span class="num">14</span>
+                </span>
+              </div>
+              <div data-pass-dados>
+                <h3 data-pass-nome>Alice Duarte</h3>
+                <div data-pass-sala>
+                  <span class="chip" title="Turma escolar 3ºA"><span data-pass-led aria-hidden="true"></span>3ºA</span>
+                  <span class="chip">Informática</span>
+                </div>
+                <p data-pass-bio>Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p>
+                <div data-pass-tags>
+                  <span class="chip">React</span>
+                  <span class="chip">Next.js</span>
+                  <span class="chip">Excel</span>
+                </div>
+              </div>
+            </div>
+
+            <footer data-pass-rodape>
+              <div data-pass-qr-area>
+                <div class="olho" data-pass-qr role="img" aria-label="QR Code para o perfil de Alice Duarte">
+                  <svg viewBox="0 0 29 29" width="68" height="68" fill="currentColor" aria-hidden="true">
+                    <g fill="none" stroke="currentColor" stroke-width="1">
+                      <rect x="0.5" y="0.5" width="6" height="6"/><rect x="21.5" y="0.5" width="7" height="7"/><rect x="0.5" y="21.5" width="7" height="7"/>
+                    </g>
+                    <rect x="2" y="2" width="3" height="3"/><rect x="23" y="2" width="3" height="3"/><rect x="2" y="23" width="3" height="3"/>
+                    <rect x="9" y="1" width="1" height="1"/><rect x="11" y="1" width="2" height="1"/><rect x="15" y="1" width="1" height="1"/><rect x="18" y="1" width="2" height="1"/>
+                    <rect x="9" y="3" width="2" height="2"/><rect x="13" y="4" width="1" height="2"/><rect x="16" y="3" width="1" height="1"/><rect x="19" y="4" width="1" height="2"/>
+                    <rect x="1" y="9" width="2" height="1"/><rect x="4" y="11" width="1" height="2"/><rect x="6" y="9" width="1" height="1"/><rect x="9" y="10" width="2" height="2"/>
+                    <rect x="12" y="9" width="1" height="1"/><rect x="14" y="11" width="2" height="1"/><rect x="17" y="9" width="1" height="2"/><rect x="20" y="10" width="2" height="2"/>
+                    <rect x="23" y="9" width="1" height="1"/><rect x="25" y="11" width="2" height="1"/><rect x="27" y="9" width="1" height="2"/>
+                    <rect x="1" y="14" width="1" height="2"/><rect x="4" y="15" width="2" height="1"/><rect x="7" y="14" width="1" height="1"/><rect x="10" y="16" width="2" height="1"/>
+                    <rect x="13" y="14" width="1" height="2"/><rect x="16" y="15" width="2" height="2"/><rect x="19" y="14" width="1" height="1"/><rect x="22" y="16" width="2" height="1"/>
+                    <rect x="9" y="19" width="2" height="1"/><rect x="12" y="20" width="1" height="2"/><rect x="15" y="19" width="2" height="2"/><rect x="19" y="21" width="1" height="1"/>
+                    <rect x="22" y="19" width="1" height="2"/><rect x="25" y="20" width="1" height="1"/><rect x="27" y="22" width="1" height="2"/>
+                    <rect x="9" y="24" width="1" height="2"/><rect x="12" y="25" width="2" height="1"/><rect x="16" y="24" width="1" height="1"/><rect x="19" y="26" width="2" height="1"/>
+                    <rect x="23" y="25" width="1" height="2"/><rect x="26" y="24" width="2" height="1"/>
+                  </svg>
+                </div>
+                <span data-pass-dica>Aponte a câmera</span>
+              </div>
+              <div data-pass-mat-area>
+                <div data-pass-codigo aria-hidden="true">
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <span data-pass-matricula>3A26-0041-887</span>
+              </div>
+            </footer>
+          </div>
+        </div>
+
+        <div data-pass-deck>
+          <div class="linha">
+            <button type="button" class="btn btn--primario" title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico" data-toast="Baixar Crachá (PNG) — o app desenha o cartão num canvas e exporta o arquivo.">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Baixar Crachá (PNG)</span>
+            </button>
+            <button type="button" class="btn btn--secundario" title="Copiar link do portfólio" data-toast="https://alunos-sesi.vercel.app/alunos/alice-duarte">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copiar Link</span>
+            </button>
+            <a class="btn btn--secundario" href="#" title="Acessar página pública do estudante" data-toast="Crachá digital público — tela 11 do showcase.">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Ver Página</span>
+            </a>
+          </div>
+          <ul class="badge-redes" data-pass-redes>
+            <li><a href="https://linkedin.com/in/aliceduarte" title="Acessar LinkedIn" aria-label="LinkedIn de Alice Duarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li>
+            <li><a href="https://github.com/aliceduarte" title="Acessar GitHub (aliceduarte)" aria-label="GitHub de Alice Duarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg><span>GitHub</span></a></li>
+            <li><a href="mailto:alice@estudante.sesisenai.org.br" title="Enviar e-mail para alice@estudante.sesisenai.org.br" aria-label="E-mail institucional de Alice Duarte"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m3 7 8.4 5.6a1 1 0 0 0 1.2 0L21 7"/></svg><span>alice@estudante.sesisenai.org.br</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap pilha" aria-label="verso do crachá" style="padding-block: var(--sp-400)">
+  <div class="linha linha-entre">
+    <p class="eyebrow">o mesmo cartão · estado "verso" — ficha que o /validar confere</p>
+    <p class="eyebrow">sem varrimento: o verso é a face impressa</p>
+  </div>
+
+  <div class="ilha-escura" data-pass data-pass-verso style="--cor-destaque: var(--ciano); padding: var(--sp-500) var(--sp-400); border-radius: var(--raio-lg)">
+    <div data-pass-furo aria-hidden="true"></div>
+    <header data-pass-cabecalho>
+      <div class="marca-sesi">
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+        <span>SISTEMA FIESC · SESI SENAI<small>SESI SC · JOINVILLE</small></span>
+      </div>
+      <div data-pass-chip aria-hidden="true"><span></span><span></span><span></span></div>
+    </header>
+
+    <div data-verso-notas>
+      <span class="selo selo--validado">MATRÍCULA VALIDADA · ESTUDANTE ATIVO</span>
+      <div data-verso-linha><span class="eyebrow">Número de Registro / Matrícula</span><b>3A26-0041-887</b></div>
+      <div data-verso-linha><span class="eyebrow">Situação Escolar</span><b>Regular · Frequência Ativa</b></div>
+      <div data-verso-linha><span class="eyebrow">Sala</span><b>3ºA · Informática · 2026</b></div>
+      <div data-verso-linha><span class="eyebrow">Unidade</span><b>ESCOLA SESI JOINVILLE · SANTA CATARINA</b></div>
+    </div>
+
+    <footer data-pass-rodape>
+      <div data-pass-qr-area>
+        <div data-pass-codigo aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span data-pass-dica>AUTENTICAÇÃO PÚBLICA DIGITAL</span>
+      </div>
+      <div data-pass-lacre>
+        <span class="eyebrow">Código de integridade (HMAC-SHA256)</span>
+        <code>a3f9…c1d2</code>
+      </div>
+    </footer>
+  </div>
+</section>
+
+<section class="wrap pilha" aria-label="estados do deck" style="padding-block: var(--sp-400) var(--sp-600)">
+  <p class="eyebrow">os três transitórios reais do componente</p>
+  <div class="grade grade-2">
+    <article class="cartao">
+      <div class="cartao-cabeca"><span class="eyebrow">carregando o QR</span><span class="badge badge--info">qrcode importado sob demanda</span></div>
+      <div class="cartao-corpo">
+        <div data-estado>
+          <div class="skeleton" data-pass-qr-vazio aria-hidden="true"></div>
+          <p class="eyebrow">enquanto o dataURL não chega, o slot fica no trilho</p>
+        </div>
+      </div>
+    </article>
+    <article class="cartao">
+      <div class="cartao-cabeca"><span class="eyebrow">gerando o arquivo</span><span class="badge badge--aviso">aria-busy</span></div>
+      <div class="cartao-corpo">
+        <div data-estado>
+          <button type="button" class="btn btn--primario" disabled aria-busy="true" title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico"><span>Gerando PNG...</span></button>
+          <span class="kbd">ESC</span><span class="eyebrow">fecha o diálogo</span>
+        </div>
+      </div>
+    </article>
+    <article class="cartao">
+      <div class="cartao-cabeca"><span class="eyebrow">clipboard</span><span class="badge badge--ok">2,4s</span><span class="badge badge--perigo">4s no erro</span></div>
+      <div class="cartao-corpo">
+        <div data-estado>
+          <span class="toast toast--ok">Link Copiado!</span>
+          <span class="toast toast--perigo">Não deu para copiar</span>
+        </div>
+      </div>
+    </article>
+  </div>
+  <p class="eyebrow">fidelidade: nenhum rótulo acima foi reescrito — "Gerando PNG...", "Link Copiado!" e "Não deu para copiar" são os literais do <code>CrachaModal</code>. O deck de ações fica fora da <code>.ilha-escura</code> porque no app ele é o deck do diálogo, não mais uma estampa do cartão.</p>
+</section>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!doctype html>
+<!--
+  15 · 15-estados.html — Os estados globais do app, um por um e rotulados:
+  404 · error boundary · global-error · .vazio do ds · esqueleto de carregamento
+  (proposta nova). Um DOM, dois conceitos (design/PADROES.md).
+
+  fontes reais desta tela (gate de fidelidade):
+    src/app/not-found.tsx:1-48 · Topo voltar="← Ver a turma", número 404 em
+      3.5rem/800 na cor do acento, card de 500px com min-height 65vh.
+    src/app/error.tsx:1-82 · "use client", card de 540px/min-height 70vh,
+      <details> só com NODE_ENV=development, reset() + Link de retorno.
+    src/app/global-error.tsx:1-66 · <html>/<body> próprios, cores literais
+      (#0a0f14/#101a22/#3fc2bc) porque o layout raiz morreu: nenhuma folha de
+      estilo do sistema chegou a carregar.
+    src/components/ds.tsx:6-61 · Topo (marca "Alunos / Escola SESI" + voltar),
+      Rodape ("…"/"Feito pela turma, para a turma."), Vazio (div.vazio > b + filhos).
+    src/app/alunos/page.tsx:55-70 · Topo/Rodape do 404 e o <Vazio> do catch.
+    src/components/Vitrine.tsx:454-463 · os dois .vazio da vitrine (total=0 e
+      visiveis=0). Contexto: src/app/alunos/page.tsx:51 (Rodape da vitrine).
+    Ausência verificada: não existe loading.tsx nem skeleton/animate-pulse em
+    src/ (find src -name loading.tsx e grep -l skeleton em 02/10/2026) — a
+      seção 05 é proposta, não redesenho de algo existente.
+
+  strings copiadas LITERALMENTE dos fontes:
+    "404" (not-found.tsx:31) · "Página ou Estudante não encontrado" (:34) ·
+    "O perfil ou recurso que você tentou acessar não existe, foi removido ou o
+    link está incorreto." (:37) · "Explorar Alunos & Portfólios" (:41) ·
+    "← Ver a turma" (not-found.tsx:7, error.tsx:76) ·
+    "Algo inesperado aconteceu" (error.tsx:42) · "Ocorreu uma falha temporária
+    ao carregar esta página. Nossa equipe e os sistemas automáticos foram
+    notificados." (error.tsx:45) · "Detalhes do erro (dev)" (error.tsx:61) ·
+    "Digest: " (error.tsx:63) · "↻ Tentar Novamente" (error.tsx:73) ·
+    "Falha Crítica no Sistema" (global-error.tsx:42) · "Ocorreu uma falha
+    inesperada na interface. Por favor, tente recarregar o aplicativo."
+    (global-error.tsx:44) · "Recarregar Aplicativo" (global-error.tsx:60) ·
+    "Não conseguimos carregar a turma agora." + "O banco de dados não
+    respondeu. Tente de novo em alguns instantes — isto não é a lista vazia, é
+    falha de leitura." (alunos/page.tsx:63-65) · "A turma ainda está vazia." +
+    "Os alunos aparecem aqui assim que o ADM cadastrar a lista."
+    (Vitrine.tsx:456-457) · "Nenhum aluno encontrado com esses filtros." +
+    "Tente outra sala, outra habilidade ou limpe a busca." (Vitrine.tsx:461-462) ·
+    "Se persistir, avise o ADM." (alunos/page.tsx:69) ·
+    "Escola SESI · Formando desenvolvedores para o futuro." (not-found.tsx:45) ·
+    "Feito pela turma, para a turma." (ds.tsx:42) ·
+    "Alunos" / "Escola SESI" (ds.tsx:20-21).
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15 · Estados globais — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<style>
+/* no-sistema */
+/* 1. número-herói — o "404" de not-found.tsx:31 (3.5rem/800 na cor do acento).
+   Falta primitivo nos dois sistemas; dívida §1 de dividas/15-estados.md. */
+[data-numero-heroi] {
+  font-family: var(--fonte-titulo);
+  font-size: 3.5rem; font-weight: 800; line-height: 1;
+  letter-spacing: -0.04em; color: var(--accent);
+}
+/* 2. centragem do card de estado — min-height 65vh/70vh + max-width 500/540px
+   nos dois fontes; aqui encurtado para a tela caber em um rolinho. */
+[data-estado-centro] {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: var(--sp-600); min-height: 34vh;
+}
+[data-estado-centro] > * { width: min(100%, 520px); }
+/* 3. <details> de dev — disclosure que nenhum sistema estiliza; dívida §2 */
+[data-dev-details] {
+  width: 100%; text-align: left; background: var(--surface-2); color: var(--vermelho);
+  padding: var(--sp-300) var(--sp-400); border-radius: var(--raio-sm);
+  font-size: var(--fs-200); line-height: var(--lh-corpo); word-break: break-all;
+}
+[data-dev-details] summary { cursor: pointer; font-weight: 700; }
+[data-dev-details] p { margin: var(--sp-200) 0 0; }
+[data-dev-details] p + p { color: var(--faint); }
+/* 4. nota de fidelidade: de qual arquivo-fonte a peça veio, em mono */
+[data-nota-fonte] {
+  font-family: var(--fonte-mono); font-size: var(--fs-100);
+  color: var(--faint); letter-spacing: 0.01em; margin: 0;
+}
+/* 5. o filete de 4 cores de .ilha-escura é assinatura de peça oficial
+   (crachá/NFC); o global-error é falha fatal, não documento. Dívida §4 */
+[data-glob-erro]::before { display: none; }
+</style>
+</head>
+<body>
+<div class="palco">
+  <main class="tela" data-tela="15-estados">
+
+    <!-- ── Topo público (ds.tsx Topo — o chrome das telas 10–16) ───────────── -->
+    <header class="wrap topo">
+      <a class="marca-sesi" href="../index.html">
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+        <span>Alunos<small>Escola SESI</small></span>
+      </a>
+      <nav>
+        <a class="nav-link" href="10-vitrine.html">← Ver a turma</a>
+      </nav>
+    </header>
+
+    <div class="wrap pilha" style="padding-block: var(--sp-700); gap: var(--sp-700)">
+
+      <!-- ── Abertura ─────────────────────────────────────────────────────── -->
+      <header class="pilha">
+        <p class="eyebrow eyebrow--accent">15 · estados globais do app</p>
+        <h1 style="font-size: var(--fs-800); letter-spacing: -0.04em; max-width: 22ch">Quando não tem conteúdo, ou o app quebra</h1>
+        <p style="color: var(--dim); font-size: var(--fs-500); max-width: 62ch">
+          São as telas que o produto nunca projeta — e que o aluno vê primeiro quando
+          digita o endereço errado. Cinco estados, um DOM só, nos dois conceitos:
+          404, limite de erro, erro fatal no layout raiz, lista vazia e o
+          carregando, que ainda não existe.
+        </p>
+      </header>
+
+      <!-- ── 01 · 404 — src/app/not-found.tsx ─────────────────────────────── -->
+      <section class="pilha" aria-labelledby="t-404" style="gap: var(--sp-500)">
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow">01 · 404 — src/app/not-found.tsx</p>
+          <h2 id="t-404" style="font-size: var(--fs-600); letter-spacing: -0.025em">Rota não encontrada</h2>
+        </div>
+
+        <div data-estado-centro>
+          <div class="cartao" style="--cor-destaque: var(--ciano); display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-400); padding: var(--sp-700) var(--sp-600)">
+            <span data-numero-heroi>404</span>
+            <h3>Página ou Estudante não encontrado</h3>
+            <p style="color: var(--dim)">O perfil ou recurso que você tentou acessar não existe, foi removido ou o link está incorreto.</p>
+            <a class="btn btn--primario" href="10-vitrine.html">Explorar Alunos &amp; Portfólios</a>
+            <p data-nota-fonte>not-found.tsx:31-41 · card 500px · min-height 65vh · Topo voltar="← Ver a turma" · Rodape "Escola SESI · Formando desenvolvedores para o futuro."</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 02 · error boundary — src/app/error.tsx ──────────────────────── -->
+      <section class="pilha" aria-labelledby="t-erro" style="gap: var(--sp-500)">
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow">02 · limite de erro — src/app/error.tsx</p>
+          <h2 id="t-erro" style="font-size: var(--fs-600); letter-spacing: -0.025em">Algo deu errado nesta rota</h2>
+        </div>
+
+        <div data-estado-centro>
+          <div class="cartao" style="--cor-destaque: var(--vermelho); display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-400); padding: var(--sp-700) var(--sp-600)">
+            <span aria-hidden="true" style="font-size: 3rem; line-height: 1">⚠️</span>
+            <h3>Algo inesperado aconteceu</h3>
+            <p style="color: var(--dim)">Ocorreu uma falha temporária ao carregar esta página. Nossa equipe e os sistemas automáticos foram notificados.</p>
+
+            <details data-dev-details open>
+              <summary>Detalhes do erro (dev)</summary>
+              <p>TypeError: Cannot read properties of undefined (reading &quot;nome&quot;)</p>
+              <p>Digest: 8f2c41b0d7e9</p>
+            </details>
+
+            <div class="linha" style="justify-content: center">
+              <button type="button" class="btn btn--primario">↻ Tentar Novamente</button>
+              <a class="btn btn--fantasma" href="10-vitrine.html">← Ver a turma</a>
+            </div>
+            <p data-nota-fonte>error.tsx:40-78 · card 540px · min-height 70vh · o details só existe com NODE_ENV=development (aqui aberto para o print) · o botão chama reset()</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 03 · global-error — src/app/global-error.tsx ─────────────────── -->
+      <section class="pilha" aria-labelledby="t-global" style="gap: var(--sp-500)">
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow">03 · erro fatal no layout raiz — src/app/global-error.tsx</p>
+          <h2 id="t-global" style="font-size: var(--fs-600); letter-spacing: -0.025em">O mínimo possível quando tudo cai</h2>
+        </div>
+
+        <div data-estado-centro>
+          <div class="ilha-escura" data-glob-erro style="--cor-destaque: var(--vermelho); display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-400); padding: var(--sp-700) var(--sp-600)">
+            <p class="eyebrow eyebrow--accent">app indisponível</p>
+            <h3>Falha Crítica no Sistema</h3>
+            <p style="color: var(--dim); max-width: 44ch">Ocorreu uma falha inesperada na interface. Por favor, tente recarregar o aplicativo.</p>
+            <button type="button" class="btn btn--primario">Recarregar Aplicativo</button>
+            <p data-nota-fonte>global-error.tsx:42-61 · sem Topo, sem Rodape, sem sistema: o arquivo escreve html/body próprios com cor literal porque nenhuma folha de estilo carregou — aqui veste a ilha escura</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 04 · .vazio do ds — os três estados de lista ──────────────────── -->
+      <section class="pilha" aria-labelledby="t-vazio" style="gap: var(--sp-500)">
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow">04 · lista vazia — ds.tsx Vazio + Vitrine.tsx</p>
+          <h2 id="t-vazio" style="font-size: var(--fs-600); letter-spacing: -0.025em">“Não tem nada” tem três causas diferentes</h2>
+          <p style="color: var(--dim); max-width: 62ch">
+            O app já separa os três casos, e a distinção é o ponto: uma falha de
+            leitura nunca pode virar “a turma ainda não tem ninguém” — senão alguém
+            recadastra os 10 alunos do 3ºA para tapar uma falha de rede.
+          </p>
+        </div>
+
+        <div class="grade grade-2">
+          <div class="pilha pilha-apertada">
+            <p class="eyebrow">Vitrine · total === 0</p>
+            <div class="vazio">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/><path d="M3 8h6l1.5 2.5h3L15 8h6"/></svg>
+              <b>A turma ainda está vazia.</b>
+              <p>Os alunos aparecem aqui assim que o ADM cadastrar a lista.</p>
+            </div>
+          </div>
+
+          <div class="pilha pilha-apertada">
+            <p class="eyebrow">Vitrine · visiveis.length === 0</p>
+            <div class="vazio">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <b>Nenhum aluno encontrado com esses filtros.</b>
+              <p>Tente outra sala, outra habilidade ou limpe a busca.</p>
+            </div>
+          </div>
+
+          <div class="pilha pilha-apertada" style="--cor-destaque: var(--vermelho)">
+            <p class="eyebrow">página da vitrine · catch de leitura</p>
+            <div class="vazio">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+              <b>Não conseguimos carregar a turma agora.</b>
+              <p>O banco de dados não respondeu. Tente de novo em alguns instantes — isto não é a lista vazia, é falha de leitura.</p>
+            </div>
+            <p data-nota-fonte>Vitrine.tsx:454-463 · alunos/page.tsx:63-65 (Vazio do ds.tsx) · o rodapé do catch é "Se persistir, avise o ADM."</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 05 · skeletons — proposta (o app não tem loading.tsx) ─────────── -->
+      <section class="pilha" aria-labelledby="t-skel" style="gap: var(--sp-500)">
+        <div class="pilha pilha-apertada">
+          <p class="eyebrow eyebrow--accent">05 · carregando — MELHORIA — o app não tem loading.tsx</p>
+          <h2 id="t-skel" style="font-size: var(--fs-600); letter-spacing: -0.025em">A vitrine enquanto os 10 alunos chegam</h2>
+          <p style="color: var(--dim); max-width: 62ch">
+            Hoje a tela abre vazia e só depois pinta os cards. O esqueleto abaixo é o
+            que um <code>src/app/alunos/loading.tsx</code> entregaria: os mesmos
+            cartões, na mesma grade, com a forma do conteúdo que está vindo.
+          </p>
+        </div>
+
+        <div class="cartao" style="--cor-destaque: var(--ciano); display: flex; flex-direction: column; gap: var(--sp-500)" aria-busy="true">
+          <div class="cartao-cabeca" style="margin-bottom: 0">
+            <div class="pilha pilha-apertada" style="flex: 1; min-width: 12rem">
+              <div class="skeleton skeleton--titulo"></div>
+              <div class="skeleton skeleton--linha" style="width: 34%"></div>
+            </div>
+            <div class="linha">
+              <button type="button" class="chip" aria-pressed="true">Todas <small>10</small></button>
+              <button type="button" class="chip">3ºA <small>4</small></button>
+              <button type="button" class="chip">3ºB <small>2</small></button>
+              <button type="button" class="chip">4ºA <small>2</small></button>
+              <button type="button" class="chip">5ºA <small>2</small></button>
+            </div>
+          </div>
+
+          <!-- trilho shimmer: a faixa fina que segura o topo enquanto os dados chegam -->
+          <div class="skeleton" aria-hidden="true" style="height: 10px; border-radius: var(--raio-full)"></div>
+
+          <p class="sr-only">Carregando alunos da vitrine…</p>
+
+          <div class="grade" style="--col-min: 13rem">
+            <div class="cartao cartao--plano" style="gap: var(--sp-300)">
+              <div class="linha" style="gap: var(--sp-300)">
+                <span class="skeleton skeleton--circulo" aria-hidden="true" style="width: 2.6rem; height: 2.6rem"></span>
+                <div class="pilha pilha-apertada" style="flex: 1; min-width: 0">
+                  <div class="skeleton skeleton--linha" style="width: 58%"></div>
+                  <div class="skeleton skeleton--linha" style="width: 32%"></div>
+                </div>
+              </div>
+              <div class="skeleton" aria-hidden="true" style="height: 4.5rem"></div>
+              <div class="linha" style="gap: var(--sp-200)">
+                <div class="skeleton skeleton--linha" style="width: 3.5rem"></div>
+                <div class="skeleton skeleton--linha" style="width: 4.5rem"></div>
+              </div>
+            </div>
+
+            <div class="cartao cartao--plano" style="gap: var(--sp-300)">
+              <div class="linha" style="gap: var(--sp-300)">
+                <span class="skeleton skeleton--circulo" aria-hidden="true" style="width: 2.6rem; height: 2.6rem"></span>
+                <div class="pilha pilha-apertada" style="flex: 1; min-width: 0">
+                  <div class="skeleton skeleton--linha" style="width: 64%"></div>
+                  <div class="skeleton skeleton--linha" style="width: 28%"></div>
+                </div>
+              </div>
+              <div class="skeleton" aria-hidden="true" style="height: 4.5rem"></div>
+              <div class="linha" style="gap: var(--sp-200)">
+                <div class="skeleton skeleton--linha" style="width: 3rem"></div>
+              </div>
+            </div>
+
+            <div class="cartao cartao--plano" style="gap: var(--sp-300)">
+              <div class="linha" style="gap: var(--sp-300)">
+                <span class="skeleton skeleton--circulo" aria-hidden="true" style="width: 2.6rem; height: 2.6rem"></span>
+                <div class="pilha pilha-apertada" style="flex: 1; min-width: 0">
+                  <div class="skeleton skeleton--linha" style="width: 48%"></div>
+                  <div class="skeleton skeleton--linha" style="width: 36%"></div>
+                </div>
+              </div>
+              <div class="skeleton" aria-hidden="true" style="height: 4.5rem"></div>
+              <div class="linha" style="gap: var(--sp-200)">
+                <div class="skeleton skeleton--linha" style="width: 4rem"></div>
+                <div class="skeleton skeleton--linha" style="width: 2.5rem"></div>
+              </div>
+            </div>
+
+            <div class="cartao cartao--plano" style="gap: var(--sp-300)">
+              <div class="linha" style="gap: var(--sp-300)">
+                <span class="skeleton skeleton--circulo" aria-hidden="true" style="width: 2.6rem; height: 2.6rem"></span>
+                <div class="pilha pilha-apertada" style="flex: 1; min-width: 0">
+                  <div class="skeleton skeleton--linha" style="width: 70%"></div>
+                  <div class="skeleton skeleton--linha" style="width: 30%"></div>
+                </div>
+              </div>
+              <div class="skeleton" aria-hidden="true" style="height: 4.5rem"></div>
+              <div class="linha" style="gap: var(--sp-200)">
+                <div class="skeleton skeleton--linha" style="width: 3.5rem"></div>
+                <div class="skeleton skeleton--linha" style="width: 5rem"></div>
+              </div>
+            </div>
+
+            <div class="cartao cartao--plano" style="gap: var(--sp-300)">
+              <div class="linha" style="gap: var(--sp-300)">
+                <span class="skeleton skeleton--circulo" aria-hidden="true" style="width: 2.6rem; height: 2.6rem"></span>
+                <div class="pilha pilha-apertada" style="flex: 1; min-width: 0">
+                  <div class="skeleton skeleton--linha" style="width: 54%"></div>
+                  <div class="skeleton skeleton--linha" style="width: 34%"></div>
+                </div>
+              </div>
+              <div class="skeleton" aria-hidden="true" style="height: 4.5rem"></div>
+              <div class="linha" style="gap: var(--sp-200)">
+                <div class="skeleton skeleton--linha" style="width: 2.75rem"></div>
+              </div>
+            </div>
+
+            <div class="cartao cartao--plano" style="gap: var(--sp-300)">
+              <div class="linha" style="gap: var(--sp-300)">
+                <span class="skeleton skeleton--circulo" aria-hidden="true" style="width: 2.6rem; height: 2.6rem"></span>
+                <div class="pilha pilha-apertada" style="flex: 1; min-width: 0">
+                  <div class="skeleton skeleton--linha" style="width: 60%"></div>
+                  <div class="skeleton skeleton--linha" style="width: 26%"></div>
+                </div>
+              </div>
+              <div class="skeleton" aria-hidden="true" style="height: 4.5rem"></div>
+              <div class="linha" style="gap: var(--sp-200)">
+                <div class="skeleton skeleton--linha" style="width: 4rem"></div>
+                <div class="skeleton skeleton--linha" style="width: 3rem"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p data-nota-fonte>Nenhum loading.tsx, skeleton ou animate-pulse existe em src/ (verificado em 02/10/2026) · proposta: loading.tsx em src/app/alunos/ com este esqueleto, aria-busy no contêiner e trilho no topo da grade</p>
+      </section>
+
+    </div>
+
+    <!-- ── Rodapé público (ds.tsx Rodape — a dupla que fecha as telas 10–16) ─ -->
+    <footer class="rodape" style="margin-top: 0">
+      <div class="linha" style="justify-content: center">
+        <span>Escola SESI · Formando desenvolvedores para o futuro.</span>
+        <span>Feito pela turma, para a turma.</span>
+      </div>
+    </footer>
+
+  </main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>
