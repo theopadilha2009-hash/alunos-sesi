@@ -1,0 +1,163 @@
+/* ==========================================================================
+   primitivos-2026.css — Etapa 2, fatia 3: formas únicas para as famílias que
+   o app desenha em dialetos (4 de botão, 3 de campo, 2 de chip). Nada é
+   renomeado no JSX — este arquivo mora no FIM da cascata e harmoniza a
+   MÉTRICA, sempre com o seletor composto do dialeto atual. Cores por família
+   continuam onde vivem; só o corpo (altura, raio, padding, foco, hover,
+   placeholder, disabled) passa a ser um contrato, nos valores do conceito B
+   aprovado no showcase (design/sistemas/sistema-b.css).
+
+   O que NÃO entra de propósito:
+   - os ~25 utilitários btn-* do crm (btn-sidebar-cracha, btn-deletar-item…):
+     são botões locais com caixa própria, não dialeto; unifica-los com .botao
+     seria um pixel-shift massivo sem ganho de vocabulário.
+   - a caixa-base do .botao (min-height 2.4rem + translateY do B): o .botao
+     atual já é o canônico com 21 usos; portar a forma muda TODOS os botões
+     do app de uma vez — decisão separada, registrada em .context/memoria.
+   - select.campo do wrapper vs B: no app .campo é o WRAPPER (label grid);
+     o input canônico do B é a classe no próprio controle. Portamos a MÉTRICA
+     do B para os controles reais do app, não o nome — renomear é Etapa 3.
+   ========================================================================== */
+
+:root {
+  /* nomes do contrato B (design/sistemas/sistema-b.css:93,118) — shared com
+     o showcase pra quem portar tela ler a mesma coisa */
+  --ctrl-h: 2.75rem;
+  --raio-md: 12px;
+}
+
+/* ── BOTÃO SECUNDÁRIO ────────────────────────────────────────────────────── */
+/* Viviam 5 usos em "botao botao-secundario" sem nenhuma regra CSS: o botão
+   secundário RENDERIZAVA como o primário teal (a lista órfã do teste
+   classes-css confirmava). Forma = B's btn--secundario; opacity:1 mata o
+   fade do .botao:hover porque a borda de accent é o feedback. */
+.botao-secundario {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.botao-secundario:hover {
+  opacity: 1;
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
+  background: color-mix(in oklab, var(--accent) 7%, var(--surface-2));
+}
+
+:root[data-theme="light"] .botao-secundario {
+  /* src: sistema-b.css:1564 — no papel, secundário sobe para surface puro
+     para não virar nó cinza em formulário branco */
+  background: var(--surface);
+}
+
+/* wrapper do buscador (Vitrine.tsx:314, CrmApp.tsx:694): era classe fantasma
+   na lista SEM_CSS; vira inline-flex mínimo — o input .busca já carrega a
+   caixa, o label só agrupa. */
+.busca-campo {
+  display: inline-flex;
+}
+
+/* ── CAMPO: os 3 dialetos numa caixa só ─────────────────────────────────── */
+/* .campo input (vitrine.css:598 — fundo --bg), .input-texto/-select/-textarea
+   (crm.css:3016 — --surface-2, 12px) e .input-texto-custom (estudio.css:174 —
+   8px) desenhavam o mesmo controle três vezes. Corpo único = B .campo
+   (sistema-b.css:494-528): fundo em "papel afundado" (mix do --bg com
+   --surface), hover tinge a borda de accent, foco com anel glow, disabled
+   afunda. */
+.campo input,
+.campo textarea,
+.campo select,
+.input-texto,
+.input-select,
+.input-textarea,
+.input-texto-custom,
+.busca {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--ctrl-h);
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--raio-md);
+  background: color-mix(in oklab, var(--bg) 55%, var(--surface));
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  transition:
+    border-color 0.14s var(--ease),
+    box-shadow 0.24s var(--ease),
+    background 0.14s var(--ease);
+}
+
+.campo textarea,
+.input-textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.campo input::placeholder,
+.campo textarea::placeholder,
+.input-texto::placeholder,
+.input-textarea::placeholder,
+.input-texto-custom::placeholder,
+.busca::placeholder {
+  color: var(--faint);
+}
+
+.campo input:hover:not(:disabled),
+.campo textarea:hover:not(:disabled),
+.campo select:hover:not(:disabled),
+.input-texto:hover:not(:disabled),
+.input-select:hover:not(:disabled),
+.input-textarea:hover:not(:disabled),
+.input-texto-custom:hover:not(:disabled),
+.busca:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
+}
+
+/* A convenção do repo (base.css:49-52): quem escreve :focus em campo segura
+   com :not(:focus-visible) — aqui é o caminho VISÍVEL, então focus-visible é
+   o alvo correto e o anel substitui o outline global sem apagá-lo à toa. */
+.campo input:focus-visible,
+.campo textarea:focus-visible,
+.campo select:focus-visible,
+.input-texto:focus-visible,
+.input-select:focus-visible,
+.input-textarea:focus-visible,
+.input-texto-custom:focus-visible,
+.busca:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow);
+  background: var(--surface);
+}
+
+.campo input:disabled,
+.campo textarea:disabled,
+.campo select:disabled,
+.input-texto:disabled,
+.input-select:disabled,
+.input-textarea:disabled,
+.input-texto-custom:disabled,
+.input-texto-custom[readonly],
+.busca:disabled {
+  background: var(--surface-2);
+  color: var(--faint);
+  cursor: not-allowed;
+  border-color: var(--line-soft);
+}
+
+/* ── CHIP: duas famílias, uma forma ──────────────────────────────────────── */
+/* .chip-hab (crm.css:2377) e .edit-hab-chip (editor-perfil.css:43) já eram
+   pill 999; o bloco só iguala padding/gap/tamanho de texto — o hover e a cor
+   de cada família ficam onde estão. */
+.chip-hab,
+.edit-hab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.1;
+}

@@ -45,3 +45,7 @@
 @import "./styles/claro-estudio.css";
 @import "./styles/claro-desafios.css";
 @import "./styles/claro-vitrine.css";
+/* Etapa 2, fatia 3 — primitivos únicos: harmoniza a METRICA das famílias em
+   dialeto (campo x3, chip x2, botao-secundario orfao) sem renomear nada no
+   JSX. Vem depois dos claros porque tambem carrega regras light proprias. */
+@import "./styles/primitivos-2026.css";
