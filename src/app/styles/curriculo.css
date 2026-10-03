@@ -39,9 +39,9 @@
 .badge-curriculo-formato {
   font-size: 0.7rem;
   font-weight: 800;
-  background: rgba(227, 6, 19, 0.2);
-  color: #ff6666;
-  border: 1px solid rgba(227, 6, 19, 0.4);
+  background: rgb(var(--vermelho-sesi-rgb) / 0.2);
+  color: var(--vermelho-sesi-texto);
+  border: 1px solid rgb(var(--vermelho-sesi-rgb) / 0.4);
   padding: 0.25rem 0.55rem;
   border-radius: 6px;
   letter-spacing: 0.06em;
@@ -93,7 +93,7 @@
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #E30613;
+  color: var(--vermelho-sesi);
   text-transform: uppercase;
 }
 
@@ -141,7 +141,7 @@
   width: 72px;
   height: 72px;
   font-size: 1.5rem;
-  background: #E30613;
+  background: var(--vermelho-sesi);
   color: #ffffff;
   border-radius: 12px;
 }

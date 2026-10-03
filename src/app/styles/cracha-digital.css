@@ -52,7 +52,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #E30613;
+  color: var(--vermelho-sesi);
   text-transform: uppercase;
 }
 
@@ -143,9 +143,9 @@
   width: 60px;
   height: 60px;
   font-size: 1.2rem;
-  background: linear-gradient(135deg, #E30613 0%, #990000 100%);
+  background: linear-gradient(135deg, var(--vermelho-sesi) 0%, #990000 100%);
   border: 2px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 6px 16px rgba(227, 6, 19, 0.3);
+  box-shadow: 0 6px 16px rgb(var(--vermelho-sesi-rgb) / 0.3);
 }
 
 .validar-aluno-titulos h2 {
@@ -166,8 +166,8 @@
   font-size: 0.74rem;
   font-weight: 800;
   padding: 0.25rem 0.65rem;
-  background: rgba(227, 6, 19, 0.15);
-  color: #ff6666;
+  background: rgb(var(--vermelho-sesi-rgb) / 0.15);
+  color: var(--vermelho-sesi-texto);
   border-radius: 6px;
   letter-spacing: 0.06em;
 }
@@ -316,7 +316,7 @@
   transform: translateX(-50%);
   width: 500px;
   height: 400px;
-  background: radial-gradient(circle, rgba(227, 6, 19, 0.22) 0%, rgba(9, 13, 22, 0) 70%);
+  background: radial-gradient(circle, rgb(var(--vermelho-sesi-rgb) / 0.22) 0%, rgba(9, 13, 22, 0) 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -404,16 +404,16 @@
   height: 80px;
   font-size: 1.6rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #E30613 0%, #850000 100%);
+  background: linear-gradient(135deg, var(--vermelho-sesi) 0%, #850000 100%);
   border: 3px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 24px rgba(227, 6, 19, 0.35);
+  box-shadow: 0 8px 24px rgb(var(--vermelho-sesi-rgb) / 0.35);
 }
 
 .nfc-pulse-ring {
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 2px solid rgba(227, 6, 19, 0.4);
+  border: 2px solid rgb(var(--vermelho-sesi-rgb) / 0.4);
   animation: pulseNfc 2.5s infinite;
   pointer-events: none;
 }
@@ -540,13 +540,13 @@
 }
 
 .nfc-link-destaque {
-  background: linear-gradient(135deg, rgba(227, 6, 19, 0.25) 0%, rgba(133, 0, 0, 0.2) 100%);
-  border-color: rgba(227, 6, 19, 0.5);
+  background: linear-gradient(135deg, rgb(var(--vermelho-sesi-rgb) / 0.25) 0%, rgba(133, 0, 0, 0.2) 100%);
+  border-color: rgb(var(--vermelho-sesi-rgb) / 0.5);
 }
 
 .nfc-link-destaque:hover {
-  background: linear-gradient(135deg, rgba(227, 6, 19, 0.4) 0%, rgba(133, 0, 0, 0.3) 100%);
-  border-color: rgba(227, 6, 19, 0.7);
+  background: linear-gradient(135deg, rgb(var(--vermelho-sesi-rgb) / 0.4) 0%, rgba(133, 0, 0, 0.3) 100%);
+  border-color: rgb(var(--vermelho-sesi-rgb) / 0.7);
 }
 
 .nfc-link-oficial {

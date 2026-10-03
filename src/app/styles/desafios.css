@@ -6,7 +6,7 @@
 }
 
 .mural-topo-banner {
-  background: radial-gradient(circle at 80% 20%, rgba(227, 6, 19, 0.18) 0%, rgba(16, 24, 38, 0.95) 70%);
+  background: radial-gradient(circle at 80% 20%, rgb(var(--vermelho-sesi-rgb) / 0.18) 0%, rgba(16, 24, 38, 0.95) 70%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 2.25rem;
@@ -25,7 +25,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #E30613;
+  color: var(--vermelho-sesi);
   text-transform: uppercase;
 }
 
@@ -96,9 +96,9 @@
 }
 
 .btn-filtro-ativo {
-  background: #E30613 !important;
+  background: var(--vermelho-sesi) !important;
   color: #ffffff !important;
-  border-color: #E30613 !important;
+  border-color: var(--vermelho-sesi) !important;
 }
 
 .mural-desafios-grid {
@@ -287,7 +287,7 @@
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #E30613;
+  color: var(--vermelho-sesi);
   text-transform: uppercase;
 }
 

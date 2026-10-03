@@ -276,7 +276,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
                 <div
                   key={aluno.id}
                   className={`hall-card ${classeMedalha}`}
-                  style={{ ["--sala-cor" as string]: aluno.cor }}
+                  style={{ ["--sala" as string]: aluno.cor }}
                 >
                   <span className="hall-medalha">{medalha}</span>
                   <div className="hall-avatar-wrap">
