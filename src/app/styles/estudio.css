@@ -6,7 +6,7 @@
 }
 
 .estudio-topo {
-  background: linear-gradient(135deg, rgba(227, 6, 19, 0.12) 0%, rgba(14, 165, 233, 0.08) 100%);
+  background: linear-gradient(135deg, rgb(var(--vermelho-sesi-rgb) / 0.12) 0%, rgba(14, 165, 233, 0.08) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 1.5rem 1.75rem;
@@ -17,7 +17,7 @@
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #E30613;
+  color: var(--vermelho-sesi);
   text-transform: uppercase;
   margin-bottom: 0.35rem;
 }
@@ -101,9 +101,9 @@
 }
 
 .btn-alvo-ativo {
-  background: rgba(227, 6, 19, 0.15) !important;
-  border-color: #E30613 !important;
-  color: #ff6666 !important;
+  background: rgb(var(--vermelho-sesi-rgb) / 0.15) !important;
+  border-color: var(--vermelho-sesi) !important;
+  color: var(--vermelho-sesi-texto) !important;
 }
 
 .campo-selecao-projeto {
@@ -191,8 +191,8 @@
 }
 
 .painel-propriedades {
-  background: rgba(227, 6, 19, 0.05);
-  border-color: rgba(227, 6, 19, 0.25);
+  background: rgb(var(--vermelho-sesi-rgb) / 0.05);
+  border-color: rgb(var(--vermelho-sesi-rgb) / 0.25);
 }
 
 .propriedades-topo {
@@ -239,7 +239,7 @@
 }
 
 .slider-item input[type="range"] {
-  accent-color: #E30613;
+  accent-color: var(--vermelho-sesi);
   width: 100%;
 }
 
@@ -364,7 +364,7 @@
   width: 50px;
   height: 50px;
   font-size: 1.1rem;
-  background: #E30613;
+  background: var(--vermelho-sesi);
 }
 
 .preview-hero-textos {
@@ -375,7 +375,7 @@
 .preview-tag-cargo {
   font-size: 0.65rem;
   font-weight: 800;
-  color: #E30613;
+  color: var(--vermelho-sesi);
   letter-spacing: 0.08em;
 }
 

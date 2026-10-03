@@ -30,3 +30,7 @@
 @import "./styles/perfil-publico.css";
 @import "./styles/editor-perfil.css";
 @import "./styles/cargos-badges.css";
+/* Etapa 2 (redesign): tokens novos só entram no FIM da cascata. Este arquivo
+   define tokens que nenhum import antigo define (--vermelho-sesi, --cor-destaque),
+   então a posição não muda pixel nenhum — é só contrato de nome. */
+@import "./styles/tokens-2026.css";

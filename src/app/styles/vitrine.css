@@ -1075,8 +1075,8 @@ body::before {
   width: 3.4rem;
   height: 3.4rem;
   font-size: 1.15rem;
-  border: 2px solid var(--sala-cor, var(--accent));
-  box-shadow: 0 0 14px -3px var(--sala-cor, var(--accent));
+  border: 2px solid var(--sala, var(--accent));
+  box-shadow: 0 0 14px -3px var(--sala, var(--accent));
 }
 
 .hall-nome {

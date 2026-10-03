@@ -1,0 +1,19 @@
+/* ==========================================================================
+   tokens-2026.css — Etapa 2 do redesign (contrato em design/PADROES.md).
+   Entra no FIM dos @imports de globals.css: a ordem é a cascata.
+   Casa o VERMELHO INSTITUCIONAL SESI — que vivia em 33 literais por 4 fatias
+   (curriculo/estudio/cracha-digital/desafios) — em tokens únicos.
+   NÃO confundir com --vermelho (tokens.css), que é DADO DE SALA (#d74d42).
+   ========================================================================== */
+:root {
+  --vermelho-sesi: #e30613;
+  /* companheiro de canais p/ alpha: rgb(var(--vermelho-sesi-rgb) / 0.2).
+     exato em sRGB — color-mix em oklab deslocaria a cor da marca. */
+  --vermelho-sesi-rgb: 227 6 19;
+  --vermelho-sesi-texto: #ff6666; /* tinte p/ texto sobre fundo escuro */
+
+  /* --cor-destaque: nome canônico do redesign (design/); no app a semântica
+     real é --sala (cor do card: override do aluno ou da sala — tipos.ts).
+     Alias de compatibilidade: quem portar tela do showcase lê o mesmo nome. */
+  --cor-destaque: var(--sala);
+}
