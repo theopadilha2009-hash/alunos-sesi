@@ -1,0 +1,67 @@
+/* ==========================================================================
+   claro-cargos.css — fatia de tema claro do domínio "cargos"
+
+   As pílulas opacas de cargos-badges.css (bloco light, linhas 206-261) já
+   resolveram super-adm, adm, fixado, destaque e extra no claro: cor pastel
+   fixa e texto escuro, autocontidas contra qualquer fundo — porque o mesmo
+   badge mora em cima de três ilhas que continuam escuras no claro (crachá
+   .cracha-card, NFC .nfc-hero-card, banner .perfil-hero-banner).
+
+   Este arquivo acrescenta o que ficou fora do bloco: o badge de turma
+   (.badge-cargo-turma), o único cuja cor vem de --cor-turma injetado inline
+   pelo CargosBadges.tsx. Todo o resto do domínio já está resolvido lá ou é
+   literal que não pinta no claro. As classes de layout do arquivo-fonte
+   (.linha-cargos-container, .badge-cargo, .badge-pequeno/padrao/grande) não
+   carregam cor nenhuma e não precisam de override.
+
+   Decisões discutíveis:
+
+   1. A âncora do mix é literal fixo (#ffffff, #0f172a), não var(--surface)
+      nem var(--text): o .cracha-card redefine --text para #ffffff !important
+      dentro de si (cracha.css:78). Misturando o texto com --text, o badge
+      dentro do crachá viraria tinta pálida sobre pílula pálida. Com o par
+      fixo a pílula continua autocontida, o mesmo princípio do bloco acima
+      (o comentário de 189-190: "o contraste é do badge consigo mesmo").
+      #ffffff e #0f172a são os valores de --surface/--text do claro, usados
+      aqui como âncora de cálculo, não como papel.
+
+   2. Os percentuais sobre --cor-turma (fundo 20%, texto 45%, borda 50%,
+      hover 32%) foram calibrados na paleta finita CORES_SALA, as seis cores
+      do símbolo mais azul e petróleo (lib/cores.ts:17). Quem perde é a mais
+      luminosa — amarelo dá 5,5:1 no parado e 5,1:1 no hover; ciano 5,8:1 e
+      5,3:1. As outras quatro só melhoram. Um percentual de texto mais alto
+      (55%) já reprovava o ciano por um décimo.
+
+   3. As cores de borda no hover das outras quatro pílulas de cargo
+      (#fbbf24, #38bdf8, #34d399, #fde047) ficam como estão: o bloco aprovado
+      fez o contraste depender só de fundo+texto, e uma borda 1px de cor
+      saturada da mesma família continua decorativa sobre o pastel.
+
+   4. A borda do hover da turma continua a tinta cheia de --cor-turma
+      (fonte linha 75): cor pura funciona igual no claro, não há motivo de
+      apagá-la. O glow do hover e do LED-ponto também ficam: sombra colorida
+      não carrega texto e continua legendo no branco.
+   ========================================================================== */
+
+:root[data-theme="light"] .badge-cargo-turma {
+  /* src: cargos-badges.css:67 — .badge-cargo-turma, fundo navy rgba(15,23,42,.8)
+     que continuaria escuro sobre a vitrine clara: vira pastel da tinta da turma */
+  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 20%, #ffffff);
+  /* src: cargos-badges.css:68 — a borda rgba(255,255,255,.25) some sobre o
+     branco; pastel a 50% mantém o contorno da pílula em qualquer fundo */
+  border-color: color-mix(in srgb, var(--cor-turma, #38c7bd) 50%, #ffffff);
+  /* src: cargos-badges.css:69 — o branco da tinta só existia para o navy;
+     sobre o pastel, a turma escurece misturada com a tinta do claro */
+  color: color-mix(in srgb, var(--cor-turma, #38c7bd) 45%, #0f172a);
+  /* src: cargos-badges.css:70 — a sombra preta dava legibilidade ao pastel
+     sobre fundo escuro; na pílula opaca ela só borra o texto (mesma regra
+     do bloco 206-261, que o AA não credita sombra) */
+  text-shadow: none;
+}
+
+:root[data-theme="light"] .badge-cargo-turma:hover {
+  /* src: cargos-badges.css:74 — hover com base rgba(15,23,42,.9): o navy
+     aprofundado no claro viraria ilha escura de novo; o pastel só engrossa
+     de 20% para 32% da tinta da turma */
+  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 32%, #ffffff);
+}

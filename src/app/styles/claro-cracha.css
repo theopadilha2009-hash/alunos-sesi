@@ -1,0 +1,158 @@
+/* ==========================================================================
+   claro-cracha.css — tema CLARO do domínio crachá (cracha.css +
+   cracha-digital.css). Tudo escopado em :root[data-theme="light"]; nenhum
+   byte dos fontes é tocado. O domínio tem duas espécies de superfície e o
+   arquivo trata cada uma de um jeito:
+
+   ILHAS (crachá holográfico, cartão NFC /u/[slug], documento /validar/[slug])
+   — são o objeto físico escuro num produto que clareia; a doutrina está no
+   showcase aprovado (design/sistemas/sistema-b.css:205-210 e o nó .ilha-escura
+   em sistema-b.css:1627-1633). A auditoria achou que cracha.css:76-81 pina só
+   --text/--dim/--faint com !important e esquece o resto: no light o avatar sem
+   foto (cracha.css:275, color-mix com --surface-2) vira branco sobre
+   quase-branco e as bordas dos nós 202/211/380 somem. O escudo abaixo reafirma
+   os tokens dark originais (tokens.css:29-64) nos quatro nós-ilha.
+
+   PAPEL (o resto do domínio: deck de botões, selo verificado, link validado,
+   pills de competência nos modais de perfil) — segue os tokens claros; aqui
+   só se corrige o literal que foi desenhado contra fundo escuro e sobre
+   branco fica invisível.
+
+   Decisões de design, as mais discutíveis:
+
+   1. O escudo usa !important e declara --fg/--border com VALOR LITERAL, não
+      var(--text)/var(--line): os apelidos são resolvidos no :root
+      (tokens.css:59-60 e 80-81), então repinar --text num nó-ilha mais
+      abaixo NÃO move o --fg que ele já herdou calculado. É exatamente o vazamento
+      real do documento: cracha-digital.css:13 pinta a página com var(--fg) e no
+      claro isso é tinta quase-preta sobre página quase-preta.
+   2. --accent/--on-accent/--glow/--sombra entram no escudo embora a auditoria
+      nomeie só surface-2/line/line-soft/bg: sem --accent os fallbacks do card
+      (avatar cracha.css:274-280, .cracha-sub :236 no card-leve, .ponto-sala
+      :354, .badge-sala-tabela :340-341) ficam azul-institucional #02609e numa
+      ilha verde-água, e os botões globais embutidos no documento
+      (validar/[slug]/page.tsx:165-174) viram claro-sobre-claro.
+   3. --text/--dim/--faint vão SÓ nas duas ilhas de página. O card já tem
+      pino próprio em cracha.css:78-80 com valores dele (ffffff/f1f5f9/cbd5e1);
+      o escudo por cima da especificação dele quebraria o "idêntica" — no card
+      a inicial do avatar (cracha.css:279, branco literal) precisa do --surface-2
+      escuro do pino, não de um --text novo.
+   4. Intocáveis por natureza: QR #fff (cracha.css:394-395 — zona de silêncio é
+      papel do código, não chrome), chip dourado 242-255, presilha/fita/gancho
+      63-73, cordão e fecho 37-49. São objetos físicos: mesmo visual nos dois
+      temas, destino "skip" do inventário.
+   5. O verde do papel segue o precedente do próprio fonte
+      (cracha-digital.css:725-738 e 766-772): #065f46 sobre o fundo em alpha
+      verde já presente passa AA (6,5:1 no pior fundo claro). Nada de --verde
+      #38b95d, que é dado de sala.
+   ========================================================================== */
+
+/* ── ILHAS: escudo de tokens dark nos quatro nós (pin, não override) ─────── */
+
+:root[data-theme="light"] .cracha-card,
+:root[data-theme="light"] .cracha-card-leve,
+:root[data-theme="light"] .nfc-bio-layout,
+:root[data-theme="light"] .validar-documento-layout {
+  /* src: cracha-digital.css:8 — .validar-documento-layout e :303
+     .nfc-bio-layout: as ilhas de página já têm fundo literal escuro; o pin
+     vale para descendentes que consumirem --bg (nenhum hoje, escudo) */
+  --bg: #090d12 !important;
+  /* src: sem consumo no fonte do domínio dentro das ilhas; escudo para
+     componentes compartilhados embutidos (cartões de vídeo em
+     u/[slug]/page.tsx:320) */
+  --surface: #10161f !important;
+  /* src: cracha.css:275 — .cracha-avatar (color-mix 25% + surface-2, o bug
+     da missão: inicial branca sobre quase-branco), :403
+     .cracha-qrcode-placeholder, :331 .cracha-sala-pill (card-leve),
+     :341 .badge-sala-tabela quando dentro do card;
+     cracha-digital.css:674 — .endorsement-pill */
+  --surface-2: #16202c !important;
+  /* src: cracha-digital.css:686 — .endorsement-pill:hover */
+  --surface-3: #1e2a38 !important;
+  /* src: cracha-digital.css:13 — .validar-documento-layout (o leak real,
+     decisão 1 do header) e :680 — .endorsement-pill */
+  --fg: #f8fafc !important;
+  /* src: cracha-digital.css:675 — .endorsement-pill (border var(--border)) */
+  --border: rgba(255, 255, 255, 0.08) !important;
+  /* src: cracha.css:202 — .cracha-furo, :325 — .cracha-sala-pill (card-leve),
+     :340 — .badge-sala-tabela */
+  --line: rgba(255, 255, 255, 0.08) !important;
+  /* src: cracha.css:211 — .cracha-cabecalho, :380 — .cracha-rodape */
+  --line-soft: rgba(255, 255, 255, 0.04) !important;
+  /* src: cracha.css:274/275/280 — .cracha-avatar fallback sem --sala-cor,
+     :236 — .cracha-sub (o card puro pinou 38c7bd literal na linha 150, o
+     card-leve não), :340-341 — .badge-sala-tabela, :354 — .ponto-sala */
+  --accent: #38c7bd !important;
+  /* src: validar/[slug]/page.tsx:165 — .botao-primario embutido na ilha
+     consumir var(--on-accent) sobre --accent: no claro o texto branco do
+     botão sumiria no teal */
+  --on-accent: #04211f !important;
+  /* src: cracha.css:485 — .btn-cracha-download (fora do card; escudo para
+     variantes de botão embutidas nas ilhas de página) */
+  --glow: rgba(56, 199, 189, 0.16) !important;
+  /* src: cracha-digital.css:379 — .nfc-hero-card tem sombra literal, mas o
+     deck externo e cartões compartilhados que usam var(--sombra) dentro da
+     ilha receberiam a névoa azul do claro sobre fundo escuro */
+  --sombra: 0 20px 45px -20px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+:root[data-theme="light"] .nfc-bio-layout,
+:root[data-theme="light"] .validar-documento-layout {
+  /* src: cracha.css:76-81 — o fonte só pina text/dim/faint NO CARD; as ilhas
+     de página ficaram nuas. Valores = dark original (tokens.css:34-53).
+     --dim/:209 .dado-rotulo usa rgba branco literal, então isto é escudo para
+     descendentes compartilhados, não conserto de leak conhecido */
+  --text: #f8fafc !important;
+  /* src: cracha-digital.css:825 — .breve-secao-dica/.perfil-hab-sub vivem em
+     papel fora da ilha; aqui, vale o par AA do dark */
+  --dim: #94a3b8 !important;
+  /* src: cracha-digital.css:283 — .seguranca-hash-label usa rgba literal;
+     pino simétrico ao --text por qualquer consumidor futuro de --faint */
+  --faint: #8291a8 !important;
+}
+
+/* ── PAPEL: literais desenhados contra escuro que somem no branco ────────── */
+
+:root[data-theme="light"] .selo-verificado-pill {
+  /* src: cracha-digital.css:834-836 — .selo-verificado-pill (renderizado em
+     PerfilInterativo.tsx:301, página de papel): #34d399 sobre o alpha
+     0,12 em branco dá 1,7:1. #065f46 sobre a mesma tinta mint passa 6,5:1,
+     e a borda acompanha o precedente de cracha-digital.css:731 */
+  color: #065f46;
+  border-color: rgba(6, 95, 70, 0.35);
+}
+
+:root[data-theme="light"] .breve-link-validado {
+  /* src: cracha-digital.css:847 — .breve-link-validado
+     (ModalPerfilBreve.tsx:253): o mesmo #34d399 como LINK sobre --surface
+     branco é texto de 0,72rem invisível; desce ao verde do par AA */
+  color: #065f46;
+}
+
+:root[data-theme="light"] .endorsement-pill:hover {
+  /* src: cracha-digital.css:685 — .endorsement-pill:hover: borda
+     rgba(255,255,255,0.25) sobre a pílula claro (#f1f5f9 em --surface-2) é
+     hover invisível no papel; tinta do --line-escuro-claro do repo
+     (tokens.css:78), invertida em alfa */
+  border-color: rgba(15, 23, 42, 0.16);
+}
+
+/* ── doutrina da ilha aplicada aos selos de outro domínio ────────────────── */
+
+:root[data-theme="light"] .validar-documento-layout .selo-destaque {
+  /* src: vitrine.css:389-398 (isla) — dentro do documento escuro /validar,
+     o chip-papel aprovado (vitrine.css:419-425, #fef3e2/#92400e) mancha a
+     ilha: objeto autocontido claro boiando em página-preta. Dentro de ilha,
+     o objeto veste a ilha — volta o par dark original, literal. Específico
+     (0,4,0) > override-papel do fonte (0,3,0); ordem de import não importa. */
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+:root[data-theme="light"] .validar-documento-layout .selo-fixado {
+  /* src: vitrine.css:401-412 (isla) — idem, esmeralda */
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+}
