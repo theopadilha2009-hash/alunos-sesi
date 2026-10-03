@@ -1,0 +1,285 @@
+/* ==========================================================================
+   claro-vitrine.css — fatia CLARO do domínio "vitrine"
+   (fontes: vitrine.css, vitrine-moderno.css, perfil-publico.css,
+    editor-perfil.css — insignias.css não tem um literal que seja)
+
+   A vitrine é a cara do projeto: Hall da Fama, cards de aluno, herói do
+   perfil e o crachá. No claro ela já é quase toda token-driven, então esta
+   fatia faz quatro coisas:
+
+   1. troca a TINTA DAS SOMBRAS — o preto 0.5-0.85 que sustenta a elevação no
+      fundo escuro vira slate 15,23,42 nas alfas do showcase aprovado;
+   2. reafirma as ILHAS ESCURAS (o card 3D do herói e a caixa do player de
+      vídeo) por pin de tokens, porque o fundo delas é literal e o texto que
+      vaza é token;
+   3. conserta a TINTA DE MARCA usada como texto — amarelo, verde, vermelho e
+      azul-claro são dados da paleta e não viram no claro, então sobre papel
+      branco eles reprovariam AA; escurecem por mix com --text, na proporção
+      do showcase;
+   4. ajeita os dois fundos planos que não são papel: o scrim do modal e o
+      botão primário do herói.
+
+   Decisões de design discutíveis (as que merecem revisão):
+   a) o scrim do modal deixa de ser preto 0.78 e vira slate 0.45
+      (sistema-b.css:192 --backdrop). A página continua legível embaixo do
+      modal — e é o mesmo valor que claro-curriculo.css já pôs no scrim do
+      currículo; deixar os dois iguais evita duas caras no mesmo overlay.
+   b) .botao-primario-grande perde o degradê ciano-azul no claro e vira
+      --accent sólido. Branco sobre --ciano #3fc2bc é 2,15:1: o degradê só
+      funciona no escuro. O produto é escolar: um azul institucional chapado
+      é mais sóbrio e passa no AA; o degradê só existe bem sobre fundo escuro.
+   c) a tinta de marca como TEXTO é mixada em in srgb, não in oklab (o
+      showcase mixa em oklab). Todo color-mix destas fontes é srgb, e a regra
+      6 da onda de tokens é clara: oklab desloca a cor da marca. As
+      proporções 42/58/55 são as do showcase (sistema-b.css:200-203); o
+      espaço é que fica consistente com o resto da fatia.
+   d) .capa-card-preview e .aluno-tilt não têm consumidor no JSX hoje
+      (busca em src não acha a classe) — é CSS órfão do herói novo. O pin e a
+      sombra entram mesmo assim: custam 12 linhas e já vêm certos quando o
+      componente voltar. Se o herói for descartado, esta fatia perde as duas
+      seções.
+   e) o fundo BRANCO do QR (vitrine-moderno.css:572) fica literal: zona
+      silenciosa de código de barras é função de leitura da câmera, não papel
+      do tema. Só a borda branca, que some sobre o card branco, ganha anel.
+   ========================================================================== */
+
+/* ── 1. SCRIM DO MODAL ───────────────────────────────────────────────────
+   src: vitrine.css:1417 — .modal-backdrop
+   Preto 0.78 no claro apaga a página inteira atrás do modal; o slate 0.45 do
+   showcase segura o contraste do modal e deixa o fundo vivo. O blur fica.
+   Vale para todos os modais do app, que usam a mesma classe (CrachaModal,
+   CommandBar, MuralDesafios, ModalPerfilBreve). */
+:root[data-theme="light"] .modal-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+/* ── 2. ELEVAÇÃO: sombra preta vira tinta slate ──────────────────────────
+   No escuro, sombra preta é a única forma de elevar card. No claro a mesma
+   alfa mancha o papel; a escada vira a do showcase (sistema-b.css:189-191),
+   que é slate 15,23,42 — os mesmos canais do --line e do --sombra do claro. */
+
+/* src: vitrine-moderno.css:8 — .cmd-container (painel flutuante do ⌘K).
+   Mantém a geometria própria do painel, troca a tinta e usa a alfa da
+   --sombra-alta do claro (sistema-b.css:191). */
+:root[data-theme="light"] .cmd-container {
+  box-shadow: 0 30px 60px -20px rgba(15, 23, 42, 0.22);
+}
+
+/* src: vitrine.css:903 — .botao-tema, .botao-tema-icone (o toggle do tema,
+   que é o ponto de entrada do claro: não pode ter a sombra mais pesada da tela). */
+:root[data-theme="light"] .botao-tema,
+:root[data-theme="light"] .botao-tema-icone {
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+}
+
+/* src: vitrine.css:1203 — .btn-modo-ativo (seletor grade/tabela do Hall). */
+:root[data-theme="light"] .btn-modo-ativo {
+  box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.14);
+}
+
+/* src: vitrine-moderno.css:447 — .botao-cracha-flutuante (pílula sobre a
+   foto do perfil, assento em --surface branco). */
+:root[data-theme="light"] .botao-cracha-flutuante {
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+}
+
+/* src: vitrine.css:1290 — .aluno-tilt (hover 3D do card de aluno).
+   Repete o segundo componente da sombra, que é a tinta da sala: o fonte
+   declara as duas camadas juntas e box-shadow não é aditivo.
+   Ver decisão (d) do cabeçalho: classe sem consumidor no JSX ainda. */
+:root[data-theme="light"] .aluno-tilt {
+  box-shadow:
+    0 20px 35px -18px rgba(15, 23, 42, 0.28),
+    0 0 25px -10px color-mix(in srgb, var(--sala, var(--accent)) 30%, transparent);
+}
+
+/* ── 3. ILHAS ESCURAS (pin de tokens) ────────────────────────────────────
+   O fundo delas é literal e fica onde está; o que quebra é o token de tema
+   que vaza para dentro. Mesma técnica do showcase: a ilha reafirma os tokens
+   no próprio nó (sistema-b.css:1627). Sem o pin, o texto herda --text do
+   claro e some sobre o gradiente escuro. */
+
+/* src: vitrine-moderno.css:254 — .capa-card-preview (herói 3D do perfil
+   moderno). Vazam: o texto herdado, --surface-2 (o .preview-avatar mixa com
+   ele), --dim (.preview-sala), --accent (.preview-edicao) e --line-soft
+   (.preview-rodape). Os valores pinados são os do tema escuro do app
+   (tokens.css:32-35, 54-55, 61) para a ilha ficar idêntica nas duas luzes.
+   Dentro dela ficam corretos sem tocar: o brilho branco 0.15
+   (vitrine-moderno.css:270), o chip de ouro 306-308 e o --amarelo do
+   .preview-qr-badge — todos tintas sobre fundo escuro.
+   Ver decisão (d) do cabeçalho: classe sem consumidor no JSX ainda. */
+:root[data-theme="light"] .capa-card-preview {
+  color: #f8fafc;
+  --surface-2: #16202c;
+  --dim: #94a3b8;
+  --accent: #38c7bd;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.04);
+}
+
+/* src: perfil-publico.css:103 e :114 — .video-embed-capa (color: #fff)
+   O texto é #fff sobre o véu inline do VideoEmbed, que é SEMPRE preto 0.35
+   (VideoEmbed.tsx:62-64), com miniatura ou sem. Com miniatura, a imagem cobre
+   o fundo; sem (Vimeo), o fundo é --surface-3, que no claro é #e2e8f0:
+   branco sobre esse cinza dá 1,9:1. A caixa do player então continua com a
+   letra escura nos dois temas, como qualquer player de vídeo, e o --accent do
+   anel de foco e do play no hover volta ao ciano do escuro (senão o botão
+   hover ia para #02609e sobre a letra escura: some).
+   O play rgba(0 0 0 / .6), o triângulo branco e o text-shadow 0.8 do rótulo
+   ficam: são tinta sobre mídia, funcionam nas duas luzes. */
+:root[data-theme="light"] .video-embed-capa {
+  --surface-3: #1e2a38;
+  --accent: #38c7bd;
+}
+
+/* ── 4. FUNDOS PLANOS QUE NÃO SÃO PAPEL ───────────────────────────────── */
+
+/* src: vitrine-moderno.css:182-196 — .botao-primario-grande
+   Ver decisão (b) do cabeçalho. O texto #fff da fonte continua certo, agora
+   sobre --accent com --on-accent do claro (branco): 6,45:1. O brilho da
+   sombra sai do --ciano cru e vai para --glow, o companheiro de alfa do
+   accent no claro (tokens.css:84). Consumida de verdade: é o CTA do login. */
+:root[data-theme="light"] .botao-primario-grande {
+  background: var(--accent);
+  box-shadow: 0 10px 25px -8px var(--glow);
+}
+
+:root[data-theme="light"] .botao-primario-grande:hover {
+  box-shadow: 0 14px 30px -6px var(--glow);
+}
+
+/* src: vitrine-moderno.css:597-603 — .botao-whats
+   #25d366 (verde WhatsApp) é 2,02:1 sobre branco: reprova AA no texto do
+   botão. #075e54 é o teal escuro da própria marca, 7,67:1. O fundo do hover
+   (12% do verde sobre transparente) fica: sobre branco vira menta clara, que
+   é o que se quer atrás de texto escuro.
+   Classe sem consumidor no JSX hoje, mesma nota da decisão (d). */
+:root[data-theme="light"] .botao-whats {
+  color: #075e54;
+  border-color: color-mix(in srgb, #075e54 45%, var(--line));
+}
+
+/* src: vitrine-moderno.css:571 — .qrcode-img
+   Ver decisão (e) do cabeçalho: o branco do fundo fica; só a borda, que no
+   claro é branco sobre card branco, ganha o anel --surface-3. */
+:root[data-theme="light"] .qrcode-img {
+  border-color: var(--surface-3);
+}
+
+/* ── 5. TINTA DE MARCA SOBRE PAPEL BRANCO ────────────────────────────────
+   --amarelo, --verde, --vermelho e --azul-claro (tokens.css:9-16) são dados
+   da paleta e o bloco claro não os revira: sobre --surface/--surface-2 eles
+   ficam em 1,9:1 (amarelo), 2,6:1 (verde) e 3,4:1 (vermelho/azul-claro) —
+   todos abaixo do AA de texto. A resposta é a mesma do showcase no claro:
+   mixar a tinta com --text até passar (sistema-b.css:200-203, --ok-fg 58%,
+   --aviso-fg 42%, --perigo-fg 55%, --info-fg 55%). Ver decisão (c).
+   Nenhum destes casos é literal: é por isso que a varredura de literais não
+   os pegaria, mas no claro eles quebram antes de qualquer literal.
+   Os fundos 10-12% das mesmas cores ficam: tinta clara sobre papel é
+   realce, e quem carrega a mensagem passa a ser o texto escurecido. */
+
+/* src: vitrine.css:488 — .estrela:hover (contador de estrelas do card) */
+:root[data-theme="light"] .estrela:hover {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
+
+/* src: vitrine.css:493-494 — .estrela[aria-pressed="true"]
+   Aqui a borda É o estado (apertada ou não), então acompanha o texto. */
+:root[data-theme="light"] .estrela[aria-pressed="true"] {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+  border-color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
+
+/* src: vitrine.css:747 — .botao-aprovar (moderação: o pendente de decisão) */
+:root[data-theme="light"] .botao-aprovar {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
+
+/* src: vitrine.css:774 — .recado-atencao */
+:root[data-theme="light"] .recado-atencao {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
+
+/* src: vitrine.css:1066 — .hall-medalha (eyebrow OURO/PRATA/BRONZE do Hall)
+   src: vitrine.css:1110 — .hall-estrelas (contador do pódio)
+   Os dois sentem sobre --surface-2 do claro: o mix acima fecha em 6,07:1. */
+:root[data-theme="light"] .hall-medalha,
+:root[data-theme="light"] .hall-estrelas {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
+
+/* src: vitrine-moderno.css:540-541 — .botao-estrela-grande
+   Botão inteiro: a borda é o desenho do botão, acompanha. */
+:root[data-theme="light"] .botao-estrela-grande {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+  border-color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
+
+/* src: vitrine.css:740-741 — .mini[aria-pressed="true"] (filtro ligado) */
+:root[data-theme="light"] .mini[aria-pressed="true"] {
+  color: color-mix(in srgb, var(--verde) 58%, var(--text));
+  border-color: color-mix(in srgb, var(--verde) 58%, var(--text));
+}
+
+/* src: vitrine.css:761 — .recado-ok */
+:root[data-theme="light"] .recado-ok {
+  color: color-mix(in srgb, var(--verde) 58%, var(--text));
+}
+
+/* src: vitrine-moderno.css:95 — .cmd-sub-ok (feedback de copiar link) */
+:root[data-theme="light"] .cmd-sub-ok {
+  color: color-mix(in srgb, var(--verde) 58%, var(--text));
+}
+
+/* src: vitrine.css:671 — .botao-perigo */
+:root[data-theme="light"] .botao-perigo {
+  color: color-mix(in srgb, var(--vermelho) 55%, var(--text));
+}
+
+/* src: vitrine.css:767 — .recado-erro */
+:root[data-theme="light"] .recado-erro {
+  color: color-mix(in srgb, var(--vermelho) 55%, var(--text));
+}
+
+/* src: vitrine-moderno.css:99 — .cmd-sub-erro */
+:root[data-theme="light"] .cmd-sub-erro {
+  color: color-mix(in srgb, var(--vermelho) 55%, var(--text));
+}
+
+/* src: vitrine.css:815 — .erros code (lista de erros da importação) */
+:root[data-theme="light"] .erros code {
+  color: color-mix(in srgb, var(--vermelho) 55%, var(--text));
+}
+
+/* src: editor-perfil.css:161 — .edit-foto-aviso (0.78rem, o mais apertado) */
+:root[data-theme="light"] .edit-foto-aviso {
+  color: color-mix(in srgb, var(--vermelho) 55%, var(--text));
+}
+
+/* src: vitrine.css:461 — .pes-in:hover (link do LinkedIn no card) */
+:root[data-theme="light"] .pes-in:hover {
+  color: color-mix(in srgb, var(--azul-claro) 55%, var(--text));
+}
+
+/* ── 6. LITERAIS QUE NÃO PRECISAM DE OVERRIDE (registro) ─────────────────
+   Nada aqui é seção de regra; é o destino que a varredura deu ao resto.
+
+   . selo-destaque e .selo-fixado (vitrine.css:389-411): o claro JÁ existe na
+     fonte, com valores medidos (vitrine.css:419-434: #fef3e2/#92400e e
+     #e2f7f0/#065f46, 6,46:1 e 6,88:1). Repisar aqui seria segunda fonte de
+     verdade do mesmo selo.
+   . .podio-prata e .podio-bronze (vitrine.css:1054, 1058): prata #95a5a6 e
+     bronze #d35400 são tintas de medalha mixadas a 50/40% com --line, que é
+     o token que vira no claro. O mix acompanha a tinta do tema nas duas
+     luzes; a borda fica legível sobre o --surface-2.
+   . .capa-card-preview (vitrine-moderno.css:257): a sombra preta 0.85 da ilha
+     fica com ela — sobre fundo escuro é a elevação correta, e o showcase faz
+     igual dentro de ilha (sistema-b.css:1387-1388). A sombra do .cmd-container
+     (vitrine-moderno.css:8), essa sim, foi tratada na seção 2.
+   . editor-perfil.css:188, 228, 258-259: o check branco das amostras e o
+     chip rgba(0 0 0 / .65) da capa vazia são tinta sobre DADO (as seis cores
+     fixas da paleta e a cor da capa do aluno), não sobre papel. O drop-shadow
+     de 0.55 é a resposta que a fonte já deu para "cai sobre claro e escuro".
+   . insignias.css: nenhum literal, nenhum hex, nenhum rgb — 100% token. Nada
+     a tratar, por isso não há seção vazia aqui.
+   ────────────────────────────────────────────────────────────────────────── */

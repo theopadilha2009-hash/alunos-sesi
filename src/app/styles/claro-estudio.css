@@ -1,0 +1,144 @@
+/* ==========================================================================
+   claro-estudio.css — tema claro do Estúdio de Stickers (fonte: estudio.css)
+
+   Fatia 4 do app em :root[data-theme="light"]. O painel de controles, as
+   barras e os cards de projeto vão pro papel claro; a área de composição
+   do banner é ilha escura INTENCIONAL (o sticker precisa de fundo estável
+   igual ao herói real do perfil, que também é escuro nos dois temas) e é
+   pinada, não invertida.
+
+   Decisões discutíveis, comentadas no ponto:
+
+   1. PIN por token, não por background: a ilha do banner já se desenha com
+      literais escuros no CSS e com style inline no TSX (StickerCanvas.tsx
+      613-625), então o fundo não vaza; o que vazava era só o --text, usado
+      pelas iniciais do .avatar (vitrine.css:305), que no claro ficariam
+      tinta quase-preta sobre o vermelho de marca (3,6:1). Reafirmo o
+      --text escuro no nó da ilha — correção de 1 linha, e qualquer
+      descendente futuro que ler --text já nasce certo.
+
+   2. Todo acento sky (#38bdf8, #60a5fa) mapeia para var(--accent): não
+      existe token de azul-claro escuro no app, e o azul institucional do
+      claro (#02609e, 4,9:1 no papel) mantém a semântica de seleção/link.
+      A família "sky" era só o brilho do tema escuro.
+
+   3. O chip ativo (.btn-alvo-ativo) mantém o fundo lavanda de marca e
+      escurece o texto com mix do próprio token --vermelho-sesi em --text:
+      o --vermelho-sesi-texto (#ff6666) é tinta para fundo ESCURO e daria
+      ~2,4:1 no papel; o --vermelho-sesi puro sobre a lavanda dá 3,4:1 e
+      reprova nos 12,8px. O mix a 80% fecha em 4,8:1 sem copiar hex novo.
+
+   4. .canvas-drop-hint precisa de !important: o TSX pinta o segundo hint
+      com style inline (StickerCanvas.tsx:670, literal #60a5fa), e fonte
+      fora de escopo aqui; !important em var(--accent) ganha do inline e é
+      no-op no primeiro hint, que o inline já pinta de var(--accent).
+   ========================================================================== */
+
+/* ── topo do estúdio ────────────────────────────────────────────────────── */
+
+/* src: estudio.css:8-13 — .estudio-topo
+   A borda rgba(255,255,255,.08) é hairline de tema escuro: some sobre o
+   papel claro. O gradiente por baixo fica: 12% de vermelho + 8% de azul
+   sobre branco é a mesma lavanda institucional, só que em tinta clara. */
+:root[data-theme="light"] .estudio-topo {
+  border-color: var(--line);
+}
+
+/* ── controles: chips, presets, perigo ──────────────────────────────────── */
+
+/* src: estudio.css:103-107 — .btn-alvo-ativo
+   Ver decisão 3 do cabeçalho. O fundo rgb(--vermelho-sesi-rgb / .15) e a
+   borda var(--vermelho-sesi) ficam: tint e traço de marca funcionam nos
+   dois temas. Fonte usa !important, o override precisa também. */
+:root[data-theme="light"] .btn-alvo-ativo {
+  color: color-mix(in srgb, var(--vermelho-sesi) 80%, var(--text)) !important;
+}
+
+/* src: estudio.css:148-152 — .btn-preset-card:hover
+   Borda hover rgba(255,255,255,.3) é clareamento progressivo de tema
+   escuro; no papel o gesto é escurecer. 22% de --text ≈ 2,7x o alpha do
+   --line base — o mesmo salto de 8% para 30% que o escuro dava. */
+:root[data-theme="light"] .btn-preset-card:hover {
+  border-color: color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+/* src: estudio.css:204-215 — .btn-remover-sticker
+   Texto #ef4444 (4,0:1 no branco) não passa dos 11,5px. Sem token de
+   perigo no app, derivo do próprio literal da fonte misturado com --text
+   (resultado ~#a1343b, 6,4:1) em vez de introduzir hex novo. O tint de
+   fundo e a borda rosa ficam: é a linguagem do botão, legível no claro. */
+:root[data-theme="light"] .btn-remover-sticker {
+  color: color-mix(in srgb, #ef4444 60%, var(--text));
+}
+
+/* ── painel do canvas: cabeçalho e hints (chrome, vai pro claro) ────────── */
+
+/* src: estudio.css:277-282 — .canvas-tag
+   #38bdf8 sobre branco = 2,1:1 numa tag de 11px bold. Decisão 2: --accent. */
+:root[data-theme="light"] .canvas-tag {
+  color: var(--accent);
+}
+
+/* src: estudio.css:467-471 — .canvas-drop-hint
+   #60a5fa some no papel (2,5:1). Ver decisão 4 do cabeçalho: !important
+   é para ganhar do style inline do TSX, não do CSS da fonte. */
+:root[data-theme="light"] .canvas-drop-hint {
+  color: var(--accent) !important;
+}
+
+/* ── cards de projeto: superfície preview que SEGUE o tema ─────────────────
+   O card de projeto no estúdio espelha o card real do perfil, e esse é
+   claro no papel — não é ilha. Fica token-driven (--surface-2, --border,
+   --fg, --dim) e só os acentos sky precisam de correção abaixo. ────────── */
+
+/* src: estudio.css:412-415 — .canvas-projeto-ativo
+   Borda sky de 2px = 2,1:1 sobre o card claro: a seleção sumia. Fundo
+   rgba(56,189,248,.05) sobre surface-2 é indistinguível no claro; vira o
+   --glow institucional (azul 12%), o análogo exato do destaque suave. */
+:root[data-theme="light"] .canvas-projeto-ativo {
+  border-color: var(--accent);
+  background: var(--glow);
+}
+
+/* src: estudio.css:340-343 — .canvas-zona-destaque nos cards de projeto
+   (fonte estúdio + TSX 683). A zona de drop usa a mesma animação pulseZona
+   do banner: sobre a ilha escura o teal fica; sobre o card claro a borda
+   teal .65 (2,1:1) não segurava o affordance sozinha. Borda vira --accent;
+   o halo teal do keyframe fica fraco no claro — aceito, quem carregou a
+   indicação é a borda, e keyframe não é escopável por tema sem redeclarar
+   a animação inteira. Fonte usa !important, override também. */
+:root[data-theme="light"] .canvas-projeto-card.canvas-zona-destaque {
+  border-color: var(--accent) !important;
+}
+
+/* src: estudio.css:423-426 — .proj-card-icon-wrap
+   Ícone sky 18px sobre card claro: gráfico funcional, precisa de 3:1. */
+:root[data-theme="light"] .proj-card-icon-wrap {
+  color: var(--accent);
+}
+
+/* src: estudio.css:458-465 — .sticker-bounding-box dentro dos cards
+   A caixa de seleção do sticker divide CSS com a ilha escura (mesmo
+   seletor nos dois canvas), por isso o override é escopado ao card de
+   projeto: no banner ela continua o #38bdf8 atual sobre fundo escuro, e
+   aqui ganha a tinta de seleção do claro. O halo sky do box-shadow fica
+   nos dois (é brilho, não borda). */
+:root[data-theme="light"] .canvas-projeto-card .sticker-bounding-box {
+  border-color: var(--accent);
+}
+
+/* ── PIN: ilha escura do banner — não inverte ─────────────────────────────
+   .canvas-banner-preview é a área de composição: fundo gradiente escuro
+   literal (estudio.css:306) que o TSX ainda pinta por inline (capa com
+   scrim, ou cor do aluno para #0d1926), borda dashed branca, ::after com
+   scrim rgba(6,12,20), nome #ffffff e sub rgba(255,255,255,.5) — nada
+   disso depende de token, então a ilha sobrevive ao claro por construção.
+   O único vazamento da subárvore (varrida em StickerCanvas.tsx 612-661):
+   as iniciais do .avatar leem var(--text) (vitrine.css:305). Reafirmo o
+   --text escuro no nó; o --fg de :root já nasceu resolvido em claro e não
+   é usado dentro da ilha, então não precisa de par. A borda de estado
+   .canvas-ativo (teal, estudio.css:335-338) só veste o banner — TSX 613 —
+   e fica exatamente como é hoje. */
+:root[data-theme="light"] .canvas-banner-preview {
+  --text: #f8fafc;
+}

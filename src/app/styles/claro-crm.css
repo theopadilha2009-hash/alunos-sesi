@@ -1,0 +1,323 @@
+/* ==========================================================================
+   claro-crm.css — fatia de tema claro do domínio "crm" (src/app/styles/crm.css)
+
+   O crm.css já é token-first na maior parte: sidebar, header, tabelas,
+   painéis do editor, abas, banners de aviso (sucesso/erro/atenção) e todos os
+   campos leem var(--surface/--surface-2/--line/--text/...), então o claro vem
+   pelo tokens.css sem intervenção. Este arquivo cuida apenas dos ~185
+   literais hardcoded do fonte, triados em três destinos:
+
+   (a) PAPEL — literal que é superfície/texto/borda de card → override
+       apontando para o token do claro (preferência absoluta por token).
+   (b) ILHA — fundo escuro que DEVE continuar escuro no claro (foto com
+       scrim, badge sobre imagem, editor de recorte) → os tokens que VAZAM
+       para dentro dela são redefinidos no nó da ilha, com os valores de
+       ilha aprovados no showcase (design/sistemas/sistema-b.css:212-221:
+       --ilha-surface #131c27, --ilha-text #f8fafc, --ilha-accent #45d3c9).
+   (c) SKIP — não afeta o claro (tinta de gradiente, alpha sobre foto,
+       branco sobre cor cheia de marca, brand-colors das badges de rede que
+       o fonte já desenha light-first com bloco dark aparte).
+
+   Decisões discutíveis:
+
+   1. Sombras: o tema escuro usa preto 0.45-0.9; sobre papel branco isso
+       vira mancha, não profundidade. O showcase trata o claro como "névoa
+       azulada" (sistema-b.css:172) com --sombra-alta 0 24px 50px -18px
+       rgba(15,23,42,.22). Como o app não define --sombra-alta, replico o
+       valor EXATO do design aprovado como literal nos modais; nos cards em
+       hover uso o mesmo tom num raio menor, e deixo o 0.06-0.08 de respingo
+       pequeno — o --sombra do claro já veste os estados de repouso.
+
+   2. O herói do perfil e o cartão do usuário com banner são as ilhas que o
+       showcase nomeia como intencionais (sistema-b.css:207-209: "crachá,
+       cartão NFC, herói do perfil"). O herói continua escuro no claro e por
+       isso seus tokens vazados (--accent, --glow) são pinados no nó. O
+       cartão do usuário NÃO: sem banner ele é papel normal, então a pin
+       só entra com :has(.card-usuario-banner-fundo) — quando a foto existe,
+       o scrim rgba(11,20,24,.85) manda e o texto precisa voltar a ser claro.
+
+   3. O âmbar de "alterações pendentes" (#fde68a, tinta para fundo escuro)
+       mora na .perfil-barra-salvar, que é var(--surface) — branca no claro.
+       Vira #92400e (âmbar 800 do slate dos tokens, 7.6:1 sobre branco). O
+       !important do fonte obriga o !important aqui; é a única declaração
+       importante do arquivo.
+
+   4. Hover com texto branco sobre tinta translúcida (.link-ext:hover usa
+       accent 24% + #ffffff) fica ilegível sobre card branco. Em vez de só
+       escurecer o texto, o hover vira a pílula cheia do padrão do próprio
+       fonte (.btn-abrir-cracha-pill:hover, crm.css:1318): fundo var(--accent)
+       + texto var(--on-accent). Mesma lógica dos botões do modal de recorte,
+       que cravam #000/#0b1418 sobre var(--accent) — no claro o --on-accent
+       é branco e resolve sozinho.
+
+   5. Os tintes turquesa do claro-erro-de-tema (dropzone, aviso de segurança,
+       glow do seletor adm) são o --accent do ESCURO como literal
+       rgba(56,199,189,...). No claro o acento é o azul institucional, então
+       troco para mix de var(--accent)/var(--glow) — regra do companheiro de
+       canais, sem colar hex novo de marca.
+   ========================================================================== */
+
+/* ── LOGIN ────────────────────────────────────────────────────────────────
+   A tela (fundo, card, acento) já tem bloco light no próprio fonte
+   (crm.css:63-79); sobra só a sombra 0.85 do cartão, pesada sobre --bg claro.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* src: crm.css:120 — .login-card (sombra preta 0.85 vira névoa azulada) */
+:root[data-theme="light"] .login-card {
+  box-shadow: 0 25px 50px -20px rgb(15 23 42 / 0.18);
+}
+
+/* ── BOTOES GHOST E HOVERS COM TINTA ESCURA-PARA-ILHA ─────────────────── */
+
+/* src: crm.css:964-972 — .btn-ver-autor (vidro branco do dark sobre card branco:
+   fundo invisível e texto #f1f5f9 ilegível — vira ghost padrão do claro) */
+:root[data-theme="light"] .btn-ver-autor {
+  color: var(--dim);
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+
+/* src: crm.css:979-984 — .btn-ver-autor:hover */
+:root[data-theme="light"] .btn-ver-autor:hover {
+  background: var(--surface-3);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* src: crm.css:949-952 — .criacao-rodape .link-ext:hover (branco sobre accent
+   24% = ilegível no claro; vira a pílula cheia, padrão do fonte no :1318) */
+:root[data-theme="light"] .criacao-rodape .link-ext:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* src: crm.css:3973-3975 — .btn-ajuste-automatico:hover (preto sobre accent) */
+:root[data-theme="light"] .btn-ajuste-automatico:hover {
+  color: var(--on-accent);
+}
+
+/* src: crm.css:4003-4011 — .btn-recorte-aplicar (texto #0b1418 sobre accent;
+   no claro o on-accent é branco e a mesma tinta institucional resolve) */
+:root[data-theme="light"] .btn-recorte-aplicar {
+  color: var(--on-accent);
+}
+
+/* ── MODAIS E DRAWERS: SOMBRA + VAZAMENTOS P/ ILHAS DE FOTO ─────────── */
+
+/* src: crm.css:995 — .modal-drawer-perfil */
+:root[data-theme="light"] .modal-drawer-perfil {
+  box-shadow: 0 24px 50px -18px rgb(15 23 42 / 0.22);
+}
+
+/* src: crm.css:1267 — .modal-perfil-breve (mantém o anel 1px do fonte) */
+:root[data-theme="light"] .modal-perfil-breve {
+  box-shadow: 0 24px 50px -18px rgb(15 23 42 / 0.22), 0 0 0 1px var(--line);
+}
+
+/* src: crm.css:3755 — .modal-recortar-banner */
+:root[data-theme="light"] .modal-recortar-banner {
+  box-shadow: 0 24px 50px -18px rgb(15 23 42 / 0.22);
+}
+
+/* src: crm.css:1324-1329 — .breve-identificacao h2 (o topo do modal é tinta
+   clara no claro — a sombra de texto preta 0.85 só borraria) */
+:root[data-theme="light"] .breve-identificacao h2 {
+  text-shadow: none;
+}
+
+/* src: crm.css:1145-1154 — .badge-tipo-midia: chip SOBRE A FOTO (scrim preto
+   0.75), lê var(--accent), que no claro é azul escuro sobre preto. Pino o
+   accent de ilha do showcase. */
+:root[data-theme="light"] .badge-tipo-midia {
+  color: #45d3c9;
+}
+
+/* src: crm.css:3867-3873 — .viewport-loading-overlay: mesma lógica, overlay
+   preto 0.7 sobre o palco de recorte; --dim do claro some no preto. */
+:root[data-theme="light"] .viewport-loading-overlay {
+  color: #94a3b8;
+}
+
+/* ── ILHAS ESCURAS QUE CONTINUAM ESCURAS NO CLARO (pin de tokens) ────
+   Fotos com scrim não trocam com o tema; o que precisa de pino são os tokens
+   do claro que vazam para dentro delas (texto, accent, glow, anéis).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* src: crm.css:440-448 + scrim 462-472 — cartão do usuário COM banner: vira
+   ilha quando a foto existe; sem banner é papel puro e não toca. */
+:root[data-theme="light"] .card-usuario-logado:has(.card-usuario-banner-fundo) {
+  --surface: #131c27;
+  --surface-2: #1b2635;
+  --text: #f8fafc;
+  --dim: #9fb0c4;
+  --faint: #8291a8;
+}
+
+/* src: crm.css:2498-2542 + 2569-2582 + 3636-3639 — herói do perfil: a borda
+   lateral (::before), o anel do avatar e o hover das ações flutuantes leem
+   --accent/--glow, que no claro são azul — sobre a foto escura ficam
+   apagados. Pino o accent de ilha aprovado (sistema-b.css:220) e troco a
+   sombra preta 0.5 pela névoa. */
+:root[data-theme="light"] .perfil-hero-banner {
+  --accent: #45d3c9;
+  --glow: rgba(69, 211, 201, 0.22);
+  box-shadow: 0 16px 40px -15px rgb(15 23 42 / 0.22);
+}
+
+/* src: crm.css:3682-3688 — avatar fora do banner, flutuando sobre a página
+   clara: sombra preta 0.45 amassa o claro. */
+:root[data-theme="light"] .perfil-hero-avatar {
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.18);
+}
+
+/* src: crm.css:3810-3819 — palco do recorte: moldura preta intencional
+   (editor de imagem); só a sombra cai sobre o modal branco. */
+:root[data-theme="light"] .viewport-recorte-moldura {
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.18);
+}
+
+/* ── HOVERS DE CARD: SOMBRA PRETA 0.75-0.85 VIRA NÉVOA ─────────────── */
+
+/* src: crm.css:681-684, 855-857, 1943-1946 */
+:root[data-theme="light"] .card-portfolio-estudante:hover,
+:root[data-theme="light"] .card-criacao-mural:hover,
+:root[data-theme="light"] .card-top-projeto:hover {
+  box-shadow: 0 18px 38px -16px rgb(15 23 42 / 0.18);
+}
+
+/* ── ALERTA DE ALTERAÇÕES NÃO SALVAS (papel, não ilha) ────────────── */
+
+/* src: crm.css:2691-2694 — .alerta-alteracoes-pendentes: mora na barra com
+   fundo var(--surface); #fde68a foi desenhado para scrim escuro (o do herói).
+   Âmbar profundo, 7.6:1 sobre branco. O !important espelha o do fonte. */
+:root[data-theme="light"] .alerta-alteracoes-pendentes {
+  color: #92400e !important;
+  text-shadow: none;
+}
+
+/* src: crm.css:2610-2627 — pílula de turma do herói fica como está: scrim
+   escuro por baixo em qualquer tema (ilha). O badge âmbar do topo do herói
+   idem. Registrado como skip, não esquecido. */
+
+/* ── AVISO DE SEGURANÇA (teal literal do dark → acento do tema) ─────── */
+
+/* src: crm.css:3359-3366 — .aviso-seguranca-box sobre painel claro: o tinte
+   turquesa era o --accent escuro hardcoded; no claro veste o azul. */
+:root[data-theme="light"] .aviso-seguranca-box {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* ── SELETOR DE TURMA DO PAINEL ADM ─────────────────────────────────── */
+
+/* src: crm.css:3563-3568 — vidro branco 0.05/0.14 sobre fundo claro é
+   invisível; vira papel do tema. */
+:root[data-theme="light"] .adm-select-sala-wrap {
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+
+/* src: crm.css:3574-3578 — hover/foco: idem, e o glow turquesa literal vira
+   var(--glow) (azul, 0.12). */
+:root[data-theme="light"] .adm-select-sala-wrap:hover,
+:root[data-theme="light"] .adm-select-sala-wrap:focus-within {
+  background: var(--surface-3);
+  box-shadow: 0 0 10px var(--glow);
+}
+
+/* src: crm.css:3603-3605 — popup nativo do select: #0f172a sobre #f1f5f9 é
+   ilha escura desenhada para o dark; o dropdown do OS no claro precisa de
+   fundo/tinta claros, senão a lista abre escura dentro da página clara. */
+:root[data-theme="light"] .adm-select-sala option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ── DROPZONE DE CAPA DE PROJETO ────────────────────────────────────── */
+
+/* src: crm.css:4055-4057 — rgba(15,23,42,.45) sobre o card surface-2: no
+   dark é tinta de sulco; no claro viria lasca cinza-escura com texto
+   #f1f5f9 (ilha acidental). Vira caixa clara com borda tracejada do acento. */
+:root[data-theme="light"] .projeto-dropzone-olx {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--surface);
+}
+
+/* src: crm.css:4065-4069 — hover/arrastando: os três turquesas literais
+   (56,199,189 e #38c7bd) são o accent do dark. */
+:root[data-theme="light"] .projeto-dropzone-olx:hover,
+:root[data-theme="light"] .projeto-dropzone-olx.dropzone-arrastando {
+  border-color: var(--accent);
+  background: var(--glow);
+  box-shadow: 0 0 20px var(--glow);
+}
+
+/* src: crm.css:4095-4100 — ícone do dropzone: idem. */
+:root[data-theme="light"] .dropzone-icone-wrap {
+  background: var(--glow);
+  color: var(--accent);
+}
+
+/* src: crm.css:4112-4115 — título do dropzone: #f1f5f9 sobre fundo claro. */
+:root[data-theme="light"] .dropzone-titulo {
+  color: var(--text);
+}
+
+/* src: crm.css:4134-4138 — filete do "ou": branco 0.1 some no claro. */
+:root[data-theme="light"] .dropzone-divisor-ou::before,
+:root[data-theme="light"] .dropzone-divisor-ou::after {
+  border-bottom-color: var(--line);
+}
+
+/* src: crm.css:4157-4163 — moldura do preview: a borda branca 0.15 é de ilha,
+   mas esta caixa fica no card claro; o #090d16 de dentro é letterbox da foto
+   e FICA (salto de linha só na borda). */
+:root[data-theme="light"] .projeto-capa-preview-box {
+  border-color: var(--line);
+}
+
+/* ── tinta de STATUS como texto: os tokens --amarelo/--verde/--vermelho são
+   DADO de sala e vivem no :root neutro do tokens.css (tema-independentes),
+   mas o crm os usa como COR DE TEXTO sobre papel — #f3b544 sobre branco
+   rende ~1,9:1, reprova AA em todo ícone de alerta, strong e estrela.
+   Não desce o token (ele também pinta fundo de chip e borda de banner,
+   onde a versão clara funciona); desce a tinta só nos 8 pontos de texto,
+   com os pares AA do showcase B: âmbar #a16207, verde #15803d,
+   vermelho #b91c1c. Ficou de fora de propósito: .perfil-hero-estrelas
+   (crm.css:3734) mora no scrim escuro do herói — lá o amarelo vivo É o
+   valor correto dos dois temas (ilha autossuficiente, decisão do inventário). */
+
+:root[data-theme="light"] .crm-aviso-moderacao strong {
+  /* src: crm.css:1748 — color var(--amarelo) sobre caixa claro-mix */
+  color: #a16207;
+}
+
+:root[data-theme="light"] .alerta-banner.alerta-sucesso svg {
+  /* src: crm.css:1785 — ícone var(--verde) sobre banner 12% em surface-2 */
+  color: #15803d;
+}
+
+:root[data-theme="light"] .alerta-banner.alerta-erro svg {
+  /* src: crm.css:1793 — ícone var(--vermelho) sobre o mesmo padrão */
+  color: #b91c1c;
+}
+
+:root[data-theme="light"] .alerta-banner.alerta-atencao svg {
+  /* src: crm.css:1801 — ícone var(--amarelo), o caso 1,9:1 */
+  color: #a16207;
+}
+
+:root[data-theme="light"] .erros-importacao-lista li::marker {
+  /* src: crm.css:1829 — bullet var(--amarelo) sobre papel */
+  color: #a16207;
+}
+
+:root[data-theme="light"] .breve-estrelas {
+  /* src: crm.css:1347 — ★ var(--amarelo) dentro do modal-breve (papel) */
+  color: #a16207;
+}
+
+:root[data-theme="light"] .top-projetos-tag {
+  /* src: crm.css:1906 — rótulo uppercase var(--amarelo) sobre surface-2 */
+  color: #a16207;
+}

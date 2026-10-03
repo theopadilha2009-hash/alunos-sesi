@@ -1,0 +1,201 @@
+/* ==========================================================================
+   claro-curriculo.css — fatia CLARO do domínio "curriculo"
+   (fonte: src/app/styles/curriculo.css — gerador de mini-currículo A4 em modal)
+
+   O currículo É papel: a folha A4 carrega a mesma tinta de documento nos dois
+   temas. No claro ela já está certa (papel branco sobre fundo claro); o que
+   esta fatia faz é três coisas:
+
+   1. SCARADEIA o scrim do modal — preto 0.85 some atrás da folha no claro, o
+      showcase aprovado usa slate 0.45 (design/sistemas/sistema-b.css:193,
+      --backdrop) e mais de baixo dele: a página continua legível.
+   2. congela a BARRA-FERRAMENTA (.curriculo-top-bar) como ilha escura com pin
+      de tokens — é a decisão mais discutível e está comentada no bloco dela.
+   3. traz os literais slate da folha para a escada de tokens do claro
+      (--text, --dim, --faint, --surface-2/3, --accent), sem inventar valor.
+
+   Decisões de design arriscadas (as três primeiras comentam no lugar):
+   a) barra-ferramenta continua escura no claro (pin), não vira card claro;
+   b) sombra da folha vem da --sombra-alta do showcase, não do --sombra do app
+      (a folha A4 é um modal flutuando no scrim, precisa de elevação alta);
+   c) os azuis de link da folha (#0284c7) viram var(--accent) = azul
+      institucional #02609e no claro — o documento passa a usar a tinta oficial
+      em vez do azul-Tailwind;
+   d) os chips de status verde (#dcfce7/#166534 e #059669) ficam literais: não
+      existe token verde-foreground com AA sobre branco no app (--verde
+      #38b95d reprova), e os que existem no showcase (--ok-fg) NÃO são
+      definidos no app — referenciá-los aqui quebraria a cascata;
+   e) .selo-emissao-data era #94a3b8 (o antigo --dim do escuro): 2,8:1 sobre o
+      papel branco, reprova AA em 0.68rem. Vira var(--faint) (4,55:1), o mesmo
+      ajuste que o tokens.css já fez para o tema claro.
+   ========================================================================== */
+
+/* ── 1. SCRIM DO MODAL ───────────────────────────────────────────────────
+   src: curriculo.css:4 — .curriculo-modal-backdrop
+   rgba(0,0,0,0.85) no claro pesa e apaga a página atrás da folha; casa com o
+   --backdrop claro do showcase (slate 15,23,42 a 45%). O blur fica. */
+:root[data-theme="light"] .curriculo-modal-backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+/* ── 2. ILHA ESCURA: barra-ferramenta sobre a folha ──────────────────────
+   src: curriculo.css:27 — .curriculo-top-bar (fundo #111827 literal, título
+   branco literal, badge com tinta --vermelho-sesi-texto = #ff6666, feita para
+   fundo escuro). Clarear a barra exigiria escurecer o texto da marca e
+   inverter o badge — cor de marca não se migra, e o showcase trata toolbar
+   escura como ilha intencional (ilha-escura). Então a barra CONTINUA escura
+   no claro; o que vaza para dentro dela são os botões compartilhados
+   (.botao/.botao-primario/.botao-fraco, vitrine.css:639-660) que leem tokens
+   de tema. Sem este pin o .botao-fraco (color: var(--dim)) fica #475569 sobre
+   #111827 = 2,4:1, invisível.
+   A escada pinada: superfícies na família do próprio fundo literal da barra
+   (gray 800/700/600), tintas na ilha do showcase (sistema-b.css:212-216),
+   e a tríade accent/on-accent/glow do tema escuro do app (tokens.css:61-63)
+   para o botão primário da barra ter a mesma cara nos dois temas.
+   --fg/--border também são pinados: eles resolvem var() no :root, então
+   pinar só --text/--line não os consertaria dentro da ilha. */
+:root[data-theme="light"] .curriculo-top-bar {
+  --bg: #111827;
+  --surface: #1f2937;
+  --surface-2: #374151;
+  --surface-3: #4b5563;
+  --text: #f8fafc;
+  --dim: #9fb0c4;
+  --faint: #8291a8;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-soft: rgba(255, 255, 255, 0.05);
+  --fg: var(--text);
+  --border: var(--line);
+  --accent: #38c7bd;
+  --on-accent: #04211f;
+  --glow: rgba(56, 199, 189, 0.16);
+}
+
+/* ── 3. FOLHA A4 — papel do documento ──────────────────────────────────
+   src: curriculo.css:64-68 — .curriculo-folha-a4
+   fundo branco literal = exatamente var(--surface) no claro (troca de
+   literal por token sem mudar pixel); tinta #111827 (gray-900) vira
+   var(--text) #0f172a, um passo de slate indistinguível sobre branco.
+   A sombra: 0 20px 50px rgba(0,0,0,0.5) era calibrada para o escuro; sobre
+   o claro-claro do bg ela borra. Vira a --sombra-alta do showcase
+   (sistema-b.css:191) — mesma geometria, tinta slate. No @media print o
+   !important da fonte (curriculo.css:380) continua mandando. */
+:root[data-theme="light"] .curriculo-folha-a4 {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 50px -18px rgba(15, 23, 42, 0.22);
+}
+
+/* ── 4. TINTA DE TÍTULO/VALOR — var(--text) ────────────────────────────
+   src: curriculo.css:103,123,156,279,331 — #1e293b e #0f172a
+   #0f172a É o var(--text) do claro, literal exato; #1e293b (slate-800) sobe
+   um degrau para a tinta cheia — na folha impressa os dois se leem iguais. */
+:root[data-theme="light"] .instituicao-unidade,
+:root[data-theme="light"] .carimbo-ano,
+:root[data-theme="light"] .curriculo-nome,
+:root[data-theme="light"] .curriculo-proj-titulo-wrap,
+:root[data-theme="light"] .val-titulo,
+:root[data-theme="light"] .contato-valor {
+  color: var(--text);
+}
+
+/* ── 5. TINTA SECUNDÁRIA — var(--dim) ───────────────────────────────────
+   src: curriculo.css:164,223,296 — #475569 (exato) e #334155 (bio)
+   A bio era slate-700, um degrau abaixo do #475569 dos subtítulos; na
+   escada do claro os dois cabem no mesmo --dim, e a hierarquia segue sendo
+   feita por peso/tamanho, não por cor. */
+:root[data-theme="light"] .curriculo-subtitulo,
+:root[data-theme="light"] .curriculo-bio-texto,
+:root[data-theme="light"] .curriculo-proj-desc {
+  color: var(--dim);
+}
+
+/* ── 6. TINTA DE RÓTULO — var(--faint) ───────────────────────────────────
+   src: curriculo.css:116,182,336 — #64748b, o exato do token no claro */
+:root[data-theme="light"] .carimbo-label,
+:root[data-theme="light"] .contato-rotulo,
+:root[data-theme="light"] .val-desc {
+  color: var(--faint);
+}
+
+/* src: curriculo.css:367 — .selo-emissao-data
+   #94a3b8 era o --dim do ESCURO esquecido no claro: 2,8:1 sobre papel,
+   reprova AA. var(--faint) = #64748b, 4,55:1. */
+:root[data-theme="light"] .selo-emissao-data {
+  color: var(--faint);
+}
+
+/* ── 7. LINKS DO DOCUMENTO — var(--accent) ───────────────────────────────
+   src: curriculo.css:201,290,342 — #0284c7 (sky-600)
+   O azul-Tailwind vira a tinta institucional do claro (var(--accent) =
+   #02609e, 6,4:1 sobre branco, aprovação AA em corpo e link). */
+:root[data-theme="light"] .contato-link,
+:root[data-theme="light"] .curriculo-proj-url,
+:root[data-theme="light"] .val-url {
+  color: var(--accent);
+}
+
+/* ── 8. DIVISÓRIAS E FILIGRANAS — var(--surface-3) ───────────────────────
+   src: curriculo.css:129 — .curriculo-divisor-topo
+   #e2e8f0 é o exato de var(--surface-3) no claro. */
+:root[data-theme="light"] .curriculo-divisor-topo {
+  background: var(--surface-3);
+}
+
+/* src: curriculo.css:213,217 — .curriculo-secao-titulo
+   tinta #0f172a (exato --text) e filete #cbd5e1 (slate-300, degrau acima do
+   --surface-3): sem token intermediate, o filete desce para --surface-3 —
+   em papel branco a diferença de um degrau não afeta AA nem a leitura. */
+:root[data-theme="light"] .curriculo-secao-titulo {
+  color: var(--text);
+  border-bottom-color: var(--surface-3);
+}
+
+/* src: curriculo.css:238-244 — .curriculo-hab-tag
+   os três literais da tag casam com a escada: fundo --surface-2 (#f1f5f9
+   exato), borda --surface-3 (#e2e8f0 exato), tinta --text (degrau de
+   #1e293b). */
+:root[data-theme="light"] .curriculo-hab-tag {
+  background: var(--surface-2);
+  border-color: var(--surface-3);
+  color: var(--text);
+}
+
+/* src: curriculo.css:260 — .curriculo-projeto-item (filete #e2e8f0 exato) */
+:root[data-theme="light"] .curriculo-projeto-item {
+  border-left-color: var(--surface-3);
+}
+
+/* src: curriculo.css:304 — .curriculo-rodape (régua #e2e8f0 exato) */
+:root[data-theme="light"] .curriculo-rodape {
+  border-top-color: var(--surface-3);
+}
+
+/* src: curriculo.css:319 — .curriculo-qrcode-img (#cbd5e1 → degrau abaixo,
+   mesmo tratamento do filete de seção) */
+:root[data-theme="light"] .curriculo-qrcode-img {
+  border-color: var(--surface-3);
+}
+
+/* ==========================================================================
+   LITERAIS SEM REGRA (destino = manter, com motivo)
+   curriculo.css:28  rgba(255,255,255,0.1) — borda da ILHA escura, tinta dela
+                     mesma (igual ao --line pinado acima)
+   curriculo.css:42,44 rgb(var(--vermelho-sesi-rgb) / .2 e .4) — alpha de cor
+                     DE MARCA dentro da ilha; marca não se migra
+                     (tokens-2026.css) e #ff6666 do badge é tinta p/ escuro,
+                     que é onde a ilha continua
+   curriculo.css:53  #ffffff — título branco DA ilha (fundo #111827 literal
+                     na fonte), não vaza para a folha
+   curriculo.css:145 #ffffff — tinta branca do avatar SOBRE var(--vermelho-sesi),
+                     ink-over-brand, tema-independente
+   curriculo.css:197 #059669 — status "verde" funcional, 4,6:1 sobre papel,
+                     passa AA; não há token fg-verde no app com esse piso
+   curriculo.css:249,250,359,360 #dcfce7/#166534 — par de chip de status
+                     (apoios/selo): já é cor de papel claro, e as variantes
+                     do showcase (--ok-bg/--ok-fg) não existem no app,
+                     referenciá-las daria inválido-no-computed-value
+   Bloco @media print (curriculo.css:371-385) usa !important na própria
+                     fonte: o papel e o scrim voltam ao neutro na impressão
+                     em qualquer tema, nada a fazer aqui.
+   ========================================================================== */

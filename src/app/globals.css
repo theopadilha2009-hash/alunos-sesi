@@ -34,3 +34,14 @@
    define tokens que nenhum import antigo define (--vermelho-sesi, --cor-destaque),
    então a posição não muda pixel nenhum — é só contrato de nome. */
 @import "./styles/tokens-2026.css";
+/* Etapa 2, fatia 2 — tema claro dos domínios órfãos. Cada arquivo só adiciona
+   regras escopadas em :root[data-theme="light"], então a posição não toca no
+   dark nem briga com os antigos (que não têm light próprio). Um arquivo por
+   domínio; se nascer domínio novo, nasce o claro dele aqui, não em outro lugar. */
+@import "./styles/claro-crm.css";
+@import "./styles/claro-cracha.css";
+@import "./styles/claro-cargos.css";
+@import "./styles/claro-curriculo.css";
+@import "./styles/claro-estudio.css";
+@import "./styles/claro-desafios.css";
+@import "./styles/claro-vitrine.css";

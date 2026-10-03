@@ -1,0 +1,132 @@
+/* ==========================================================================
+   claro-desafios.css — tema CLARO do domínio desafios (Mural de Desafios &
+   Hackathons). Tudo escopado em :root[data-theme="light"]; o fonte
+   (src/app/styles/desafios.css:1-376) não é tocado — aqui só se dá destino
+   aos literais que ele carrega quando o papel fica branco.
+
+   Decisões de design, as mais discutíveis:
+
+   1. O banner do mural NÃO foi pinado como ilha escura. O gradiente fecha em
+      azul-marinho quase opaco e daria para reafirmar tokens escuros no nó,
+      mas o showcase aprovado trata faixa-hero no claro como papel + glow da
+      marca (design/sistemas/sistema-b.css:1614, .cta-band), e o mural não é
+      uma das 3 ilhas intencionais do app (crachá, NFC, herói do perfil —
+      sistema-b.css:205-210). Então o stop de tinta escura virou --surface e
+      o glow vermelho 0,18 ficou exatamente onde estava.
+   2. Cor de categoria é DADO, não decoração a apagar: os fundos em alpha
+      (âmbar do chip hackathon, sky do badge, verde/amarelo dos selos) já
+      são a mistura com branco que o claro pede sobre papel branco — ficam
+      intactos. O que desce para o par AA é só a TINTA (texto e ícone), no
+      padrão do showcase: cor misturada até --text (sistema-b.css:200-203).
+   3. Os percentuais abaixo são calibrados em srgb, não oklab como o showcase:
+      oklab desloca matiz de cor de marca (alerta registrado em
+      tokens-2026.css:10-11) e, em srgb, os números batem com os contrastes
+      medidos à mão sobre --surface: sky 6,3:1, âmbar 5,4:1, verde 7,0:1,
+      amarelo 6,1:1 — todos acima do piso AA de 4,5.
+   4. Sombra preta (rgba(0,0,0,.2 a .6)) é tinta de fundo escuro; no papel
+      ela suja. Card e banner vão para o token --sombra do claro
+      (tokens.css:85). Hover do card e modal não têm token no app: herdam a
+      geometria do fonte com tinta azul-ardósia, e o modal usa o valor do
+      --sombra-alta claro do showcase (sistema-b.css:191).
+   5. Borda branca (rgba(255,255,255,.08/.2)) sobre branco é invisível: o
+      banner recebe --line e o hover do card recebe --surface-3, um degrau
+      antes de inventar literal novo.
+   ========================================================================== */
+
+/* ── Banner do mural: papel claro com o glow da marca por cima ────────────── */
+
+:root[data-theme="light"] .mural-topo-banner {
+  /* src: desafios.css:9 — .mural-topo-banner: só o stop escuro vira --surface;
+     o radial vermelho em rgb(var(--vermelho-sesi-rgb) / 0.18) fica inalterado */
+  background: radial-gradient(circle at 80% 20%, rgb(var(--vermelho-sesi-rgb) / 0.18) 0%, var(--surface) 70%);
+  /* src: desafios.css:10 — .mural-topo-banner: rgba(255,255,255,.08) não se vê no papel */
+  border-color: var(--line);
+  /* src: desafios.css:13 — .mural-topo-banner: sombra preta .3 vira o token do claro */
+  box-shadow: var(--sombra);
+}
+
+/* src: desafios.css:47 — .mural-titulo: branco puro some sobre o banner claro */
+:root[data-theme="light"] .mural-titulo {
+  color: var(--text);
+}
+
+/* src: desafios.css:54 — .mural-subtitulo: rgba(255,255,255,.75) idem */
+:root[data-theme="light"] .mural-subtitulo {
+  color: var(--dim);
+}
+
+/* src: desafios.css:38 — .mural-tag-hackathon: o #fbbf24 do tema escuro dá
+   1,7:1 sobre branco. A tinta desce, o âmbar continua: mix feito a partir de
+   #f59e0b, os MESMOS canais do tint de fundo rgba(245,158,11,…) da linha 37 —
+   chip e tinta ficam na mesma cor, e a categoria não é apagada. */
+:root[data-theme="light"] .mural-tag-hackathon {
+  color: color-mix(in srgb, #f59e0b 52%, var(--text));
+}
+
+/* ── Cards do grid: sombras e borda de hover ──────────────────────────────── */
+
+/* src: desafios.css:118 — .card-desafio-item: sombra preta .2 sobre branco
+   vira mancha; o token já existe no claro */
+:root[data-theme="light"] .card-desafio-item {
+  box-shadow: var(--sombra);
+}
+
+:root[data-theme="light"] .card-desafio-item:hover {
+  /* src: desafios.css:123 — .card-desafio-item:hover: borda branca .2 é
+     invisível no papel; --surface-3 (#e2e8f0) é o degrau de linha mais forte
+     que o claro tem antes de inventar valor novo */
+  border-color: var(--surface-3);
+  /* src: desafios.css:125 — .card-desafio-item:hover: mesma geometria do
+     fonte, tinta azul-ardósia do light no lugar do preto .3 */
+  box-shadow: 0 14px 32px -14px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+/* ── Chips e selos: a cor da categoria fica, a tinta desce para o AA ─────── */
+
+/* src: desafios.css:140 — .desafio-categoria-badge: #38bdf8 (sky-400) sobre
+   branco dá 2,8:1. O mix usa #0ea5e9, os mesmos canais do tint de fundo
+   rgba(14,165,233,.15) da linha 139, que fica: badge continua azul-céu, só
+   com texto legível (6,3:1). */
+:root[data-theme="light"] .desafio-categoria-badge {
+  color: color-mix(in srgb, #0ea5e9 55%, var(--text));
+}
+
+:root[data-theme="light"] .recompensa-icone-wrap {
+  /* src: desafios.css:226 — .recompensa-icone-wrap: #fbbf24 sobre o box âmbar
+     1,7:1; ícone precisa de 3:1 e pega os mesmos 5,4:1 do texto ao lado */
+  color: color-mix(in srgb, #f59e0b 52%, var(--text));
+}
+
+/* src: desafios.css:245 — .recompensa-nome: idem à linha acima (13px bold) */
+:root[data-theme="light"] .recompensa-nome {
+  color: color-mix(in srgb, #f59e0b 52%, var(--text));
+}
+
+/* src: desafios.css:332 — .mural-envio-aprovado: o token var(--verde) é tinta
+   de fundo escuro (2,5:1 sobre branco). O tint rgba(34,197,94,.15) da linha
+   331 fica; a tinta desce para 7,0:1 no padrão --ok-fg do showcase. */
+:root[data-theme="light"] .mural-envio-aprovado {
+  color: color-mix(in srgb, var(--verde) 45%, var(--text));
+}
+
+/* src: desafios.css:337 — .mural-envio-pendente: var(--amarelo) dá 1,8:1
+   sobre branco; tint da linha 336 fica, tinta vai a 6,1:1 */
+:root[data-theme="light"] .mural-envio-pendente {
+  color: color-mix(in srgb, var(--amarelo) 45%, var(--text));
+}
+
+/* src: desafios.css:368 — .mural-fila-adm-tem .mural-fila-texto b: a faixa
+   zerada se adapta sozinha (color-mix sobre tokens), mas o negrito em
+   var(--amarelo) sobre a faixa amarela 12% não passa no claro. */
+:root[data-theme="light"] .mural-fila-adm-tem .mural-fila-texto b {
+  color: color-mix(in srgb, var(--amarelo) 45%, var(--text));
+}
+
+/* ── Modal de submissão ───────────────────────────────────────────────────── */
+
+/* src: desafios.css:275 — .modal-submissao-desafio: rgba(0,0,0,.6) é sombra
+   de palco escuro; no claro o modal pede difusão larga e leve — valor do
+   --sombra-alta do light no showcase (design/sistemas/sistema-b.css:191) */
+:root[data-theme="light"] .modal-submissao-desafio {
+  box-shadow: 0 24px 50px -18px rgba(15, 23, 42, 0.22);
+}
