@@ -1,0 +1,562 @@
+<!doctype html>
+<!--
+  16 · 16-impressao.html — Impressão A4 (rota A4 · catálogo /alunos/[slug] →
+  CurriculoImpressao). Um DOM, dois conceitos (design/PADROES.md). A folha é
+  papel branco nos dois conceitos e nos dois temas: --papel/--tinta remapeiam o
+  interior de [data-folha]; o chrome (barra de ações, cabeçalho, rodapé) é do
+  conceito e some no @media print — sobe apenas as duas folhas.
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>16 · Impressão A4 — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/components/CurriculoImpressao.tsx:88–114 — barra de ações:
+     "FORMATO OFICIAL A4", "Mini-Currículo Acadêmico & Profissional"
+     (id curriculo-titulo), botão "Salvar em PDF / Imprimir" com title "Salvar
+     como PDF ou Imprimir em A4", botão "Fechar" com title "Fechar visualização";
+     :119–131 — cabeçalho: "SISTEMA FIESC · ESCOLA SESI SENAI", "Unidade
+     Joinville · Santa Catarina", "DOCUMENTO OFICIAL DO ESTUDANTE", "Ano Letivo
+     2026"; :136–191 — identidade: "Formação Técnica em Desenvolvimento de
+     Sistemas / Ensino Médio SESI · Turma {sala}", rótulos "Matrícula Escolar:",
+     "Situação:", "E-mail:", "LinkedIn:", "GitHub:", valor "Matrícula Ativa &
+     Regular", links com o domínio cortado (aliceduarte / github.com/…);
+     :193–246 — seções "Resumo Profissional & Acadêmico", "Competências Técnicas
+     & Tecnologias Dominadas" (tag "+{n} apoios" com title "{n} apoios recebidos
+     de colegas e professores"), "Projetos Técnicos & Inovações Desenvolvidas";
+     :249–272 — rodapé: alt "QR Code de validação", "Autenticidade Verificável
+     por QR Code", "Aponte a câmera para confirmar a matrícula e o histórico
+     escolar oficial em:", URL /validar/{slug} (fallback literal
+     https://alunos-sesi.vercel.app), "Emitido pelo Portal Alunos SESI SC ·
+     Joinville", "Documento gerado em {data pt-BR}".
+     src/app/styles/curriculo.css:62–385 — folha branca 860px, padding
+     3.5rem/3rem, avatar 72px, contatos em grid 2 colunas, título de seção
+     caixa-alta com filete, tag de apoio verde, projeto com filete esquerdo,
+     selo de emissão verde, @media print sem sombra/raio/padding.
+     src/app/styles/print.css:2–77 — @page margin 1.5cm size A4 portrait; chrome
+     escondido na impressão; tabela impressa com linhas que não quebram
+     (page-break-inside: avoid); a coluna de ações (.tabela-acoes) não sobe.
+     src/components/TabelaAlunos.tsx:41–55 — cabeçalhos literais "Aluno",
+     "Sala", "Habilidades & Foco", "Redes Profissionais (LinkedIn / GitHub)",
+     "Estrelas", "Crachá & Ações" (esta coluna é a que o print.css esconde);
+     :58–195 — célula de aluno com bio em <small>, tag de habilidade, badges de
+     rede, sem-dado "—". Dados: CONTEUDO.md (Alice 3ºA 14★; 10 alunos, mesmas
+     habilidades/redes/estrelas da tela 05; matrículas e cor_perfil — Luana
+     --azul-claro, Enzo --petroleo). -->
+<style>
+/* no-sistema */
+/* Dívida 16-a (dividas/16-impressao.md): nenhum sistema define a FOLHA de papel
+   como componente — o base.css só cita ".folha-mundo" num comentário. O remape
+   --papel/--tinta mora aqui, apenas com var()/color-mix() dos tokens. Os pares
+   semânticos (--ok-bg/--ok-fg etc.) do B são computados no :root com o --surface
+   do tema, então a folha re-declara tudo localmente ou o badge--ok viraria
+   cápsula escura sobre o papel. */
+[data-folha] {
+  --text: var(--tinta); --dim: var(--tinta-2); --faint: var(--tinta-3);
+  --surface: var(--papel);
+  --surface-2: color-mix(in oklab, var(--tinta) 5%, var(--papel));
+  --surface-3: color-mix(in oklab, var(--tinta) 9%, var(--papel));
+  --thead: color-mix(in oklab, var(--tinta) 4%, var(--papel));
+  --line: color-mix(in oklab, var(--tinta) 20%, var(--papel));
+  --line-soft: color-mix(in oklab, var(--tinta) 10%, var(--papel));
+  --ok-bg: color-mix(in oklab, var(--verde) 16%, var(--papel));
+  --ok-fg: color-mix(in oklab, var(--verde) 52%, var(--tinta));
+  --aviso-bg: color-mix(in oklab, var(--amarelo) 22%, var(--papel));
+  --aviso-fg: color-mix(in oklab, var(--amarelo) 40%, var(--tinta));
+  --perigo-bg: color-mix(in oklab, var(--vermelho) 13%, var(--papel));
+  --perigo-fg: color-mix(in oklab, var(--vermelho) 55%, var(--tinta));
+  --info-bg: color-mix(in oklab, var(--azul-claro) 15%, var(--papel));
+  --info-fg: color-mix(in oklab, var(--azul-claro) 50%, var(--tinta));
+  --ok-fundo: var(--ok-bg); --ok-texto: var(--ok-fg);
+  --aviso-fundo: var(--aviso-bg); --aviso-texto: var(--aviso-fg);
+  --perigo-fundo: var(--perigo-bg); --perigo-texto: var(--perigo-fg);
+  --info-fundo: var(--info-bg); --info-texto: var(--info-fg);
+  --accent: var(--azul); --on-accent: var(--papel); --glow: transparent;
+  --destaque-filtro: var(--tinta-2); --destaque-sala: var(--cor-destaque);
+  background: var(--papel); color: var(--tinta);
+  width: min(100%, 210mm); margin-inline: auto;
+  display: flex; flex-direction: column; gap: var(--sp-500);
+  font-size: var(--fs-300); line-height: 1.5;
+  border-radius: var(--raio-md);
+  box-shadow: 0 24px 60px -22px color-mix(in oklab, var(--tinta) 60%, transparent);
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+[data-folha="curr"] { padding: 3.5rem clamp(1.25rem, 6vw, 3.5rem) 3rem; }
+[data-folha="cat"] { padding: 2.25rem clamp(1rem, 5vw, 2.5rem) 1.75rem; }
+/* a folha é papel mesmo: o logo branco jamais aparece nela (um DOM só — dívida 16-c) */
+[data-folha] .logo-modo-dark { display: none; }
+[data-folha] .logo-modo-light { display: block; }
+[data-folha] .marca-sesi img { height: 30px; }
+
+[data-doc-cab] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-400); }
+[data-doc-marcas] { display: flex; align-items: center; gap: var(--sp-300); }
+[data-doc-inst] { display: flex; flex-direction: column; gap: var(--sp-50); }
+[data-doc-inst] b { font-size: var(--fs-200); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--vermelho-sesi); }
+[data-doc-inst] span { font-size: var(--fs-300); font-weight: 700; color: var(--dim); }
+[data-doc-carimbo] { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: var(--sp-50); }
+[data-doc-carimbo] strong { font-size: var(--fs-300); font-weight: 800; color: var(--text); }
+[data-doc-divisor] { border: 0; height: 2px; margin: 0; background: color-mix(in oklab, var(--tinta) 12%, var(--papel)); }
+
+[data-doc-ident] { display: flex; flex-wrap: wrap; gap: var(--sp-500); align-items: flex-start; }
+[data-folha] .avatar { width: 72px; height: 72px; font-size: var(--fs-500); border-radius: var(--raio-md); }
+/* dívida 16-b: o anel/sombra do avatar do B é de tela escura; na folha, iniciais
+   claras sobre a cor da sala aprofundada na tinta. */
+[data-conceito="b"] [data-folha] .avatar {
+  background: color-mix(in oklab, var(--cor-destaque) 82%, var(--tinta));
+  color: var(--papel); border-color: transparent; box-shadow: none;
+}
+[data-doc-nome] { font-size: var(--fs-600); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; color: var(--text); margin: 0; }
+[data-doc-sub] { font-size: var(--fs-300); font-weight: 600; color: var(--dim); margin: 0; }
+[data-doc-contatos] { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--sp-200) var(--sp-500); font-size: var(--fs-200); margin: 0; }
+[data-cont] { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-100); }
+[data-cont-rot] { color: var(--faint); font-weight: 700; white-space: nowrap; }
+[data-cont-valor] { color: var(--dim); font-weight: 700; }
+[data-mat] { font-family: var(--fonte-mono); font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
+[data-folha] [data-cont-link] { color: var(--azul); font-weight: 600; text-decoration: none; }
+
+[data-folha] [data-secao-tit] { font-size: var(--fs-400); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text); padding-bottom: var(--sp-200); border-bottom: 2px solid color-mix(in oklab, var(--tinta) 14%, var(--papel)); margin: 0 0 var(--sp-300); }
+[data-folha] section { break-inside: avoid; }
+[data-doc-bio] { font-size: var(--fs-400); color: var(--dim); line-height: 1.6; max-width: 60ch; margin: 0; }
+[data-folha] [data-apoios] {
+  font-size: var(--fs-100); font-weight: 700;
+  background: color-mix(in oklab, var(--verde) 20%, var(--papel));
+  color: color-mix(in oklab, var(--verde) 48%, var(--tinta));
+  padding: 0.12em 0.45em; border-radius: var(--raio-sm);
+}
+
+[data-proj] { display: flex; flex-direction: column; gap: var(--sp-100); padding-left: var(--sp-400); border-left: 2px solid color-mix(in oklab, var(--tinta) 14%, var(--papel)); }
+[data-proj-topo] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-200); }
+[data-proj-nome] { display: inline-flex; align-items: center; gap: var(--sp-100); font-size: var(--fs-400); font-weight: 800; color: var(--text); }
+[data-proj-url] { font-family: var(--fonte-mono); font-size: var(--fs-100); color: var(--azul); }
+[data-proj-desc] { font-size: var(--fs-300); color: var(--dim); line-height: 1.45; margin: 0; }
+
+[data-doc-rod] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-400); border-top: 2px solid color-mix(in oklab, var(--tinta) 14%, var(--papel)); padding-top: var(--sp-400); }
+[data-doc-qr-bloco] { display: flex; align-items: center; gap: var(--sp-400); }
+[data-doc-qr] { width: 68px; height: 68px; flex: none; padding: 7px; background: var(--papel); border: 1px solid var(--line); border-radius: var(--raio-sm); }
+[data-doc-qr] span { display: block; width: 100%; height: 100%; background:
+  repeating-linear-gradient(0deg, color-mix(in oklab, var(--tinta) 82%, transparent) 0 3px, transparent 3px 7px),
+  repeating-linear-gradient(90deg, color-mix(in oklab, var(--tinta) 82%, transparent) 0 3px, transparent 3px 7px); }
+[data-doc-val-tit] { display: block; font-size: var(--fs-200); font-weight: 800; color: var(--text); }
+[data-doc-val-desc] { display: block; font-size: var(--fs-200); color: var(--faint); max-width: 34ch; }
+[data-doc-val-url] { display: block; font-family: var(--fonte-mono); font-size: var(--fs-200); font-weight: 700; color: var(--azul); }
+[data-doc-selo-em] { display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-100); }
+
+/* catálogo — a .tabela do CRM em modo papel (print.css: linhas não quebram,
+   header perde o sticky, ações não sobem) */
+[data-folha] .tabela { border-radius: var(--raio-sm); font-size: var(--fs-200); }
+[data-folha="cat"] .tabela thead th { position: static; }
+[data-folha] .tabela tbody td { padding-block: var(--sp-300); }
+[data-folha] .tabela tbody tr { break-inside: avoid; }
+[data-folha] .tabela small { color: var(--faint); }
+/* Rodada 4 (sweep): o .corte como flex-item da folha (min-width:auto) estourava
+   os 210mm — header cortado na borda e ALUNO em 1 palavra/linha. min-width:0
+   devolve o recorte à folha; layout fixo + quebra em qualquer ponto fazem o
+   catálogo de 5 colunas caber em A4 nos dois conceitos. Proposta em dividas/16. */
+[data-folha] > .corte { min-width: 0; }
+[data-folha="cat"] .tabela { table-layout: fixed; }
+/* rodada 5 (laudo): o thead do B usa white-space:nowrap — overflow-wrap não tem
+   efeito com nowrap, e o header "Redes Profissionais (LinkedIn / GitHub)"
+   estourava a coluna invadindo "Estrelas". nowrap solto só no catálogo: em
+   papel, header quebra em 2 linhas. anywhere cortava nomes próprios ao meio
+   ("Bittencour/t") — break-word só quebra quando não cabe. Avatar de 72px
+   comia 1/3 da coluna ALUNO; na folha 2 é 44px. Salas voltam a ser 1 linha. */
+[data-folha="cat"] .tabela thead th { white-space: normal; }
+[data-folha="cat"] .tabela :is(th, td) { overflow-wrap: break-word; }
+/* rodada 6: no B o thead é caixa alta + tracking — nas colunas de 10/13% o
+   nowrap solto quebrou "SALA"/"ESTRELAS" no meio. th do catálogo respira com
+   tipo menor e tracking zero (td mantém --fs-200 do bloco acima). */
+[data-folha="cat"] .tabela thead th { font-size: var(--fs-100); letter-spacing: 0; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(1) { width: 30%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(2) { width: 10%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(3) { width: 22%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(4) { width: 25%; }
+[data-folha="cat"] .tabela :is(th, td):nth-child(5) { width: 13%; }
+[data-folha="cat"] .avatar { width: 44px; height: 44px; font-size: var(--fs-300); }
+[data-folha="cat"] [data-sala-chip] { white-space: nowrap; }
+[data-folha] .tabela tfoot td { border-top: 1px solid var(--line); padding: var(--sp-300) var(--sp-200); font-size: var(--fs-200); color: var(--faint); font-weight: 700; }
+/* chip da sala na COR DA SALA (mesma régua da tela 05 — dívida lá registrada) */
+[data-sala-chip] {
+  border-color: color-mix(in oklab, var(--cor-destaque) 55%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 12%, var(--papel));
+  color: color-mix(in oklab, var(--cor-destaque) 40%, var(--tinta));
+  font-weight: 700;
+}
+[data-ponto] { width: 7px; height: 7px; flex: none; border-radius: var(--raio-full); background: var(--cor-destaque); }
+
+/* impressão real: [data-nao-imprime] é o .nao-imprimir do fonte, estendido a
+   todo chrome; sobem só as folhas, cada uma na sua página (print.css: @page
+   1.5cm, A4 portrait; folha sem sombra/raio/padding) */
+@media print {
+  @page { margin: 1.5cm; size: A4 portrait; }
+  [data-nao-imprime] { display: none !important; }
+  .palco .tela { min-height: 0; width: 100%; }
+  body { background: var(--papel); color: var(--tinta); }
+  [data-folha] { width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; margin: 0; gap: var(--sp-400); }
+  [data-folha="cat"] { break-before: page; }
+}
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="16-impressao">
+
+<header class="wrap pilha" style="padding-block: var(--sp-600) var(--sp-200)" data-nao-imprime>
+  <p class="eyebrow">16 · /alunos/[slug] → CurriculoImpressao · janela window.print()</p>
+  <h1>Impressão A4</h1>
+  <p style="max-width: 60ch">O mini-currículo do app é <b>documento</b>, não tela: folha de
+  210mm em papel branco nos dois conceitos — <code>--papel</code>/<code>--tinta</code> nunca
+  seguem o tema. A barra de ações, o cabeçalho da página e o rodapé são chrome do conceito e
+  ficam de fora da impressão; o que sobe na impressora é só a folha.</p>
+</header>
+
+<section class="wrap" style="padding-block: var(--sp-400)" data-nao-imprime>
+  <div class="cartao">
+    <div class="linha linha-entre">
+      <div class="linha" style="gap: var(--sp-300)">
+        <span class="selo">FORMATO OFICIAL A4</span>
+        <strong>Mini-Currículo Acadêmico &amp; Profissional</strong>
+      </div>
+      <div class="linha">
+        <button type="button" class="btn btn--primario" data-print title="Salvar como PDF ou Imprimir em A4">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M8 14h8v7a1 1 0 0 0 1 1h6"/></svg>
+          <span>Salvar em PDF / Imprimir</span>
+        </button>
+        <button type="button" class="btn btn--secundario" title="Fechar visualização">Fechar</button>
+      </div>
+    </div>
+    <small class="eyebrow" style="margin-top: var(--sp-300)">o botão chama window.print() — no preview do navegador, @page A4 retrato com margem de 1,5cm</small>
+  </div>
+</section>
+
+<section class="wrap" aria-label="folha A4 do mini-currículo" style="padding-block: var(--sp-400)">
+  <p class="eyebrow" style="margin: 0 0 var(--sp-300)" data-nao-imprime>folha 1 · mini-currículo da Alice — reproduz as seções do fonte</p>
+
+  <div data-folha="curr" style="--cor-destaque: var(--ciano)">
+    <header data-doc-cab>
+      <div class="marca-sesi" data-doc-marcas>
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="" aria-hidden="true">
+        <div class="pilha pilha-apertada" data-doc-inst>
+          <b>SISTEMA FIESC · ESCOLA SESI SENAI</b>
+          <span>Unidade Joinville · Santa Catarina</span>
+        </div>
+      </div>
+      <div data-doc-carimbo>
+        <p class="eyebrow">DOCUMENTO OFICIAL DO ESTUDANTE</p>
+        <strong>Ano Letivo 2026</strong>
+      </div>
+    </header>
+
+    <hr data-doc-divisor>
+
+    <section data-doc-ident>
+      <span class="avatar avatar-lg avatar--lg" style="--cor: var(--ciano); --cor-destaque: var(--ciano)" aria-hidden="true">AD</span>
+      <div class="ocupada pilha pilha-apertada">
+        <h1 data-doc-nome>Alice Duarte</h1>
+        <p data-doc-sub>Formação Técnica em Desenvolvimento de Sistemas / Ensino Médio SESI · Turma 3ºA</p>
+        <div data-doc-contatos>
+          <span data-cont><span data-cont-rot>Matrícula Escolar:</span><span data-mat>3A26-0041-887</span></span>
+          <span data-cont><span data-cont-rot>Situação:</span><span class="badge badge--ok">Matrícula Ativa &amp; Regular</span></span>
+          <span data-cont><span data-cont-rot>E-mail:</span><a data-cont-link href="mailto:alice@estudante.sesisenai.org.br">alice@estudante.sesisenai.org.br</a></span>
+          <span data-cont><span data-cont-rot>LinkedIn:</span><a data-cont-link href="https://linkedin.com/in/aliceduarte" rel="noreferrer noopener">aliceduarte</a></span>
+          <span data-cont><span data-cont-rot>GitHub:</span><a data-cont-link href="https://github.com/aliceduarte" rel="noreferrer noopener">github.com/aliceduarte</a></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-secao-tit>Resumo Profissional &amp; Acadêmico</h2>
+      <p data-doc-bio>Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p>
+    </section>
+
+    <section>
+      <h2 data-secao-tit>Competências Técnicas &amp; Tecnologias Dominadas</h2>
+      <div class="linha">
+        <span class="chip">React <span data-apoios title="6 apoios recebidos de colegas e professores">+6 apoios</span></span>
+        <span class="chip">Next.js</span>
+        <span class="chip">Excel</span>
+        <span class="chip">Documentação</span>
+      </div>
+    </section>
+
+    <section>
+      <h2 data-secao-tit>Projetos Técnicos &amp; Inovações Desenvolvidas</h2>
+      <div class="pilha" data-proj>
+        <div data-proj-topo>
+          <strong data-proj-nome><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>Portfólio da Turma</strong>
+          <small data-proj-url>alunos-sesi.vercel.app/alunos/alice-duarte</small>
+        </div>
+        <p data-proj-desc>Next.js + Supabase, vitrine dos alunos.</p>
+      </div>
+    </section>
+
+    <footer data-doc-rod>
+      <div data-doc-qr-bloco>
+        <div data-doc-qr aria-hidden="true"><span></span></div>
+        <span class="sr-only">QR Code de validação</span>
+        <div>
+          <strong data-doc-val-tit>Autenticidade Verificável por QR Code</strong>
+          <span data-doc-val-desc>Aponte a câmera para confirmar a matrícula e o histórico escolar oficial em:</span>
+          <span data-doc-val-url>https://alunos-sesi.vercel.app/validar/alice-duarte</span>
+        </div>
+      </div>
+      <div data-doc-selo-em>
+        <span class="badge badge--ok"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Emitido pelo Portal Alunos SESI SC · Joinville</span>
+        <small class="eyebrow" style="margin: 0">Documento gerado em 02/10/2026</small>
+      </div>
+    </footer>
+  </div>
+</section>
+
+<section class="wrap pilha" style="padding-block: var(--sp-600)" aria-label="catálogo da turma em papel">
+  <div class="linha linha-entre" data-nao-imprime>
+    <p class="eyebrow" style="margin: 0">folha 2 · variante "Catálogo da turma" — a .tabela do CRM em modo papel, 10 alunos</p>
+    <button type="button" class="btn btn--secundario btn--pequeno" data-print title="Salvar como PDF ou Imprimir em A4">Imprimir</button>
+  </div>
+
+  <div data-folha="cat">
+    <header data-doc-cab>
+      <div class="marca-sesi" data-doc-marcas>
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="" aria-hidden="true">
+        <div class="pilha pilha-apertada" data-doc-inst>
+          <b>SISTEMA FIESC · ESCOLA SESI SENAI</b>
+          <span>Unidade Joinville · Santa Catarina</span>
+        </div>
+      </div>
+      <div data-doc-carimbo>
+        <p class="eyebrow">CATÁLOGO DA TURMA</p>
+        <strong>Vitrine Profissional · Ano Letivo 2026</strong>
+      </div>
+    </header>
+
+    <div class="corte">
+      <table class="tabela">
+        <caption>Catálogo da turma — 10 alunos publicados na vitrine. A coluna "Crachá &amp; Ações" fica de fora: em papel, as ações de tela não sobem.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Aluno</th>
+            <th scope="col">Sala</th>
+            <th scope="col">Habilidades &amp; Foco</th>
+            <th scope="col">Redes Profissionais (LinkedIn / GitHub)</th>
+            <th scope="col" class="num">Estrelas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">AD</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Alice Duarte</strong>
+                  <small>Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>3ºA</span></td>
+            <td><div class="linha"><span class="chip">React</span><span class="chip">Next.js</span><span class="chip">Excel</span></div></td>
+            <td>
+              <div class="badge-redes badge-redes-clara">
+                <a class="badge-linkedin" href="https://linkedin.com/in/aliceduarte" rel="noreferrer noopener" aria-label="LinkedIn de Alice Duarte" title="Acessar LinkedIn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V9h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+                <a class="badge-github" href="https://github.com/aliceduarte" rel="noreferrer noopener" aria-label="GitHub de Alice Duarte" title="Acessar GitHub (aliceduarte)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg></a>
+              </div>
+            </td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>14</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--azul-claro); --cor: var(--azul-claro)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">LF</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Luana Ferraz</strong>
+                  <small>Design e dados. Mexo com Figma, Power BI e uns scripts em Python.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip style="--cor-destaque: var(--ciano)"><span data-ponto aria-hidden="true" style="--cor-destaque: var(--ciano)"></span>3ºA</span></td>
+            <td><div class="linha"><span class="chip">Figma</span><span class="chip">Power BI</span><span class="chip">Python</span></div></td>
+            <td>
+              <div class="badge-redes badge-redes-clara">
+                <a class="badge-github" href="https://github.com/luanaferraz" rel="noreferrer noopener" aria-label="GitHub de Luana Ferraz" title="Acessar GitHub (luanaferraz)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg></a>
+              </div>
+            </td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>11</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">PS</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Pedro Ivo Schmitt</strong>
+                  <small>Automação: n8n no dia a dia do grêmio. Tenho medo de tarefa repetitiva.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>3ºA</span></td>
+            <td><div class="linha"><span class="chip">n8n</span><span class="chip">Excel</span><span class="chip">Documentação</span></div></td>
+            <td><small>—</small></td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>9</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">DB</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Davi Bittencourt</strong>
+                  <small>Back-end e banco. Se tem SELECT, tem eu.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>3ºA</span></td>
+            <td><div class="linha"><span class="chip">SQL</span><span class="chip">Python</span><span class="chip">n8n</span></div></td>
+            <td>
+              <div class="badge-redes badge-redes-clara">
+                <a class="badge-github" href="https://github.com/davibit" rel="noreferrer noopener" aria-label="GitHub de Davi Bittencourt" title="Acessar GitHub (davibit)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg></a>
+              </div>
+            </td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>6</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--verde); --cor: var(--verde)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">YR</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Yasmin Rocha</strong>
+                  <small>Vídeo e interação. Meu portfólio tem até QR code que abre reel.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>3ºB</span></td>
+            <td><div class="linha"><span class="chip">UI Design</span><span class="chip">Figma</span></div></td>
+            <td><small>—</small></td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>12</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--petroleo); --cor: var(--petroleo)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">EM</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Enzo Marchiori</strong>
+                  <small>Games e React Native. Projeto da feira: app de trigonometria com placar.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip style="--cor-destaque: var(--verde)"><span data-ponto aria-hidden="true" style="--cor-destaque: var(--verde)"></span>3ºB</span></td>
+            <td><div class="linha"><span class="chip">React</span><span class="chip">UI Design</span></div></td>
+            <td><small>—</small></td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>8</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">TW</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Thales Wobeto</strong>
+                  <small>Redes e infraestrutura. Montei a rede do laboratório novo.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>4ºA</span></td>
+            <td><div class="linha"><span class="chip">Documentação</span><span class="chip">Excel</span></div></td>
+            <td>
+              <div class="badge-redes badge-redes-clara">
+                <a class="badge-linkedin" href="https://linkedin.com/in/thaleswobeto" rel="noreferrer noopener" aria-label="LinkedIn de Thales Wobeto" title="Acessar LinkedIn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V9h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+              </div>
+            </td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>10</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">BS</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Bruna Selming</strong>
+                  <small>IA aplicada: treinei um classificador de resíduos pra cantina.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>4ºA</span></td>
+            <td><div class="linha"><span class="chip">Python</span><span class="chip">Power BI</span></div></td>
+            <td><small>—</small></td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>5</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">OR</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Otávio Redivo</strong>
+                  <small>Veterano. Mentor dos menores e suspeito de quase todo deploy quebrado.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>5ºA</span></td>
+            <td><div class="linha"><span class="chip">SQL</span><span class="chip">Documentação</span></div></td>
+            <td><small>—</small></td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>7</strong></span></td>
+          </tr>
+
+          <tr style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)">
+            <td>
+              <div class="linha">
+                <span class="avatar" aria-hidden="true">MK</span>
+                <div class="ocupada pilha pilha-apertada">
+                  <strong>Marina Kowalski</strong>
+                  <small>Produto. Documento tudo, prototipo rápido, testo com a turma inteira.</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="selo" data-sala-chip><span data-ponto aria-hidden="true"></span>5ºA</span></td>
+            <td><div class="linha"><span class="chip">Documentação</span><span class="chip">Figma</span><span class="chip">UI Design</span></div></td>
+            <td>
+              <div class="badge-redes badge-redes-clara">
+                <a class="badge-github" href="https://github.com/mkowalski" rel="noreferrer noopener" aria-label="GitHub de Marina Kowalski" title="Acessar GitHub (mkowalski)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg></a>
+              </div>
+            </td>
+            <td class="num"><span class="linha" style="justify-content: flex-end"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><strong>13</strong></span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Escola SESI · Formando desenvolvedores para o futuro.</td>
+            <td>4 salas</td>
+            <td>10 endossáveis</td>
+            <td>7 com rede profissional</td>
+            <td class="num">10 alunos</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer class="rodape wrap" data-nao-imprime>
+  <span>Feito pela turma, para a turma.</span>
+  <a href="../index.html">← index</a>
+  <span class="rodape-entre">16 · Impressão A4 — o que o tema não alcança: papel é papel.</span>
+</footer>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

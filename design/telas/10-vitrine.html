@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 · Vitrine pública — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/app/alunos/page.tsx — h1 "A turma" (40-42), Topo/Rodape do ds (38, 51),
+       texto do rodapé "Clique na estrela para guardar quem você quer acompanhar."
+       e o estado de erro "Não conseguimos carregar a turma agora. / O banco de
+       dados não respondeu..." (59-70);
+     src/components/Vitrine.tsx — retrato (225-257): "alunos na rede", "salas
+       ativas", "com LinkedIn", "com GitHub", "estrelas trocadas"; Hall da Fama
+       (261-309): "Destaques da Turma", "🏆 Hall da Fama", "Os alunos que mais
+       receberam estrelas e reconhecimento dos colegas.", "🥇 1º Lugar"/"🥈 2º
+       Lugar"/"🥉 3º Lugar", "★ {n} estrelas", "📇 Crachá 3D"; controles (313-381):
+       placeholder "Buscar nome, sala, @github ou habilidade...", "Comandos ⌘K",
+       "★ Mais Estrelados"/"🔤 Ordem Alfabética (A-Z)"/"🌐 Mais Conectados",
+       "🎴 Cards"/"📊 Tabela", "{n} de {n}"; trilhos (384-445): "Todas",
+       "Meus estrelados", "Competências:"; vazios (454-463): "A turma ainda está
+       vazia...", "Nenhum aluno encontrado com esses filtros. / Tente outra sala,
+       outra habilidade ou limpe a busca."; ranking das salas (487-517):
+       "Ranking das salas", "{n} alunos · {n}% dos links preenchidos" (507);
+     src/components/CartaoAluno.tsx — cartão do aluno: bio, 3 habilidades, botão
+       "Crachá" (title "Abrir Crachá Holográfico 3D"), estrelas com
+       title/aria "Dar estrela"/"Tirar a estrela de {nome}", badges GitHub/
+       LinkedIn/e-mail (RedesBadges.tsx);
+     src/components/ds.tsx — Topo ("Alunos / Escola SESI") e Rodape
+       ("Feito pela turma, para a turma."); CONTEUDO.md — os 10 aprovados, cores
+       de sala (3ºA ciano, 3ºB verde, 4ºA amarelo, 5ºA vermelho), overrides
+       cor_perfil (Luana azul-claro, Enzo petróleo), números do retrato e do
+       Hall; "Escola SESI · Formando desenvolvedores para o futuro." é o rodapé
+       institucional do elenco. -->
+<style>
+/* no-sistema */
+/* 1) .barra de progresso: CONSOLIDADA nos dois sistemas (A §20, B §PROGRESSO —
+      fill = --cor-destaque, que o markup já seta inline). O hatch antigo
+      (trilho surface-3 + fill --accent) sobrescrevia o sistema e foi removido
+      no QA de 02/10 — dívida 17 §2 encerrada. */
+/* 2) filete do pódio: no fonte (Vitrine.tsx:273) cada lugar tem classe própria
+      com metal; aqui o metal é tinta de token, via atributo — sem classe órfã.
+      Dívida: primitivo .podio com 3 variações nos dois sistemas. */
+/* Rodada 4 (sweep): no tema claro, [data-conceito=b][data-theme=light] .cartao
+   pinta border-color com (0,3,0) e achatava os metais — o .cartao no seletor
+   sobe estes para (0,3,0)+ordem (o style da tela vem depois do link). */
+[data-conceito] .cartao[data-podio="1"] { border-top: 3px solid color-mix(in oklab, var(--amarelo) 70%, var(--line)); }
+[data-conceito] .cartao[data-podio="2"] { border-top: 3px solid color-mix(in oklab, var(--faint) 55%, var(--line)); }
+[data-conceito] .cartao[data-podio="3"] { border-top: 3px solid color-mix(in oklab, var(--vermelho) 50%, var(--amarelo)); }
+/* 3) ponto de cor de sala (o .ponto do fonte é aula, não showcase): usa --cor
+      já definida pelos dois conceitos para avatar/badge. */
+[data-conceito] [data-sala-pt] { display: inline-flex; align-items: center; gap: var(--sp-200); }
+[data-conceito] [data-sala-pt]::before {
+  content: ""; width: 8px; height: 8px; flex: none;
+  border-radius: var(--raio-full); background: var(--cor, var(--accent));
+}
+/* 4) filete lateral no ranking de salas (o fonte pinta a borda pela cor da
+      sala em .linha-adm; aqui é atributo para não criar classe órfã). */
+[data-conceito] .cartao[data-ranking] { border-left: 3px solid var(--cor, var(--line)); }
+/* no-sistema */
+/* 5) QA P1-5 (02/10): no A o <small> da marca é inline (sai "AlunosEscola
+      SESI" grudado) e o logo branco nunca deve aparecer no papel — espelho das
+      pontes da tela 06 (dividas/06-crm-meu-perfil.md §4/§7, que 10 e index
+      passam a repetir). */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-size: var(--fs-100); font-weight: 600;
+  letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint);
+}
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="10-vitrine">
+
+  <!-- ── Topo público (ds.tsx Topo — mesmo chrome das telas 10–16) ───────── -->
+  <header class="wrap topo">
+    <a class="marca-sesi" href="../index.html">
+      <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+      <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+      <span>Alunos<small>Escola SESI</small></span>
+    </a>
+    <nav class="linha">
+      <a class="nav-link" href="08-overlay-commandbar.html" title="Abrir Command Palette (⌘K)">⌘K Comandos</a>
+    </nav>
+  </header>
+
+  <div class="wrap pilha" style="padding-block: var(--sp-600); gap: var(--sp-600)">
+
+    <h1 style="margin:0; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -0.04em">A turma</h1>
+
+    <!-- ── RETRATO (Vitrine.tsx:225-257) — números de CONTEUDO.md ────────── -->
+    <section class="grade" style="--col-min: 12rem" aria-label="Retrato da turma">
+      <div class="metrica">
+        <b class="metrica-valor">10</b>
+        <span class="metrica-label">alunos na rede</span>
+        <div class="barra" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Alunos na rede">
+          <span class="barra-fill" style="--pct: 100%; --accent: var(--ciano); --accent-fill: var(--ciano); --cor-destaque: var(--ciano)"></span>
+        </div>
+      </div>
+      <div class="metrica">
+        <b class="metrica-valor">4</b>
+        <span class="metrica-label">salas ativas</span>
+        <div class="barra" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Salas ativas">
+          <span class="barra-fill" style="--pct: 100%; --accent: var(--verde); --accent-fill: var(--verde); --cor-destaque: var(--verde)"></span>
+        </div>
+      </div>
+      <div class="metrica">
+        <b class="metrica-valor">70%</b>
+        <span class="metrica-label">com LinkedIn</span>
+        <div class="barra" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" aria-label="Com LinkedIn">
+          <span class="barra-fill" style="--pct: 70%; --accent: var(--azul-claro); --accent-fill: var(--azul-claro); --cor-destaque: var(--azul-claro)"></span>
+        </div>
+      </div>
+      <div class="metrica">
+        <b class="metrica-valor">60%</b>
+        <span class="metrica-label">com GitHub</span>
+        <div class="barra" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Com GitHub">
+          <span class="barra-fill" style="--pct: 60%; --accent: var(--amarelo); --accent-fill: var(--amarelo); --cor-destaque: var(--amarelo)"></span>
+        </div>
+      </div>
+      <div class="metrica">
+        <b class="metrica-valor" style="color: var(--amarelo)">★ 76</b>
+        <span class="metrica-label">estrelas trocadas</span>
+        <div class="barra" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Estrelas trocadas">
+          <span class="barra-fill" style="--pct: 100%; --accent: var(--amarelo); --accent-fill: var(--amarelo); --cor-destaque: var(--amarelo)"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HALL DA FAMA (Vitrine.tsx:261-309) — Alice 14★, Marina 13★,
+          Yasmin 12★ (ordem de CONTEUDO.md) ────────────────────────────────── -->
+    <section class="pilha" aria-label="Hall da Fama">
+      <div class="pilha-apertada">
+        <p class="eyebrow">Destaques da Turma</p>
+        <h2 style="margin:0">🏆 Hall da Fama</h2>
+        <p style="margin:0; color: var(--dim); max-width: 70ch">
+          Os alunos que mais receberam estrelas e reconhecimento dos colegas.
+        </p>
+      </div>
+      <div class="grade grade-2" style="--col-min: 15rem">
+        <article class="cartao pilha pilha-apertada" data-podio="1" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+          <div><span class="badge badge--num">🥇 1º Lugar</span></div>
+          <span class="avatar avatar--lg" aria-hidden="true">AD</span>
+          <h3 style="margin:0">Alice Duarte</h3>
+          <span class="badge" data-sala-pt style="--cor: var(--ciano)">3ºA</span>
+          <div class="linha linha-entre">
+            <span class="legenda">★ 14 estrelas</span>
+            <a class="btn btn--pequeno btn--secundario" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">📇 Crachá 3D</a>
+          </div>
+        </article>
+        <article class="cartao pilha pilha-apertada" data-podio="2" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)">
+          <div><span class="badge badge--num">🥈 2º Lugar</span></div>
+          <span class="avatar avatar--lg" aria-hidden="true">MK</span>
+          <h3 style="margin:0">Marina Kowalski</h3>
+          <span class="badge" data-sala-pt style="--cor: var(--vermelho)">5ºA</span>
+          <div class="linha linha-entre">
+            <span class="legenda">★ 13 estrelas</span>
+            <a class="btn btn--pequeno btn--secundario" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">📇 Crachá 3D</a>
+          </div>
+        </article>
+        <article class="cartao pilha pilha-apertada" data-podio="3" style="--cor-destaque: var(--verde); --cor: var(--verde)">
+          <div><span class="badge badge--num">🥉 3º Lugar</span></div>
+          <span class="avatar avatar--lg" aria-hidden="true">YR</span>
+          <h3 style="margin:0">Yasmin Rocha</h3>
+          <span class="badge" data-sala-pt style="--cor: var(--verde)">3ºB</span>
+          <div class="linha linha-entre">
+            <span class="legenda">★ 12 estrelas</span>
+            <a class="btn btn--pequeno btn--secundario" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">📇 Crachá 3D</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── CONTROLES (Vitrine.tsx:313-381) ────────────────────────────────── -->
+    <div class="linha" style="align-items: center; gap: var(--sp-300)">
+      <div style="flex: 1 1 18rem; min-width: 0">
+        <label class="sr-only" for="vt-busca">Buscar aluno</label>
+        <input class="campo" id="vt-busca" type="search" style="width: 100%"
+               placeholder="Buscar nome, sala, @github ou habilidade...">
+      </div>
+      <a class="btn btn--secundario" href="08-overlay-commandbar.html"
+         title="Abrir Command Palette (⌘K)" aria-label="Abrir busca por comando">
+        <span aria-hidden="true">🔍</span><span>Comandos</span><kbd class="kbd">⌘K</kbd>
+      </a>
+      <div>
+        <label class="sr-only" for="vt-ordem">Ordenar alunos</label>
+        <select class="campo" id="vt-ordem">
+          <option value="estrelas" selected>★ Mais Estrelados</option>
+          <option value="nome">🔤 Ordem Alfabética (A-Z)</option>
+          <option value="conectados">🌐 Mais Conectados</option>
+        </select>
+      </div>
+      <span class="linha" style="gap: var(--sp-200)" role="group" aria-label="Modo de visualização">
+        <button type="button" class="chip" aria-pressed="true" title="Visualização em Cards 3D">🎴 Cards</button>
+        <button type="button" class="chip" aria-pressed="false" title="Visualização em Tabela Tática">📊 Tabela</button>
+      </span>
+      <p class="legenda" aria-live="polite" style="margin:0">10 de 10</p>
+    </div>
+
+    <!-- ── TRILHO DE SALAS (Vitrine.tsx:384-418) — cor = paleta de CONTEUDO ─ -->
+    <div class="linha" role="group" aria-label="Filtrar por sala">
+      <button type="button" class="chip" aria-pressed="true">Todas <small>10</small></button>
+      <button type="button" class="chip" aria-pressed="false" style="--cor: var(--amarelo)">
+        <span data-sala-pt>★ Meus estrelados</span> <small>2</small>
+      </button>
+      <button type="button" class="chip" aria-pressed="false" style="--cor: var(--ciano)">
+        <span data-sala-pt>3ºA</span> <small>4</small>
+      </button>
+      <button type="button" class="chip" aria-pressed="false" style="--cor: var(--verde)">
+        <span data-sala-pt>3ºB</span> <small>2</small>
+      </button>
+      <button type="button" class="chip" aria-pressed="false" style="--cor: var(--amarelo)">
+        <span data-sala-pt>4ºA</span> <small>2</small>
+      </button>
+      <button type="button" class="chip" aria-pressed="false" style="--cor: var(--vermelho)">
+        <span data-sala-pt>5ºA</span> <small>2</small>
+      </button>
+    </div>
+
+    <!-- ── TRILHO DE COMPETÊNCIAS (Vitrine.tsx:421-445) — contagem da turma ── -->
+    <div class="linha" role="group" aria-label="Filtrar por habilidade">
+      <strong>Competências:</strong>
+      <button type="button" class="chip" aria-pressed="true">Todas</button>
+      <button type="button" class="chip" aria-pressed="false">React <small>4</small></button>
+      <button type="button" class="chip" aria-pressed="false">Python <small>4</small></button>
+      <button type="button" class="chip" aria-pressed="false">UI Design <small>4</small></button>
+      <button type="button" class="chip" aria-pressed="false">Documentação <small>4</small></button>
+      <button type="button" class="chip" aria-pressed="false">Next.js <small>3</small></button>
+      <button type="button" class="chip" aria-pressed="false">SQL <small>3</small></button>
+      <button type="button" class="chip" aria-pressed="false">Figma <small>3</small></button>
+      <button type="button" class="chip" aria-pressed="false">Power BI <small>3</small></button>
+      <button type="button" class="chip" aria-pressed="false">Excel <small>3</small></button>
+      <button type="button" class="chip" aria-pressed="false">n8n <small>2</small></button>
+    </div>
+
+    <!-- ── GRADE DE CARDS (Vitrine.tsx:464-476 + CartaoAluno.tsx) — ordenada
+          por ★ (padrão "Mais Estrelados"). Luana e Enzo exibem cor_perfil
+          (feature do app): o avatar pinta com a cor escolhida, a sala mantém a
+          cor da turma. Visitante do showcase estrelou Alice e Marina. ──────── -->
+    <div class="grade" style="--col-min: 17rem">
+
+      <!-- 1 · Alice Duarte — 3ºA · 14★ · estrelada -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">AD</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Alice Duarte</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--ciano)">3ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">React</span><span class="badge">Next.js</span><span class="badge">UI Design</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <span class="linha" style="gap: var(--sp-200)">
+            <a class="badge badge-github" href="https://github.com/aliceduarte" target="_blank" rel="noreferrer">GitHub</a>
+            <a class="badge badge-linkedin" href="https://linkedin.com/in/aliceduarte" target="_blank" rel="noreferrer">LinkedIn</a>
+          </span>
+          <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true"
+                  aria-label="Tirar a estrela de Alice Duarte" title="Tirar a estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 14</button>
+        </div>
+      </article>
+
+      <!-- 2 · Marina Kowalski — 5ºA · 13★ · estrelada -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">MK</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Marina Kowalski</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--vermelho)">5ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Produto. Documento tudo, prototipo rápido, testo com a turma inteira.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">Documentação</span><span class="badge">Figma</span><span class="badge">UI Design</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <a class="badge badge-github" href="https://github.com/mkowalski" target="_blank" rel="noreferrer">GitHub</a>
+          <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true"
+                  aria-label="Tirar a estrela de Marina Kowalski" title="Tirar a estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 13</button>
+        </div>
+      </article>
+
+      <!-- 3 · Yasmin Rocha — 3ºB · 12★ -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--verde); --cor: var(--verde)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">YR</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Yasmin Rocha</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--verde)">3ºB</span>
+          </div>
+        </div>
+        <p style="margin:0">Vídeo e interação. Meu portfólio tem até QR code que abre reel.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">UI Design</span><span class="badge">Figma</span><span class="badge">React</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Yasmin Rocha" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 12</button>
+        </div>
+      </article>
+
+      <!-- 4 · Luana Ferraz — 3ºA · 11★ · cor de perfil própria (azul-claro) -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--azul-claro); --cor: var(--azul-claro)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">LF</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Luana Ferraz</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--ciano)">3ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Design e dados. Mexo com Figma, Power BI e uns scripts em Python.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">Figma</span><span class="badge">Power BI</span><span class="badge">Python</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <a class="badge badge-github" href="https://github.com/luanaferraz" target="_blank" rel="noreferrer">GitHub</a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Luana Ferraz" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 11</button>
+        </div>
+      </article>
+
+      <!-- 5 · Thales Wobeto — 4ºA · 10★ -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">TW</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Thales Wobeto</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--amarelo)">4ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Redes e infraestrutura. Montei a rede do laboratório novo.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">Documentação</span><span class="badge">n8n</span><span class="badge">Power BI</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <a class="badge badge-linkedin" href="https://linkedin.com/in/thaleswobeto" target="_blank" rel="noreferrer">LinkedIn</a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Thales Wobeto" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 10</button>
+        </div>
+      </article>
+
+      <!-- 6 · Pedro Ivo Schmitt — 3ºA · 9★ -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">PS</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Pedro Ivo Schmitt</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--ciano)">3ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Automação: n8n no dia a dia do grêmio. Tenho medo de tarefa repetitiva.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">n8n</span><span class="badge">Python</span><span class="badge">Documentação</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Pedro Ivo Schmitt" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 9</button>
+        </div>
+      </article>
+
+      <!-- 7 · Enzo Marchiori — 3ºB · 8★ · cor de perfil própria (petróleo) -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--petroleo); --cor: var(--petroleo)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">EM</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Enzo Marchiori</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--verde)">3ºB</span>
+          </div>
+        </div>
+        <p style="margin:0">Games e React Native. Projeto da feira: app de trigonometria com placar.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">React</span><span class="badge">Next.js</span><span class="badge">UI Design</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Enzo Marchiori" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 8</button>
+        </div>
+      </article>
+
+      <!-- 8 · Otávio Redivo — 5ºA · 7★ -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">OR</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Otávio Redivo</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--vermelho)">5ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Veterano. Mentor dos menores e suspeito de quase todo deploy quebrado.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">SQL</span><span class="badge">Excel</span><span class="badge">Documentação</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Otávio Redivo" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 7</button>
+        </div>
+      </article>
+
+      <!-- 9 · Davi Bittencourt — 3ºA · 6★ -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">DB</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Davi Bittencourt</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--ciano)">3ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">Back-end e banco. Se tem SELECT, tem eu.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">SQL</span><span class="badge">Python</span><span class="badge">Next.js</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <a class="badge badge-github" href="https://github.com/davibit" target="_blank" rel="noreferrer">GitHub</a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Davi Bittencourt" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 6</button>
+        </div>
+      </article>
+
+      <!-- 10 · Bruna Selming — 4ºA · 5★ -->
+      <article class="cartao pilha-apertada" style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)">
+        <div class="linha">
+          <span class="avatar" aria-hidden="true">BS</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <h3 style="margin:0">Bruna Selming</h3>
+            <span class="badge badge--num" data-sala-pt style="--cor: var(--amarelo)">4ºA</span>
+          </div>
+        </div>
+        <p style="margin:0">IA aplicada: treinei um classificador de resíduos pra cantina.</p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <span class="badge">Python</span><span class="badge">SQL</span><span class="badge">Power BI</span>
+        </div>
+        <div class="linha linha-entre">
+          <a class="btn btn--pequeno btn--fantasma" href="09-overlay-cracha.html" title="Abrir Crachá Holográfico 3D">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Crachá</span>
+          </a>
+          <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false"
+                  aria-label="Dar estrela para Bruna Selming" title="Dar estrela"
+                  data-toast="Voto de visitante — sem backend no showcase.">★ 5</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- ── ESTADOS DA VITRINE (Vitrine.tsx:454-463 + page.tsx:59-70) ──────── -->
+    <section class="grade grade-2" role="group" aria-label="Estados da vitrine">
+      <div class="pilha pilha-apertada">
+        <p class="eyebrow">Estado: turma sem cadastro</p>
+        <div class="vazio"><b>A turma ainda está vazia.</b>
+          Os alunos aparecem aqui assim que o ADM cadastrar a lista.</div>
+      </div>
+      <div class="pilha pilha-apertada">
+        <p class="eyebrow">Estado: filtro sem resultado</p>
+        <div class="vazio"><b>Nenhum aluno encontrado com esses filtros.</b>
+          Tente outra sala, outra habilidade ou limpe a busca.</div>
+      </div>
+      <div class="pilha pilha-apertada">
+        <p class="eyebrow">Estado: falha de leitura (page.tsx)</p>
+        <div class="vazio"><b>Não conseguimos carregar a turma agora.</b>
+          O banco de dados não respondeu. Tente de novo em alguns instantes —
+          isto não é a lista vazia, é falha de leitura.</div>
+      </div>
+    </section>
+
+    <!-- ── RANKING DAS SALAS (Vitrine.tsx:487-517) — meta literal da linha 507 ─ -->
+    <section class="pilha pilha-apertada" aria-labelledby="ranking-salas">
+      <h2 id="ranking-salas" class="eyebrow" style="margin:0">Ranking das salas</h2>
+      <div class="pilha pilha-apertada">
+        <div class="cartao linha" data-ranking style="--cor: var(--ciano); --cor-destaque: var(--ciano); gap: var(--sp-400)">
+          <span class="avatar" aria-hidden="true">1</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <b>3ºA</b>
+            <small class="legenda">4 alunos · 75% dos links preenchidos</small>
+          </div>
+          <span class="badge badge--num">★ 40</span>
+        </div>
+        <div class="cartao linha" data-ranking style="--cor: var(--vermelho); --cor-destaque: var(--vermelho); gap: var(--sp-400)">
+          <span class="avatar" aria-hidden="true">2</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <b>5ºA</b>
+            <small class="legenda">2 alunos · 50% dos links preenchidos</small>
+          </div>
+          <span class="badge badge--num">★ 20</span>
+        </div>
+        <div class="cartao linha" data-ranking style="--cor: var(--verde); --cor-destaque: var(--verde); gap: var(--sp-400)">
+          <span class="avatar" aria-hidden="true">3</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <b>3ºB</b>
+            <small class="legenda">2 alunos · 50% dos links preenchidos</small>
+          </div>
+          <span class="badge badge--num">★ 20</span>
+        </div>
+        <div class="cartao linha" data-ranking style="--cor: var(--amarelo); --cor-destaque: var(--amarelo); gap: var(--sp-400)">
+          <span class="avatar" aria-hidden="true">4</span>
+          <div class="pilha-apertada ocupada" style="align-items: flex-start">
+            <b>4ºA</b>
+            <small class="legenda">2 alunos · 75% dos links preenchidos</small>
+          </div>
+          <span class="badge badge--num">★ 15</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── Rodapé público (ds.tsx Rodape + page.tsx:51 + texto institucional) ── -->
+  <footer class="rodape">
+    <div class="wrap linha" style="justify-content: center; gap: var(--sp-500)">
+      <span>Clique na estrela para guardar quem você quer acompanhar.</span>
+      <span>Feito pela turma, para a turma.</span>
+      <a href="../index.html">Escola SESI · Formando desenvolvedores para o futuro.</a>
+    </div>
+  </footer>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

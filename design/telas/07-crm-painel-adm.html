@@ -1,0 +1,916 @@
+<!doctype html>
+<!--
+  07 · crm-painel-adm.html — Shell do CRM + aba Painel ADM (rota real: / logado, aba "adm", papel super_adm).
+  fontes reais desta tela (para o gate de fidelidade):
+    src/components/crm/PainelAdmIntegrado.tsx:228-360 (cabeçalho, métricas, 5 sub-abas),
+    369-594 (Gestão de Alunos + código de ativação 421-433), 596-655 (Importar em Massa),
+    657-757 (Cadastrar Aluno Individual), 759-828 (Salas & Turmas), 830-1054 (Desafios do Mural),
+    1085-1201 (SeletorSala); src/app/styles/adm.css:48-130, 154-330, 362-400;
+    src/app/adm/acoes.ts:137-310, 393-466, 559-594; src/lib/importar.ts:126-140;
+    src/lib/lacunas.ts:31-38; src/lib/desafios.ts:13-32; src/lib/ativacao.ts:72-74;
+    src/components/crm/CrmApp.tsx:417-622 (shell/sidebar).
+  Strings copiadas LITERALMENTE dos fontes:
+    "MÓDULO ADMINISTRATIVO EXCLUSIVO" · "Painel de Gestão da Turma" ·
+    "Gerenciamento global de estudantes, destaques em pódio, importação em lote e moderação" ·
+    "Estudantes Cadastrados" · "Salas / Turmas Ativas" · "Destaques Super ADM" ·
+    "Perfis com Redes Conectadas" · "Gestão de Alunos & Destaques (10)" ·
+    "Importar em Massa (Planilha)" · "Cadastrar Aluno Individual" · "Salas & Turmas (4)" ·
+    "Desafios do Mural (3)" · "Buscar por nome, sala ou usuário GitHub..." ·
+    "Todas as salas (10)" · "3ºA" "3ºB" "4ºA" "5ºA" · "Mostrando 10 alunos" · "Limpar filtro" ·
+    "Código de" · "Vale uma vez, por 7 dias. Anote agora e passe para o aluno — ele não aparece de novo." ·
+    "Estudante" "Sala" "Redes" "Fixar no Topo" "Destaque ADM" "Ações" ·
+    "Nenhum estudante encontrado para os filtros selecionados." ·
+    "Fixar no topo da lista" · "Fixado"/"Fixar" ·
+    "Destacar com estrela de recomendação do Super ADM" · "Destaque"/"Destacar" ·
+    "Abrir crachá digital 3D" · "Gerar código de ativação para este aluno" · "Excluir estudante" ·
+    "Importar Lista de Estudantes da Planilha" ·
+    "Cole diretamente as linhas do Excel ou Google Sheets para sincronização em massa" ·
+    "Conteúdo da Planilha (Colunas: Nome, Sala, LinkedIn, GitHub)" ·
+    "Exemplo de colagem:" (placeholder com &#9;) · "Avisos encontrados durante a leitura:" ·
+    "Linha 4:" "Linha 5:" "Linha 6:" · "nome curto demais" "sem sala" "sem nome" ·
+    "Nenhuma linha aproveitável na colagem." · "Importar Turma Agora" · "Processando e Importando..." ·
+    "Cadastrar Novo Estudante Individualmente" ·
+    "Insira manualmente um aluno para adicionar à respectiva sala" · "Nome do Aluno *" ·
+    "Nome completo do estudante" · "Sala / Turma *" · "Ex: DSM3 ou 3ºB · Robótica FLL" ·
+    "Perfil LinkedIn" · "https://linkedin.com/in/..." · "Usuário GitHub" ·
+    "usuario ou link github.com/..." · "Bio / Apresentação Inicial" ·
+    "Foco de aprendizado e tecnologias que estuda..." · "Cadastrar Estudante" · "Salvando Aluno..." ·
+    "Salas e Turmas Registradas (4)" ·
+    "Organização pedagógica por turmas no catálogo institucional SESI" · "alunos" · "com redes" ·
+    "sem LinkedIn" "sem GitHub" "sem bio" · "Turma sem alunos cadastrados." ·
+    "Turma completa: todos com LinkedIn, GitHub e bio." ·
+    "Envios dos alunos (3)" · "3 esperando decisão." · "Nenhum envio esperando decisão." ·
+    "Aluno" "Desafio" "Projeto" "Enviado" "Situação" · "Pendente" "Aprovado" "Rejeitado" · "abrir" ·
+    "Aprovar" · "Rejeitar" ·
+    "Nenhum aluno enviou projeto ainda. O envio acontece no mural, dentro do CRM do aluno." ·
+    "Publicar um desafio novo" · "Título" · "Ex.: Robô Seguidor de Linha" · "Categoria" ·
+    "Robótica FLL" "Desenvolvimento Web" "Inteligência Artificial" "Automação IoT" "Design &amp; UI/UX" ·
+    "Subtítulo do card" · "Uma linha dizendo o que o aluno vai construir" · "Prazo" · "10/11/2026" ·
+    "Texto livre: cabe uma data ou um período." · "Recompensa" · "Ex.: Insígnia de Engenharia" ·
+    "Descrição" · "O que o aluno precisa fazer e com que tecnologias" · "Critérios de avaliação" ·
+    "Um por linha. Ex.:" "Percurso completo sem sair da pista" "Código comentado" ·
+    "Um critério por linha, até 8. Linha em branco é ignorada." · "Publicar no mural" · "Publicando..." ·
+    "Sem sala definida" · "Sem sala" · "+ Nova turma..." · "Trocar a turma de Alice Duarte" ·
+    "Sem turma" · "Trocar a turma de Alice Duarte: o cadastro dele é do painel standalone." ·
+    "Não foi possível criar a turma "DSM3-26"." (modelo da action) ·
+    "Não deu para emitir o código agora. Tente de novo." ·
+    "Crie a sala primeiro para mover o aluno." ·
+    "Tem certeza que deseja excluir Alice Duarte? Esta ação é irreversível." ·
+    "Nada mudou." · "2 novos · 1 completado · 1 duplicada na própria colagem" ·
+    "Manuela Ribeiro entrou na turma." (modelo `${nome} entrou na turma.`) ·
+    "Nome muito curto." · "Informe a sala." · "Turma atualizada." · "Aluno inválido." ·
+    "Escolha a turma para onde mover o aluno." · "SESI-7KQ2-M4VB" (formato ativacao.ts:72-74).
+  Dados: design/CONTEUDO.md (10 alunos, 4 salas, 76 ★, 5 com redes, 3 pendentes:
+  Rafael Kuntz · Iasmin Bonilha · Nathan Prado).
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Painel ADM (CRM) — Redesign alunos-sesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<style>
+/* no-sistema */
+/* 1–3: as mesmas pontes das dívidas 1/2/3/6 de dividas/02-crm-portifolio.md —
+   o shell do CRM (01–07/09) repete o hatch enquanto o coordenador não porta. */
+[data-conceito="b"] .quadro { display: flex; align-items: stretch; min-height: calc(100vh - var(--esp-palco)); background: var(--bg); border: 1px solid var(--line); border-radius: var(--raio); overflow: hidden; }
+[data-conceito="b"] .quadro-corpo { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; }
+html[data-frame="mobile"] [data-conceito="b"] .quadro { flex-direction: column; }
+[data-conceito="b"] .sidebar-marca { display: flex; flex-direction: column; gap: var(--sp-300); }
+[data-conceito="b"] .sidebar-pe { display: flex; align-items: center; gap: var(--sp-200); padding: var(--sp-300); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--raio-md); }
+[data-conceito="a"] .sidebar-rodape { display: flex; flex-direction: column; gap: var(--sp-100); margin: var(--sp-200); padding-top: var(--sp-300); border-top: 1px solid var(--line); }
+[data-conceito="a"] .kbd { padding: 0.1rem 0.4rem; border-radius: var(--raio-sm); background: var(--surface-2); border: 1px solid var(--line); font-family: var(--fonte-mono); font-size: var(--fs-200); color: var(--dim); }
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="a"] .avatar { --cor: var(--cor-destaque, var(--accent-fill)); }
+[data-conceito="a"] .tabela .avatar { width: 28px; height: 28px; font-size: var(--fs-100); }
+/* classe nova desta tela — devída em dividas/07-crm-painel-adm.md (§6) */
+.vazio--linha { flex-direction: row; justify-content: space-between; text-align: left; gap: var(--sp-400); padding: var(--sp-400) var(--sp-500); }
+.vazio--linha b { font-size: var(--fs-300); }
+.vazio--linha svg { flex: none; }
+.chip-sala { border-color: color-mix(in oklab, var(--cor-destaque) 55%, var(--line)); background: color-mix(in oklab, var(--cor-destaque) 12%, var(--surface)); color: color-mix(in oklab, var(--cor-destaque) 62%, var(--text)); font-weight: 700; }
+/* abaixo: só ajustes de elemento/atributo (nada novo para o gate 2) */
+.tela[data-tela="07-crm-painel-adm"] .tabela td .chip { font-size: var(--fs-100); }
+.tela[data-tela="07-crm-painel-adm"] .aba { position: sticky; top: 0; z-index: var(--z-sticky); background: var(--bg); padding-block: var(--sp-200); }
+[data-conceito="b"] .tela[data-tela="07-crm-painel-adm"] code { font-family: var(--fonte-mono); font-size: var(--fs-200); color: var(--dim); }
+.tela[data-tela="07-crm-painel-adm"] .ilha-escura code { display: block; margin-block: var(--sp-200) var(--sp-100); font-size: var(--fs-600); font-weight: 700; letter-spacing: 0.06em; color: var(--ilha-accent); user-select: all; }
+/* no-sistema */
+/* QA P1-4 (A, 02/10): a regra acima lê --ilha-accent, token que só o B tem —
+   no A a cor cai no herda-da-ilha (quase-branco) e some dentro da pílula clara
+   que o §code do A pinta em --surface-2. Texto volta ao token de texto do A
+   sobre o fundo da pílula, como o B faz com o seu accent. Proposta em
+   dividas/07-crm-painel-adm.md §7. */
+[data-conceito="a"] .tela[data-tela="07-crm-painel-adm"] .ilha-escura code { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="07-crm-painel-adm">
+<div class="quadro">
+
+  <!-- ══ SIDEBAR CRM (real: CrmApp.tsx:417-622) — aba "adm" ativa ══════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-marca">
+      <a class="marca-sesi" href="#">
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+        <span>ALUNOS SESI<small>WORKSPACE CRM</small></span>
+      </a>
+      <button type="button" class="btn btn--secundario btn--full" title="Buscar com Command Palette (⌘K)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar...</span>
+        <kbd class="kbd">⌘K</kbd>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Navegação do CRM">
+      <button type="button" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        <span class="ocupada">Portfólio</span>
+      </button>
+      <button type="button" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+        <span class="ocupada">Projetos &amp; Criações</span>
+      </button>
+      <button type="button" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        <span class="ocupada">Mural de Desafios</span>
+      </button>
+      <button type="button" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+        <span class="ocupada">Tabelas &amp; Alunos</span>
+      </button>
+      <button type="button" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="ocupada">Meu Perfil</span>
+      </button>
+      <button type="button" class="nav-item nav-ativo" aria-current="page">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+        <span class="ocupada">Painel ADM</span>
+        <span class="badge badge--aviso badge--num" title="3 envios do mural esperando julgamento">3</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-pe">
+      <span class="avatar" style="--cor-destaque: var(--ciano)" aria-hidden="true">AD</span>
+      <div class="ocupada">
+        <strong>Alice Duarte</strong>
+        <small>3ºA · Matrícula 3A26-0041-887</small>
+      </div>
+    </div>
+
+    <div class="sidebar-rodape">
+      <button type="button" class="btn btn--secundario" title="Visualizar e baixar meu crachá digital">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+        <span>Meu Crachá</span>
+      </button>
+      <button type="button" class="btn btn--fantasma" title="Encerrar sessão no CRM" aria-label="Sair da conta">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══ CONTEÚDO (real: PainelAdmIntegrado.tsx:228-1054) ══════════════════ -->
+  <div class="quadro-corpo">
+    <header class="topo">
+      <div class="ocupada pilha-apertada">
+        <span class="selo">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+          MÓDULO ADMINISTRATIVO EXCLUSIVO
+        </span>
+        <h1>Painel de Gestão da Turma</h1>
+        <p>Gerenciamento global de estudantes, destaques em pódio, importação em lote e moderação</p>
+      </div>
+      <div class="topo-acoes">
+        <span class="badge badge--info">super_adm</span>
+        <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Nada mudou.">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <span>Recarregar catálogo</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="wrap pilha">
+
+      <!-- ── MÉTRICAS (real: adm-metricas-grid, PainelAdmIntegrado.tsx:244-285) ── -->
+      <div class="grade" style="--col-min: 14rem">
+        <div class="cartao metrica">
+          <span class="metrica-label eyebrow">Estudantes Cadastrados</span>
+          <b class="metrica-valor">10</b>
+          <small class="metrica-delta">4 salas · 76 ★</small>
+        </div>
+        <div class="cartao metrica">
+          <span class="metrica-label eyebrow">Salas / Turmas Ativas</span>
+          <b class="metrica-valor">4</b>
+          <small class="metrica-delta">3ºA · 3ºB · 4ºA · 5ºA</small>
+        </div>
+        <div class="cartao metrica">
+          <span class="metrica-label eyebrow">Destaques Super ADM</span>
+          <b class="metrica-valor">1</b>
+          <small class="metrica-delta">Alice Duarte</small>
+        </div>
+        <div class="cartao metrica">
+          <span class="metrica-label eyebrow">Perfis com Redes Conectadas</span>
+          <b class="metrica-valor">5</b>
+          <small class="metrica-delta">completude geral 65%</small>
+        </div>
+        <div class="cartao metrica metrica--destaque">
+          <span class="metrica-label eyebrow">Estrelas da turma</span>
+          <b class="metrica-valor">76</b>
+          <small class="metrica-delta">3ºA 40 · 3ºB 20 · 5ºA 20 · 4ºA 15</small>
+        </div>
+        <div class="cartao metrica">
+          <span class="metrica-label eyebrow">Desafios do Mural</span>
+          <b class="metrica-valor">3</b>
+          <small class="metrica-delta">3 esperando decisão.</small>
+        </div>
+      </div>
+
+      <!-- ── 5 SUB-ABAS (real: adm-tabs-nav, PainelAdmIntegrado.tsx:288-365) ── -->
+      <div data-aba-group>
+        <div class="aba" role="tablist">
+          <button type="button" class="aba" role="tab" aria-selected="true" data-aba="07-alunos">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+            Gestão de Alunos &amp; Destaques (10)
+          </button>
+          <button type="button" class="aba" role="tab" aria-selected="false" data-aba="07-importar">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Importar em Massa (Planilha)
+          </button>
+          <button type="button" class="aba" role="tab" aria-selected="false" data-aba="07-novo">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Cadastrar Aluno Individual
+          </button>
+          <button type="button" class="aba" role="tab" aria-selected="false" data-aba="07-salas">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6-9 6-9-6Z"/><path d="M3 15l9 6 9-6"/></svg>
+            Salas &amp; Turmas (4)
+          </button>
+          <button type="button" class="aba" role="tab" aria-selected="false" data-aba="07-desafios">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Desafios do Mural (3)
+          </button>
+        </div>
+
+        <!-- ══ SUB-ABA 1 · Gestão de Alunos (real: 369-594) ═══════════════ -->
+        <div class="painel-aba" data-aba="07-alunos">
+          <div class="pilha">
+
+            <div class="linha linha-entre">
+              <div class="ocupada" style="max-width: 34rem">
+                <label class="sr-only" for="adm-busca">Buscar estudante</label>
+                <input id="adm-busca" class="campo" type="search" placeholder="Buscar por nome, sala ou usuário GitHub...">
+              </div>
+              <div style="max-width: 16rem">
+                <label class="sr-only" for="adm-sala-filtro">Filtrar por sala</label>
+                <select id="adm-sala-filtro" class="campo">
+                  <option>Todas as salas (10)</option>
+                  <option>3ºA</option>
+                  <option>3ºB</option>
+                  <option>4ºA</option>
+                  <option>5ºA</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Filtro ativo (real: adm-filtro-ativo, 406-417) -->
+            <div class="linha linha-entre cartao cartao--plano">
+              <span>Mostrando <b class="forte">10</b> alunos</span>
+              <button type="button" class="btn btn--pequeno btn--fantasma">Limpar filtro</button>
+            </div>
+
+            <!-- Código de ativação (real: adm-codigo-ativacao, 421-433 — aparece
+                 UMA vez; o banco guarda só o hash. Aqui é a ilha escura do sistema.) -->
+            <div class="ilha-escura" style="padding: var(--sp-500)">
+              <p class="eyebrow eyebrow--accent">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                Código de Davi Bittencourt
+              </p>
+              <code>SESI-7KQ2-M4VB</code>
+              <p style="color: var(--ilha-dim); max-width: 60ch">Vale uma vez, por 7 dias. Anote agora e passe para o aluno — ele não aparece de novo.</p>
+            </div>
+
+            <div class="corte">
+              <table class="tabela">
+                <caption>Gestão de alunos da turma — 10 estudantes · o código só aparece para quem ainda não tem login.</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Estudante</th>
+                    <th scope="col">Sala</th>
+                    <th scope="col">Redes</th>
+                    <th scope="col">Fixar no Topo</th>
+                    <th scope="col">Destaque ADM</th>
+                    <th scope="col" class="num">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--ciano)" aria-hidden="true">AD</span>
+                        <span class="ocupada forte">Alice Duarte</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="linha pilha-apertada">
+                        <select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Alice Duarte">
+                          <option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option>
+                        </select>
+                        <span class="badge badge--perigo">Sem turma</span>
+                        <small>Trocar a turma de Alice Duarte: o cadastro dele é do painel standalone.</small>
+                      </div>
+                    </td>
+                    <td>
+                      <ul class="badge-redes">
+                        <li><a class="badge-github" href="https://github.com/aliceduarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>GitHub</a></li>
+                        <li><a class="badge-linkedin" href="https://linkedin.com/in/aliceduarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a></li>
+                      </ul>
+                    </td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="true" title="Destacar com estrela de recomendação do Super ADM">Destaque</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Alice Duarte"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Alice Duarte"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--azul-claro)" aria-hidden="true">LF</span>
+                        <span class="ocupada forte">Luana Ferraz</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="linha pilha-apertada">
+                        <select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Luana Ferraz">
+                          <option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option>
+                        </select>
+                        <small>Não foi possível criar a turma "DSM3-26".</small>
+                      </div>
+                    </td>
+                    <td><ul class="badge-redes"><li><a class="badge-github" href="https://github.com/luanaferraz"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>GitHub</a></li></ul></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Luana Ferraz"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Não deu para emitir o código agora. Tente de novo." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Luana Ferraz"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Luana Ferraz"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--ciano)" aria-hidden="true">PS</span>
+                        <span class="ocupada forte">Pedro Ivo Schmitt</span>
+                      </div>
+                    </td>
+                    <td><select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Pedro Ivo Schmitt"><option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select></td>
+                    <td><span class="badge">—</span></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Pedro Ivo Schmitt"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Pedro Ivo Schmitt gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Pedro Ivo Schmitt"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Pedro Ivo Schmitt"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--ciano)" aria-hidden="true">DB</span>
+                        <span class="ocupada forte">Davi Bittencourt</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="linha pilha-apertada">
+                        <select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Davi Bittencourt"><option>3ºA</option><option>3ºB</option><option>4ºA</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select>
+                        <small>Escolha a turma para onde mover o aluno.</small>
+                      </div>
+                    </td>
+                    <td><ul class="badge-redes"><li><a class="badge-github" href="https://github.com/davibit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>GitHub</a></li></ul></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Davi Bittencourt"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Davi Bittencourt gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Davi Bittencourt"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Davi Bittencourt"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--verde)" aria-hidden="true">YR</span>
+                        <span class="ocupada forte">Yasmin Rocha</span>
+                      </div>
+                    </td>
+                    <td><select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Yasmin Rocha"><option>3ºB</option><option>3ºA</option><option>4ºA</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select></td>
+                    <td><span class="badge">—</span></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Yasmin Rocha"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Yasmin Rocha gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Yasmin Rocha"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Yasmin Rocha"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--petroleo)" aria-hidden="true">EM</span>
+                        <span class="ocupada forte">Enzo Marchiori</span>
+                      </div>
+                    </td>
+                    <td><select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Enzo Marchiori"><option>3ºB</option><option>3ºA</option><option>4ºA</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select></td>
+                    <td><span class="badge">—</span></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Enzo Marchiori"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Enzo Marchiori gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Enzo Marchiori"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Enzo Marchiori"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--amarelo)" aria-hidden="true">TW</span>
+                        <span class="ocupada forte">Thales Wobeto</span>
+                      </div>
+                    </td>
+                    <td><select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Thales Wobeto"><option>4ºA</option><option>3ºA</option><option>3ºB</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select></td>
+                    <td><ul class="badge-redes"><li><a class="badge-linkedin" href="https://linkedin.com/in/thaleswobeto"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a></li></ul></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Thales Wobeto"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Thales Wobeto gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Thales Wobeto"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Thales Wobeto"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--amarelo)" aria-hidden="true">BS</span>
+                        <span class="ocupada forte">Bruna Selming</span>
+                      </div>
+                    </td>
+                    <td><select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Bruna Selming"><option>4ºA</option><option>3ºA</option><option>3ºB</option><option>5ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select></td>
+                    <td><span class="badge">—</span></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Bruna Selming"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Bruna Selming gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Bruna Selming"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Bruna Selming"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--vermelho)" aria-hidden="true">OR</span>
+                        <span class="ocupada forte">Otávio Redivo</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="linha pilha-apertada">
+                        <select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Otávio Redivo"><option>5ºA</option><option>3ºA</option><option>3ºB</option><option>4ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select>
+                        <small>Turma atualizada.</small>
+                      </div>
+                    </td>
+                    <td><span class="badge">—</span></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Fixar no topo da lista">Fixar</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Otávio Redivo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Otávio Redivo gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Otávio Redivo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Otávio Redivo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <div class="linha">
+                        <span class="avatar" style="--cor-destaque: var(--vermelho)" aria-hidden="true">MK</span>
+                        <span class="ocupada forte">Marina Kowalski</span>
+                      </div>
+                    </td>
+                    <td><select class="campo" style="max-width: 9.5rem" aria-label="Trocar a turma de Marina Kowalski"><option>5ºA</option><option>3ºA</option><option>3ºB</option><option>4ºA</option><option disabled>Sem sala definida</option><option>+ Nova turma...</option></select></td>
+                    <td><ul class="badge-redes"><li><a class="badge-github" href="https://github.com/mkowalski"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>GitHub</a></li></ul></td>
+                    <td><button type="button" class="chip" aria-pressed="true" title="Fixar no topo da lista">Fixado</button></td>
+                    <td><button type="button" class="chip" aria-pressed="false" title="Destacar com estrela de recomendação do Super ADM">Destacar</button></td>
+                    <td class="num">
+                      <div class="linha">
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" title="Abrir crachá digital 3D" aria-label="Abrir crachá digital 3D de Marina Kowalski"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--secundario" data-toast="Código de Marina Kowalski gerado. Vale uma vez, por 7 dias." title="Gerar código de ativação para este aluno" aria-label="Gerar código de ativação para este aluno: Marina Kowalski"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg></button>
+                        <button type="button" class="btn btn--icone btn--pequeno btn--fantasma" data-abre="#modal-excluir" title="Excluir estudante" aria-label="Excluir estudante Marina Kowalski"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Estados que a rota tem de verdade (real: 455-462) -->
+            <div class="pilha-apertada">
+              <p class="eyebrow">Estado — busca sem resultados</p>
+              <div class="vazio vazio--linha">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <b>Nenhum estudante encontrado para os filtros selecionados.</b>
+                <button type="button" class="btn btn--pequeno btn--secundario">Limpar filtro</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SUB-ABA 2 · Importar em Massa (real: 596-655) ══════════════ -->
+        <div class="painel-aba" data-aba="07-importar" hidden>
+          <article class="cartao pilha">
+            <div class="cartao-cabeca">
+              <div class="ocupada">
+                <h3>Importar Lista de Estudantes da Planilha</h3>
+                <p>Cole diretamente as linhas do Excel ou Google Sheets para sincronização em massa</p>
+              </div>
+              <span class="badge badge--info">TSV</span>
+            </div>
+
+            <div class="pilha-apertada">
+              <label class="eyebrow" for="adm-lista">Conteúdo da Planilha (Colunas: Nome, Sala, LinkedIn, GitHub)</label>
+              <textarea id="adm-lista" class="campo" rows="8" placeholder="Exemplo de colagem:&#9;Lucas Albuquerque&#9;3ºB · Robótica FLL&#9;https://linkedin.com/in/lucas-albuquerque&#9;lucas-bot&#9;Enzo Cavalcanti&#9;3ºB · Robótica FLL&#9;&#9;enzoc-dev&#9;Manuela Ribeiro&#9;DSM3&#9;https://linkedin.com/in/manuela-ribeiro&#9;"></textarea>
+              <small class="cartao-nota">A prévia abaixo vem do que está colado agora: 6 linhas lidas, 3 aproveitáveis.</small>
+            </div>
+
+            <div class="corte">
+              <table class="tabela">
+                <caption>Prévia da colagem — nada é gravado antes de você confirmar</caption>
+                <thead>
+                  <tr><th scope="col">Nome</th><th scope="col">Sala</th><th scope="col">LinkedIn</th><th scope="col">GitHub</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="forte">Lucas Albuquerque</td><td>3ºB · Robótica FLL</td><td class="num">linkedin.com/in/lucas-albuquerque</td><td class="num">lucas-bot</td></tr>
+                  <tr><td class="forte">Manuela Ribeiro</td><td>DSM3</td><td class="num">linkedin.com/in/manuela-ribeiro</td><td><span class="badge">—</span></td></tr>
+                  <tr><td class="forte">Bruna Selming</td><td>4ºA</td><td><span class="badge">—</span></td><td class="num">bruna-selming</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="cartao cartao--plano pilha-apertada">
+              <span class="eyebrow">Avisos encontrados durante a leitura:</span>
+              <ul class="pilha-apertada">
+                <li>Linha 4: nome curto demais (<code>Enzo</code>)</li>
+                <li>Linha 5: sem sala (<code>Manuela Ribeiro</code>)</li>
+                <li>Linha 6: sem nome (<code>3ºB · Robótica FLL</code>)</li>
+              </ul>
+            </div>
+
+            <div class="linha">
+              <button type="button" class="btn btn--primario" data-toast="2 novos · 1 completado · 1 duplicada na própria colagem">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                <span>Importar Turma Agora</span>
+              </button>
+              <button type="button" class="btn btn--secundario" aria-busy="true">
+                <span>Processando e Importando...</span>
+              </button>
+              <span class="toast toast--perigo">Nenhuma linha aproveitável na colagem.</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- ══ SUB-ABA 3 · Cadastrar Aluno Individual (real: 657-757) ═════ -->
+        <div class="painel-aba" data-aba="07-novo" hidden>
+          <article class="cartao pilha" style="max-width: 62rem">
+            <div class="cartao-cabeca">
+              <div class="ocupada">
+                <h3>Cadastrar Novo Estudante Individualmente</h3>
+                <p>Insira manualmente um aluno para adicionar à respectiva sala</p>
+              </div>
+            </div>
+
+            <div class="grade grade-2">
+              <div class="pilha-apertada">
+                <label class="eyebrow" for="adm-novo-nome">Nome do Aluno *</label>
+                <input id="adm-novo-nome" class="campo" type="text" placeholder="Nome completo do estudante" required>
+              </div>
+              <div class="pilha-apertada">
+                <label class="eyebrow" for="adm-novo-sala">Sala / Turma *</label>
+                <input id="adm-novo-sala" class="campo" type="text" list="adm-salas-sugestoes" placeholder="Ex: DSM3 ou 3ºB · Robótica FLL" required>
+                <datalist id="adm-salas-sugestoes">
+                  <option value="3ºA"></option>
+                  <option value="3ºB"></option>
+                  <option value="4ºA"></option>
+                  <option value="5ºA"></option>
+                </datalist>
+              </div>
+              <div class="pilha-apertada">
+                <label class="eyebrow" for="adm-novo-linkedin">Perfil LinkedIn</label>
+                <input id="adm-novo-linkedin" class="campo" type="text" placeholder="https://linkedin.com/in/...">
+              </div>
+              <div class="pilha-apertada">
+                <label class="eyebrow" for="adm-novo-github">Usuário GitHub</label>
+                <input id="adm-novo-github" class="campo" type="text" placeholder="usuario ou link github.com/...">
+              </div>
+            </div>
+
+            <div class="pilha-apertada">
+              <label class="eyebrow" for="adm-novo-bio">Bio / Apresentação Inicial</label>
+              <textarea id="adm-novo-bio" class="campo" rows="3" placeholder="Foco de aprendizado e tecnologias que estuda..."></textarea>
+            </div>
+
+            <div class="linha">
+              <button type="button" class="btn btn--primario" data-toast="Manuela Ribeiro entrou na turma.">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                <span>Cadastrar Estudante</span>
+              </button>
+              <button type="button" class="btn btn--secundario" aria-busy="true"><span>Salvando Aluno...</span></button>
+              <span class="toast toast--perigo">Nome muito curto.</span>
+              <span class="toast toast--perigo">Informe a sala.</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- ══ SUB-ABA 4 · Salas & Turmas (real: 759-828) ═════════════════ -->
+        <div class="painel-aba" data-aba="07-salas" hidden>
+          <article class="cartao pilha">
+            <div class="cartao-cabeca">
+              <div class="ocupada">
+                <h3>Salas e Turmas Registradas (4)</h3>
+                <p>Organização pedagógica por turmas no catálogo institucional SESI</p>
+              </div>
+            </div>
+
+            <div class="grade" style="--col-min: 17rem">
+              <div class="cartao cartao--plano pilha-apertada" style="--cor-destaque: var(--ciano)">
+                <div class="linha linha-entre">
+                  <span class="chip chip-sala">3ºA</span>
+                  <span class="badge badge--num">4 alunos</span>
+                </div>
+                <p class="eyebrow">3 com redes · 40 ★</p>
+                <div class="linha">
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 2 alunos sem LinkedIn em 3ºA.">2 sem LinkedIn</button>
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 1 aluno sem GitHub em 3ºA.">1 sem GitHub</button>
+                </div>
+              </div>
+
+              <div class="cartao cartao--plano pilha-apertada" style="--cor-destaque: var(--verde)">
+                <div class="linha linha-entre">
+                  <span class="chip chip-sala">3ºB</span>
+                  <span class="badge badge--num">2 alunos</span>
+                </div>
+                <p class="eyebrow">0 com redes · 20 ★</p>
+                <div class="linha">
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 2 alunos sem LinkedIn em 3ºB.">2 sem LinkedIn</button>
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 2 alunos sem GitHub em 3ºB.">2 sem GitHub</button>
+                </div>
+              </div>
+
+              <div class="cartao cartao--plano pilha-apertada" style="--cor-destaque: var(--amarelo)">
+                <div class="linha linha-entre">
+                  <span class="chip chip-sala">4ºA</span>
+                  <span class="badge badge--num">2 alunos</span>
+                </div>
+                <p class="eyebrow">1 com redes · 15 ★</p>
+                <div class="linha">
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 1 aluno sem LinkedIn em 4ºA.">1 sem LinkedIn</button>
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 2 alunos sem GitHub em 4ºA.">2 sem GitHub</button>
+                </div>
+              </div>
+
+              <div class="cartao cartao--plano pilha-apertada" style="--cor-destaque: var(--vermelho)">
+                <div class="linha linha-entre">
+                  <span class="chip chip-sala">5ºA</span>
+                  <span class="badge badge--num">2 alunos</span>
+                </div>
+                <p class="eyebrow">1 com redes · 20 ★</p>
+                <div class="linha">
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 2 alunos sem LinkedIn em 5ºA.">2 sem LinkedIn</button>
+                  <button type="button" class="btn btn--pequeno btn--secundario" data-toast="Mostrando 1 aluno sem GitHub em 5ºA.">1 sem GitHub</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="cartao-nota">Cada botão de lacuna troca para a aba <b>Gestão de Alunos &amp; Destaques</b> já filtrada — na tela real ele rola até <code>#adm-painel-alunos</code> (PainelAdmIntegrado.tsx:211-223). Hoje o catálogo tem só as quatro turmas da planilha; <b>Turma sem alunos cadastrados.</b> e <b>Turma completa: todos com LinkedIn, GitHub e bio.</b> são as outras duas frases que estes cartões sabem dizer.</p>
+          </article>
+        </div>
+
+        <!-- ══ SUB-ABA 5 · Desafios do Mural (real: 830-1054) ═════════════ -->
+        <div class="painel-aba" data-aba="07-desafios" hidden>
+          <div class="pilha">
+
+            <article class="cartao pilha">
+              <div class="cartao-cabeca">
+                <div class="ocupada">
+                  <h3>Envios dos alunos (3)</h3>
+                  <p>3 esperando decisão.</p>
+                </div>
+                <span class="badge badge--aviso">3 na fila</span>
+              </div>
+
+              <div class="corte">
+                <table class="tabela">
+                  <caption>A fila vem antes do formulário: julgar envio é rotina, publicar desafio é raro.</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Aluno</th>
+                      <th scope="col">Sala</th>
+                      <th scope="col">Desafio</th>
+                      <th scope="col">Projeto</th>
+                      <th scope="col">Enviado</th>
+                      <th scope="col">Situação</th>
+                      <th scope="col" class="num">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="forte">Rafael Kuntz</td>
+                      <td><span class="chip chip-sala" style="--cor-destaque: var(--vermelho)">5ºA</span></td>
+                      <td>Robô Seguidor de Linha</td>
+                      <td>Seguidor de linha com PID <a href="#" class="num">abrir</a></td>
+                      <td class="num">28/09/2026</td>
+                      <td><span class="badge badge--aviso">Pendente</span></td>
+                      <td class="num">
+                        <div class="linha">
+                          <button type="button" class="btn btn--pequeno btn--primario" data-toast="Aprovado. Rafael Kuntz está no mural.">Aprovar</button>
+                          <button type="button" class="btn btn--pequeno btn--perigo" data-abre="#modal-recusar">Rejeitar</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="forte">Iasmin Bonilha</td>
+                      <td><span class="chip chip-sala" style="--cor-destaque: var(--verde)">3ºB</span></td>
+                      <td>Reel QR</td>
+                      <td>Portfólio em vídeo com QR <a href="#" class="num">abrir</a></td>
+                      <td class="num">30/09/2026</td>
+                      <td><span class="badge badge--aviso">Pendente</span></td>
+                      <td class="num">
+                        <div class="linha">
+                          <button type="button" class="btn btn--pequeno btn--primario" data-toast="Aprovado. Iasmin Bonilha está no mural.">Aprovar</button>
+                          <button type="button" class="btn btn--pequeno btn--perigo" data-abre="#modal-recusar">Rejeitar</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="forte">Nathan Prado</td>
+                      <td><span class="chip chip-sala" style="--cor-destaque: var(--amarelo)">4ºA</span></td>
+                      <td>Painho de Resíduos</td>
+                      <td>Classificador de resíduos da cantina <span class="badge">—</span></td>
+                      <td class="num">01/10/2026</td>
+                      <td><span class="badge badge--aviso">Pendente</span></td>
+                      <td class="num">
+                        <div class="linha">
+                          <button type="button" class="btn btn--pequeno btn--primario" data-toast="Aprovado. Nathan Prado está no mural.">Aprovar</button>
+                          <button type="button" class="btn btn--pequeno btn--perigo" data-abre="#modal-recusar">Rejeitar</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="linha">
+                <span class="badge badge--ok">Aprovado</span>
+                <span class="badge badge--perigo">Rejeitado</span>
+                <span class="eyebrow">Situações que a fila já usou — um envio julgado sai da frente e vira histórico.</span>
+              </div>
+            </article>
+
+            <!-- Estado vazio real desta aba (real: 851-854) -->
+            <div class="pilha-apertada">
+              <p class="eyebrow">Estado — fila zerada</p>
+              <div class="vazio">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/><path d="M3 8h6l1.5 2.5h3L15 8h6"/></svg>
+                <b>Nenhum envio esperando decisão.</b>
+                <p>Nenhum aluno enviou projeto ainda. O envio acontece no mural, dentro do CRM do aluno.</p>
+              </div>
+            </div>
+
+            <!-- Publicar desafio (real: details 947-1052) -->
+            <details class="cartao">
+              <summary>Publicar um desafio novo</summary>
+              <div class="pilha" style="padding-top: var(--sp-400)">
+                <div class="grade grade-2">
+                  <div class="pilha-apertada">
+                    <label class="eyebrow" for="dft-titulo">Título</label>
+                    <input id="dft-titulo" class="campo" type="text" maxlength="80" placeholder="Ex.: Robô Seguidor de Linha" required>
+                  </div>
+                  <div class="pilha-apertada">
+                    <label class="eyebrow" for="dft-categoria">Categoria</label>
+                    <select id="dft-categoria" class="campo" required>
+                      <option>Robótica FLL</option>
+                      <option>Desenvolvimento Web</option>
+                      <option>Inteligência Artificial</option>
+                      <option>Automação IoT</option>
+                      <option>Design &amp; UI/UX</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="pilha-apertada">
+                  <label class="eyebrow" for="dft-subtitulo">Subtítulo do card</label>
+                  <input id="dft-subtitulo" class="campo" type="text" maxlength="140" placeholder="Uma linha dizendo o que o aluno vai construir" required>
+                </div>
+
+                <div class="grade grade-2">
+                  <div class="pilha-apertada">
+                    <label class="eyebrow" for="dft-prazo">Prazo</label>
+                    <input id="dft-prazo" class="campo" type="text" maxlength="40" placeholder="10/11/2026" required>
+                    <small class="cartao-nota">Texto livre: cabe uma data ou um período.</small>
+                  </div>
+                  <div class="pilha-apertada">
+                    <label class="eyebrow" for="dft-recompensa">Recompensa</label>
+                    <input id="dft-recompensa" class="campo" type="text" maxlength="80" placeholder="Ex.: Insígnia de Engenharia" required>
+                  </div>
+                </div>
+
+                <div class="pilha-apertada">
+                  <label class="eyebrow" for="dft-descricao">Descrição</label>
+                  <textarea id="dft-descricao" class="campo" rows="3" maxlength="600" placeholder="O que o aluno precisa fazer e com que tecnologias" required></textarea>
+                </div>
+
+                <div class="pilha-apertada">
+                  <label class="eyebrow" for="dft-criterios">Critérios de avaliação</label>
+                  <textarea id="dft-criterios" class="campo" rows="4" placeholder="Um por linha. Ex.:&#10;Percurso completo sem sair da pista&#10;Código comentado" required></textarea>
+                  <small class="cartao-nota">Um critério por linha, até 8. Linha em branco é ignorada.</small>
+                </div>
+
+                <button type="button" class="btn btn--primario" data-toast="&quot;Robô Seguidor de Linha&quot; está no mural.">Publicar no mural</button>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /quadro-corpo -->
+</div><!-- /quadro -->
+
+<!-- ══ Modais dos gestos destrutivos (real: window.confirm + recado da action) ══ -->
+<div class="modal" id="modal-excluir" role="dialog" aria-modal="true" aria-labelledby="ex-t">
+  <div class="modal-caixa">
+    <div class="modal-cabeca">
+      <h2 id="ex-t">Excluir estudante</h2>
+      <button type="button" class="modal-x" data-fecha aria-label="Fechar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <p>Tem certeza que deseja excluir Alice Duarte? Esta ação é irreversível.</p>
+      <p>O portfólio dela sai da vitrine e o crachá deixa de validar. A matrícula 3A26-0041-887 continua na planilha da escola.</p>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn btn--secundario" data-fecha>Voltar</button>
+      <button type="button" class="btn btn--perigo" data-fecha data-toast="Aluno inválido.">Excluir estudante</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-recusar" role="dialog" aria-modal="true" aria-labelledby="rc-t">
+  <div class="modal-caixa">
+    <div class="modal-cabeca">
+      <h2 id="rc-t">Rejeitar envio</h2>
+      <button type="button" class="modal-x" data-fecha aria-label="Fechar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-corpo">
+      <p>Rafael Kuntz continua fora do mural e recebe o motivo por e-mail. Ele pode reenviar.</p>
+      <label class="sr-only" for="rc-motivo">Motivo da recusa</label>
+      <textarea id="rc-motivo" class="campo" placeholder="O que o aluno precisa fazer e com que tecnologias"></textarea>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn btn--secundario" data-fecha>Voltar</button>
+      <button type="button" class="btn btn--perigo" data-fecha data-toast="Rejeitado. Rafael Kuntz foi avisado.">Rejeitar</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

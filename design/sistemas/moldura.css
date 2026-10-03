@@ -1,0 +1,103 @@
+/* ==========================================================================
+   moldura.css — chrome NEUTRO da barra de comparação (moldura.js injeta o
+   markup; as telas nunca escrevem nele). É a única peça de design/ autorizada
+   a ter cor fora dos sistemas: são 5 tons --mf-* de cinza-noite, o contrapeso
+   da ferramenta — nunca um terceiro conceito. A barra NÃO usa var() dos
+   tokens de sistema-a/sistema-b; só as vars locais daqui.
+   ========================================================================== */
+
+:root {
+  --mf-noite: #12151b;   /* fundo da barra e texto do segmento ativo */
+  --mf-borda: #313845;   /* divisores e contornos */
+  --mf-texto: #e9edf4;   /* texto inativo forte / hover */
+  --mf-fraque: #8d97a8;  /* rótulos e segmentos inativos */
+  --mf-pilula: #f4f6fa;  /* pílula do segmento ativo */
+}
+
+/* escondido é escondido — a barra usa isto p/ o grupo de tema no conceito A */
+[hidden] { display: none !important; }
+
+.barra-showcase {
+  position: fixed;
+  /* canto INFERIOR-direito: em cima ela cobria botões do header das telas
+     (relato dos dois QAs da onda). some no print, ver @media abaixo. */
+  bottom: 14px;
+  right: 14px;
+  z-index: 1300; /* acima de qualquer .modal/.toast dos sistemas */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+  border: 1px solid var(--mf-borda);
+  border-radius: 100px;
+  background: rgba(18, 21, 27, 0.88); /* --mf-noite translúcido */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.6);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mf-texto);
+}
+
+.mf-grupo {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 2px;
+  border: 1px solid var(--mf-borda);
+  border-radius: 100px;
+}
+
+.mf-rotulo {
+  padding: 0 6px 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mf-fraque);
+}
+
+.mf-segmento {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--mf-fraque);
+  font: inherit;
+  line-height: 1.2;
+  transition: none; /* chrome instantâneo: a comparação não espera animação */
+}
+
+.mf-segmento:hover { color: var(--mf-texto); }
+
+.mf-segmento[aria-pressed="true"] {
+  background: var(--mf-pilula);
+  color: var(--mf-noite);
+}
+
+.mf-link {
+  padding: 4px 12px;
+  border: 1px solid var(--mf-borda);
+  border-radius: 100px;
+  color: var(--mf-fraque);
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.mf-link:hover { color: var(--mf-texto); }
+
+/* foco visível sem depender do token --accent dos sistemas */
+.barra-showcase :focus-visible {
+  outline: 2px solid var(--mf-texto);
+  outline-offset: 2px;
+  border-radius: 100px;
+}
+
+/* a barra some na folha impressa (tela 16 chama [data-print] → window.print) */
+@media print {
+  .barra-showcase { display: none !important; }
+}

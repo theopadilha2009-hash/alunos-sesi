@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Login — Redesign alunos-sesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/components/crm/LoginTela.tsx:37-338 — as 3 abas Entrar / Criar Conta /
+     Ativar, subtextos por modo, rótulos, placeholders, dicas, botão
+     "Completar com @estudante.sesisenai.org.br" (completarDominio, linhas
+     25-35), textos de submit e de carregando; src/components/TemaToggle.tsx:16-47
+     — o toggle de tema vivia no canto do card; no showcase a troca é da barra
+     (moldura), por isso o ícone não se replica aqui; src/app/page.tsx:26-32 —
+     sem sessão, a raiz renderiza direto o LoginTela; src/lib/auth.ts:144,245,
+     335,516,540 — "Usuário ou senha incorretos.", "Este nome de usuário já está
+     em uso.", "Código incompleto. Confira com o seu professor.", "Código
+     inválido ou já usado. Peça um novo ao seu professor."; src/app/acoes-crm.ts:
+     59-96 — fallbacks "Falha na autenticação." / "Falha ao cadastrar." / "Não
+     foi possível ativar o acesso."; src/lib/limites.ts:99 —
+     DOMINIO_EMAIL_ESCOLA; src/lib/turmas.ts:6-14 — TURMAS_OFICIAIS (options do
+     select, com "DSM3 (Turma Principal)" de LoginTela.tsx:204).
+     strings literais (≥8): "ALUNOS SESI", "CRM & PORTFÓLIO ESCOLAR", "Entrar",
+     "Criar Conta", "Ativar", "E-mail da Escola ou Usuário", "Ex.: theo ou
+     theo@estudante.sesisenai.org.br", "Senha", "Sua senha de acesso", "Acessar
+     o CRM →", "Entrando...", "Criando conta...", "Entre com sua conta para
+     acessar seu portfólio, projetos e gerenciar criações.", "Crie seu acesso
+     direto para montar seu perfil personalizado no portfólio.", "Você já está
+     na lista da turma: use o código do seu professor para assumir o seu
+     perfil.", "Seu Nome Completo", "Ex.: Theo Padilha", "Sua Sala / Turma",
+     "Selecione sua turma oficial no SESI SENAI.", "seu.nome ou seu e-mail",
+     "Pode ser o seu e-mail da escola.", "Completar com
+     @estudante.sesisenai.org.br", "Senha (mínimo 8 caracteres)", "Crie sua
+     senha", "Criar Conta & Entrar no CRM →", "Código de Ativação",
+     "SESI-XXXX-XXXX", "Peça o código ao seu professor. Ele expira em 7 dias.",
+     "Usuário de Login", "Seu usuário ou e-mail", "Crie sua Senha", "Mínimo de
+     8 caracteres", "Ativar meu acesso →", "Ambiente Escolar Seguro · Rede SESI
+     Tech 2026". -->
+<style>
+/* no-sistema */
+/* 1) abas no DOM canônico do inventário (.aba-lista + button.aba): o B estiliza
+      .aba como contentor e os botões por dentro — no mesmo DOM do A o botão
+      carregaria a régua do contentor. Espelha aqui as regras de
+      sistema-b §abas; dividas/01-login.md §1. */
+[data-conceito="b"] .aba-lista {
+  display: flex; flex-wrap: wrap; gap: var(--sp-100);
+  border-bottom: 1px solid var(--line);
+}
+[data-conceito="b"] .aba-lista .aba {
+  appearance: none; border: 0; margin-bottom: 0; background: transparent;
+  padding: .65rem 1.05rem; border-radius: var(--raio-md) var(--raio-md) 0 0;
+  font: inherit; font-size: var(--fs-300); font-weight: 700;
+  color: var(--dim); cursor: pointer; position: relative;
+}
+[data-conceito="b"] .aba-lista .aba:hover { color: var(--text); background: var(--pouso); }
+[data-conceito="b"] .aba-lista .aba[aria-selected="true"] { color: var(--accent); background: var(--realce); }
+[data-conceito="b"] .aba-lista .aba[aria-selected="true"]::after {
+  content: ""; position: absolute; left: .7rem; right: .7rem; bottom: -1px;
+  height: 2px; border-radius: 2px; background: var(--accent);
+}
+[data-conceito="b"][data-frame="mobile"] .aba-lista {
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+}
+
+/* 2) marca de logo duplo no A: o A ignora data-theme e mostraria os dois logos
+      (o branco some no papel); A é sempre claro → só o padrão, e o small da
+      sub-marca em bloco como no B. dividas/01-login.md §2. */
+[data-conceito="a"] .marca-sesi .logo-modo-dark { display: none; }
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-size: var(--fs-100); font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+}
+
+/* 3) rótulo/dica de campo no B: .campo-label/.campo-dica só existem no A
+      (confirma a dívida 17-galeria §3); espelho com tokens do próprio B. */
+[data-conceito="b"] .campo-label {
+  display: block; font-size: var(--fs-300); font-weight: 700; color: var(--text);
+}
+[data-conceito="b"] .campo-dica { color: var(--faint); font-size: var(--fs-200); }
+
+/* 4) spinner de aria-busy no submit: o §3 do A desenha em [aria-busy]; o B não
+      tem par — mesmo anel com currentColor. dividas/01-login.md §3. */
+[data-conceito="b"] .btn[aria-busy="true"] { opacity: .8; pointer-events: none; }
+[data-conceito="b"] .btn[aria-busy="true"]::before {
+  content: ""; width: 14px; height: 14px; border-radius: var(--raio-full);
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: ns-girar .8s linear infinite;
+}
+@keyframes ns-girar { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="01-login" style="--cor-destaque: var(--ciano)">
+
+  <section class="hero">
+    <div class="pilha" style="width:min(100%,30rem);margin-inline:auto">
+
+      <article class="cartao pilha">
+        <h1 class="marca-sesi">
+          <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+          <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+          <span>ALUNOS SESI<small>CRM &amp; PORTFÓLIO ESCOLAR</small></span>
+        </h1>
+
+        <div data-aba-group>
+          <div class="aba-lista" role="tablist" aria-label="Modos de acesso ao CRM">
+            <button type="button" class="aba" role="tab" id="login-tab-login"
+                    aria-selected="true" aria-controls="login-painel-login" data-aba="login">Entrar</button>
+            <button type="button" class="aba" role="tab" id="login-tab-cadastro"
+                    aria-selected="false" aria-controls="login-painel-cadastro" data-aba="cadastro">Criar Conta</button>
+            <button type="button" class="aba" role="tab" id="login-tab-ativar"
+                    aria-selected="false" aria-controls="login-painel-ativar" data-aba="ativar">Ativar</button>
+          </div>
+
+          <div class="painel-aba" id="login-painel-login" role="tabpanel"
+               aria-labelledby="login-tab-login" data-aba="login">
+            <div class="pilha" style="gap:var(--sp-300)">
+              <p style="font-size:var(--fs-300)">Entre com sua conta para acessar seu portfólio, projetos e gerenciar criações.</p>
+              <div class="toast toast--perigo" role="alert">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>
+                <span>Usuário ou senha incorretos.</span>
+              </div>
+              <form class="pilha pilha-apertada" onsubmit="return false">
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="lg-user">E-mail da Escola ou Usuário</label>
+                  <input class="campo" id="lg-user" name="username" type="text"
+                         placeholder="Ex.: theo ou theo@estudante.sesisenai.org.br"
+                         autocomplete="username" required>
+                </div>
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="lg-pass">Senha</label>
+                  <input class="campo" id="lg-pass" name="senha" type="password"
+                         placeholder="Sua senha de acesso" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn--primario btn--full">Acessar o CRM →</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="painel-aba" id="login-painel-cadastro" role="tabpanel"
+               aria-labelledby="login-tab-cadastro" data-aba="cadastro" hidden>
+            <div class="pilha" style="gap:var(--sp-300)">
+              <p style="font-size:var(--fs-300)">Crie seu acesso direto para montar seu perfil personalizado no portfólio.</p>
+              <form class="pilha pilha-apertada" onsubmit="return false">
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="cad-nome">Seu Nome Completo</label>
+                  <input class="campo" id="cad-nome" name="nome" type="text"
+                         placeholder="Ex.: Theo Padilha" required>
+                </div>
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="cad-sala">Sua Sala / Turma</label>
+                  <select class="campo" id="cad-sala" name="sala" required>
+                    <option selected>DSM3 (Turma Principal)</option>
+                    <option>DSM3-25</option><option>DS1-25</option><option>DS2-25</option>
+                    <option>DS4-25</option><option>DS1-26</option><option>DS2-26</option>
+                    <option>DS1-24</option><option>DS2-24</option>
+                  </select>
+                  <small class="campo-dica">Selecione sua turma oficial no SESI SENAI.</small>
+                </div>
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="cad-user">E-mail da Escola ou Usuário</label>
+                  <input class="campo" id="cad-user" name="username" type="text"
+                         placeholder="seu.nome ou seu e-mail" required>
+                  <small class="campo-dica">Pode ser o seu e-mail da escola. <button type="button" class="btn btn--fantasma btn--pequeno">Completar com @estudante.sesisenai.org.br</button></small>
+                </div>
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="cad-pass">Senha (mínimo 8 caracteres)</label>
+                  <input class="campo" id="cad-pass" name="senha" type="password"
+                         placeholder="Crie sua senha" autocomplete="new-password" required>
+                </div>
+                <button type="submit" class="btn btn--primario btn--full">Criar Conta &amp; Entrar no CRM →</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="painel-aba" id="login-painel-ativar" role="tabpanel"
+               aria-labelledby="login-tab-ativar" data-aba="ativar" hidden>
+            <div class="pilha" style="gap:var(--sp-300)">
+              <p style="font-size:var(--fs-300)">Você já está na lista da turma: use o código do seu professor para assumir o seu perfil.</p>
+              <form class="pilha pilha-apertada" onsubmit="return false">
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="atv-codigo">Código de Ativação</label>
+                  <input class="campo" id="atv-codigo" name="codigo" type="text"
+                         placeholder="SESI-XXXX-XXXX" autocomplete="off"
+                         autocapitalize="characters" spellcheck="false" required>
+                  <small class="campo-dica">Peça o código ao seu professor. Ele expira em 7 dias.</small>
+                </div>
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="atv-user">Usuário de Login</label>
+                  <input class="campo" id="atv-user" name="username" type="text"
+                         placeholder="Seu usuário ou e-mail" autocomplete="username" required>
+                  <small class="campo-dica">Pode ser o seu e-mail da escola. <button type="button" class="btn btn--fantasma btn--pequeno">Completar com @estudante.sesisenai.org.br</button></small>
+                </div>
+                <div class="pilha-apertada">
+                  <label class="campo-label" for="atv-pass">Crie sua Senha</label>
+                  <input class="campo" id="atv-pass" name="senha" type="password"
+                         placeholder="Mínimo de 8 caracteres" autocomplete="new-password" required>
+                </div>
+                <button type="submit" class="btn btn--primario btn--full">Ativar meu acesso →</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <footer class="eyebrow" style="text-align:center">Ambiente Escolar Seguro · Rede SESI Tech 2026</footer>
+      </article>
+
+      <div class="linha" style="justify-content:center">
+        <span class="selo">Sistema FIESC · SESI SENAI</span>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="wrap pilha">
+    <p class="eyebrow eyebrow--accent">Estados reais desta tela · erro literal das actions e carregando no submit</p>
+    <div class="grade grade-2">
+      <div class="pilha-apertada">
+        <p class="eyebrow">carregando · texto do fonte ("Entrando..." / "Criando conta...")</p>
+        <button type="button" class="btn btn--primario btn--full" aria-busy="true">Entrando...</button>
+        <button type="button" class="btn btn--primario btn--full" disabled>Criando conta...</button>
+        <button type="button" class="btn btn--primario btn--full" disabled>Ativando...</button>
+      </div>
+      <div class="pilha pilha-apertada">
+        <p class="eyebrow">erro · recado dentro do card (src/lib/auth.ts)</p>
+        <span class="toast toast--perigo">Código inválido ou já usado. Peça um novo ao seu professor.</span>
+        <span class="toast toast--perigo">Código incompleto. Confira com o seu professor.</span>
+        <span class="toast toast--perigo">Falha na autenticação.</span>
+      </div>
+    </div>
+    <p class="eyebrow" style="margin-bottom:var(--sp-500)">O toggle de tema do app (TemaToggle.tsx, "Ativar o tema claro" / "Ativar o tema escuro") mora na barra do showcase — aqui o card não o replica. Sala do elenco no showcase: 3ºA via --cor-destaque (token --ciano) no <code>.tela</code>.</p>
+  </section>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!doctype html>
+<!--
+  11 · Crachá digital — tela do showcase (design/PADROES.md).
+  Rota real redesenhada: /alunos/[slug] · perfil público da Alice Duarte.
+  Fontes reais lidas (fidelidade): src/app/alunos/[slug]/page.tsx:79,95 (Topo/Rodape,
+  404 honesto), src/components/PerfilInterativo.tsx:270–628,
+  src/app/not-found.tsx:31–45, src/components/Insignias.tsx:94–110,
+  src/components/CargosBadges.tsx:80,102, src/components/RedesBadges.tsx:101–175,
+  src/components/ds.tsx:17–45, src/components/CrachaModal.tsx:295–298.
+  Strings reais desta tela (copiadas dos fontes acima, ≥8):
+  "← A turma" · "Compartilhe este crachá no seu currículo e redes." ·
+  "Feito pela turma, para a turma." · "Matrícula Validada SESI Joinville" ·
+  "Crachá Digital" · "estrelas recebidas" · "Dar estrela de reconhecimento ao aluno" ·
+  "Desativar efeitos sonoros" · "Competências & Prova Social dos Colegas:" ·
+  "Clique em +1 para apoiar uma competência" · "Apoiar React de Alice Duarte" ·
+  "Não deu para apoiar agora." · "Insígnias & Conquistas:" ·
+  "Elas vêm das estrelas e dos endossos dos colegas — não se escolhe ter." ·
+  "Conquistada" · "Projetos & Inovações Desenvolvidas:" · "Acessar Demonstração ↗" ·
+  "Portfólio de Mídias:" · "Mídia do portfólio de Alice Duarte" · "Vídeos:" ·
+  "Redes Profissionais & Contato:" · "LinkedIn" · "GitHub" · "Escanear com celular" ·
+  "Abrir Crachá Digital 3D" · "Cartão NFC / Link na Bio" · "Validar Matrícula SESI" ·
+  "Copiar Link do Perfil" · "Link Copiado!" · "← Voltar para a turma" ·
+  "Página ou Estudante não encontrado" ·
+  "O perfil ou recurso que você tentou acessar não existe, foi removido ou o link está incorreto." ·
+  "Explorar Alunos & Portfólios" · "Fixado" · "Destaque" ·
+  botões literais desta tela: "Baixar crachá em PNG" · "Mini-Currículo (A4)"
+  (nota: deep-link ?curriculo=1).
+  Dívidas abertas por esta tela: design/dividas/11-cracha-digital.md
+  (.barra/.cartao-nota sem par no B; anel de pulso e play de vídeo sem primitivo).
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 · Crachá digital — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/app/alunos/[slug]/page.tsx; src/components/PerfilInterativo.tsx -->
+<style>
+/* no-sistema */
+/* Espelhos de nomenclatura (dívidas 17/06 — não duplicar, consolidar lá):
+   o A nomeia tamanhos de avatar com "-lg/-xl" e só ele define .cartao-nota e
+   .barra; o B nomeia com "--lg/--xl" e pinta as iniciais do .avatar em
+   --surface — tinta sobre tinta na ilha escura. (.barra era só do A; hoje os
+   dois sistemas definem o primitivo — o hatch de B daqui foi removido no QA
+   02/10 e a barra de insignia lê --cor-destaque da ilha.) */
+[data-conceito="a"] .avatar--xl { width: 5.5rem; height: 5.5rem; font-size: var(--fs-600); }
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="b"] .avatar { color: var(--text); }
+[data-conceito="b"] .cartao-nota { margin-top: var(--sp-200); padding-top: var(--sp-300); border-top: 1px solid var(--line-soft); font-size: var(--fs-200); color: var(--faint); }
+/* no-sistema */
+/* Primitivos que os dois sistemas não têm (propostas em dividas/11-cracha-digital.md):
+   o anel de pulso do avatar do crachá e o play sobre o placeholder de vídeo. */
+[data-conceito] .pulso-anel { position: relative; display: inline-grid; place-items: center; flex: none; }
+[data-conceito] .pulso-anel::before {
+  content: ""; position: absolute; inset: -10px; border-radius: var(--raio-full);
+  border: 2px solid color-mix(in oklab, var(--cor-destaque, var(--accent)) 55%, transparent);
+  animation: cd-pulso 2.4s var(--ease) infinite;
+}
+[data-conceito] .video-play {
+  width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: var(--raio-full);
+  background: color-mix(in oklab, var(--accent) 24%, var(--surface)); color: var(--text); cursor: pointer;
+}
+@keyframes cd-pulso {
+  from { transform: scale(0.9); opacity: 0.9; }
+  75% { transform: scale(1.18); opacity: 0; }
+  to { transform: scale(1.18); opacity: 0; }
+}
+/* no-sistema */
+/* QA P0-1 (A, 02/10): o bloco de nome sobe -sp-700 sobre a base da capa; no
+   conceito papel o placeholder .olho é claro (--surface-2) e o --ilha-texto
+   branco do h1 desaparece ali. Scrim na base da capa (color-mix do preto) em
+   vez de deslocar o bloco — preserva a sobreposição do avatar. Espelho da
+   divida: proposta em dividas/11-cracha-digital.md §5. */
+[data-conceito="a"] .ilha-escura > .olho { position: relative; }
+[data-conceito="a"] .ilha-escura > .olho::after {
+  content: ""; position: absolute; inset: 45% 0 1px; pointer-events: none;
+  border-radius: 0 0 var(--raio-md) var(--raio-md);
+  background: linear-gradient(to top, color-mix(in oklab, black 88%, transparent), transparent);
+}
+/* Rodada 3 (laudo 02/10): o position:relative do .olho (necessário ao scrim)
+   fez a CAIXA inteira da capa pintar sobre o bloco de nome estático — hit-test
+   devolvia DIV.olho no topo do h1. A linha do hero sobe para a camada
+   posicionada; o scrim continua atrás do nome, como intenção original. */
+[data-conceito="a"] .ilha-escura > .linha { position: relative; z-index: var(--z-conteudo, 1); }
+/* QA P1 (redes vazias no A, 02/10): fora da ilha, o A pinta o par li+a com os
+   tokens da ilha (texto quase-branco sobre papel) — a variante --clara já
+   existe no sistema para o `a`; o li local só desveste a pílula duplicada. */
+[data-conceito="a"] .badge-redes--clara li { padding: 0; border: 0; background: none; }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="11-cracha-digital">
+
+  <!-- ── Topo público (ds.tsx Topo — mesmo chrome das telas 10–16) ─────────── -->
+  <header class="wrap topo">
+    <a class="marca-sesi" href="../index.html">
+      <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+      <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+      <span>Alunos<small>Escola SESI</small></span>
+    </a>
+    <nav>
+      <a class="nav-link" href="../index.html">← A turma</a>
+    </nav>
+  </header>
+
+  <div class="wrap pilha" style="padding-block: var(--sp-600); gap: var(--sp-600)">
+
+    <!-- ── HERO · crachá na ilha escura (perfil-capa + avatar + cargos + bio) ── -->
+    <section class="ilha-escura" aria-label="Crachá digital de Alice Duarte" style="--cor-destaque: var(--ciano); --cor: var(--ciano)">
+      <div class="olho" role="img" aria-label="Capa do perfil (banner)" style="height: 210px; border-radius: var(--raio-md)">Capa do perfil</div>
+
+      <div class="linha linha-entre" style="align-items: flex-end; gap: var(--sp-400)">
+        <div class="linha" style="align-items: flex-end; gap: var(--sp-400); margin-top: calc(-1 * var(--sp-700))">
+          <span class="pulso-anel"><span class="avatar avatar--xl" aria-hidden="true">AD</span></span>
+          <div class="pilha-apertada">
+            <h1 style="font-size: var(--fs-800)">Alice Duarte</h1>
+            <p class="legenda">3ºA · Informática · Escola SESI · Joinville–SC</p>
+            <div class="linha">
+              <span class="selo selo--fixado">Fixado</span>
+              <span class="selo">Destaque</span>
+              <span class="selo selo--validado"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Matrícula Validada SESI Joinville</span>
+            </div>
+          </div>
+        </div>
+        <p class="eyebrow eyebrow--accent">Crachá Digital</p>
+      </div>
+
+      <p style="max-width: 60ch">Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p>
+    </section>
+
+    <div class="linha" style="align-items: flex-start; gap: var(--sp-600)">
+
+      <!-- ── COLUNA PRINCIPAL ──────────────────────────────────────────────── -->
+      <div class="ocupada pilha" style="gap: var(--sp-600)">
+
+        <!-- Endossos (+1 React 6, +1 SQL 4) -->
+        <article class="cartao pilha" style="gap: var(--sp-300)">
+          <div class="pilha-apertada">
+            <p class="eyebrow">Competências &amp; Prova Social dos Colegas:</p>
+            <p style="font-size: var(--fs-200); color: var(--faint)">Clique em +1 para apoiar uma competência</p>
+          </div>
+          <ul class="pill-list">
+            <li class="chip" aria-pressed="false">React <small>6</small>
+              <button type="button" class="btn btn--pequeno btn--fantasma" title="Apoiar React de Alice Duarte" aria-label="Apoiar React de Alice Duarte"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>1</span></button>
+            </li>
+            <li class="chip" aria-pressed="false">Next.js
+              <button type="button" class="btn btn--pequeno btn--fantasma" title="Apoiar Next.js de Alice Duarte" aria-label="Apoiar Next.js de Alice Duarte"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>1</span></button>
+            </li>
+            <li class="chip" aria-pressed="false">SQL <small>4</small>
+              <button type="button" class="btn btn--pequeno btn--fantasma" title="Apoiar SQL de Alice Duarte" aria-label="Apoiar SQL de Alice Duarte"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>1</span></button>
+            </li>
+            <li class="chip" aria-pressed="false">Excel</li>
+            <li class="chip" aria-pressed="false">Documentação</li>
+          </ul>
+          <!-- estado real da rota: o recado de erro do apoio (PerfilInterativo.tsx:155,165) -->
+          <span class="toast toast--perigo" role="alert">Não deu para apoiar agora.</span>
+          <p class="cartao-nota">O +1 só existe nas competências que o endosso alcança — fora da lista, o chip aparece sem número e sem botão.</p>
+        </article>
+
+        <!-- Insígnias (escada da Alice com barra 80%) -->
+        <article class="cartao pilha" style="gap: var(--sp-300)">
+          <div class="cartao-cabeca">
+            <h3 style="margin: 0">Insígnias &amp; Conquistas:</h3>
+            <span class="badge badge--num">14 ★</span>
+          </div>
+          <p style="font-size: var(--fs-300); color: var(--dim)">Elas vêm das estrelas e dos endossos dos colegas — não se escolhe ter.</p>
+          <div class="pilha-apertada">
+            <div class="linha linha-entre">
+              <span class="forte"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block; vertical-align:-2px"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.6 9.7l5.8-.8z"/></svg> Primeira Estrela</span>
+              <span class="badge badge--ok">Conquistada</span>
+            </div>
+            <div class="linha linha-entre">
+              <span class="forte">Em Ascensão</span>
+              <span class="badge badge--ok">Conquistada</span>
+            </div>
+            <div class="pilha-apertada" style="margin-top: var(--sp-200)">
+              <div class="linha linha-entre">
+                <span class="forte">Queridinha da Turma</span>
+                <span class="badge badge--aviso badge--num">8 ★ de 10 · faltam 2</span>
+              </div>
+              <div class="barra" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso de Queridinha da Turma">
+                <span class="barra-fill" style="--pct: 80%"></span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Projetos -->
+        <section class="pilha" style="gap: var(--sp-300)">
+          <p class="eyebrow">Projetos &amp; Inovações Desenvolvidas:</p>
+          <div class="grade" style="--col-min: 18rem">
+            <article class="cartao cartao--interativo pilha-apertada">
+              <div class="linha linha-entre"><h3 style="margin: 0">Portfólio da Turma</h3><span class="badge">Next.js + Supabase</span></div>
+              <p style="font-size: var(--fs-300); color: var(--dim)">Next.js + Supabase, vitrine dos alunos.</p>
+              <p><a href="#" class="nav-link">Acessar Demonstração ↗</a></p>
+            </article>
+          </div>
+        </section>
+
+        <!-- Galeria de mídias -->
+        <section class="pilha" style="gap: var(--sp-300)">
+          <p class="eyebrow">Portfólio de Mídias:</p>
+          <div class="grade" style="--col-min: 13rem">
+            <figure class="pilha-apertada" style="margin: 0">
+              <div class="olho" role="img" aria-label="Mídia do portfólio de Alice Duarte — Feira de Profissões 2026" style="aspect-ratio: 4/3">Feira de Profissões 2026</div>
+              <figcaption class="eyebrow">Feira de Profissões 2026</figcaption>
+            </figure>
+            <figure class="pilha-apertada" style="margin: 0">
+              <div class="olho" role="img" aria-label="Mídia do portfólio de Alice Duarte — Deploy da vitrine" style="aspect-ratio: 4/3">Deploy da vitrine</div>
+              <figcaption class="eyebrow">Deploy da vitrine</figcaption>
+            </figure>
+            <figure class="pilha-apertada" style="margin: 0">
+              <div class="olho" role="img" aria-label="Mídia do portfólio de Alice Duarte — Laboratório novo" style="aspect-ratio: 4/3">Laboratório novo</div>
+              <figcaption class="eyebrow">Laboratório novo</figcaption>
+            </figure>
+            <figure class="pilha-apertada" style="margin: 0">
+              <div class="olho" role="img" aria-label="Mídia do portfólio de Alice Duarte — Gravação do reel" style="aspect-ratio: 4/3">Gravação do reel</div>
+              <figcaption class="eyebrow">Gravação do reel</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <!-- Vídeo -->
+        <section class="pilha" style="gap: var(--sp-300)">
+          <p class="eyebrow">Vídeos:</p>
+          <div class="olho" style="aspect-ratio: 16/9; max-width: 640px; border-radius: var(--raio-md)">
+            <button type="button" class="video-play" aria-label="Reproduzir vídeo do portfólio de Alice Duarte" title="Reproduzir"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.5v15l13-7.5z"/></svg></button>
+          </div>
+          <p class="eyebrow">YouTube · SESIVITRINE01</p>
+        </section>
+
+        <!-- Redes + ações -->
+        <div class="linha" style="align-items: flex-start; gap: var(--sp-500)">
+          <div class="ocupada pilha" style="gap: var(--sp-300)">
+            <p class="eyebrow">Redes Profissionais &amp; Contato:</p>
+            <ul class="badge-redes badge-redes--clara">
+              <li><a class="badge-linkedin" href="https://linkedin.com/in/aliceduarte" aria-label="LinkedIn de Alice Duarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li>
+              <li><a class="badge-github" href="https://github.com/aliceduarte" aria-label="GitHub de Alice Duarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg><span>GitHub</span></a></li>
+              <li><a class="badge-instagram" href="https://instagram.com/aliceduarte" aria-label="Instagram de Alice Duarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg><span>Instagram</span></a></li>
+              <li><a class="badge-email" href="mailto:alice@estudante.sesisenai.org.br" aria-label="E-mail institucional de Alice Duarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg><span>alice@estudante.sesisenai.org.br</span></a></li>
+            </ul>
+            <div class="linha" style="margin-top: var(--sp-200)">
+              <button type="button" class="btn btn--secundario" aria-pressed="false" title="Dar estrela de reconhecimento ao aluno">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.6 9.7l5.8-.8z"/></svg>
+                <span>14 estrelas recebidas</span>
+              </button>
+              <button type="button" class="btn btn--fantasma btn--pequeno" aria-label="Desativar efeitos sonoros" title="Efeitos sonoros e confetes ativos (clique para silenciar)">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+              </button>
+            </div>
+            <p><a class="btn btn--fantasma btn--pequeno" href="../index.html">← Voltar para a turma</a></p>
+          </div>
+
+          <!-- Cartão de compartilhamento + QR -->
+          <article class="cartao pilha" style="flex: 1 1 260px; max-width: 340px; gap: var(--sp-300)">
+            <div class="pilha-apertada" style="align-items: center; text-align: center">
+              <div class="olho" role="img" aria-label="QR do URL" style="width: 148px; height: 148px">QR do URL</div>
+              <p class="eyebrow">Escanear com celular</p>
+              <small style="color: var(--faint); font-size: var(--fs-200)">alunos-sesi.vercel.app/alunos/alice-duarte</small>
+            </div>
+            <div class="pilha-apertada">
+              <button type="button" class="btn btn--primario" title="Abrir o crachá em 3D"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16c.8-1.6 1.8-2.4 3-2.4s2.2.8 3 2.4M14 9h6M14 13h4"/></svg>Abrir Crachá Digital 3D</button>
+              <button type="button" class="btn btn--secundario" title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Baixar crachá em PNG</button>
+              <button type="button" class="btn btn--secundario" title="Gerar e imprimir mini-currículo em folha A4"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Mini-Currículo (A4)</button>
+              <a class="btn btn--fantasma" href="#">Cartão NFC / Link na Bio</a>
+              <a class="btn btn--fantasma" href="#"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>Validar Matrícula SESI</a>
+              <button type="button" class="btn btn--fantasma" data-toast="Link Copiado!"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar Link do Perfil</button>
+            </div>
+            <p class="cartao-nota">O "Mini-Currículo (A4)" também abre por deep-link: <code>?curriculo=1</code> — é assim que o Cartão NFC aponta para cá.</p>
+          </article>
+        </div>
+      </div>
+
+      <!-- ── LATERAL ───────────────────────────────────────────────────────── -->
+      <aside class="pilha" style="flex: 1 1 280px; max-width: 340px; gap: var(--sp-400)">
+
+        <!-- O 404 honesto do não-aprovado -->
+        <article class="cartao pilha-apertada">
+          <p class="eyebrow eyebrow--accent">Quem ainda não foi aprovado</p>
+          <h3 style="font-size: var(--fs-500); margin: 0">Página ou Estudante não encontrado</h3>
+          <p style="font-size: var(--fs-300); color: var(--dim)">O perfil ou recurso que você tentou acessar não existe, foi removido ou o link está incorreto.</p>
+          <p class="cartao-nota">404, não "perfil em análise": para quem está de fora, um pendente não existe — dizer que ele existe transformaria a moderação em vitrine.</p>
+          <a class="btn btn--primario btn--pequeno" href="../index.html">Explorar Alunos &amp; Portfólios</a>
+        </article>
+
+        <!-- Prova institucional do crachá -->
+        <article class="cartao pilha-apertada">
+          <p class="eyebrow">AUTENTICAÇÃO PÚBLICA DIGITAL</p>
+          <div class="pilha-apertada" style="gap: var(--sp-200)">
+            <span class="selo">SISTEMA FIESC · SESI SENAI</span>
+            <span class="selo selo--validado">MATRÍCULA VALIDADA · ESTUDANTE ATIVO</span>
+          </div>
+          <div class="linha linha-entre" style="margin-top: var(--sp-200)">
+            <small style="color: var(--faint)">Matrícula</small>
+            <code>3A26-0041-887</code>
+          </div>
+          <p class="cartao-nota">Código de integridade (HMAC-SHA256): <code>a3f9…c1d2</code></p>
+        </article>
+
+        <!-- Retrato rápido da vitrine -->
+        <div class="metrica">
+          <span>1º no Hall da Fama</span>
+          <b>14</b>
+          <small>estrelas recebidas · sala 3ºA</small>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ── Rodapé público (ds.tsx Rodape + page.tsx:95) ─────────────────────── -->
+  <footer class="rodape">
+    <div class="wrap linha" style="justify-content: center">
+      <span>Compartilhe este crachá no seu currículo e redes.</span>
+      <span>Feito pela turma, para a turma.</span>
+      <a href="../index.html">Escola SESI · Formando desenvolvedores para o futuro.</a>
+    </div>
+  </footer>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

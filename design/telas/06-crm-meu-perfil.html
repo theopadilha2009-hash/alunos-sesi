@@ -1,0 +1,809 @@
+<!doctype html>
+<!--
+  06 · Meu Perfil (CRM) — tela do showcase (design/PADROES.md).
+  Rota real redesenhada: / (aba Meu Perfil) · quem usa: Alice Duarte.
+  Fontes reais lidas (fidelidade): src/components/crm/PaginaMeuPerfil.tsx:1010–2686,
+  src/components/crm/StickerCanvas.tsx:317–729,
+  src/components/crm/ModalRecortarBanner.tsx:336–500,
+  src/components/crm/ImportarGithub.tsx:120–210, src/components/VideoEmbed.tsx:26–80,
+  src/app/styles/editor-perfil.css:1–60.
+  Strings reais desta tela (copiadas dos fontes acima, ≥8):
+  "WORKSPACE CRM" · "ESTUDANTES" · "Ver Crachá Digital" · "Mini-Currículo (A4)" ·
+  "Cartão NFC / Bio" · "Validar Matrícula" · "Página Pública" · "Trocar Banner" ·
+  "Ajuste Automático" · "Recortar & Ajustar" · "Remover" · "estrelas recebidas" ·
+  "LinkedIn Ativo" · "GitHub Ativo" · "Alterações não salvas" · "IDENTIFICAÇÃO" ·
+  "APARÊNCIA" · "REDES PROFISSIONAIS" · "CONTEXTO INSTITUCIONAL" · "Turma Cadastrada" ·
+  "Estrelas Recebidas" · "Projetos Ativos" · "Mídias na Galeria" · "Nível de Permissão" ·
+  "Estudante" · "Dados & Bio" · "Projetos & Criações" · "Estúdio Canva & GIFs" ·
+  "Galeria de Imagens" · "Vídeos" · "Segurança & Conta" · "Dados Cadastrais do Aluno" ·
+  "Informações principais exibidas na vitrine e crachá do SESI" · "Nome Completo *" ·
+  "Seu nome oficial" · "Sala / Turma" ·
+  "Para mudar de turma, fale com o professor ou com o ADM." · "Bio & Apresentação Pessoal" ·
+  "Competências Técnicas" · "Outra competência (ex: Javascript)" · "Adicionar" ·
+  "Insígnias & Conquistas" · "Importar do GitHub" · "Usuário do GitHub" ·
+  "Buscar repositórios" · "Criações & Projetos Cadastrados (1)" ·
+  "Trabalhos escolares, sistemas e criações desenvolvidas na escola" ·
+  "+ Cadastrar Nova Criação" · "Título do Projeto *" · "Ex: Robô Seguidor de Linha FLL" ·
+  "Link da Criação (GitHub, Vercel, Figma)" · "Descrição Resumida" ·
+  "Foto de Capa do Projeto (Estilo Vitrine / OLX)" ·
+  "Arraste uma foto aqui ou escolha do seu computador / celular" ·
+  "ou cole o link direto da imagem" · "https://exemplo.com/foto-do-robo.jpg" ·
+  "Adicionar Projeto à Lista" · "ESTÚDIO CRIATIVO ESTILO CANVA" ·
+  "Personalize seu Perfil & Projetos com Stickers e GIFs" · "1. Onde fixar o sticker/GIF?" ·
+  "Banner do Perfil" · "Sobre um Projeto" · "Selecione o projeto alvo:" ·
+  "2. Galeria de Elementos (Clique para adicionar)" ·
+  "3. Ou adicione seu próprio GIF / Imagem via URL" ·
+  "Nome do elemento (ex: Aranha Pixel)" · "Carregar GIF ou Imagem do PC" · "Ajustar:" ·
+  "Onde fixar este elemento:" · "Tamanho:" · "Rotação:" · "Posição Horizontal (X%):" ·
+  "Posição Vertical (Y%):" · "PRÉVIA INTERATIVA EM TEMPO REAL" ·
+  "Clique em qualquer ponto da tela para posicionar o elemento" ·
+  "Visualização: Banner do Perfil" · "Clique no banner para fixar ou mover aqui" ·
+  "ESTUDANTE SESI · 3ºA" · "SESI SENAI Joinville · Matrícula Validada" ·
+  "Galeria de Fotos & Demonstrações (4)" ·
+  "Mídias que comprovam suas habilidades práticas em bancada e código" ·
+  "+ Adicionar Foto ou GIF à Galeria" · "Origem da Imagem" ·
+  "Cole o link direto da imagem ou GIF..." · "Arquivo Local" ·
+  "Legenda Educacional da Foto" · "Ex: Bancada de teste com microcontrolador ESP32" ·
+  "Incluir na Galeria" · "Vídeos do Perfil (1)" ·
+  "Demonstrações em vídeo publicadas no YouTube ou no Vimeo" ·
+  "Título do vídeo (opcional)" · "+ Adicionar Vídeo" · "Link do Vídeo" ·
+  "Ex: https://www.youtube.com/watch?v=..." · "Alterar Senha de Acesso" ·
+  "Confirme a senha atual e defina uma nova com pelo menos 8 caracteres" · "Senha Atual" ·
+  "Sua senha de hoje, para confirmar que é você" · "Nova Senha" ·
+  "Mínimo 8 caracteres (opcional)" · "Confirmar Nova Senha" ·
+  "Repita a nova senha digitada" · "Alterar Senha" · "Credenciais de Autenticação" ·
+  "Informações técnicas e proteção criptográfica da sua conta" ·
+  "Nome de Usuário (Login)" · "Privilégio da Conta" · "Estudante SESI" ·
+  "E-mail da escola" · "As alterações salvas são refletidas instantaneamente na vitrine
+  da turma e no crachá digital." · "Salvar Todas as Alterações" ·
+  "Recortar & Ajustar Banner" ·
+  "Arraste a imagem ou use os controles para enquadrar perfeitamente no perfil." ·
+  "Clique e arraste para posicionar" · "Aplicar e Salvar Banner" · "Cancelar" ·
+  "Fechar modal de recorte" · "Reproduzir: Vídeo no YouTube" · "Remover vídeo" ·
+  "Editar" · "Excluir projeto" · "Copiar Link" · "Crachá Digital" · "Sair" ·
+  "Portfólio" · "Mural de Desafios" · "Tabelas & Alunos" · "Meu Perfil" · "Painel ADM" ·
+  "Meu Crachá" (CrmApp.tsx:449–553, via galeria).
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Meu Perfil (CRM) — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<style>
+/* no-sistema */
+/* A: a tela é uma só — o logo branco nunca aparece no conceito claro, e o
+   herói (ilha) precisa de âncora para os stickers posicionados. */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+[data-conceito="a"] .ilha-escura { position: relative; }
+[data-conceito="a"] .kbd { padding: 0.15rem 0.45rem; border-radius: var(--raio-sm); background: var(--surface-2); border: 1px solid var(--line); font-family: var(--fonte-mono); font-size: var(--fs-100); color: var(--faint); }
+/* A: tab no DOM do B — container .aba/.aba-lista + botão .aba-item (o .aba
+   do A é o botão; aqui quem pinta a régua é .aba-lista e cada aba é .aba-item) */
+[data-conceito="a"] .aba.aba-lista { border-bottom: 1px solid var(--line); padding: 0; margin-bottom: 0; color: inherit; font: inherit; }
+[data-conceito="a"] .aba-item { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: var(--sp-300) var(--sp-100); font: 600 var(--fs-300)/1 var(--fonte-texto); color: var(--dim); cursor: pointer; }
+[data-conceito="a"] .aba-item:hover { color: var(--text); }
+[data-conceito="a"] .aba-item[aria-selected="true"] { color: var(--link); border-bottom-color: var(--accent-fill); }
+/* no-sistema */
+/* B: o quadro do CRM não tem par no sistema-b (port sugerido em dividas) */
+[data-conceito="b"] .quadro { display: flex; flex-wrap: wrap; align-items: stretch; min-height: 70vh; border: 1px solid var(--line); border-radius: var(--raio-lg); overflow: hidden; }
+[data-conceito="b"] .quadro-corpo { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; }
+[data-conceito="b"] .sidebar-pe { display: flex; align-items: center; gap: var(--sp-200); margin-top: var(--sp-400); padding-top: var(--sp-400); border-top: 1px solid var(--line-soft); }
+[data-conceito="b"] .sidebar-pe strong { display: block; font-size: var(--fs-200); color: var(--text); }
+[data-conceito="b"] .sidebar-pe small { font-size: var(--fs-100); color: var(--faint); }
+/* B: .barra de progresso — CONSOLIDADA no sistema-b §PROGRESSO (dívida 17 §2
+   encerrada no QA 02/10); o fill lê --cor-destaque, que o markup da aba
+   define. Hatch anterior (fill --accent) sobrescrevia o sistema: removido. */
+/* no-sistema */
+/* B: peças do .modal (dívida 17 §1) — mesmo DOM do A */
+[data-conceito="b"] .modal-cabeca { display: flex; align-items: center; gap: var(--sp-300); }
+[data-conceito="b"] .modal-x { margin-left: auto; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--raio-md); color: var(--faint); cursor: pointer; }
+[data-conceito="b"] .modal-x:hover { background: var(--pouso); color: var(--text); }
+[data-conceito="b"] .modal-corpo { display: flex; flex-direction: column; gap: var(--sp-400); }
+[data-conceito="b"] .modal-rodape { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-300); margin-top: var(--sp-500); padding-top: var(--sp-400); border-top: 1px solid var(--line-soft); }
+/* B: .avatar pinta as iniciais em --surface — sobre a ilha escura (e o dark
+   em geral) isso é tinta sobre tinta; o texto volta a ser legível em --text. */
+[data-conceito="b"] .avatar { color: var(--text); }
+/* A: o <small> da marca só é bloco no B; no A o nome sai grudado */
+[data-conceito="a"] .marca-sesi small { display: block; font-size: var(--fs-100); font-weight: 600; letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint); }
+/* primitivos desta tela: ponto de status do avatar e janela do recorte */
+[data-conceito] .ponto-status { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; border-radius: var(--raio-full); background: var(--verde); border: 3px solid var(--bg); box-sizing: border-box; }
+/* rodada 5 (laudo 06-A): mesmo com os stickers recolocados, o "Arcade" roçava o
+   pill "Alterações não salvas" — no A a régua de identidade fica a ~60% da
+   altura do herói. As duas .linha do herói sobem para a camada acima dos
+   stickers (que viram colagem de segundo plano) — zero colisão de texto em
+   qualquer conceito/tema, sem depender de posição percentual. */
+[data-conceito] .ilha-escura > .linha { position: relative; z-index: var(--z-conteudo, 1); }
+[data-conceito] .recorte-janela { position: absolute; inset: 10% 18%; border: 2px dashed color-mix(in oklab, var(--accent) 75%, transparent); border-radius: var(--raio-sm); pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="06-crm-meu-perfil">
+<div class="quadro">
+
+  <!-- ── SIDEBAR CRM (nav real de CrmApp.tsx:449–553) ──────────────────── -->
+  <aside class="sidebar" aria-label="Navegação do CRM">
+    <div class="sidebar-marca">
+      <a class="marca-sesi" href="../index.html">
+        <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+        <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+        <span>Alunos<small>Escola SESI</small></span>
+      </a>
+    </div>
+    <p class="sidebar-sub eyebrow">Área do aluno</p>
+    <nav class="sidebar-nav">
+      <a href="02-crm-portifolio.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        Portfólio
+      </a>
+      <a href="03-crm-projetos.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+        Projetos &amp; Criações
+      </a>
+      <a href="04-crm-desafios.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        Mural de Desafios
+      </a>
+      <a href="05-crm-tabelas.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>
+        Tabelas &amp; Alunos
+      </a>
+      <a href="06-crm-meu-perfil.html" class="nav-item" aria-current="page">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Meu Perfil
+      </a>
+      <a href="07-crm-painel-adm.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+        Painel ADM
+      </a>
+    </nav>
+    <div class="sidebar-rodape">
+      <a href="09-overlay-cracha.html" class="nav-item">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+        Meu Crachá
+      </a>
+      <p class="eyebrow"><span class="kbd">⌘K</span> abre a busca rápida</p>
+    </div>
+    <div class="sidebar-pe">
+      <span class="avatar" style="--cor: var(--ciano); --cor-destaque: var(--ciano)">AD</span>
+      <div><strong>Alice Duarte</strong><small>3ºA · Matrícula 3A26-0041-887</small></div>
+    </div>
+  </aside>
+
+  <div class="quadro-corpo">
+    <div class="pilha" style="padding: clamp(1rem, 3vw, var(--sp-600)); gap: var(--sp-500)">
+
+      <!-- ── BREADCRUMB + AÇÕES DE TOPO (PaginaMeuPerfil.tsx:1013–1084) ──── -->
+      <header class="linha linha-entre">
+        <p class="eyebrow">
+          WORKSPACE CRM&nbsp; <span aria-hidden="true">/</span> &nbsp;ESTUDANTES&nbsp;
+          <span aria-hidden="true">/</span> &nbsp;<strong class="num">Alice Duarte</strong>
+        </p>
+        <div class="linha" style="gap: var(--sp-200)">
+          <button type="button" class="btn btn--secundario btn--pequeno" title="Abrir e baixar crachá digital institucional">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+            <span>Ver Crachá Digital</span>
+          </button>
+          <button type="button" class="btn btn--primario btn--pequeno" title="Gerar Mini-Currículo em formato A4">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            <span>Mini-Currículo (A4)</span>
+          </button>
+          <button type="button" class="btn btn--fantasma btn--pequeno" title="Abrir cartão NFC / Link na Bio">
+            <span>Cartão NFC / Bio</span>
+          </button>
+          <button type="button" class="btn btn--fantasma btn--pequeno" title="Verificar autenticidade oficial da matrícula">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+            <span>Validar Matrícula</span>
+          </button>
+          <button type="button" class="btn btn--fantasma btn--pequeno" title="Abrir portfólio público em nova aba">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+            <span>Página Pública</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ── HERO: banner .ilha-escura editável + stickers do estúdio ───── -->
+      <section class="ilha-escura" style="--cor-destaque: var(--ciano); padding: var(--sp-600); display: flex; flex-direction: column; gap: var(--sp-500)">
+        <div class="linha linha-entre">
+          <span class="badge badge--info">3:1 · 1280×427</span>
+          <div class="linha" style="gap: var(--sp-200)">
+            <button type="button" class="btn btn--secundario btn--pequeno" data-abre="#recorte-banner" title="Escolher uma nova imagem para o banner">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0-4 4m4-4 4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
+              <span>Trocar Banner</span>
+            </button>
+            <button type="button" class="btn btn--secundario btn--pequeno" title="Ajuste automático e enquadramento oficial 3:1 do banner">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15.5l-1.9-4.6L5.5 9l4.6-1.4z"/></svg>
+              <span>Ajuste Automático</span>
+            </button>
+            <button type="button" class="btn btn--secundario btn--pequeno" data-abre="#recorte-banner" title="Recortar e ajustar enquadramento do banner">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+              <span>Recortar &amp; Ajustar</span>
+            </button>
+            <button type="button" class="btn btn--fantasma btn--pequeno" title="Remover banner do perfil">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              <span>Remover</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- stickers do estúdio posicionados sobre o herói (StickerCanvas) -->
+        <!-- Rodada 4 (sweep): os stickers em top 36/54/88% caíam sobre a
+             legenda do banner (88% ≈ última linha da ilha) nos dois conceitos.
+             Banda direita livre entre a régua de botões e o bloco de identidade,
+             longe da caption. -->
+        <span class="olho" title="Foguete / Launch Pixel" style="position:absolute; left:90%; top:26%; width:72px; height:72px; aspect-ratio:1; transform:translate(-50%,-50%) rotate(8deg);">Foguete</span>
+        <span class="olho" title="Pixel Heart 8-bit" style="position:absolute; left:95%; top:42%; width:54px; height:54px; transform:translate(-50%,-50%) rotate(-6deg);">Pixel Heart</span>
+        <span class="olho" title="Retro Arcade / Code" style="position:absolute; left:85%; top:56%; width:60px; height:60px; transform:translate(-50%,-50%) rotate(4deg);">Arcade</span>
+
+        <div class="linha" style="align-items: flex-end; gap: var(--sp-500)">
+          <span class="linha" style="position: relative; width: fit-content">
+            <span class="avatar avatar--xl" style="--cor-destaque: var(--ciano)">AD</span>
+            <span class="ponto-status" title="Online" aria-label="Online"></span>
+          </span>
+          <div class="pilha ocupada" style="gap: var(--sp-200)">
+            <div class="linha" style="gap: var(--sp-200)">
+              <span class="selo selo--validado">Estudante SESI · 3ºA</span>
+              <span class="selo selo--suave">Matrícula validada</span>
+            </div>
+            <h2 style="font-size: var(--fs-800); letter-spacing: -0.03em; margin: 0">Alice Duarte</h2>
+            <div class="linha" style="gap: var(--sp-300)">
+              <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> @alice-duarte</span>
+              <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> 14 estrelas recebidas</span>
+              <span class="badge badge--ok">LinkedIn Ativo</span>
+              <span class="badge badge--ok">GitHub Ativo</span>
+              <span class="badge badge--aviso">Alterações não salvas</span>
+            </div>
+          </div>
+        </div>
+        <p class="legenda" style="color: var(--dim); font-size: var(--fs-300)">Enquadramento panorâmico oficial 3:1 (1280×427px). Formatado automaticamente com opção de ajuste e recorte interativo.</p>
+      </section>
+
+      <!-- ── COLUNAS: identidade | editor de 6 abas ─────────────────────── -->
+      <div class="grade" style="--col-min: 24rem; align-items: start; grid-template-columns: minmax(18rem, 25rem) 1fr">
+
+        <!-- Coluna identidade + ações rápidas -->
+        <div class="pilha">
+
+          <article class="cartao pilha">
+            <p class="eyebrow">IDENTIFICAÇÃO</p>
+            <div class="linha" style="align-items: center; gap: var(--sp-400)">
+              <span class="avatar avatar--lg" style="--cor-destaque: var(--ciano)">AD</span>
+              <div class="pilha-apertada ocupada">
+                <h3 style="margin: 0">Alice Duarte</h3>
+                <div class="linha" style="gap: var(--sp-200)">
+                  <button type="button" class="chip" aria-pressed="true">3ºA <small>4</small></button>
+                  <span class="selo selo--fixado">Destaque da semana</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pilha-apertada">
+              <div class="linha linha-entre">
+                <span class="eyebrow">Bio &amp; Apresentação Pessoal</span>
+                <span class="badge badge--num">103 / 280</span>
+              </div>
+              <textarea class="campo" rows="4" maxlength="280" aria-label="Bio &amp; Apresentação Pessoal">Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</textarea>
+            </div>
+
+            <p class="eyebrow">REDES PROFISSIONAIS</p>
+            <ul class="badge-redes badge-redes--clara">
+              <li><a href="https://github.com/aliceduarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.9a3.4 3.4 0 0 0-.9-2.6c3-.3 6.2-1.5 6.2-6.7A5.2 5.2 0 0 0 19.9 5a4.9 4.9 0 0 0-.1-3.6s-1.2-.3-3.8 1.4a5.2 5.2 0 0 0-5.8 0C7.4 1.1 6.2 1.4 6.2 1.4A4.9 4.9 0 0 0 6.1 5a5.2 5.2 0 0 0-1.4 3.6c0 5.2 3.2 6.4 6.2 6.7A3.4 3.4 0 0 0 12 18v4"/></svg>github.com/aliceduarte</a></li>
+              <li><a href="https://linkedin.com/in/aliceduarte"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-13h4v2a5 5 0 0 1 2-2z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>linkedin.com/in/aliceduarte</a></li>
+              <li><a href="mailto:alice@estudante.sesisenai.org.br"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>alice@estudante.sesisenai.org.br</a></li>
+            </ul>
+
+            <p class="eyebrow">AÇÕES RÁPIDAS</p>
+            <div class="linha" style="gap: var(--sp-200)">
+              <button type="button" class="btn btn--secundario btn--pequeno" data-toast="Link Copiado!" title="Copiar link do portfólio">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copiar Link</span>
+              </button>
+              <button type="button" class="btn btn--secundario btn--pequeno" title="Abrir e baixar crachá digital institucional">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h4"/></svg>
+                <span>Crachá Digital</span>
+              </button>
+              <button type="button" class="btn btn--primario btn--pequeno" title="Gerar Mini-Currículo em formato A4">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                <span>Mini-Currículo (A4)</span>
+              </button>
+              <button type="button" class="btn btn--fantasma btn--pequeno" title="Abrir versão Cartão NFC / Linktree">
+                <span>Cartão NFC / Bio</span>
+              </button>
+            </div>
+            <p class="legenda" style="font-size: var(--fs-200); color: var(--faint)">A imagem é recortada em quadrado pelo centro e reduzida para 256×256 pixels. Vale para a vitrine, a tabela, o cartão e o crachá.</p>
+          </article>
+
+          <article class="cartao pilha">
+            <div class="cartao-cabeca">
+              <h3 style="margin: 0">Insígnias &amp; Conquistas</h3>
+              <span class="badge badge--num">14 ★</span>
+            </div>
+            <p style="font-size: var(--fs-300); color: var(--dim)">Elas vêm das estrelas e dos endossos dos colegas — não se escolhe ter.</p>
+            <div class="pilha-apertada">
+              <div class="linha linha-entre">
+                <span class="forte"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> Primeira Estrela</span>
+                <span class="badge badge--ok">Conquistada</span>
+              </div>
+              <div class="linha linha-entre">
+                <span class="forte">Em Ascensão</span>
+                <span class="badge badge--ok">Conquistada</span>
+              </div>
+              <div class="pilha-apertada" style="margin-top: var(--sp-200)">
+                <div class="linha linha-entre">
+                  <span class="forte">Queridinha da Turma</span>
+                  <span class="badge badge--aviso badge--num">8 ★ de 10 · faltam 2</span>
+                </div>
+                <div class="barra" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso de Queridinha da Turma">
+                  <span class="barra-fill" style="--pct: 80%"></span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="cartao pilha">
+            <p class="eyebrow">CONTEXTO INSTITUCIONAL</p>
+            <div class="pilha-apertada">
+              <div class="linha linha-entre"><span>Turma Cadastrada</span><strong class="num">3ºA</strong></div>
+              <div class="linha linha-entre"><span>Estrelas Recebidas</span><strong class="num">14</strong></div>
+              <div class="linha linha-entre"><span>Projetos Ativos</span><strong class="num">1</strong></div>
+              <div class="linha linha-entre"><span>Mídias na Galeria</span><strong class="num">4</strong></div>
+              <div class="linha linha-entre"><span>Nível de Permissão</span><strong>Estudante</strong></div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Coluna editor: 6 abas reais (PaginaMeuPerfil.tsx:1623–1712) -->
+        <div class="pilha" data-aba-group="perfil">
+          <div class="aba aba-lista" role="tablist" aria-label="Editor do perfil">
+            <button type="button" class="aba-item" role="tab" id="perfil-tab-dados" aria-selected="true" aria-controls="perfil-painel-dados" data-aba="perfil-dados" tabindex="0"><span>Dados &amp; Bio</span></button>
+            <button type="button" class="aba-item" role="tab" id="perfil-tab-projetos" aria-selected="false" aria-controls="perfil-painel-projetos" data-aba="perfil-projetos" tabindex="-1"><span>Projetos &amp; Criações</span> <span class="badge badge--num">1</span></button>
+            <button type="button" class="aba-item" role="tab" id="perfil-tab-estudio" aria-selected="false" aria-controls="perfil-painel-estudio" data-aba="perfil-estudio" tabindex="-1"><span>Estúdio Canva &amp; GIFs</span> <span class="badge badge--num">3</span></button>
+            <button type="button" class="aba-item" role="tab" id="perfil-tab-midias" aria-selected="false" aria-controls="perfil-painel-midias" data-aba="perfil-midias" tabindex="-1"><span>Galeria de Imagens</span> <span class="badge badge--num">4</span></button>
+            <button type="button" class="aba-item" role="tab" id="perfil-tab-videos" aria-selected="false" aria-controls="perfil-painel-videos" data-aba="perfil-videos" tabindex="-1"><span>Vídeos</span> <span class="badge badge--num">1</span></button>
+            <button type="button" class="aba-item" role="tab" id="perfil-tab-conta" aria-selected="false" aria-controls="perfil-painel-conta" data-aba="perfil-conta" tabindex="-1"><span>Segurança &amp; Conta</span></button>
+          </div>
+
+          <!-- ── ABA 1: DADOS & BIO ───────────────────────────────────────── -->
+          <section class="painel-aba pilha" data-aba="perfil-dados" role="tabpanel" id="perfil-painel-dados" aria-labelledby="perfil-tab-dados">
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Dados Cadastrais do Aluno</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Informações principais exibidas na vitrine e crachá do SESI</p>
+              </div>
+              <div class="grade grade-2">
+                <label class="pilha-apertada">
+                  <span class="eyebrow">Nome Completo *</span>
+                  <input class="campo" type="text" value="Alice Duarte" placeholder="Seu nome oficial">
+                </label>
+                <label class="pilha-apertada">
+                  <span class="eyebrow">Sala / Turma</span>
+                  <input class="campo" type="text" value="3ºA" readonly aria-readonly="true">
+                  <small style="color: var(--faint); font-size: var(--fs-200)">Para mudar de turma, fale com o professor ou com o ADM.</small>
+                </label>
+              </div>
+              <div class="pilha-apertada">
+                <div class="linha linha-entre">
+                  <span class="eyebrow">Competências Técnicas</span>
+                  <span class="badge badge--num">4/6</span>
+                </div>
+                <div class="linha">
+                  <button type="button" class="chip" aria-pressed="true">React <small>6</small></button>
+                  <button type="button" class="chip" aria-pressed="true">Next.js</button>
+                  <button type="button" class="chip" aria-pressed="true">Excel</button>
+                  <button type="button" class="chip" aria-pressed="true">Documentação</button>
+                  <button type="button" class="chip" aria-pressed="false">Python</button>
+                  <button type="button" class="chip" aria-pressed="false">SQL</button>
+                  <button type="button" class="chip" aria-pressed="false">Figma</button>
+                  <button type="button" class="chip" aria-pressed="false">n8n</button>
+                  <button type="button" class="chip" aria-pressed="false">Power BI</button>
+                  <button type="button" class="chip" aria-pressed="false">UI Design</button>
+                </div>
+                <p class="legenda" style="font-size: var(--fs-200); color: var(--faint)">Escolha até 6 do que você domina de verdade. As da lista recebem o apoio dos colegas; as que você escrever aparecem no seu perfil do mesmo jeito.</p>
+                <div class="linha">
+                  <input class="campo ocupada" type="text" placeholder="Outra competência (ex: Javascript)" aria-label="Criar nova competência" style="flex: 1 1 auto; min-width: 0">
+                  <button type="button" class="btn btn--secundario">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Adicionar</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ── ABA 2: PROJETOS & CRIAÇÕES ────────────────────────────────── -->
+          <section class="painel-aba pilha" data-aba="perfil-projetos" role="tabpanel" id="perfil-painel-projetos" aria-labelledby="perfil-tab-projetos" hidden>
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Importar do GitHub</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Puxa os repositórios públicos do <strong>seu</strong> perfil do GitHub e transforma em projetos — só os seus, não de outra pessoa. Você escolhe quais entram, e nada é gravado até você salvar o perfil.</p>
+              </div>
+              <label class="pilha-apertada">
+                <span class="eyebrow">Usuário do GitHub</span>
+                <input class="campo" type="text" value="aliceduarte" placeholder="theopadilha2009-hash" autocomplete="off" spellcheck="false">
+              </label>
+              <div class="linha">
+                <button type="button" class="btn btn--primario">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <span>Buscar repositórios</span>
+                </button>
+                <button type="button" class="btn btn--fantasma">Cancelar</button>
+              </div>
+            </article>
+
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Criações &amp; Projetos Cadastrados (1)</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Trabalhos escolares, sistemas e criações desenvolvidas na escola</p>
+              </div>
+              <div class="linha" style="align-items: stretch; gap: var(--sp-400)">
+                <span class="olho" style="width: 132px; aspect-ratio: 4/3; flex: none">capa</span>
+                <div class="pilha-apertada ocupada">
+                  <h4 style="margin: 0; font-size: var(--fs-500)">Portfólio da Turma</h4>
+                  <p style="color: var(--dim); font-size: var(--fs-300)">Next.js + Supabase, vitrine dos alunos.</p>
+                  <a class="badge badge--info" href="https://github.com/aliceduarte" style="width: fit-content; text-decoration: none">github.com/aliceduarte</a>
+                </div>
+                <div class="linha" style="gap: var(--sp-100); align-items: center">
+                  <button type="button" class="btn btn--pequeno btn--secundario" title="Editar informações deste projeto">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L17 10.3l-4 1 1-4z"/></svg>
+                    <span>Editar</span>
+                  </button>
+                  <button type="button" class="btn btn--icone btn--fantasma" title="Excluir projeto" aria-label="Excluir projeto">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <article class="cartao pilha" id="form-projeto-editor">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">+ Cadastrar Nova Criação</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Adicione um projeto escolar com foto de capa e link externo</p>
+              </div>
+              <div class="grade grade-2">
+                <label class="pilha-apertada">
+                  <span class="eyebrow">Título do Projeto *</span>
+                  <input class="campo" type="text" placeholder="Ex: Robô Seguidor de Linha FLL">
+                </label>
+                <label class="pilha-apertada">
+                  <span class="eyebrow">Link da Criação (GitHub, Vercel, Figma)</span>
+                  <input class="campo" type="text" placeholder="https://..." inputmode="url">
+                </label>
+              </div>
+              <label class="pilha-apertada">
+                <span class="eyebrow">Descrição Resumida</span>
+                <textarea class="campo" rows="2" placeholder="Explique o objetivo do projeto, tecnologias utilizadas e resultados..."></textarea>
+              </label>
+              <div class="pilha-apertada">
+                <span class="eyebrow">Foto de Capa do Projeto (Estilo Vitrine / OLX)</span>
+                <div class="vazio" style="padding: var(--sp-600) var(--sp-400)">
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0-4 4m4-4 4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
+                  <p style="font-size: var(--fs-300)">Arraste uma foto aqui ou <strong style="color: var(--accent)">escolha do seu computador / celular</strong></p>
+                  <div class="linha" style="width: 100%; max-width: 420px">
+                    <span class="legenda" style="flex: 1; text-align: right">ou cole o link direto da imagem</span>
+                    <span style="flex: 0 0 auto; width: 40px; height: 1px; background: var(--line)"></span>
+                  </div>
+                  <input class="campo" type="text" placeholder="https://exemplo.com/foto-do-robo.jpg" inputmode="url" style="max-width: 420px">
+                </div>
+              </div>
+              <div class="linha" style="justify-content: flex-end">
+                <button type="button" class="btn btn--primario">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  <span>Adicionar Projeto à Lista</span>
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <!-- ── ABA 3: ESTÚDIO CANVA & GIFS ──────────────────────────────── -->
+          <section class="painel-aba pilha" data-aba="perfil-estudio" role="tabpanel" id="perfil-painel-estudio" aria-labelledby="perfil-tab-estudio" hidden>
+            <article class="cartao pilha">
+              <div>
+                <p class="eyebrow eyebrow--accent">ESTÚDIO CRIATIVO ESTILO CANVA</p>
+                <h3 style="margin: var(--sp-100) 0">Personalize seu Perfil &amp; Projetos com Stickers e GIFs</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Dê vida e personalidade ao seu espaço escolar: adicione GIFs em pixel art, robôs do SESI, insígnias ou cole o GIF do seu personagem favorito (ex: Homem-Aranha) diretamente por cima das suas criações!</p>
+              </div>
+
+              <div class="grade" style="--col-min: 24rem; grid-template-columns: 1fr 1fr">
+                <!-- painel de controles -->
+                <div class="pilha">
+                  <div class="pilha-apertada">
+                    <span class="eyebrow">1. Onde fixar o sticker/GIF?</span>
+                    <div class="linha">
+                      <button type="button" class="chip" aria-pressed="true">Banner do Perfil</button>
+                      <button type="button" class="chip" aria-pressed="false">Sobre um Projeto</button>
+                    </div>
+                    <label class="pilha-apertada">
+                      <span class="eyebrow">Selecione o projeto alvo:</span>
+                      <select class="campo">
+                        <option>Portfólio da Turma</option>
+                        <option>Painho de Resíduos</option>
+                        <option>TriNet</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="pilha-apertada">
+                    <span class="eyebrow">2. Galeria de Elementos (Clique para adicionar)</span>
+                    <div class="linha">
+                      <button type="button" class="chip" aria-pressed="false" title="Adicionar Homem-Aranha Pixel Art">Homem-Aranha Pixel Art</button>
+                      <button type="button" class="chip" aria-pressed="false" title="Adicionar Retro Arcade / Code">Retro Arcade / Code</button>
+                      <button type="button" class="chip" aria-pressed="true" title="Adicionar Foguete / Launch Pixel">Foguete / Launch Pixel</button>
+                      <button type="button" class="chip" aria-pressed="false" title="Adicionar Holograma Cyberpunk">Holograma Cyberpunk</button>
+                      <button type="button" class="chip" aria-pressed="false" title="Adicionar Pixel Heart 8-bit">Pixel Heart 8-bit</button>
+                    </div>
+                  </div>
+                  <div class="pilha-apertada">
+                    <span class="eyebrow">3. Ou adicione seu próprio GIF / Imagem via URL</span>
+                    <input class="campo" type="url" placeholder="https://exemplo.com/homem-aranha-pixel.gif">
+                    <div class="linha">
+                      <input class="campo" type="text" placeholder="Nome do elemento (ex: Aranha Pixel)" style="flex: 1 1 auto; min-width: 0">
+                      <button type="button" class="btn btn--primario btn--pequeno">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                        <span>Adicionar</span>
+                      </button>
+                    </div>
+                    <button type="button" class="btn btn--secundario btn--full" title="Selecionar imagem ou GIF do seu dispositivo">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0-4 4m4-4 4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
+                      <span>Carregar GIF ou Imagem do PC</span>
+                    </button>
+                  </div>
+                  <div class="pilha-apertada">
+                    <div class="linha linha-entre">
+                      <span class="eyebrow">Ajustar: Foguete / Launch Pixel</span>
+                      <button type="button" class="btn btn--fantasma btn--pequeno" title="Remover elemento">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                        <span>Remover</span>
+                      </button>
+                    </div>
+                    <div class="pilha-apertada">
+                      <div class="linha linha-entre"><span>Onde fixar este elemento:</span><strong class="num">Banner</strong></div>
+                      <div class="linha linha-entre"><span>Tamanho:</span><strong class="num">70px</strong></div>
+                      <input type="range" min="30" max="140" value="70" aria-label="Tamanho do sticker" class="ocupada">
+                      <div class="linha linha-entre"><span>Rotação:</span><strong class="num">8°</strong></div>
+                      <input type="range" min="-45" max="45" value="8" aria-label="Rotação do sticker" class="ocupada">
+                      <div class="linha linha-entre"><span>Posição Horizontal (X%):</span><strong class="num">76%</strong></div>
+                      <input type="range" min="0" max="100" value="76" aria-label="Posição horizontal" class="ocupada">
+                      <div class="linha linha-entre"><span>Posição Vertical (Y%):</span><strong class="num">30%</strong></div>
+                      <input type="range" min="0" max="100" value="30" aria-label="Posição vertical" class="ocupada">
+                    </div>
+                    <p style="font-size: var(--fs-200); color: var(--faint)">Clique em um sticker acima ou na visualização ao lado para ajustar tamanho, rotação e posição.</p>
+                  </div>
+                </div>
+
+                <!-- canvas: prévia em tempo real -->
+                <div class="pilha">
+                  <div class="linha linha-entre">
+                    <span class="eyebrow">PRÉVIA INTERATIVA EM TEMPO REAL</span>
+                    <small style="color: var(--faint); font-size: var(--fs-200)">Clique em qualquer ponto da tela para posicionar o elemento</small>
+                  </div>
+                  <div class="linha linha-entre">
+                    <span class="eyebrow">Visualização: Banner do Perfil</span>
+                    <span class="badge badge--info">Clique no banner para fixar ou mover aqui</span>
+                  </div>
+                  <div class="olho" style="--cor-destaque: var(--ciano); position: relative; aspect-ratio: 3/1; border-radius: var(--raio)">
+                    <span class="ilha-escura" style="display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--sp-400) var(--sp-600); border-radius: var(--raio-md)">
+                      <span class="eyebrow" style="font-size: var(--fs-100)">ESTUDANTE SESI · 3ºA</span>
+                      <strong style="font-size: var(--fs-500)">Alice Duarte</strong>
+                      <small style="font-size: var(--fs-100); color: var(--dim)">SESI SENAI Joinville · Matrícula Validada</small>
+                    </span>
+                  </div>
+                  <ul class="pill-list" aria-label="Stickers fixados no banner">
+                    <li>Foguete / Launch Pixel <strong>76×30</strong></li>
+                    <li>Pixel Heart 8-bit <strong>90×64</strong></li>
+                    <li>Retro Arcade / Code <strong>60×74</strong></li>
+                  </ul>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ── ABA 4: GALERIA DE IMAGENS (MÍDIAS) ───────────────────────── -->
+          <section class="painel-aba pilha" data-aba="perfil-midias" role="tabpanel" id="perfil-painel-midias" aria-labelledby="perfil-tab-midias" hidden>
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Galeria de Fotos &amp; Demonstrações (4)</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Mídias que comprovam suas habilidades práticas em bancada e código</p>
+              </div>
+              <div class="grade" style="grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr))">
+                <figure class="cartao cartao--plano pilha-apertada" style="padding: var(--sp-200); margin: 0">
+                  <span class="olho" style="aspect-ratio: 4/3; border-bottom: 0">bancada</span>
+                  <figcaption style="padding: 0 var(--sp-200) var(--sp-200)"><strong style="font-size: var(--fs-200)">Feira de Profissões 2026</strong></figcaption>
+                  <button type="button" class="btn btn--fantasma btn--pequeno" title="Remover mídia" style="align-self: flex-start">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    <span>Remover mídia</span>
+                  </button>
+                </figure>
+                <figure class="cartao cartao--plano pilha-apertada" style="padding: var(--sp-200); margin: 0">
+                  <span class="olho" style="aspect-ratio: 4/3; border-bottom: 0">tela</span>
+                  <figcaption style="padding: 0 var(--sp-200) var(--sp-200)"><strong style="font-size: var(--fs-200)">Deploy da vitrine</strong></figcaption>
+                </figure>
+                <figure class="cartao cartao--plano pilha-apertada" style="padding: var(--sp-200); margin: 0">
+                  <span class="olho" style="aspect-ratio: 4/3; border-bottom: 0">lab</span>
+                  <figcaption style="padding: 0 var(--sp-200) var(--sp-200)"><strong style="font-size: var(--fs-200)">Laboratório novo</strong></figcaption>
+                </figure>
+                <figure class="cartao cartao--plano pilha-apertada" style="padding: var(--sp-200); margin: 0">
+                  <span class="olho" style="aspect-ratio: 4/3; border-bottom: 0">câmera</span>
+                  <figcaption style="padding: 0 var(--sp-200) var(--sp-200)"><strong style="font-size: var(--fs-200)">Gravação do reel</strong></figcaption>
+                </figure>
+              </div>
+            </article>
+
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">+ Adicionar Foto ou GIF à Galeria</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Selecione um arquivo local (comprimido automaticamente) ou informe uma URL</p>
+              </div>
+              <label class="pilha-apertada">
+                <span class="eyebrow">Origem da Imagem</span>
+                <div class="linha">
+                  <input class="campo" type="text" placeholder="Cole o link direto da imagem ou GIF..." style="flex: 1 1 auto; min-width: 0">
+                  <button type="button" class="btn btn--secundario">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0-4 4m4-4 4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
+                    <span>Arquivo Local</span>
+                  </button>
+                </div>
+              </label>
+              <label class="pilha-apertada">
+                <span class="eyebrow">Legenda Educacional da Foto</span>
+                <input class="campo" type="text" placeholder="Ex: Bancada de teste com microcontrolador ESP32">
+              </label>
+              <div class="linha" style="justify-content: flex-end">
+                <button type="button" class="btn btn--primario">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  <span>Incluir na Galeria</span>
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <!-- ── ABA 5: VÍDEOS (VideoEmbed pré-clique) ─────────────────────── -->
+          <section class="painel-aba pilha" data-aba="perfil-videos" role="tabpanel" id="perfil-painel-videos" aria-labelledby="perfil-tab-videos" hidden>
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Vídeos do Perfil (1)</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Demonstrações em vídeo publicadas no YouTube ou no Vimeo</p>
+              </div>
+              <div class="cartao cartao--plano" style="padding: 0; overflow: hidden">
+                <div style="position: relative">
+                  <div class="olho" style="aspect-ratio: 16/9; border: 0; border-radius: 0" role="img" aria-label="Miniatura do vídeo">SESIVITRINE01</div>
+                  <button type="button" class="btn btn--primario" aria-label="Reproduzir: Vídeo no YouTube" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56px; height: 56px; border-radius: var(--raio-full); padding: 0">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l13-7.5z"/></svg>
+                  </button>
+                </div>
+                <div class="linha" style="padding: var(--sp-300) var(--sp-400)">
+                  <input class="campo" type="text" placeholder="Título do vídeo (opcional)" aria-label="Título do vídeo" style="flex: 1 1 auto; min-width: 0">
+                  <button type="button" class="btn btn--icone btn--fantasma" title="Remover vídeo" aria-label="Remover vídeo">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">+ Adicionar Vídeo</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Até 4 vídeos por perfil, sempre por link do YouTube ou do Vimeo</p>
+              </div>
+              <label class="pilha-apertada">
+                <span class="eyebrow">Link do Vídeo</span>
+                <div class="linha">
+                  <input class="campo" type="text" placeholder="Ex: https://www.youtube.com/watch?v=..." inputmode="url" style="flex: 1 1 auto; min-width: 0">
+                  <button type="button" class="btn btn--primario">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Adicionar</span>
+                  </button>
+                </div>
+              </label>
+            </article>
+          </section>
+
+          <!-- ── ABA 6: SEGURANÇA & CONTA ─────────────────────────────────── -->
+          <section class="painel-aba pilha" data-aba="perfil-conta" role="tabpanel" id="perfil-painel-conta" aria-labelledby="perfil-tab-conta" hidden>
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Alterar Senha de Acesso</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Confirme a senha atual e defina uma nova com pelo menos 8 caracteres</p>
+              </div>
+              <label class="pilha-apertada">
+                <span class="eyebrow">Senha Atual</span>
+                <input class="campo" type="password" placeholder="Sua senha de hoje, para confirmar que é você" autocomplete="current-password">
+              </label>
+              <div class="grade grade-2">
+                <label class="pilha-apertada">
+                  <span class="eyebrow">Nova Senha</span>
+                  <input class="campo" type="password" placeholder="Mínimo 8 caracteres (opcional)" autocomplete="new-password">
+                </label>
+                <label class="pilha-apertada">
+                  <span class="eyebrow">Confirmar Nova Senha</span>
+                  <input class="campo" type="password" placeholder="Repita a nova senha digitada" autocomplete="new-password">
+                </label>
+              </div>
+              <div class="linha">
+                <button type="button" class="btn btn--primario">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6z"/></svg>
+                  <span>Alterar Senha</span>
+                </button>
+              </div>
+            </article>
+
+            <article class="cartao pilha">
+              <div>
+                <h3 style="margin: 0 0 var(--sp-100)">Credenciais de Autenticação</h3>
+                <p style="color: var(--dim); font-size: var(--fs-300)">Informações técnicas e proteção criptográfica da sua conta</p>
+              </div>
+              <div class="pilha-apertada">
+                <div class="linha linha-entre"><span>Nome de Usuário (Login)</span><strong>@alice-duarte</strong></div>
+                <div class="linha linha-entre"><span>Privilégio da Conta</span><strong>Estudante SESI</strong></div>
+                <div class="linha linha-entre"><span>E-mail da escola</span><strong>alice@estudante.sesisenai.org.br</strong></div>
+              </div>
+              <div class="vazio" style="padding: var(--sp-400); text-align: left">
+                <p style="font-size: var(--fs-200)">Sua conta possui acesso protegido por hash criptográfico Argon2id e sessão com cookie HttpOnly de integridade estrita.</p>
+              </div>
+              <div class="linha linha-entre">
+                <p class="legenda" style="font-size: var(--fs-200); color: var(--faint)">Encerrar a sessão neste navegador.</p>
+                <button type="button" class="btn btn--perigo btn--pequeno">Sair</button>
+              </div>
+            </article>
+          </section>
+
+          <!-- barra de salvar do editor -->
+          <article class="cartao linha linha-entre">
+            <p style="font-size: var(--fs-300); color: var(--dim)">As alterações salvas são refletidas instantaneamente na vitrine da turma e no crachá digital.</p>
+            <button type="button" class="btn btn--primario">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+              <span>Salvar Todas as Alterações</span>
+            </button>
+          </article>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de recorte (estado fechada; "Trocar Banner"/"Recortar & Ajustar" abrem
+     via data-abre do moldura.js, Esc/botões fecham — funcional, não decorativa) -->
+<div class="modal" id="recorte-banner" role="dialog" aria-modal="true" aria-labelledby="recorte-titulo">
+  <div class="modal-caixa modal-painel">
+    <div class="modal-cabeca">
+      <h2 id="recorte-titulo" style="margin: 0">Recortar &amp; Ajustar Banner</h2>
+      <button type="button" class="modal-x" data-fecha aria-label="Fechar modal de recorte">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-corpo">
+      <p>Arraste a imagem ou use os controles para enquadrar perfeitamente no perfil.</p>
+      <div style="position: relative">
+        <div class="olho" style="aspect-ratio: 16/5" role="img" aria-label="Imagem do banner">Clique e arraste para posicionar</div>
+        <div class="recorte-janela" aria-hidden="true"></div>
+      </div>
+      <div class="linha linha-entre">
+        <span class="eyebrow">Proporção oficial 3:1</span>
+        <button type="button" class="btn btn--secundario btn--pequeno" title="Centralizar e redefinir o enquadramento na proporção oficial 3:1">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15.5l-1.9-4.6L5.5 9l4.6-1.4z"/></svg>
+          <span>Ajuste Automático</span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-rodape">
+      <button type="button" class="btn btn--secundario" data-fecha>Cancelar</button>
+      <button type="button" class="btn btn--primario">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        <span>Aplicar e Salvar Banner</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

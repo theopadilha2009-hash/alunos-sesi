@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 · Validar matrícula — Redesign alunos-sesi</title>
+<!-- fontes: Google Fonts com fallback (Plus Jakarta Sans p/ A; Bricolage Grotesque
+     + Manrope p/ B) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<!-- fontes reais desta tela (para o gate de fidelidade):
+     src/app/validar/[slug]/page.tsx — todo o documento:
+       metadata.title "Verificação Oficial: {nome} | SESI SENAI Joinville" (usado como
+         aria-label do ofício) e metadata.description "Validação criptográfica de
+         matrícula ativa de {nome} na Escola SESI SENAI Joinville - SC." (linha Assunto),
+         robots index:false (nota do rodapé);
+       timbre: "SISTEMA FIESC · SESI SENAI" / "ESCOLA SESI JOINVILLE · SANTA CATARINA" /
+         "AUTENTICAÇÃO PÚBLICA DIGITAL";
+       banner: "MATRÍCULA VALIDADA · ESTUDANTE ATIVO" /
+         "Estudante Ativo e Matriculado no SESI SC · Unidade Joinville" /
+         "O crachá e a identidade digital deste estudante foram autenticados com sucesso
+          na base de dados acadêmica oficial do SESI SENAI Joinville para o Ano Letivo
+          2026.";
+       ficha: "Joinville · SC", "Canais Oficiais do Estudante:", "Número de Registro /
+         Matrícula", "Situação Escolar", "Regular · Frequência Ativa", "Unidade de
+         Ensino", "Escola SESI SENAI Joinville (SC)", "Ano Letivo Vigente",
+         "2026 · Formação Técnica & Ensino Médio", "Validação Realizada em",
+         "{data} às {hora}" (toLocaleDateString/Time pt-BR), "Reconhecimentos &
+         Estrelas", "{n} estrelas recebidas", os pills condicionais "Fixado"/"Destaque"
+         (a Alice não tem cargo → não são renderizados, mesmo critério de 09 §7);
+       rodapé: "CÓDIGO DE INTEGRIDADE (HMAC-SHA256)" +
+         "SESI-SC-JVE-AUTH-{codigoDeIntegridade}" e os três botões literais
+         "Acessar Portfólio Completo" / "Cartão Rápido NFC / Link na Bio" /
+         "← Ver a turma";
+     src/app/styles/cracha-digital.css:5-298 — validar-documento-layout (radial
+       topo→fundo), validar-conteudo-box (caixa 760px), selo-verde-icone-pulsante
+       (bloco verde com halo), validar-pill-sala (cor da sala), validar-aluno-bio
+       (caixa escura), validar-grade-dados (rótulo micro-caixa-alta + valor),
+       matricula-mono/status-regular/estrela-destaque, seguranca-hash-wrap (borda
+       tracejada);
+     src/components/RedesBadges.tsx:87-178 — "LinkedIn" (title "Acessar LinkedIn",
+       aria "LinkedIn de {nome}"), "GitHub" (title "Acessar GitHub ({handle})"),
+       e-mail institucional inteiro (title "Enviar e-mail para {email}"); Instagram
+       ausente no perfil da Alice → o fonte simplesmente não renderiza o badge;
+     src/lib/integridade.ts:4-34 — o código é HMAC-SHA256 de `id|slug|nome` com a
+       chave mestra (propósito "documento"), 32 hex maiúsculos, só no servidor;
+     src/lib/identidade.ts:36-80 — PREFIXO "SESI-SC-JVE" e matrícula derivada
+       (o valor literal exibido é o de CONTEUDO.md: 3A26-0041-887);
+     botões do fonte eram botao-primario/botao-secundario/botao-fraco → mapeados
+       para btn--primario / btn--secundario / btn--fantasma. -->
+<style>
+/* no-sistema */
+/* ── 1. OFÍCIO — os sistemas desenham produto, não documento ───────────────
+   Não existe primitivo "papel oficial": nem filete de segurança fora da
+   .ilha-escura do B, nem textura, nem carimbo. Propostas em
+   dividas/13-validar.md §1/§2. Só var()/color-mix(), como exige o contrato. */
+[data-conceito] [data-oficio] {
+  position: relative;
+  width: min(100%, 48rem);
+  padding: var(--sp-600);
+  border-width: 1px;
+  border-color: color-mix(in oklab, var(--text) 10%, var(--line));
+  background-image:
+    repeating-linear-gradient(135deg,
+      color-mix(in oklab, var(--cor-destaque) 5%, transparent) 0 1px,
+      transparent 1px 10px),
+    radial-gradient(120% 90% at 100% 0%,
+      color-mix(in oklab, var(--vermelho-sesi) 7%, transparent), transparent 62%);
+}
+[data-oficio]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: var(--raio) var(--raio) 0 0;
+  background: linear-gradient(90deg, var(--ciano), var(--verde), var(--amarelo), var(--vermelho-sesi));
+}
+[data-oficio] > * { position: relative; z-index: var(--z-conteudo); }
+[data-conceito] [data-oficio] h1 { font-size: var(--fs-600); line-height: var(--lh-apertado); letter-spacing: -0.02em; margin-bottom: var(--sp-100); }
+[data-conceito] [data-oficio] h2 { font-size: var(--fs-600); letter-spacing: -0.02em; margin: 0; }
+[data-conceito] [data-oficio] h3 { font-size: var(--fs-500); }
+
+/* ── 2. TIMBRE — a classe .topo é chrome de site (sticky + backdrop); aqui
+      ela veste o cabeçalho do ofício, então perde a fixação. */
+[data-conceito] [data-timbre] {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-300) var(--sp-500);
+  padding: 0 0 var(--sp-400);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1.5px solid color-mix(in oklab, var(--text) 14%, var(--line));
+}
+[data-timbre] .marca-sesi { align-items: center; text-align: left; }
+/* A sigla FIESC é vermelha no fonte (--vermelho-sesi). Misturada em --text ela
+   clareia no tema escuro e escurece no claro: o vermelho institucional puro dá
+   4,9:1 sobre o papel, mas só 3,7:1 sobre --surface do B escuro (dívida §4). */
+[data-timbre] .marca-sesi strong {
+  font-size: var(--fs-100);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--vermelho-sesi) 72%, var(--text));
+}
+/* No A não existe escolha de logo por tema (só o B define .logo-modo-*): sem
+   esta linha o ofício sairia com as duas rosetas lado a lado. */
+[data-conceito="a"] .logo-modo-dark { display: none; }
+
+/* ── 3. BANNER DE SELAÇÃO — .ilha-escura local (a peça física escura do
+      documento, idêntica nos dois conceitos) + o pulso do ícone. */
+[data-conceito] [data-banner] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-300);
+  padding: var(--sp-500) var(--sp-600);
+  border-radius: var(--raio-md);
+}
+[data-conceito="a"] [data-banner]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  border-radius: var(--raio-md) var(--raio-md) 0 0;
+  background: linear-gradient(90deg, var(--ciano), var(--verde), var(--amarelo), var(--vermelho-sesi));
+}
+/* Na ilha do A o --dim não é re-mapeado (só o B remapeia tokens dentro da
+   .ilha-escura), então corpo sobre --night precisaria de tinta clara pormix —
+   o mesmo var()/fallback resolve os dois conceitos com uma linha. */
+[data-banner] p {
+  max-width: 62ch;
+  font-size: var(--fs-300);
+  color: color-mix(in oklab, var(--dim) 45%, var(--ilha-text, var(--ilha-texto)));
+}
+/* O verde do selo perde nos dois conceitos sem isto: no B, `.ilha-escura .selo`
+   (0,3,0) vence `.selo--validado` (0,2,0) e pinta a pílula de ciano; no A a
+   variante não existe e o `.selo` base usa --link (azul escuro) sobre a ilha.
+   Registrado em dividas/13-validar.md §2. */
+[data-conceito] .ilha-escura .selo--validado {
+  border-color: color-mix(in oklab, var(--verde) 65%, transparent);
+  background: color-mix(in oklab, var(--verde) 18%, transparent);
+  color: color-mix(in oklab, var(--verde) 62%, white);
+}
+[data-selo-pulso] {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  flex: none;
+  border-radius: var(--raio-md);
+  background: color-mix(in oklab, var(--verde) 82%, black);
+  color: color-mix(in oklab, var(--verde) 28%, white);
+  box-shadow: 0 0 22px -2px color-mix(in oklab, var(--verde) 45%, transparent);
+}
+[data-selo-pulso]::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: calc(var(--raio-md) + 6px);
+  border: 2px solid color-mix(in oklab, var(--verde) 55%, transparent);
+  animation: validar-pulso 2.6s var(--ease) infinite;
+}
+@keyframes validar-pulso {
+  0%   { transform: scale(0.92); opacity: 0.9; }
+  70%  { transform: scale(1.12); opacity: 0; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+
+/* ── 4. FICHA ─────────────────────────────────────────────────────────────
+   badge de sala com a cor da sala (o fonte tem .validar-pill-sala; os sistemas
+   só têm badge semântico — dívida §3) e o par de linhas da grade de dados. */
+[data-conceito] [data-pill-sala] {
+  background: color-mix(in oklab, var(--cor-destaque) 18%, var(--surface));
+  border-color: color-mix(in oklab, var(--cor-destaque) 48%, transparent);
+  color: color-mix(in oklab, var(--cor-destaque) 62%, var(--text));
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+[data-conceito] [data-bio] {
+  padding: var(--sp-300) var(--sp-400);
+  border-radius: var(--raio-md);
+  border-left: 3px solid var(--cor-destaque);
+  background: color-mix(in oklab, var(--text) 5%, transparent);
+  color: var(--dim);
+  font-size: var(--fs-300);
+}
+[data-conceito] [data-ficha] .eyebrow { margin: 0; letter-spacing: 0.06em; }
+[data-ficha] { min-width: 30rem; }
+[data-ficha] td:first-child { width: 42%; }
+
+/* ── 5. LACRE + CARIMBO — a assinatura do documento. */
+[data-conceito] [data-lacre] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-100);
+  padding: var(--sp-300) var(--sp-400);
+  border-radius: var(--raio-md);
+  border: 1.5px dashed color-mix(in oklab, var(--text) 22%, var(--line));
+  background: color-mix(in oklab, var(--surface-2) 70%, transparent);
+  flex: 1 1 20rem;
+}
+[data-lacre] .eyebrow { margin: 0; }
+[data-conceito] [data-carimbo] {
+  flex-direction: column;
+  gap: var(--sp-100);
+  padding: var(--sp-300) var(--sp-500);
+  border-width: 2px;
+  border-color: color-mix(in oklab, var(--ok) 55%, var(--line));
+  background: color-mix(in oklab, var(--ok) 9%, transparent);
+  color: color-mix(in oklab, var(--ok) 62%, var(--text));
+  text-align: center;
+  line-height: 1.35;
+  transform: rotate(-4deg);
+  outline: 1.5px solid color-mix(in oklab, var(--ok) 40%, transparent);
+  outline-offset: 4px;
+}
+[data-conceito="b"] .selo--lacre {
+  flex-direction: column;
+  border-radius: var(--raio-lg);
+  padding: var(--sp-300) var(--sp-500);
+  border-width: 2px;
+  text-align: center;
+  gap: var(--sp-100);
+}
+
+/* ── 6. ESPELHOS DE NOMENCLATURA (dívidas 17/11 — consolidar lá, não aqui) ──
+   .cartao-nota e .avatar--lg são do A. Sem o espelho, o B renderiza a nota e as
+   iniciais como texto solto (e pinta o .avatar em --surface sobre a folha). */
+[data-conceito="b"] .cartao-nota {
+  margin-top: var(--sp-200);
+  padding-top: var(--sp-300);
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--fs-200);
+  color: var(--faint);
+}
+[data-conceito="a"] .avatar--lg { width: 5.5rem; height: 5.5rem; font-size: var(--fs-600); }
+[data-conceito="b"] .avatar { color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-selo-pulso]::after { animation: none; opacity: 0.5; }
+}
+@media (max-width: 40rem) {
+  [data-conceito] [data-oficio] { padding: var(--sp-500) var(--sp-400); }
+  [data-ficha] { min-width: 0; font-size: var(--fs-200); }
+  [data-ficha] td:first-child { width: 40%; }
+  [data-conceito] [data-banner] { padding: var(--sp-400); }
+}
+</style>
+</head>
+<body>
+<div class="palco">
+  <main class="tela" data-tela="13-validar" style="--cor-destaque: var(--ciano)">
+
+    <div class="wrap linha" style="align-items: flex-start; gap: var(--sp-500); padding-block: var(--sp-600)">
+
+      <!-- ══ OFÍCIO DE VALIDAÇÃO (page.tsx:58-178) ═══════════════════════ -->
+      <article class="cartao pilha ocupada" data-oficio style="flex: 1 1 30rem"
+               aria-label="Verificação Oficial: Alice Duarte | SESI SENAI Joinville">
+
+        <!-- Timbre institucional (validar-cabecalho-oficial) -->
+        <header class="topo" data-timbre>
+          <span class="marca-sesi">
+            <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+            <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+            <span class="pilha pilha-apertada" style="align-items: flex-start; gap: var(--sp-50)">
+              <strong>SISTEMA FIESC · SESI SENAI</strong>
+              <span class="eyebrow">ESCOLA SESI JOINVILLE · SANTA CATARINA</span>
+            </span>
+          </span>
+          <span class="selo">AUTENTICAÇÃO PÚBLICA DIGITAL</span>
+        </header>
+
+        <p class="eyebrow" style="margin: 0">Assunto</p>
+        <p style="font-size: var(--fs-300); color: var(--dim); max-width: 62ch">Validação criptográfica de matrícula ativa de Alice Duarte na Escola SESI SENAI Joinville - SC.</p>
+
+        <!-- Selo verde pulsante (validar-selo-ativo-banner) — a ilha escura local -->
+        <section class="ilha-escura" data-banner aria-label="Selo de matrícula validada">
+          <div class="linha" style="gap: var(--sp-500); align-items: flex-start">
+            <span data-selo-pulso aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <div class="pilha pilha-apertada ocupada">
+              <span class="selo selo--validado">MATRÍCULA VALIDADA · ESTUDANTE ATIVO</span>
+              <h1 style="margin: 0">Estudante Ativo e Matriculado no SESI SC · Unidade Joinville</h1>
+              <p style="margin: 0">O crachá e a identidade digital deste estudante foram autenticados com sucesso na base de dados acadêmica oficial do SESI SENAI Joinville para o Ano Letivo 2026.</p>
+            </div>
+          </div>
+          <div class="linha" style="gap: var(--sp-200)">
+            <span class="badge badge--ok">assinatura HMAC-SHA256 conferida</span>
+            <span class="badge badge--info">emissão server-side</span>
+            <span class="badge">não indexável</span>
+          </div>
+        </section>
+
+        <!-- Ficha do estudante (validar-ficha-card) -->
+        <section class="pilha" style="gap: var(--sp-300)">
+          <div class="linha" style="gap: var(--sp-400); align-items: center">
+            <span class="avatar avatar--lg" aria-hidden="true">AD</span>
+            <div class="pilha pilha-apertada ocupada" style="align-items: flex-start">
+              <h2 style="margin: 0">Alice Duarte</h2>
+              <div class="linha" style="gap: var(--sp-200)">
+                <span class="badge" data-pill-sala>3ºA</span>
+                <span class="eyebrow">Joinville · SC</span>
+              </div>
+            </div>
+          </div>
+
+          <p data-bio>Terceiro ano, foco em front-end. Fiz o portfólio da turma em Next.js e ensino planilha pra quem quiser.</p>
+
+          <!-- Os 6 campos da grade, agora como .tabela (rótulo → valor) -->
+          <div class="corte">
+            <table class="tabela" data-ficha>
+              <caption>Dados oficiais da matrícula · lidos da base acadêmica no instante da validação</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Campo do registro</th>
+                  <th scope="col">Valor declarado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><p class="eyebrow">Número de Registro / Matrícula</p></td>
+                  <td><code>3A26-0041-887</code> <small>derivada de id + slug</small></td>
+                </tr>
+                <tr>
+                  <td><p class="eyebrow">Situação Escolar</p></td>
+                  <td><span class="badge badge--ok">Regular · Frequência Ativa</span></td>
+                </tr>
+                <tr>
+                  <td><p class="eyebrow">Unidade de Ensino</p></td>
+                  <td>Escola SESI SENAI Joinville (SC)</td>
+                </tr>
+                <tr>
+                  <td><p class="eyebrow">Ano Letivo Vigente</p></td>
+                  <td>2026 · Formação Técnica &amp; Ensino Médio</td>
+                </tr>
+                <tr>
+                  <td><p class="eyebrow">Validação Realizada em</p></td>
+                  <td>02 de outubro de 2026 às 14:32 <small>horário de Brasília</small></td>
+                </tr>
+                <tr>
+                  <td><p class="eyebrow">Reconhecimentos &amp; Estrelas</p></td>
+                  <td>
+                    <span class="badge badge--aviso badge--num">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      14 estrelas recebidas
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Fonte</td>
+                  <td>base de dados acadêmica oficial do SESI SENAI Joinville</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Redes conectadas (validar-redes-bloco) -->
+          <div class="pilha pilha-apertada" style="padding-top: var(--sp-200); border-top: 1px solid var(--line-soft)">
+            <p class="eyebrow" style="margin: 0">Canais Oficiais do Estudante:</p>
+            <div class="badge-redes badge-redes--clara">
+              <a class="badge-linkedin" href="https://linkedin.com/in/aliceduarte" title="Acessar LinkedIn" aria-label="LinkedIn de Alice Duarte">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.45a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z"/></svg>
+                LinkedIn
+              </a>
+              <a class="badge-github" href="https://github.com/aliceduarte" title="Acessar GitHub (aliceduarte)" aria-label="GitHub de Alice Duarte">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                GitHub
+              </a>
+              <a class="badge-email" href="mailto:alice@estudante.sesisenai.org.br" title="Enviar e-mail para alice@estudante.sesisenai.org.br" aria-label="E-mail institucional de Alice Duarte">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m3 7 8.4 5.6a1 1 0 0 0 1.2 0L21 7"/></svg>
+                alice@estudante.sesisenai.org.br
+              </a>
+            </div>
+            <p class="cartao-nota">Instagram: não declarado no perfil — o fonte omite o badge em vez de desenhar um canal vazio. Os pills "Fixado"/"Destaque" também não aparecem: a Alice não tem cargo.</p>
+          </div>
+        </section>
+
+        <!-- Lacre + carimbo + navegação (validar-seguranca-footer) -->
+        <section class="pilha" style="gap: var(--sp-400); padding-top: var(--sp-300); border-top: 1.5px solid color-mix(in oklab, var(--text) 14%, var(--line))">
+          <div class="linha" style="align-items: flex-end; gap: var(--sp-400)">
+            <div data-lacre>
+              <span class="eyebrow">CÓDIGO DE INTEGRIDADE (HMAC-SHA256)</span>
+              <code>SESI-SC-JVE-AUTH-a3f9…c1d2</code>
+              <small>32 hex maiúsculos cortados do HMAC de <code>id|slug|nome</code></small>
+            </div>
+            <span class="selo selo--lacre" data-carimbo>Matrícula validada<br>Estudante ativo</span>
+          </div>
+
+          <div class="linha" style="gap: var(--sp-300)">
+            <a class="btn btn--primario" href="#" title="Abrir o portfólio completo">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Acessar Portfólio Completo
+            </a>
+            <a class="btn btn--secundario" href="#" title="Cartão NFC / link na bio">Cartão Rápido NFC / Link na Bio</a>
+            <a class="btn btn--fantasma" href="../index.html">← Ver a turma</a>
+          </div>
+        </section>
+      </article>
+
+      <!-- ══ COLUNA LATERAL — o que o documento prova, e quando ele não existe ══ -->
+      <aside class="pilha" style="flex: 1 1 16rem; max-width: 22rem; gap: var(--sp-400)">
+
+        <article class="cartao pilha-apertada">
+          <p class="eyebrow eyebrow--accent" style="margin: 0">O que este código prova</p>
+          <div class="linha" style="gap: var(--sp-200); align-items: flex-start">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 0.2rem; color: var(--ok)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 11.5 2 2 4-4"/></svg>
+            <p style="font-size: var(--fs-300); color: var(--dim); margin: 0">É HMAC de <code>id|slug|nome</code> assinado com a chave mestra do app (propósito <code>documento</code>) — um <code>sha256(nome)</code> público jamais daria isso.</p>
+          </div>
+          <div class="linha" style="gap: var(--sp-200); align-items: flex-start">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 0.2rem; color: var(--ok)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 11.5 2 2 4-4"/></svg>
+            <p style="font-size: var(--fs-300); color: var(--dim); margin: 0">Mudou o nome, mudou o código. Antes era o <code>id</code> do aluno cortado em 32 caracteres: um selo que não reagia à única coisa que protegia.</p>
+          </div>
+          <div class="linha" style="gap: var(--sp-200); align-items: flex-start">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 0.2rem; color: var(--ok)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 11.5 2 2 4-4"/></svg>
+            <p style="font-size: var(--fs-300); color: var(--dim); margin: 0">Sem a chave, não se forja — e ela só existe no servidor: <code>node:crypto</code> não chega ao navegador.</p>
+          </div>
+          <p class="cartao-nota">Rota com <code>robots: index: false</code>: o documento existe para ser mostrado a alguém, não para ser encontrado na busca — indexar aqui publicaria nome e matrícula.</p>
+        </article>
+
+        <div class="metrica">
+          <span>1º no Hall da Fama</span>
+          <b>14</b>
+          <small>estrelas recebidas · sala 3ºA</small>
+        </div>
+
+        <article class="vazio">
+          <p class="eyebrow" style="margin: 0">Estado: documento não emitido</p>
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9.5 9.5l5 5m0-5-5 5"/></svg>
+          <b>Quem não foi aprovado não valida</b>
+          <p>Um pendente da fila (Rafael Kuntz, Iasmin Bonilha, Nathan Prado) recebe 404, não "em análise": a rota só assina documento depois da moderação.</p>
+          <a class="btn btn--secundario btn--pequeno" href="../index.html">← Ver a turma</a>
+        </article>
+      </aside>
+    </div>
+
+    <footer class="rodape">
+      <div class="linha" style="justify-content: center">
+        <a href="../index.html">Escola SESI · Formando desenvolvedores para o futuro.</a>
+      </div>
+      <p class="eyebrow" style="margin: 0">SESI SC · JOINVILLE · documento 3A26-0041-887 emitido em 02 de outubro de 2026 às 14:32</p>
+    </footer>
+  </main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>

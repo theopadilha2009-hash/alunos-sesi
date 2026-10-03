@@ -1,0 +1,795 @@
+/* ==========================================================================
+   sistema-a.css — CONCEITO A: a disciplina visual da casa VAMOO aplicada ao
+   produto (spec ~/.claude/docs/design-system-vamoo.md, chrome medido na
+   Leadster 17/09/2026). Conceito CLARO: ignora data-theme. Todo seletor vive
+   sob [data-conceito="a"]; cor literal só no bloco :root abaixo — fora dele,
+   apenas var()/color-mix(). Contrato: design/PADROES.md.
+   Calibragem de acabamento: Desktop/redesign-vamoo/{Painel,Botoes}.html.
+   ========================================================================== */
+
+/* ---------- 1. TOKENS (únicos com cor literal) --------------------------- */
+:root[data-conceito="a"] {
+  /* paleta base da casa — quatro cores fixas, resto derivado */
+  --papel: #ffffff;          /* folha A4 e card: papel branco SEMPRE, mesmo "no escuro" */
+  --papel-frio: #fcfcfc;     /* fundo do sistema (spec §1 --paper) */
+  --tinta: #000000;          /* títulos e CTA de marketing (spec §1 --ink) */
+  --tinta-2: #677294;        /* corpo — o corpo não é preto (AA 5,2:1 sobre #ffffff) */
+  --tinta-3: #97a3b7;        /* metadado/legenda; NUNCA em corpo longo */
+  --night: #05070a;          /* faixa escura: crachá, NFC, cta-band */
+
+  /* semânticos de superfície */
+  --bg: var(--papel-frio);
+  --surface: var(--papel);
+  --surface-2: #f5f7fb;      /* corpo de admin, código inline */
+  --surface-3: #eef1f6;      /* trilho de segmentado, chip de admin */
+  --thead: #f8fafc;          /* thead da tabela (Tabler medido) */
+  --text: var(--tinta);
+  --dim: var(--tinta-2);
+  --faint: var(--tinta-3);
+  --line: #e6e8ec;           /* borda visível */
+  --line-soft: rgb(24 36 51 / 0.06);
+  --trilho: #f0f2f5;         /* barra de progresso, trilho de skeleton */
+
+  /* acento — nota de contraste da spec: #007dff com branco dá 3,9:1 (reprova);
+     o preenchimento cheio desce para #0063cc (5,7:1). Texto/ícone/borda
+     ficam no accent; botão/tag/nav ativo usam accent-fill. */
+  --cor-destaque: #007dff;
+  --destaque-sala: var(--cor-destaque);
+  --destaque-turma: var(--cor-destaque);
+  --destaque-tag: var(--cor-destaque);
+  --destaque-filtro: var(--cor-destaque);
+  --accent: var(--cor-destaque);
+  --accent-fill: #0063cc;
+  --accent-hover: #0057b4;
+  --accent-soft: rgb(0 125 255 / 0.07);
+  --on-accent: #ffffff;
+  --glow: rgb(0 125 255 / 0.1);  /* a onda do hero — único gradiente do sistema */
+  --link: #0050a6;               /* link de produto: AA 7,9:1 sobre branco */
+  --link-hover: #00407f;
+
+  /* paleta SESI tratada como DADO (salas/cor de perfil), não como tema */
+  --ciano: #3FC2BC;          /* sala 3ºA */
+  --verde: #38B95D;          /* sala 3ºB */
+  --amarelo: #F3B544;        /* sala 4ºA */
+  --vermelho: #D74D42;       /* sala 5ºA */
+  --azul-claro: #4881AE;     /* override cor_perfil — Luana */
+  --petroleo: #2D929E;       /* override cor_perfil — Enzo */
+  --vermelho-sesi: #E30613;
+  --azul-sesi: #02609E;
+  --azul: #02609E;          /* alias do nome do elenco (PALETA SESI como dado) */
+
+  /* badges pastel — fundo claro + texto escuro (todos AA: medidos ≥ 4,5:1) */
+  --ok-fundo: #e6f6ee;   --ok-texto: #067647;
+  --aviso-fundo: #fef0dc; --aviso-texto: #93370d;
+  --perigo-fundo: #fbe6e4; --perigo-texto: #b42318;
+  --info-fundo: #ebf3fc;  --info-texto: #0050a6;
+  --perigo-fill: #b42318; /* botão de exclusão: branco sobre ele dá 5,8:1 */
+
+  /* ilha escura — os brancos translúcidos do bloco night */
+  --ilha-texto: #f8fafc;
+  --ilha-faint: rgb(248 250 252 / 0.62);
+  --ilha-line: rgb(255 255 255 / 0.12);
+  --ilha-fill: rgb(255 255 255 / 0.07);
+  /* espelhos da família --ilha-* do B (QA 09-A: o filete/deck do crachá usam
+     estes nomes; sem eles, background/gradiente viravam IACVT → ilha
+     transparente com texto branco sobre papel = "verso branco no branco"). */
+  --ilha-bg: var(--night);
+  --ilha-surface: color-mix(in oklab, var(--ilha-texto) 7%, var(--night));
+  --ilha-surface-2: color-mix(in oklab, var(--ilha-texto) 12%, var(--night));
+  --ilha-text: var(--ilha-texto);
+  --ilha-dim: var(--ilha-faint);
+  --ilha-line-soft: rgb(255 255 255 / 0.05);
+  --ilha-accent: var(--accent-fill);
+  --ilha-glow: color-mix(in oklab, var(--accent) 30%, transparent);
+  --z-conteudo: 1;
+  /* aliases --ok-fg/--ok-bg (nomes do B; hatches 09/13 os referenciam) */
+  --ok-fg: var(--ok-texto);
+  --ok-bg: var(--ok-fundo);
+
+  /* estado desabilitado */
+  --desab-fill: #f0f2f5;
+  --desab-texto: #97a3b7;
+
+  /* fontes — família única (spec §3) */
+  --fonte-titulo: "Plus Jakarta Sans", system-ui, sans-serif;
+  --fonte-texto: "Plus Jakarta Sans", system-ui, sans-serif;
+  --fonte-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* escala tipográfica fluida (clamp — sem media query de fonte)
+     100: eyebrow/micro · 400: corpo · 700: h2 de seção · 900: h1 hero */
+  --fs-100: 0.7rem;
+  --fs-200: 0.8rem;
+  --fs-300: 0.875rem;
+  --fs-400: 1rem;
+  --fs-500: clamp(1.05rem, 1.3vw, 1.25rem);
+  --fs-600: clamp(1.35rem, 2.1vw, 1.75rem);
+  --fs-700: clamp(1.75rem, 3.6vw, 2.75rem);   /* h2 seção: 28→44, peso 500, -5% */
+  --fs-800: clamp(2.1rem, 4.4vw, 3.25rem);
+  --fs-900: clamp(2.5rem, 5.4vw, 4rem);       /* h1 hero: 40→64, peso 500, -5% */
+  --fs-gigante: clamp(4.5rem, 14vw, 12.5rem); /* métrica gigante da faixa, peso 800 */
+  --lh-corpo: 1.5;
+  --lh-titulo: 1;
+  --tracking-titulo: -0.05em;                 /* o ar vem do tamanho, não do peso */
+  --tracking-sub: -0.03em;
+  --tracking-micro: 0.14em;
+
+  /* espaçamento 4pt */
+  --sp-50: 0.125rem;  --sp-100: 0.25rem; --sp-200: 0.5rem;
+  --sp-300: 0.75rem;  --sp-400: 1rem;    --sp-500: 1.5rem;
+  --sp-600: 2rem;     --sp-700: 3rem;    --sp-800: clamp(4rem, 8vw, 7.5rem);
+
+  /* layout */
+  --content: 1320px;
+  --content-texto: 1080px;
+  --section-x: clamp(1.25rem, 4vw, 4rem);
+  --section-y: clamp(4rem, 10vw, 150px);
+  --esp-palco: clamp(0px, 1.5vw, 20px);
+  --col-min: 16rem;
+  --topo-h: 64px;          /* header de produto medido (Painel.html) */
+  --sidebar-w: 240px;      /* sidebar branca Tabler */
+  --medida-corpo: 64ch;    /* texto corrido nunca atravessa a tela toda */
+
+  /* raios — card de produto é 6px (não varia); full é a pílula de marketing */
+  --raio-sm: 6px;
+  --raio-md: 10px;
+  --raio-lg: 16px;
+  --raio-full: 100px;
+
+  /* sombra: existe UMA sombra rasa no sistema (spec § Princípio) */
+  --sombra: 0 1px 2px rgb(24 36 51 / 0.06);
+  --sombra-elev: 0 24px 48px -24px rgb(24 36 51 / 0.35);
+
+  /* movimento discreto e reversível — nada acima de 0,6s (spec §6) */
+  --dur-1: 0.15s;
+  --dur-2: 0.25s;
+  --dur-3: 0.4s;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* camadas */
+  --z-conteudo: 1;
+  --z-sticky: 20;
+  --z-overlay: 100;
+  --z-modal: 110;
+  --z-toast: 130;
+  --z-moldura: 200;
+}
+
+/* ---------- 2. BASE DO CONCEITO ----------------------------------------- */
+[data-conceito="a"] body { color: var(--dim); }            /* corpo é --dim, título é preto */
+[data-conceito="a"] h1, [data-conceito="a"] h2,
+[data-conceito="a"] h3, [data-conceito="a"] h4 { font-weight: 500; letter-spacing: var(--tracking-titulo); line-height: var(--lh-titulo); }
+[data-conceito="a"] h3, [data-conceito="a"] h4 { font-size: var(--fs-500); letter-spacing: -0.015em; line-height: 1.2; }
+[data-conceito="a"] a { color: var(--link); text-decoration-thickness: from-font; text-underline-offset: 2px; }
+[data-conceito="a"] a:hover { color: var(--link-hover); }
+[data-conceito="a"] p { max-width: var(--medida-corpo); }
+[data-conceito="a"] code {
+  font: 500 var(--fs-200)/1.5 var(--fonte-mono);
+  background: var(--surface-2); border: 1px solid var(--line-soft);
+  border-radius: 4px; padding: 0.1em 0.4em; color: var(--text);
+}
+[data-conceito="a"] .num { font-variant-numeric: tabular-nums; }
+[data-conceito="a"] .hollow { color: transparent; -webkit-text-stroke: 1.5px var(--tinta); }
+[data-conceito="a"] .wrap-texto { width: min(100%, var(--content-texto)); }
+[data-conceito="a"] .secao { padding-block: var(--section-y); }
+
+/* ---------- 3. .btn — produto azul 6px · marketing pílula preta --------- */
+/* Variantes aceitam os dois nomes de classe (btn-primario e btn--primario). */
+[data-conceito="a"] .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-200);
+  height: 36px; padding: 0 var(--sp-400); border: 1px solid transparent; border-radius: var(--raio-sm);
+  font: 600 var(--fs-300)/1 var(--fonte-texto); text-decoration: none; white-space: nowrap;
+  cursor: pointer; transition: background var(--dur-2) var(--ease), color var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease), opacity var(--dur-2) var(--ease);
+}
+[data-conceito="a"] .btn svg { width: 16px; height: 16px; flex: none; }
+[data-conceito="a"] .btn-primario, [data-conceito="a"] .btn--primario {
+  background: var(--accent-fill); color: var(--on-accent);      /* 5,7:1 — ver nota do token */
+}
+[data-conceito="a"] .btn-primario:hover, [data-conceito="a"] .btn--primario:hover { background: var(--accent-hover); }
+[data-conceito="a"] .btn-secundario, [data-conceito="a"] .btn--secundario {
+  background: var(--surface); color: var(--text); border-color: var(--line);
+}
+[data-conceito="a"] .btn-secundario:hover, [data-conceito="a"] .btn--secundario:hover { background: var(--surface-2); }
+[data-conceito="a"] .btn-fantasma, [data-conceito="a"] .btn--fantasma {
+  background: transparent; color: var(--dim);
+}
+[data-conceito="a"] .btn-fantasma:hover, [data-conceito="a"] .btn--fantasma:hover { background: var(--surface-2); color: var(--text); }
+[data-conceito="a"] .btn-perigo, [data-conceito="a"] .btn--perigo {
+  background: var(--perigo-fill); color: var(--on-accent);      /* branco sobre #b42318: 5,8:1 */
+}
+[data-conceito="a"] .btn-perigo:hover, [data-conceito="a"] .btn--perigo:hover {
+  background: color-mix(in oklab, var(--perigo-fill) 85%, var(--tinta));
+}
+[data-conceito="a"] .btn-perigo-fantasma, [data-conceito="a"] .btn--perigo-fantasma {
+  background: transparent; color: var(--perigo-texto);
+}
+[data-conceito="a"] .btn-perigo-fantasma:hover, [data-conceito="a"] .btn--perigo-fantasma:hover { background: var(--perigo-fundo); }
+/* tamanhos: 32 em filtros/linhas · 36 padrão · 44 na ação principal e no mobile */
+[data-conceito="a"] .btn-pequeno, [data-conceito="a"] .btn--pequeno { height: 32px; padding: 0 var(--sp-300); font-size: var(--fs-200); }
+[data-conceito="a"] .btn-grande, [data-conceito="a"] .btn--grande { height: 44px; padding: 0 var(--sp-500); }
+[data-conceito="a"] .btn-full, [data-conceito="a"] .btn--full { width: 100%; }
+[data-conceito="a"] .btn-icone, [data-conceito="a"] .btn--icone { width: 36px; padding: 0; }
+/* CTA de marketing: pílula preta — NUNCA azul (spec §1). Azul em pílula não existe. */
+[data-conceito="a"] .btn-marketing, [data-conceito="a"] .btn--marketing {
+  height: 49px; padding: 0 30px; border-radius: var(--raio-full);
+  background: var(--tinta); color: var(--papel-frio); font-size: var(--fs-300);
+}
+[data-conceito="a"] .btn-marketing:hover, [data-conceito="a"] .btn--marketing:hover {
+  background: color-mix(in oklab, var(--tinta) 82%, var(--papel));
+}
+[data-conceito="a"] .btn[disabled], [data-conceito="a"] .btn:disabled {
+  background: var(--desab-fill); color: var(--desab-texto); border-color: transparent;
+  cursor: not-allowed; pointer-events: none;
+}
+/* carregando: spinner de 14px via aria-busy (o texto continua no lugar) */
+[data-conceito="a"] .btn[aria-busy="true"] { opacity: 0.85; pointer-events: none; }
+[data-conceito="a"] .btn[aria-busy="true"]::before {
+  content: ""; width: 14px; height: 14px; border-radius: var(--raio-full);
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: a-girar 0.8s linear infinite;
+}
+
+/* ---------- 4. .campo — input/select/textarea, grupo com rótulo ---------- */
+/* funciona direto no controle (input.campo) e como grupo (label+campo em .campo) */
+[data-conceito="a"] .campo { display: flex; flex-direction: column; gap: var(--sp-100); }
+[data-conceito="a"] .campo > label, [data-conceito="a"] .campo-label {
+  font: 600 var(--fs-300)/1.3 var(--fonte-texto); color: var(--text);
+}
+[data-conceito="a"] .campo > small, [data-conceito="a"] .campo-dica {
+  font-size: var(--fs-200); color: var(--faint);
+}
+[data-conceito="a"] input.campo, [data-conceito="a"] select.campo, [data-conceito="a"] textarea.campo,
+[data-conceito="a"] .campo input, [data-conceito="a"] .campo select, [data-conceito="a"] .campo textarea {
+  width: 100%; min-height: 40px; padding: 0 var(--sp-300);
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--raio-sm);
+  font: 400 var(--fs-300)/1.4 var(--fonte-texto);
+  transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+[data-conceito="a"] .campo textarea, [data-conceito="a"] textarea.campo { padding: var(--sp-200) var(--sp-300); min-height: 96px; resize: vertical; }
+[data-conceito="a"] .campo input::placeholder, [data-conceito="a"] .campo textarea::placeholder,
+[data-conceito="a"] input.campo::placeholder, [data-conceito="a"] textarea.campo::placeholder { color: var(--faint); }
+[data-conceito="a"] .campo input:focus, [data-conceito="a"] .campo select:focus, [data-conceito="a"] .campo textarea:focus,
+[data-conceito="a"] input.campo:focus, [data-conceito="a"] select.campo:focus, [data-conceito="a"] textarea.campo:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+[data-conceito="a"] .campo input[disabled], [data-conceito="a"] .campo select[disabled], [data-conceito="a"] .campo textarea[disabled],
+[data-conceito="a"] input.campo[disabled], [data-conceito="a"] .campo[disabled] {
+  background: var(--surface-2); color: var(--desab-texto); cursor: not-allowed;
+}
+[data-conceito="a"] .campo-erro > input, [data-conceito="a"] .campo-erro > select, [data-conceito="a"] .campo-erro > textarea,
+[data-conceito="a"] .campo--erro > input { border-color: var(--perigo-fill); }
+[data-conceito="a"] .campo-msg-erro { font-size: var(--fs-200); font-weight: 600; color: var(--perigo-texto); }
+
+/* ---------- 5. .chip — filtro/segmentado; ativo por aria-pressed -------- */
+[data-conceito="a"] .chip {
+  display: inline-flex; align-items: center; gap: var(--sp-100);
+  min-height: 32px; padding: 0 var(--sp-300);
+  background: var(--surface); color: var(--dim);
+  border: 1px solid var(--line); border-radius: var(--raio-full);
+  font: 600 var(--fs-200)/1 var(--fonte-texto); cursor: pointer; text-decoration: none;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+[data-conceito="a"] .chip:hover { border-color: var(--accent); color: var(--text); }
+[data-conceito="a"] .chip[aria-pressed="true"], [data-conceito="a"] .chip-ativo, [data-conceito="a"] .chip--ativo {
+  background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill);
+}
+/* chip com a cor da sala da linha — lê --cor-destaque no elemento, não o alias
+   do :root (dividas/02 §6; par exato do B) */
+[data-conceito="a"] .chip-sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 45%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 62%, var(--text));
+}
+/* grupo segmentado sobre trilho (o "Período" do Painel medido) */
+[data-conceito="a"] .chip-grupo, [data-conceito="a"] .chip--grupo {
+  display: inline-flex; gap: var(--sp-50); padding: 3px;
+  background: var(--surface-3); border: 0; border-radius: var(--raio-sm);
+}
+[data-conceito="a"] .chip-grupo .chip {
+  border: 0; border-radius: 4px; background: transparent; min-height: 30px; padding: 0 var(--sp-300);
+}
+[data-conceito="a"] .chip-grupo .chip[aria-pressed="true"] {
+  background: var(--surface); color: var(--text); box-shadow: var(--sombra); border-color: transparent;
+}
+
+/* ---------- 6. .cartao — branco, 6px, borda-soft, sombra rasa ------------ */
+/* hover só muda a borda para accent: sem levantar, sem escala, sem 2ª sombra */
+[data-conceito="a"] .cartao {
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--raio-sm); box-shadow: var(--sombra);
+  padding: var(--sp-500); display: flex; flex-direction: column; gap: var(--sp-300);
+  transition: border-color var(--dur-2) var(--ease);
+}
+[data-conceito="a"] .cartao h2, [data-conceito="a"] .cartao h3 { color: var(--text); }
+[data-conceito="a"] .cartao-clique, [data-conceito="a"] .cartao--clique { cursor: pointer; }
+[data-conceito="a"] .cartao-clique:hover, [data-conceito="a"] .cartao--clique:hover { border-color: var(--accent); }
+[data-conceito="a"] .cartao-plano, [data-conceito="a"] .cartao--plano { box-shadow: none; border-color: var(--line); }
+[data-conceito="a"] .cartao-cheio, [data-conceito="a"] .cartao--cheio { padding: 0; gap: 0; overflow: hidden; }
+[data-conceito="a"] .cartao-cabeca {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-300);
+  padding: var(--sp-400) var(--sp-500); border-bottom: 1px solid var(--line-soft);
+}
+[data-conceito="a"] .cartao-corpo { padding: var(--sp-500); display: flex; flex-direction: column; gap: var(--sp-300); }
+[data-conceito="a"] .cartao-rodape {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-300);
+  padding: var(--sp-300) var(--sp-500) var(--sp-400); border-top: 1px solid var(--line-soft);
+}
+/* slot "e o que isso significa" — divisória fina + texto faint (spec §5 card) */
+[data-conceito="a"] .cartao-nota {
+  margin-top: var(--sp-200); padding-top: var(--sp-300); border-top: 1px solid var(--line-soft);
+  font-size: var(--fs-200); color: var(--faint);
+}
+
+/* ---------- 7. .aba + .painel-aba — underline 2px accent ---------------- */
+[data-conceito="a"] [data-aba-group] { position: relative; }
+[data-conceito="a"] .aba-lista, [data-conceito="a"] .aba--lista {
+  display: flex; flex-wrap: wrap; gap: var(--sp-400); border-bottom: 1px solid var(--line);
+  /* as 5 abas longas do Painel ADM estouravam os 1.320px (dividas/07 §1) */
+  overflow-x: auto; scrollbar-width: none;
+}
+/* contrato dos dois conceitos: .aba-lista régua + button.aba botão; .aba-item é
+   o alias do botão criado pela tela 06 (dividas/06 §1) */
+[data-conceito="a"] .aba, [data-conceito="a"] .aba-item {
+  appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; padding: var(--sp-300) var(--sp-100);
+  font: 600 var(--fs-300)/1 var(--fonte-texto); color: var(--dim); cursor: pointer;
+  transition: color var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
+}
+[data-conceito="a"] .aba:hover, [data-conceito="a"] .aba-item:hover { color: var(--text); }
+[data-conceito="a"] .aba[aria-selected="true"], [data-conceito="a"] .aba-item[aria-selected="true"],
+[data-conceito="a"] .aba-ativa, [data-conceito="a"] .aba--ativa {
+  color: var(--link); border-bottom-color: var(--accent-fill);
+}
+[data-conceito="a"] .painel-aba { padding-top: var(--sp-500); }
+[data-conceito="a"] .painel-aba[hidden] { display: none; }
+
+/* ---------- 8. .badge (pastel) e .selo (carimbo institucional) ----------- */
+[data-conceito="a"] .badge {
+  display: inline-flex; align-items: center; gap: var(--sp-100);
+  padding: 0.2em 0.7em; border-radius: var(--raio-full);
+  font: 600 var(--fs-200)/1.4 var(--fonte-texto); white-space: nowrap;
+  background: var(--surface-2); color: var(--dim);
+}
+[data-conceito="a"] .badge-ok, [data-conceito="a"] .badge--ok { background: var(--ok-fundo); color: var(--ok-texto); }
+[data-conceito="a"] .badge-aviso, [data-conceito="a"] .badge--aviso { background: var(--aviso-fundo); color: var(--aviso-texto); }
+[data-conceito="a"] .badge-perigo, [data-conceito="a"] .badge--perigo { background: var(--perigo-fundo); color: var(--perigo-texto); }
+[data-conceito="a"] .badge-info, [data-conceito="a"] .badge--info { background: var(--info-fundo); color: var(--info-texto); }
+/* ponto de cor antes do texto do badge (situação codifica por cor E texto) */
+[data-conceito="a"] .badge-ponto, [data-conceito="a"] .badge--ponto {
+  width: 7px; height: 7px; border-radius: var(--raio-full); background: currentColor; flex: none;
+}
+/* carimbo: micro-caixa-alta contornado — selo institucional, não status */
+[data-conceito="a"] .selo {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-200);
+  padding: var(--sp-100) var(--sp-300); border: 1.5px solid var(--accent);
+  border-radius: var(--raio-full); background: var(--accent-soft);
+  font: 700 var(--fs-100)/1.3 var(--fonte-texto); letter-spacing: var(--tracking-micro);
+  text-transform: uppercase; color: var(--link);
+}
+[data-conceito="a"] .selo svg { width: 14px; height: 14px; }
+[data-conceito="a"] .selo-lacre, [data-conceito="a"] .selo--lacre {
+  flex-direction: column; border-radius: var(--raio-lg); padding: var(--sp-300) var(--sp-500);
+  border-width: 2px; text-align: center; gap: var(--sp-100);
+}
+/* selo na COR DA SALA da linha: --cor-destaque lido no elemento onde a classe
+   aparece — os aliases --accent/--destaque-sala do :root não alcançam o style
+   pontual (dividas/05 §1, repetida em 07/14 como bug de contrato) */
+[data-conceito="a"] .selo--sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 55%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 52%, var(--text));
+}
+
+/* ---------- 9. .tabela — thead #f8fafc medido, td.num tabular ------------ */
+[data-conceito="a"] .tabela { width: 100%; border-collapse: collapse; font-size: var(--fs-300); }
+[data-conceito="a"] .tabela caption { caption-side: bottom; padding-top: var(--sp-300); font-size: var(--fs-200); color: var(--faint); text-align: left; }
+[data-conceito="a"] .tabela thead tr { background: var(--thead); }
+[data-conceito="a"] .tabela th {
+  padding: 10px var(--sp-200); text-align: left;
+  font: 500 var(--fs-200)/1.3 var(--fonte-texto); color: var(--faint);
+  white-space: nowrap;
+}
+[data-conceito="a"] .tabela th:first-child { padding-left: var(--sp-500); }
+[data-conceito="a"] .tabela th:last-child { padding-right: var(--sp-500); }
+[data-conceito="a"] .tabela td {
+  padding: var(--sp-300) var(--sp-200); border-top: 1px solid var(--line);
+  color: var(--dim); vertical-align: middle;
+}
+[data-conceito="a"] .tabela td:first-child { padding-left: var(--sp-500); }
+[data-conceito="a"] .tabela td:last-child { padding-right: var(--sp-500); }
+[data-conceito="a"] .tabela tbody tr { transition: background var(--dur-1) var(--ease); }
+[data-conceito="a"] .tabela tbody tr:hover { background: var(--surface-2); }
+[data-conceito="a"] .tabela td.num, [data-conceito="a"] .tabela th.num {
+  text-align: right; font-variant-numeric: tabular-nums; color: var(--text);
+}
+[data-conceito="a"] .forte { color: var(--text); font-weight: 600; }
+[data-conceito="a"] .tabela .forte { color: var(--text); font-weight: 600; }
+[data-conceito="a"] .tabela-truncada { display: block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- 10. .modal — backdrop escuro, painel branco 6px+ ------------- */
+[data-conceito="a"] .modal {
+  position: fixed; inset: 0; display: none; place-items: center; z-index: var(--z-modal);
+  padding: var(--sp-400);
+  background: color-mix(in oklab, var(--tinta) 55%, transparent);
+}
+[data-conceito="a"] .modal.modal-aberto { display: grid; }
+[data-conceito="a"] .modal-painel {
+  position: relative; z-index: calc(var(--z-modal) + 1);
+  width: min(100%, 560px); max-height: 85vh; overflow: auto;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--raio-md); box-shadow: var(--sombra-elev);
+}
+[data-conceito="a"] .modal-larga .modal-painel, [data-conceito="a"] .modal--larga .modal-painel { width: min(100%, 880px); }
+[data-conceito="a"] .modal-cabeca {
+  display: flex; align-items: center; gap: var(--sp-300);
+  padding: var(--sp-400) var(--sp-500); border-bottom: 1px solid var(--line-soft);
+}
+[data-conceito="a"] .modal-cabeca h2 { font-size: var(--fs-500); color: var(--text); }
+[data-conceito="a"] .modal-corpo { padding: var(--sp-500); display: flex; flex-direction: column; gap: var(--sp-400); }
+[data-conceito="a"] .modal-rodape {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-300);
+  padding: var(--sp-300) var(--sp-500) var(--sp-400); border-top: 1px solid var(--line-soft);
+}
+[data-conceito="a"] .modal-x {
+  margin-left: auto; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; border-radius: var(--raio-sm); color: var(--faint); cursor: pointer;
+}
+[data-conceito="a"] .modal-x:hover { background: var(--surface-2); color: var(--text); }
+
+/* ---------- 11. .toast ---------------------------------------------------- */
+[data-conceito="a"] .toast {
+  display: inline-flex; align-items: center; gap: var(--sp-300);
+  max-width: min(100%, 420px); padding: var(--sp-300) var(--sp-400);
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-fill); border-radius: var(--raio-sm);
+  box-shadow: var(--sombra-elev); color: var(--text);
+  font-size: var(--fs-300); line-height: 1.4;
+}
+[data-conceito="a"] .toast-ok, [data-conceito="a"] .toast--ok { border-left-color: var(--ok-texto); }
+[data-conceito="a"] .toast-erro, [data-conceito="a"] .toast--erro,
+[data-conceito="a"] .toast-perigo, [data-conceito="a"] .toast--perigo { border-left-color: var(--perigo-fill); }
+[data-conceito="a"] .toast-aviso, [data-conceito="a"] .toast--aviso { border-left-color: var(--aviso-texto); }
+[data-conceito="a"] .toast small { color: var(--faint); display: block; }
+[data-conceito="a"] .toast-area, [data-conceito="a"] .toast--area {
+  position: fixed; bottom: var(--sp-500); right: var(--sp-500); z-index: var(--z-toast);
+  display: flex; flex-direction: column-reverse; gap: var(--sp-200);
+}
+
+/* ---------- 12. .vazio ---------------------------------------------------- */
+[data-conceito="a"] .vazio {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-300);
+  padding: var(--sp-700) var(--sp-500); text-align: center;
+  background: var(--surface); border: 1.5px dashed var(--line);
+  border-radius: var(--raio-sm); color: var(--dim);
+}
+[data-conceito="a"] .vazio svg { width: 28px; height: 28px; color: var(--faint); }
+[data-conceito="a"] .vazio p { max-width: 46ch; }
+
+/* ---------- 13. .skeleton — shimmer com borda, não gradiente novo -------- */
+/* atalho: shimmer usa border-box; cores só dos tokens --trilho/--line */
+[data-conceito="a"] .skeleton {
+  position: relative; overflow: hidden;
+  background: var(--trilho); border-radius: var(--raio-sm);
+  min-height: 14px; height: var(--sk-h, 14px);
+}
+[data-conceito="a"] .skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: color-mix(in oklab, var(--surface) 65%, transparent);
+  transform: translateX(-100%);
+  animation: a-shimmer 1.4s var(--ease) infinite;
+}
+[data-conceito="a"] .skeleton-linha, [data-conceito="a"] .skeleton--linha { height: 0.9em; }
+[data-conceito="a"] .skeleton-titulo, [data-conceito="a"] .skeleton--titulo { height: 24px; width: 60%; }
+[data-conceito="a"] .skeleton-bloco, [data-conceito="a"] .skeleton--bloco { height: 160px; border-radius: var(--raio-md); }
+[data-conceito="a"] .skeleton-circulo, [data-conceito="a"] .skeleton--circulo { width: 36px; height: 36px; border-radius: var(--raio-full); }
+
+/* ---------- 14. .topo / .rodape / .marca-sesi ----------------------------- */
+/* topo de produto: 64px, fundo branco, borda inferior (Painel.html medido) */
+[data-conceito="a"] .topo {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  display: flex; align-items: center; gap: var(--sp-500);
+  min-height: var(--topo-h); padding: 0 var(--section-x);
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+[data-conceito="a"] .topo h1, [data-conceito="a"] .topo-titulo {
+  margin: 0; font-size: var(--fs-500); font-weight: 600;
+  letter-spacing: var(--tracking-sub); color: var(--text);
+}
+[data-conceito="a"] .topo-link { color: var(--faint); font-size: var(--fs-200); }
+[data-conceito="a"] .topo-link:hover { color: var(--text); }
+[data-conceito="a"] .topo-acoes { margin-left: auto; display: flex; align-items: center; gap: var(--sp-300); }
+[data-conceito="a"] .nav-link {
+  font-size: var(--fs-400); color: var(--text); text-decoration: none;
+  transition: color var(--dur-2) var(--ease);
+}
+[data-conceito="a"] .nav-link:hover { color: var(--link); }
+[data-conceito="a"] .nav-link-ativo { color: var(--link); font-weight: 600; }
+/* header de marketing não ganha sombra ao rolar (spec §6) — só opaco sticky */
+[data-conceito="a"] .topo-marketing, [data-conceito="a"] .topo--marketing { border-bottom: 0; background: transparent; }
+
+[data-conceito="a"] .marca-sesi { display: inline-flex; align-items: center; gap: var(--sp-200); text-decoration: none; }
+[data-conceito="a"] .marca-sesi img { height: 36px; width: auto; }
+[data-conceito="a"] .marca-sesi-sm img { height: 26px; }
+[data-conceito="a"] .marca-sesi-lg img { height: 56px; }
+/* o A é papel: sempre a versão de tinta. O DOM canônico carrega os dois logos
+   (exigência do B) e sem estas regras as duas rosetas apareciam lado a lado —
+   cinco telas copiavam o hatch (dividas/01 §2, 03 §3, 05 §3, 06 §4, 14 §2).
+   Dentro da ilha escura do A vale sempre o branco, como no B. */
+[data-conceito="a"] .marca-sesi .logo-modo-dark { display: none; }
+[data-conceito="a"] .ilha-escura .marca-sesi .logo-modo-light { display: none; }
+[data-conceito="a"] .ilha-escura .marca-sesi .logo-modo-dark { display: block; }
+/* sub-marca em bloco debaixo do nome (par do B; 06 §7, 08 §6) */
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-weight: 600; font-size: var(--fs-100);
+  letter-spacing: var(--tracking-micro); text-transform: uppercase; color: var(--faint);
+}
+/* respiro entre spans quando a marca é "Alunos" + "Escola SESI" em linha */
+[data-conceito="a"] .marca-texto span + span { margin-inline-start: 0.4rem; }
+
+[data-conceito="a"] .rodape {
+  margin-top: var(--sp-800); padding: var(--sp-600) var(--section-x);
+  background: var(--surface); border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-400) var(--sp-600);
+  color: var(--faint); font-size: var(--fs-200);
+}
+[data-conceito="a"] .rodape a { color: var(--dim); text-decoration: none; }
+[data-conceito="a"] .rodape a:hover { color: var(--link); }
+[data-conceito="a"] .rodape-entre { margin-left: auto; }
+[data-conceito="a"] .rodape-escuro, [data-conceito="a"] .rodape--escuro {
+  background: var(--night); border-top: 0; color: var(--ilha-faint);
+}
+[data-conceito="a"] .rodape-escuro a, [data-conceito="a"] .rodape--escuro a { color: var(--ilha-texto); }
+
+/* ---------- 15. .sidebar — branca 240px, padrão Tabler (não preta) ------- */
+[data-conceito="a"] .sidebar {
+  width: var(--sidebar-w); flex: 0 0 var(--sidebar-w); min-height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--surface); border-right: 1px solid var(--line);
+}
+[data-conceito="a"] .sidebar-marca {
+  height: var(--topo-h); display: flex; align-items: center; gap: var(--sp-200);
+  padding: 0 var(--sp-500); border-bottom: 1px solid var(--line);
+}
+[data-conceito="a"] .sidebar-marca img { height: 22px; width: auto; }
+[data-conceito="a"] .sidebar-nav { flex: 1; padding: var(--sp-500) var(--sp-200); display: flex; flex-direction: column; gap: var(--sp-500); }
+[data-conceito="a"] .sidebar-nav .eyebrow { margin: 0 0 var(--sp-200) var(--sp-200); }
+[data-conceito="a"] .nav-item {
+  display: flex; align-items: center; gap: var(--sp-200);
+  height: 36px; padding: 0 var(--sp-200); border-radius: var(--raio-sm);
+  font-size: var(--fs-300); font-weight: 500; color: var(--dim); text-decoration: none;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+[data-conceito="a"] .nav-item svg { width: 18px; height: 18px; flex: none; }
+[data-conceito="a"] .nav-item:hover { background: var(--surface-2); color: var(--text); }
+/* ativo: accent-soft + texto no azul lido (medido no Painel: #0050a6 sobre o tint) */
+[data-conceito="a"] .nav-ativo, [data-conceito="a"] .nav-item[aria-current="page"] {
+  background: var(--accent-soft); color: var(--link); font-weight: 600;
+}
+[data-conceito="a"] .sidebar-pe {
+  margin: var(--sp-200); padding: var(--sp-300); border-radius: var(--raio-sm);
+  background: var(--surface-3); display: flex; align-items: center; gap: var(--sp-200);
+}
+[data-conceito="a"] .sidebar-pe strong { font-size: var(--fs-200); color: var(--text); font-weight: 600; display: block; }
+[data-conceito="a"] .sidebar-pe small { font-size: var(--fs-100); color: var(--faint); }
+/* as duas metades do contrato de sidebar (dividas/02 §2): o A já tinha
+   marca/nav/pe — faltavam o rodapé de ações e as teclas, que eram só do B */
+[data-conceito="a"] .sidebar-rodape {
+  margin-top: var(--sp-200); padding-top: var(--sp-300); border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: var(--sp-200);
+}
+[data-conceito="a"] .sidebar-rodape .kbd { align-self: flex-start; }
+[data-conceito="a"] .kbd, [data-conceito="a"] .sidebar-kbd {
+  padding: 0.1rem 0.4rem; border-radius: var(--raio-sm);
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-family: var(--fonte-mono); font-size: var(--fs-100); color: var(--faint);
+}
+/* quadro de layout: sidebar + conteúdo */
+[data-conceito="a"] .quadro { display: flex; flex-wrap: wrap; gap: 0; min-height: 800px; background: var(--bg); }
+[data-conceito="a"] .quadro-corpo { flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; }
+
+/* ---------- 16. .metrica -------------------------------------------------- */
+/* KPI de card: rótulo micro-caixa-alta + número grande tabular + delta pastel */
+[data-conceito="a"] .metrica { display: flex; flex-direction: column; gap: var(--sp-100); }
+[data-conceito="a"] .metrica-valor {
+  margin: 0; font-size: 28px; line-height: 34px; letter-spacing: var(--tracking-sub);
+  font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums;
+}
+[data-conceito="a"] .metrica-label { margin: 0; }
+[data-conceito="a"] .metrica-delta { display: flex; align-items: center; gap: var(--sp-100); font-size: var(--fs-200); color: var(--dim); }
+[data-conceito="a"] .metrica-delta .badge { font-size: var(--fs-100); padding: 0.1em 0.5em; }
+/* número gigante da faixa escura: peso 800 na cor muted (spec §5) */
+[data-conceito="a"] .metrica-gigante, [data-conceito="a"] .metrica--gigante { gap: var(--sp-200); }
+[data-conceito="a"] .metrica-gigante .metrica-valor,
+/* rodade 4 (sweep galeria): --ilha-faint é branco-translúcido de ilha escura —
+   sobre o cartão de papel virava marca d'água invisível. No papel, o número
+   gigante é tinta. */
+[data-conceito="a"] .metrica--gigante .metrica-valor { font-size: var(--fs-gigante); font-weight: 800; line-height: 1; color: var(--text); }
+[data-conceito="a"] .facts {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  border: 1px solid var(--line-soft); border-radius: var(--raio-md); overflow: hidden;
+}
+[data-conceito="a"] .facts > * {
+  flex: 1 1 140px; padding: var(--sp-500); display: flex; flex-direction: column;
+  gap: var(--sp-100); align-items: center; text-align: center;
+  border-right: 1px solid var(--line-soft);
+}
+[data-conceito="a"] .facts > *:last-child { border-right: 0; }
+[data-conceito="a"] .facts strong { font-size: var(--fs-600); font-weight: 600; color: var(--text); letter-spacing: var(--tracking-sub); }
+
+/* ---------- 17. .hero — centrado, com a onda azul (único gradiente) ------ */
+[data-conceito="a"] .hero {
+  position: relative; overflow: clip; text-align: center;
+  padding: clamp(3.5rem, 9vw, 9rem) var(--section-x) var(--sp-800);
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-400);
+}
+[data-conceito="a"] .hero::before {
+  content: ""; position: absolute; inset: auto 0 0; height: 60%;
+  background: linear-gradient(180deg, transparent, var(--glow));
+  pointer-events: none;
+}
+[data-conceito="a"] .hero > * { position: relative; z-index: var(--z-conteudo); }
+[data-conceito="a"] .hero .eyebrow { color: var(--link); }
+[data-conceito="a"] .hero h1 { font-size: var(--fs-900); max-width: 18ch; }
+[data-conceito="a"] .hero p {
+  font-size: clamp(1rem, 1.6vw, 1.125rem); color: var(--dim); max-width: 52ch;
+}
+[data-conceito="a"] .hero-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-300); margin-top: var(--sp-300); }
+
+/* ---------- 18. .pill-list / .avatar -------------------------------------- */
+[data-conceito="a"] .pill-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: var(--sp-200);
+}
+[data-conceito="a"] .pill-list li {
+  display: inline-flex; align-items: center; gap: var(--sp-100);
+  padding: var(--sp-100) var(--sp-300); border-radius: var(--raio-full);
+  background: var(--surface-2); border: 1px solid var(--line-soft);
+  font-size: var(--fs-200); font-weight: 600; color: var(--dim);
+}
+[data-conceito="a"] .pill-list li strong { color: var(--link); font-variant-numeric: tabular-nums; }
+/* avatar: círculo de iniciais. Token único dos dois conceitos: --cor-destaque,
+   com --cor como fallback legado (dividas/02 §3 — "o DOM não decide dois nomes";
+   o text-mix usa --text, que na folha é --tinta e na ilha é --ilha-texto) */
+[data-conceito="a"] .avatar {
+  width: 36px; height: 36px; flex: none; border-radius: var(--raio-full);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: color-mix(in oklab, var(--cor-destaque, var(--cor, var(--accent-fill))) 12%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque, var(--cor, var(--accent-fill))) 78%, var(--text));
+  font: 700 var(--fs-200)/1 var(--fonte-texto); text-transform: uppercase;
+  overflow: hidden;
+}
+[data-conceito="a"] .avatar img { width: 100%; height: 100%; object-fit: cover; }
+[data-conceito="a"] .avatar-sm, [data-conceito="a"] .avatar--sm { width: 28px; height: 28px; font-size: var(--fs-100); }
+[data-conceito="a"] .avatar--md { width: 44px; height: 44px; font-size: var(--fs-300); }
+[data-conceito="a"] .avatar-lg, [data-conceito="a"] .avatar--lg { width: 64px; height: 64px; font-size: var(--fs-500); }
+[data-conceito="a"] .avatar--xl { width: 88px; height: 88px; font-size: var(--fs-600); }
+[data-conceito="a"] .avatar-anel { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in oklab, var(--cor-destaque, var(--cor, var(--accent))) 55%, var(--surface)); }
+[data-conceito="a"] .avatar-pilha { display: flex; }
+[data-conceito="a"] .avatar-pilha .avatar + .avatar { margin-left: calc(-1 * var(--sp-200)); }
+
+/* ---------- 19. .ilha-escura / .cta-band / .badge-redes ------------------ */
+/* bloco escuro nos DOIS conceitos/temas: crachá, NFC, prova social.
+   Na folha impressa (conceito A, tela 16) o papel continua --papel:
+   a ilha é chrome de tela, não da A4. */
+[data-conceito="a"] .ilha-escura {
+  /* a ilha remapeia os tokens de superfície como o B faz (dividas/13 §8): sem
+     isso, qualquer componente dentro dela pintado com var(--surface/--line/
+     --text) saía em papel claro com texto claro — o "verso" do crachá (QA da
+     tela 09). position:relative ancora os stickers do estúdio (dividas/06 §5). */
+  --bg: var(--night);
+  --surface: var(--night);
+  --surface-2: color-mix(in oklab, var(--ilha-texto) 6%, var(--night));
+  --surface-3: color-mix(in oklab, var(--ilha-texto) 10%, var(--night));
+  --thead: color-mix(in oklab, var(--ilha-texto) 8%, var(--night));
+  --trilho: color-mix(in oklab, var(--ilha-texto) 10%, var(--night));
+  --text: var(--ilha-texto);
+  --dim: var(--ilha-faint);
+  --faint: var(--ilha-faint);
+  --line: var(--ilha-line);
+  --line-soft: color-mix(in oklab, var(--ilha-line) 50%, transparent);
+  position: relative;
+  background: var(--night); color: var(--ilha-texto);
+  border: 1px solid var(--ilha-line);
+  border-radius: var(--raio-lg); padding: var(--sp-600);
+  display: flex; flex-direction: column; gap: var(--sp-400);
+}
+[data-conceito="a"] .ilha-escura h1, [data-conceito="a"] .ilha-escura h2,
+[data-conceito="a"] .ilha-escura h3, [data-conceito="a"] .ilha-escura .forte { color: var(--ilha-texto); }
+[data-conceito="a"] .ilha-escura .eyebrow { color: var(--ilha-faint); }
+[data-conceito="a"] .ilha-escura a { color: var(--ilha-texto); }
+[data-conceito="a"] .ilha-escura .cartao, [data-conceito="a"] .ilha-escura .vazio {
+  background: var(--ilha-fill); border-color: var(--ilha-line); box-shadow: none; color: var(--ilha-texto);
+}
+[data-conceito="a"] .ilha-escura .badge-info { background: var(--ilha-fill); color: var(--ilha-texto); }
+/* dentro da faixa escura a pílula de marketing inverte para branca (spec §5) */
+[data-conceito="a"] .ilha-escura .btn-marketing, [data-conceito="a"] .ilha-escura .btn--marketing,
+[data-conceito="a"] .cta-band .btn-marketing, [data-conceito="a"] .cta-band .btn--marketing {
+  background: var(--papel); color: var(--tinta);
+}
+[data-conceito="a"] .ilha-escura .btn-secundario, [data-conceito="a"] .ilha-escura .btn--secundario {
+  background: transparent; color: var(--ilha-texto); border-color: var(--ilha-line);
+}
+[data-conceito="a"] .ilha-escura .campo-msg-erro { color: var(--ilha-texto); }
+
+/* faixa de conversão: bleed total, centrada, uma ideia só */
+[data-conceito="a"] .cta-band {
+  background: var(--night); color: var(--ilha-texto);
+  padding: var(--section-y) var(--section-x); text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-400);
+}
+[data-conceito="a"] .cta-band h2 { font-size: var(--fs-700); color: var(--ilha-texto); max-width: 24ch; }
+[data-conceito="a"] .cta-band p { color: var(--ilha-faint); max-width: 56ch; }
+[data-conceito="a"] .cta-band .eyebrow { color: var(--ilha-faint); }
+
+/* linktree/link social. FORA da ilha o cápsula usa tinta/link com borda (QA:
+   com os brancos translúcidos --ilha-* ela sumia no papel — sistema-a.css:641);
+   SOBRE a ilha, ou com o modificador --ilha, inverte para o branco. */
+[data-conceito="a"] .badge-redes {
+  display: flex; flex-wrap: wrap; gap: var(--sp-200);
+  list-style: none; margin: 0; padding: 0;
+}
+[data-conceito="a"] .badge-redes a, [data-conceito="a"] .badge-redes li {
+  display: inline-flex; align-items: center; gap: var(--sp-200);
+  padding: var(--sp-200) var(--sp-400); border-radius: var(--raio-sm);
+  border: 1px solid var(--line); background: var(--surface);
+  color: var(--link); font-size: var(--fs-300); font-weight: 600; text-decoration: none;
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+[data-conceito="a"] .badge-redes a:hover { border-color: var(--accent); background: var(--surface-2); }
+[data-conceito="a"] .badge-redes svg { width: 15px; height: 15px; flex: none; }
+/* sobre a ilha escura volta ao branco translúcido (o remape do §19 troca
+   --line/--surface, mas --link é institucional e não remapeia — daí a regra) */
+[data-conceito="a"] .ilha-escura .badge-redes a, [data-conceito="a"] .ilha-escura .badge-redes li {
+  border-color: var(--ilha-line); background: var(--ilha-fill); color: var(--ilha-texto);
+}
+[data-conceito="a"] .ilha-escura .badge-redes a:hover { background: color-mix(in oklab, var(--ilha-fill) 50%, var(--ilha-line)); }
+/* versão clara (fora da ilha): contorno no line, texto dim */
+[data-conceito="a"] .badge-redes-clara a, [data-conceito="a"] .badge-redes--clara a {
+  background: var(--surface); border-color: var(--line); color: var(--dim);
+}
+[data-conceito="a"] .badge-redes-clara a:hover, [data-conceito="a"] .badge-redes--clara a:hover { color: var(--link); border-color: var(--accent); }
+
+/* ---------- 20. progresso e barra (usado por insígnia/estrelas/validar) -- */
+[data-conceito="a"] .barra {
+  height: 10px; border-radius: var(--raio-full); background: var(--trilho); overflow: hidden;
+}
+[data-conceito="a"] .barra-fill, [data-conceito="a"] .barra--fill, [data-conceito="a"] .barra > span {
+  display: block; height: 100%; width: var(--pct, 0%);
+  border-radius: var(--raio-full); background: var(--accent-fill);
+  transition: width var(--dur-3) var(--ease);
+}
+[data-conceito="a"] .barra-fina { height: 6px; }
+[data-conceito="a"] .barra-ok .barra-fill { background: var(--ok-texto); }
+
+/* ---------- 21. moldura mobile: sidebar vira régua de nav horizontal ----- */
+html[data-frame="mobile"] [data-conceito="a"] .quadro { flex-direction: column; min-height: 780px; }
+html[data-frame="mobile"] [data-conceito="a"] .sidebar {
+  width: 100%; flex: none; border-right: 0; border-bottom: 1px solid var(--line);
+}
+html[data-frame="mobile"] [data-conceito="a"] .sidebar-nav {
+  flex-direction: row; gap: var(--sp-200); padding: var(--sp-200);
+  overflow-x: auto; scrollbar-width: none;
+}
+html[data-frame="mobile"] [data-conceito="a"] .sidebar-nav .eyebrow { display: none; }
+html[data-frame="mobile"] [data-conceito="a"] .nav-item { height: 40px; flex: none; }
+html[data-frame="mobile"] [data-conceito="a"] .sidebar-pe,
+html[data-frame="mobile"] [data-conceito="a"] .sidebar-rodape { display: none; }
+html[data-frame="mobile"] [data-conceito="a"] .topo { padding: var(--sp-200) var(--sp-300); flex-wrap: wrap; }
+html[data-frame="mobile"] [data-conceito="a"] .grade { --col-min: 100%; }
+
+/* ---------- 22. animações --------------------------------------------------*/
+@keyframes a-girar { to { transform: rotate(360deg); } }
+@keyframes a-shimmer { to { transform: translateX(100%); } }
+
+/* gate PADROES §6 / spec §7: movimento zero para quem pede — obrigatório */
+@media (prefers-reduced-motion: reduce) {
+  [data-conceito="a"] *,
+  [data-conceito="a"] *::before,
+  [data-conceito="a"] *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

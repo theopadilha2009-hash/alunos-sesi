@@ -1,0 +1,535 @@
+<!doctype html>
+<!--
+  14 · Painel ADM (standalone) — rota real: /adm (composição antiga, sem sidebar).
+  Fontes lidos: src/app/adm/page.tsx:20-81 (h1 "Painel do ADM", "N alunos em
+  M salas.", nota do bloco, notFound → 404, rodapé);
+  src/components/adm/ImportarLista.tsx:9-137 (EXEMPLO do placeholder, parágrafo
+  de ajuda, prévia "entram/duplicadas/com problema", "Separador lido: …",
+  "…e mais N", "linha N: motivo — texto", "Aplicar N"/"Aplicando…"/"Limpar");
+  src/components/adm/PainelAlunos.tsx:12-101 (meta "{sala} · ★ {n} · in · gh ·
+  aguardando aprovação", rótulos de AÇÃO "Aprovar/Despublicar/Fixar/Fixado/☆
+  Destacar/★ Destaque", titles, aria-pressed, vazio);
+  src/components/adm/FormAluno.tsx:7-72 (labels, placeholders, "Adicionar"/
+  "Salvando…"); src/components/adm/BotaoRemover.tsx:24-39 (frase de confirmação
+  literal); src/lib/importar.ts:69-149 (motivos "sem nome", "sem sala", "nome
+  curto demais", número da linha física); src/app/adm/acoes.ts:148-305 (resumo
+  "N novos · N duplicada(s) na própria colagem", erros do laço);
+  src/components/ds.tsx:6-46 (Topo "Alunos / Escola SESI" + "Ver a vitrine →",
+  Rodape com as duas frases).
+
+  Strings copiadas literalmente dos fontes (fidelidade):
+  "Painel do ADM" · "13 alunos em 4 salas." · "Ver a vitrine →" · "Alunos" ·
+  "Escola SESI" · "Colar a lista da turma" · "uma linha por aluno" ·
+  "Cole direto da planilha. A ordem esperada é nome, sala, LinkedIn, GitHub —
+  mas se a primeira linha tiver cabeçalho, as colunas são ligadas pelo nome e a
+  ordem deixa de importar. LinkedIn aceita a URL inteira ou só o handle." ·
+  "Lista" · placeholder "nome⇥sala⇥linkedin⇥github / Ana Silva⇥3ºA⇥…⇥anasilva /
+  Bruno Costa⇥2ºB⇥⇥brunocosta" (EXEMPLO) · "entram" · "duplicadas" ·
+  "com problema" · "Separador lido: tabulação · cabeçalho detectado" ·
+  "linha 6: sem nome" · "linha 7: nome curto demais" · "Aplicar 3" · "Limpar" ·
+  "Adicionar um aluno" · "Nome" · "Sala" · "LinkedIn" · "GitHub" ·
+  "Bio (opcional)" · placeholders "3ºA", "linkedin.com/in/fulano", "fulano",
+  "O que você curte fazer" · "Adicionar" · "Alunos" ·
+  "fixar põe no topo · destaque dá a estrela do ADM" ·
+  "Nenhum aluno ainda. Cole a lista da turma acima." · "sem sala" ·
+  "· aguardando aprovação" · "Aprovar" · "Despublicar" · "Fixar" · "Fixado" ·
+  "☆ Destacar" · "★ Destaque" · "Remover" · "Libera o perfil na vitrine" ·
+  "Tira o perfil da vitrine até aprovar de novo" · "Põe no topo da vitrine" ·
+  "Marca como destaque" · "Remove o aluno" ·
+  "Tem certeza que deseja excluir Otávio Redivo? Esta ação é irreversível." ·
+  "3 novos · 1 duplicada na própria colagem" ·
+  "Esta página não é linkada em lugar nenhum e não é indexada." ·
+  "Feito pela turma, para a turma." · "Ativar o tema claro".
+
+  Colagem da prévia: a lista que criou a fila de 3 (Rafael Kuntz, Iasmin
+  Bonilha, Nathan Prado — CONTEUDO.md) + 1 duplicada + 2 linhas que o parse
+  rejeitou; os números da prévia e do recado batem com parseLista deste texto.
+
+  Estado: <html data-conceito="b" data-theme="dark"> — um só DOM, os dois
+  conceitos via CSS (design/PADROES.md). Modal de confirmação estático ABERTO no
+  fim da tela (o estado aberto, não o gatilho) — o confirm() nativo virou modal
+  por causa do comentário do BotaoRemover.
+-->
+<html lang="pt-BR" data-conceito="b" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>14 · Painel ADM (standalone) — Redesign alunos-sesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../sistemas/base.css">
+<link rel="stylesheet" href="../sistemas/sistema-a.css">
+<link rel="stylesheet" href="../sistemas/sistema-b.css">
+<link rel="stylesheet" href="../sistemas/moldura.css">
+<script>try{var d=document.documentElement;if(localStorage.getItem('sesi.showcase.conceito'))d.dataset.conceito=localStorage.getItem('sesi.showcase.conceito');if(localStorage.getItem('sesi.showcase.tema'))d.dataset.theme=localStorage.getItem('sesi.showcase.tema');if(localStorage.getItem('sesi.showcase.frame'))d.dataset.frame=localStorage.getItem('sesi.showcase.frame')}catch(e){}</script>
+<style>
+/* no-sistema */
+/* Dívida 14-a: sala com COR da sala no .selo — --cor-destaque inline não alcança
+   os aliases do :root (mesma lacuna registrada em dividas/05 e 07). */
+.selo--sala {
+  border-color: color-mix(in oklab, var(--cor-destaque) 55%, var(--line));
+  background: color-mix(in oklab, var(--cor-destaque) 14%, var(--surface));
+  color: color-mix(in oklab, var(--cor-destaque) 52%, var(--text));
+}
+/* Dívida 14-b: o A nunca escondeu a logo alternativa do par .logo-modo-*. */
+[data-conceito="a"] .marca-sesi .logo-modo-dark { display: none; }
+[data-conceito="a"] .marca-sesi small {
+  display: block; font-size: var(--fs-100); font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint);
+}
+/* no-sistema */
+/* Dívida 14-c: não existe família de lista inline de status/erro (o app tem
+   .recado/.erros). Aqui o recado veste .toast parado e as listas ganham
+   ganchos por atributo — sem classe nova nos sistemas. */
+[data-recado] { display: inline-flex; align-items: center; gap: var(--sp-200); margin: 0; }
+ul[data-lista-erro] {
+  list-style: none; margin: var(--sp-100) 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--sp-100);
+  font-size: var(--fs-200); color: var(--dim);
+}
+ul[data-lista-erro] code {
+  font-family: var(--fonte-mono); font-size: var(--fs-100);
+  background: var(--surface-2); border: 1px solid var(--line-soft);
+  border-radius: var(--raio-sm); padding: 0.1em 0.4em; color: var(--text);
+}
+textarea.campo[data-textarea-lista] { font-family: var(--fonte-mono); font-size: var(--fs-200); }
+/* O B só define td.forte/td b; o .forte aqui é o link do nome dentro do td. */
+.tabela td .forte { font-weight: 700; letter-spacing: -0.01em; }
+</style>
+</head>
+<body>
+<div class="palco">
+<main class="tela" data-tela="14-adm-standalone">
+
+<header class="topo">
+  <a class="marca-sesi" href="#" aria-label="Alunos — Escola SESI">
+    <img class="logo-modo-light" src="../../public/logo-sesi.png" alt="SESI">
+    <img class="logo-modo-dark" src="../../public/logo-sesi-branco.png" alt="SESI">
+    <span>Alunos<small>Escola SESI</small></span>
+  </a>
+  <nav>
+    <a class="btn btn--fantasma btn--pequeno" href="#">Ver a vitrine →</a>
+    <button type="button" class="btn btn--secundario btn--pequeno" title="Ativar o tema claro" aria-label="Ativar o tema claro">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
+    </button>
+  </nav>
+</header>
+
+<div class="wrap pilha" style="padding-block: var(--sp-500) var(--sp-700)">
+
+  <div class="pilha pilha-apertada">
+    <p class="eyebrow">14 · rota /adm — composição antiga, sem sidebar</p>
+    <h1 style="font-size: var(--fs-800); letter-spacing: -0.04em">Painel do ADM</h1>
+    <p style="color: var(--dim)">13 alunos em 4 salas.</p>
+    <p class="eyebrow">acesso negado = 404 silencioso (tela 15)</p>
+  </div>
+
+  <!-- ImportarLista — colagem + prévia ao vivo + linhas de erro numeradas -->
+  <section class="cartao pilha" aria-labelledby="importar-t">
+    <div class="linha linha-entre">
+      <h2 id="importar-t">Colar a lista da turma</h2>
+      <span class="eyebrow">uma linha por aluno</span>
+    </div>
+
+    <p style="color: var(--dim); font-size: var(--fs-300); max-width: var(--medida-corpo, 64ch)">
+      Cole direto da planilha. A ordem esperada é <b>nome, sala, LinkedIn, GitHub</b> — mas se a primeira
+      linha tiver cabeçalho, as colunas são ligadas pelo nome e a ordem deixa de importar. LinkedIn aceita
+      a URL inteira ou só o handle.
+    </p>
+
+    <label class="pilha pilha-apertada">
+      <b class="campo-label">Lista</b>
+      <textarea class="campo" name="lista" spellcheck="false" rows="7" data-textarea-lista
+placeholder="nome	sala	linkedin	github
+Ana Silva	3ºA	https://www.linkedin.com/in/ana-silva	anasilva
+Bruno Costa	2ºB		brunocosta">nome	sala	linkedin	github
+Rafael Kuntz	5ºA		rafa-kuntz
+Iasmin Bonilha	3ºB	https://www.linkedin.com/in/iasminbonilha
+Nathan Prado	4ºA		nathanprado
+Rafael Kuntz	5ºA		rafa-kuntz
+	3ºA	https://www.linkedin.com/in/anonimo
+O	4ºA	</textarea>
+    </label>
+
+    <div class="grade" role="group" aria-label="Prévia da colagem">
+      <div class="metrica"><b class="metrica-valor num">3</b><span class="metrica-label eyebrow">entram</span></div>
+      <div class="metrica"><b class="metrica-valor num">1</b><span class="metrica-label eyebrow">duplicadas</span></div>
+      <div class="metrica"><b class="metrica-valor num">2</b><span class="metrica-label eyebrow">com problema</span></div>
+    </div>
+    <p style="font-size: var(--fs-200); color: var(--faint); margin: 0">Separador lido: tabulação · cabeçalho detectado</p>
+
+    <ul data-lista-erro aria-label="Primeiras linhas que entram">
+      <li><code>Rafael Kuntz</code> — 5ºA · gh:rafa-kuntz</li>
+      <li><code>Iasmin Bonilha</code> — 3ºB · in</li>
+      <li><code>Nathan Prado</code> — 4ºA · gh:nathanprado</li>
+    </ul>
+
+    <p class="toast toast--ok" role="status" data-recado>
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
+      3 novos · 1 duplicada na própria colagem
+    </p>
+
+    <ul data-lista-erro aria-label="Erros do parse, numerados pela linha colada">
+      <li>linha 6: <code>sem nome</code> — 	3ºA	https://www.linkedin.com/in/anonimo	</li>
+      <li>linha 7: <code>nome curto demais</code> — O	4ºA</li>
+    </ul>
+
+    <div class="linha">
+      <button type="button" class="btn btn--primario">Aplicar 3</button>
+      <button type="button" class="btn btn--secundario">Limpar</button>
+    </div>
+  </section>
+
+  <!-- FormAluno — um aluno por vez -->
+  <section class="cartao pilha" aria-labelledby="form-aluno-t">
+    <h2 id="form-aluno-t">Adicionar um aluno</h2>
+    <div class="grade grade-2">
+      <label class="pilha pilha-apertada">
+        <b class="campo-label">Nome</b>
+        <input class="campo" name="nome" required minlength="2" maxlength="120">
+      </label>
+      <label class="pilha pilha-apertada">
+        <b class="campo-label">Sala</b>
+        <input class="campo" name="sala" required list="salas-existentes" placeholder="3ºA">
+        <datalist id="salas-existentes">
+          <option value="3ºA"></option><option value="3ºB"></option>
+          <option value="4ºA"></option><option value="5ºA"></option>
+        </datalist>
+      </label>
+      <label class="pilha pilha-apertada">
+        <b class="campo-label">LinkedIn</b>
+        <input class="campo" name="linkedin" placeholder="linkedin.com/in/fulano">
+      </label>
+      <label class="pilha pilha-apertada">
+        <b class="campo-label">GitHub</b>
+        <input class="campo" name="github" placeholder="fulano">
+      </label>
+    </div>
+    <label class="pilha pilha-apertada">
+      <b class="campo-label">Bio (opcional)</b>
+      <input class="campo" name="bio" maxlength="280" placeholder="O que você curte fazer">
+    </label>
+    <div><button type="button" class="btn btn--primario">Adicionar</button></div>
+  </section>
+
+  <!-- Fila dos 3 pendentes — é daqui que a moderação é despachada -->
+  <section class="cartao pilha" aria-labelledby="fila-t">
+    <div class="linha linha-entre">
+      <h2 id="fila-t">Pendentes de aprovação</h2>
+      <span class="badge badge--aviso">3 na fila</span>
+    </div>
+    <div class="corte">
+      <table class="tabela">
+        <caption>Estes três vieram da colagem acima. Sem aprovação eles nunca aparecem na vitrine.</caption>
+        <thead>
+          <tr><th scope="col">Aluno</th><th scope="col">Sala</th><th scope="col" class="num">Estrelas</th><th scope="col">Ações</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)" aria-hidden="true">RK</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Rafael Kuntz</a><small>★ 0 · gh · aguardando aprovação</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--vermelho)">5ºA</span></td>
+            <td class="num">0</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--primario" aria-pressed="false" title="Libera o perfil na vitrine">Aprovar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--verde); --cor: var(--verde)" aria-hidden="true">IB</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Iasmin Bonilha</a><small>★ 0 · in · aguardando aprovação</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--verde)">3ºB</span></td>
+            <td class="num">0</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--primario" aria-pressed="false" title="Libera o perfil na vitrine">Aprovar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)" aria-hidden="true">NP</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Nathan Prado</a><small>★ 0 · gh · aguardando aprovação</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--amarelo)">4ºA</span></td>
+            <td class="num">0</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--primario" aria-pressed="false" title="Libera o perfil na vitrine">Aprovar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PainelAlunos — os 10 aprovados; rótulo diz a AÇÃO, estado vai no aria-pressed -->
+  <section class="cartao cartao--plano pilha" aria-labelledby="alunos-t">
+    <div class="linha linha-entre">
+      <h2 id="alunos-t">Alunos</h2>
+      <span class="eyebrow">fixar põe no topo · destaque dá a estrela do ADM</span>
+    </div>
+
+    <div class="corte">
+      <table class="tabela">
+        <caption>Ordem do painel: fixados primeiro, depois estrelas. <b>Pendentes vivem na fila acima.</b></caption>
+        <thead>
+          <tr><th scope="col">Aluno</th><th scope="col">Sala</th><th scope="col" class="num">Estrelas</th><th scope="col">Ações</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--ciano); --cor: var(--ciano)" aria-hidden="true">AD</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Alice Duarte</a><small>★ 14 · in · gh</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--ciano)">3ºA</span></td>
+            <td class="num">14</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Põe no topo da vitrine">Fixado</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="true" title="Marca como destaque">★ Destaque</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)" aria-hidden="true">MK</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Marina Kowalski</a><small>★ 13 · gh</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--vermelho)">5ºA</span></td>
+            <td class="num">13</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--verde); --cor: var(--verde)" aria-hidden="true">YR</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Yasmin Rocha</a><small>★ 12</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--verde)">3ºB</span></td>
+            <td class="num">12</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--azul-claro); --cor: var(--azul-claro)" aria-hidden="true">LF</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Luana Ferraz</a><small>★ 11 · gh</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--ciano)">3ºA</span></td>
+            <td class="num">11</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)" aria-hidden="true">TW</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Thales Wobeto</a><small>★ 10 · in</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--amarelo)">4ºA</span></td>
+            <td class="num">10</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--ciano); --cor: var(--ciano)" aria-hidden="true">PS</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Pedro Ivo Schmitt</a><small>★ 9</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--ciano)">3ºA</span></td>
+            <td class="num">9</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--petroleo); --cor: var(--petroleo)" aria-hidden="true">EM</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Enzo Marchiori</a><small>★ 8</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--verde)">3ºB</span></td>
+            <td class="num">8</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--vermelho); --cor: var(--vermelho)" aria-hidden="true">OR</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Otávio Redivo</a><small>★ 7</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--vermelho)">5ºA</span></td>
+            <td class="num">7</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--ciano); --cor: var(--ciano)" aria-hidden="true">DB</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Davi Bittencourt</a><small>★ 6 · gh</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--ciano)">3ºA</span></td>
+            <td class="num">6</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="linha">
+                <span class="avatar" style="--cor-destaque: var(--amarelo); --cor: var(--amarelo)" aria-hidden="true">BS</span>
+                <span class="pilha pilha-apertada"><a href="#" class="forte">Bruna Selming</a><small>★ 5</small></span>
+              </div>
+            </td>
+            <td><span class="selo selo--sala" style="--cor-destaque: var(--amarelo)">4ºA</span></td>
+            <td class="num">5</td>
+            <td>
+              <div class="linha">
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="true" title="Tira o perfil da vitrine até aprovar de novo">Despublicar</button>
+                <button type="button" class="btn btn--pequeno btn--secundario" aria-pressed="false" title="Põe no topo da vitrine">Fixar</button>
+                <button type="button" class="btn btn--pequeno btn--fantasma" aria-pressed="false" title="Marca como destaque">☆ Destacar</button>
+                <button type="button" class="btn btn--pequeno btn--perigo" title="Remove o aluno" data-abre="#modal-remover">Remover</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grade grade-2" aria-label="Estados do painel">
+      <div class="pilha">
+        <p class="eyebrow">Estado — vazio (antes da primeira colagem)</p>
+        <div class="vazio">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M9 3h6l1 2h4v3H4V5h4l1-2Z"/><path d="M4 8h16v13H4z"/><path d="M9 13h6"/></svg>
+          <p>Nenhum aluno ainda. Cole a lista da turma acima.</p>
+        </div>
+      </div>
+      <div class="pilha">
+        <p class="eyebrow">Estado — carregando (Server Action pendente)</p>
+        <div class="cartao cartao--plano pilha-apertada">
+          <div class="skeleton skeleton--titulo"></div>
+          <div class="skeleton skeleton--linha"></div>
+          <div class="skeleton skeleton--linha" style="width:72%"></div>
+          <div class="skeleton skeleton--linha" style="width:84%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="rodape">
+  <span>Esta página não é linkada em lugar nenhum e não é indexada.</span>
+  <span>Feito pela turma, para a turma.</span>
+</footer>
+
+<!-- O confirm() do BotaoRemover virou modal — aberto estático: o estado, não o gatilho -->
+<div class="modal modal-aberto" id="modal-remover" role="dialog" aria-modal="true" aria-labelledby="md-remover-t">
+  <div class="cartao modal-painel pilha">
+    <div class="linha linha-entre">
+      <h2 id="md-remover-t" style="font-size: var(--fs-500)">Remover aluno</h2>
+      <button type="button" class="modal-x" data-fecha aria-label="Fechar">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p style="color: var(--dim)">Tem certeza que deseja excluir Otávio Redivo? Esta ação é irreversível.</p>
+    <p class="eyebrow">Sem desfazer — o perfil, as estrelas e os links somem da vitrine.</p>
+    <div class="linha" style="justify-content: flex-end">
+      <button type="button" class="btn btn--secundario" data-fecha>Cancelar</button>
+      <button type="button" class="btn btn--perigo">Remover</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<script src="../sistemas/moldura.js" defer></script>
+</body>
+</html>
