@@ -55,3 +55,6 @@
 /* Etapa 2, fatia 6 — a CARA do B (forma de botão, sidebar, tabela, sombra).
    Vem por último: sobrescreve forma, nunca JSX. */
 @import "./styles/b-visivel-2026.css";
+/* Etapa 2, fatia 7 — unificação das formas que ainda divergiam entre telas
+   (modal, avatar, select, nav). Depois da fatia 6: fecha o que ela abriu. */
+@import "./styles/b-unificado-2026.css";
