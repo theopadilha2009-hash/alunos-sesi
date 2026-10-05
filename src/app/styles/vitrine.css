@@ -364,6 +364,11 @@
   align-items: center;
   gap: 0.4rem;
   margin-top: auto;
+  /* P1 do QA em produção (05/10): sem wrap, o rodapé do card (crachá +
+     LinkedIn + GitHub + estrela) transborda 159px em 390px e em tablet,
+     abrindo barra de rolagem lateral em /alunos. Bug pré-existente (PR #7),
+     não dos PRs do redesign. */
+  flex-wrap: wrap;
 }
 
 /* O `.selo` nasceu aqui e é reestilizado pelo estilo Discord novo dos cargos —
