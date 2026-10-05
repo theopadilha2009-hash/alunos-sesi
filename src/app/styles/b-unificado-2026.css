@@ -50,11 +50,15 @@
 }
 
 /* O backdrop principal (vitrine.css:1415) passa a ler o token. O blur sobe de
-   4px para 6px — o valor do B (sistema-b.css:973). */
+   4px para 6px — o valor do B (sistema-b.css:973).
+   ARMADILHA: a vitrine declara `backdrop-filter` E `-webkit-backdrop-filter`;
+   o minificador (lightningcss/Turbopack) colapsa as duas na versão com
+   PREFIXO só, e o Chromium ignora `-webkit-backdrop-filter` sozinho — o blur
+   simplesmente NÃO pintava (o QA de 05/10 mediu `computed: none`). Aqui vai
+   SÓ a forma padrão, que o minificador preserva. */
 .modal-backdrop {
   background: var(--backdrop);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 
 /* ── AVATARES: o mesmo aluno é círculo em toda tela ───────────────────────
@@ -63,10 +67,14 @@
    SIDEBAR (`.user-avatar`, crm.css:469) e a TABELA (`.mini-avatar`,
    crm.css:2206) desenhavam o MESMO aluno em quadrado 12px. Dentro do próprio
    CRM o card era redondo e a tabela quadrada. O B (sistema-b.css:1330) é
-   `--raio-full` em todos os tamanhos. Aqui os dois quadrados viram círculo.
+   `--raio-full` em todos os tamanhos. Aqui os quadrados viram círculo.
+   `.perfil-avatar` (vitrine-moderno.css:424, 22px) entra junto: é o avatar
+   do aluno na página pública de perfil — o QA de 05/10 pegou o mesmo aluno
+   redondo no crachá e quadrado ali.
    (Crachá e currículo ficam quadrados — ilha de forma, ver topo.) */
 .user-avatar,
-.mini-avatar {
+.mini-avatar,
+.perfil-avatar {
   border-radius: 50%;
 }
 
