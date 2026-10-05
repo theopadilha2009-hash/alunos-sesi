@@ -1,0 +1,113 @@
+/* ==========================================================================
+   b-unificado-2026.css — Etapa 2, fatia 7: unificação das formas que ainda
+   divergiam entre telas do MESMO app. A fatia 6 (b-visivel-2026.css) deu a
+   cara do B ao botão, sidebar, tabela e cartão; esta fecha os três buracos
+   que o QA de 05/10 levantou e que faziam duas telas parecerem dois apps:
+   modal com 4 raios diferentes, o mesmo aluno redondo na vitrine e quadrado
+   no CRM, e o campo de formulário em 4 dialetos de select.
+
+   Vem no FIM da cascata (depois de b-visivel-2026.css): sobrescreve forma,
+   nunca JSX. Nada aqui é renomeado — os seletores são os dialetos que já
+   existem no app.
+
+   O que NÃO entra de propósito (doutrina ILHA, herdada da fatia 2):
+   - `.cracha-container`/`.cracha-avatar` e `.curriculo-*`: o crachá EXPORTA
+     em PNG e o currículo IMPRIME em A4. Círculo/raio de tela não vale para
+     papel — essas telas ficam com a forma própria (registrado nos claro-*
+     como ilha de tema; aqui é ilha de FORMA).
+   - header sticky: `.crm-header` vive DENTRO de `.crm-main`, que tem
+     `padding: 2.5rem 3.5rem`. Um sticky ali gruda na coluna de conteúdo e
+     deixa o fundo vazar nas laterais do padding — regressão visual. Fazer
+     direito exige subir o header para fora do main (mexe em JSX/layout) ou
+     um `::before` de largura total; é decisão maior, adiada de propósito.
+   ========================================================================== */
+
+:root {
+  /* --sombra-alta: sombra de overlay do B (design/sistemas/sistema-b.css:144).
+     O app não tinha nome para ela — cada modal trazia a sua, todas diferentes. */
+  --sombra-alta: 0 25px 60px -15px rgb(0 0 0 / 0.75);
+  /* --backdrop: véu do B (sistema-b.css:145). O app usava rgba(4,7,12,.78)
+     cravado no .modal-backdrop e variações em cada backdrop próprio. */
+  --backdrop: rgb(4 8 13 / 0.72);
+  /* --raio-lg: o app só tinha --raio (16px) e --raio-p (10px); o degrau de
+     20px que o B usa para a caixa de modal não existia (sistema-b.css:94). */
+  --raio-lg: 20px;
+}
+
+/* ── MODAIS: um raio, uma sombra ──────────────────────────────────────────
+   Os painéis de UI do app tinham 16 / 22 / 18 / 16px de raio e quatro
+   sombras distintas. O B (sistema-b.css:978) usa --raio-lg (20px) e
+   --sombra-alta para a caixa de modal. A largura NÃO é unificada de
+   propósito: o recorte de banner precisa ser largo (760px) e a submissão de
+   desafio estreita (560px) por conteúdo — forçar uma só seria pior.
+   (`.modal-drawer-perfil` do crm.css:972 ficou de fora: é classe MORTA, não
+   existe em nenhum JSX — o drawer virou o `.modal-perfil-breve`.) */
+.modal-perfil-breve,
+.modal-recortar-banner,
+.modal-submissao-desafio {
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-alta);
+}
+
+/* O backdrop principal (vitrine.css:1415) passa a ler o token. O blur sobe de
+   4px para 6px — o valor do B (sistema-b.css:973). */
+.modal-backdrop {
+  background: var(--backdrop);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── AVATARES: o mesmo aluno é círculo em toda tela ───────────────────────
+   O achado: `.avatar` (vitrine.css:296) é 50%, e `.card-port-avatar`/
+   `.drawer-avatar`/`.hall-avatar`/`.nfc-avatar` herdam esse círculo — mas a
+   SIDEBAR (`.user-avatar`, crm.css:469) e a TABELA (`.mini-avatar`,
+   crm.css:2206) desenhavam o MESMO aluno em quadrado 12px. Dentro do próprio
+   CRM o card era redondo e a tabela quadrada. O B (sistema-b.css:1330) é
+   `--raio-full` em todos os tamanhos. Aqui os dois quadrados viram círculo.
+   (Crachá e currículo ficam quadrados — ilha de forma, ver topo.) */
+.user-avatar,
+.mini-avatar {
+  border-radius: 50%;
+}
+
+/* ── SELECTS: o corpo de campo que faltava ────────────────────────────────
+   primitivos-2026.css unificou os controles que eram `.campo input`/
+   `.input-texto`/`.busca`. Ficaram de fora os selects de dialeto próprio:
+   `.select-sala` (crm.css:2694, raio 10px, sem altura), `.select-projeto-alvo`
+   (estudio.css:120, raio 8px, padding 0.5rem) e `.select-custom`
+   (vitrine.css:1163, raio 10px, altura 2.6rem). Aqui eles adotam a mesma
+   caixa dos outros campos: --ctrl-h (2.75rem), --raio-md (12px), o padding
+   e o fundo "papel afundado" do B. */
+.select-sala,
+.select-projeto-alvo,
+.select-custom {
+  min-height: var(--ctrl-h);
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--raio-md);
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--bg) 55%, var(--surface));
+  font-size: 0.94rem;
+  color: var(--text);
+}
+
+/* `.select-custom` já tinha `height` cravado (2.6rem) — o min-height sozinho
+   não o venceria; e é um select de filtro, então o padding lateral fica. */
+.select-custom {
+  height: auto;
+  padding-inline: 0.9rem;
+}
+
+/* O seletor de turma do ADM (crm.css:3546) é um CONTROLE COMPACTO de header
+   (dot + select inline), não um campo de formulário — forçar --ctrl-h aqui
+   estouraria a barra. Só o raio sobe para o --raio-md do resto do app. */
+.adm-select-sala-wrap {
+  border-radius: var(--raio-md);
+}
+
+/* ── NAV: o item ativo usa o raio canônico ────────────────────────────────
+   b-visivel-2026.css:49 fixou o `.nav-item` em --raio-p (10px) — o último
+   resquício do raio antigo no chrome da sidebar. O resto do app já é
+   --raio-md (12px); alinha. */
+.nav-item {
+  border-radius: var(--raio-md);
+}
