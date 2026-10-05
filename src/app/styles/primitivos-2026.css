@@ -74,13 +74,17 @@
   width: 100%;
   box-sizing: border-box;
   min-height: var(--ctrl-h);
-  padding: 0.6rem 0.9rem;
+  padding: 0.7rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: var(--raio-md);
   background: color-mix(in oklab, var(--bg) 55%, var(--surface));
   color: var(--text);
   font-family: inherit;
-  font-size: 0.88rem;
+  /* 0.94rem = o do .campo input antes deste arquivo (vitrine.css:610). O
+     padrão B é 0.88rem, mas aqui ele ENCOLHERIA todo campo do app no tema
+     escuro sem a escala --fs-300 que o B usa como âncora — regressão que o
+     QA de 05/10 pegou. Quando a escala tipográfica entrar, desce junto. */
+  font-size: 0.94rem;
   line-height: 1.5;
   transition:
     border-color 0.14s var(--ease),

@@ -1,26 +1,11 @@
 /* ── TELA DE LOGIN & CADASTRO (Abertura Direta) ────────────────────────── */
 
 .login-tela-container {
-  /* Paleta própria desta tela: só azul e branco.
-     O app inteiro é turquesa (`--accent`), e o login era onde a mistura
-     aparecia mais — turquesa no fundo, VERDE no mesh glow e ciano no botão,
-     sobre cinco cinzas azulados diferentes. Aqui o acento vira azul e o verde
-     sai; o resto do app continua turquesa. A escolha é estética (uma família
-     de cor a menos nesta tela), não de contraste: o turquesa daqui era até
-     mais contrastado. */
-  --login-acento: #6aa9dc;
-  /* Redefinir o TOKEN, não enumerar seletores. O `--accent` é usado por tudo
-     que é interativo — o contorno de foco do `base.css`, o hover do botão de
-     tema, o `.dica-acao` ("Completar com @estudante…", que vive nesta tela).
-     A primeira versão deste PR listou os casos um a um e esqueceu o
-     `.dica-acao` — que continuou turquesa no meio de uma tela azul, com o
-     agravante de o `:focus-visible` dele (mesma especificidade 0-2-0, mas
-     declarado depois) vencer o override de foco. Redefinindo aqui, todo
-     descendente entra na paleta, inclusive o que for escrito amanhã.
-     O que NÃO entra junto, e vale saber antes de usar: `--glow`, `--ciano` e
-     `--verde` são literais em `tokens.css`, não derivam do `--accent` — código
-     novo nesta tela que peça `var(--glow)` sai turquesa no meio do azul. */
-  --accent: var(--login-acento);
+  /* Login veste o conceito B do showcase (design/telas/01-login.html): o
+     acento é o teal do app (`--accent`), o wordmark é grande em Bricolage e
+     as abas têm sublinhado. Até 05/10/2026 esta tela tinha paleta própria
+     azul (PR #44) — o Théo reverteu em 05/10/2026 para o login abrir na cara
+     do B. O `--azul` segue como dado de sala no resto do app. */
   min-height: 100vh;
   display: flex;
   /* O card fica ancorado no TOPO, não centralizado: centralizado, o topo dele
@@ -57,24 +42,13 @@
   padding-block-start: clamp(1.5rem, 7vh, 6rem);
   position: relative;
   overflow: hidden;
-  background: #0a1a2f;
-}
-
-:root[data-theme="light"] .login-tela-container {
-  /* O tema claro do app já é azul e branco — lá o `--accent` é o próprio
-     `--azul`. Então aqui basta devolver o fundo do tema. */
-  --login-acento: var(--azul);
   background: var(--bg);
 }
 
 /* O fundo do `<body>` acompanha: sem isto, o "elástico" da rolagem no celular
-   descobre o `--bg` quase preto atrás da tela azul. O container é `100vh`, mas
+   descobre o `--bg` quase preto atrás da tela. O container é `100vh`, mas
    o body é quem pinta a área além dele. */
 body:has(.login-tela-container) {
-  background: #0a1a2f;
-}
-
-:root[data-theme="light"] body:has(.login-tela-container) {
   background: var(--bg);
 }
 
@@ -82,13 +56,12 @@ body:has(.login-tela-container) {
   position: absolute;
   width: 600px;
   height: 600px;
-  /* Um azul só, no lugar do turquesa com verde por baixo. O
-     `--login-acento` seria claro demais para um brilho de fundo: aqui quem
-     manda é o `--azul` institucional. */
+  /* Brilho de fundo na cor do acento (teal), como o B — antes era o azul
+     institucional. */
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--azul) 32%, transparent) 0%,
-    color-mix(in srgb, var(--azul) 14%, transparent) 40%,
+    color-mix(in srgb, var(--accent) 32%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 40%,
     transparent 70%
   );
   top: 50%;
@@ -105,15 +78,15 @@ body:has(.login-tela-container) {
   max-width: 27rem;
   padding: 2.2rem;
   border-radius: var(--raio);
-  /* O cartão puxa o azul para dentro de si: sobre o fundo azul, o `--surface`
-     puro (cinza-azulado) lia como um bloco de outra família. No tema claro o
-     mesmo mix dá um branco levemente azulado. */
-  border: 1px solid color-mix(in srgb, var(--azul) 28%, var(--line));
-  /* O mix de dentro tinge de azul; o de fora devolve a transparência que o
-     cartão já tinha (e que o `backdrop-filter` abaixo usa). */
+  /* O cartão puxa o acento para dentro de si: sobre o fundo, o `--surface`
+     puro lia como um bloco de outra família. No tema claro o mesmo mix dá um
+     branco levemente tingido. */
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  /* O mix de dentro tinge; o de fora devolve a transparência que o cartão já
+     tinha (e que o `backdrop-filter` abaixo usa). */
   background: color-mix(
     in srgb,
-    color-mix(in srgb, var(--surface) 88%, var(--azul)) 92%,
+    color-mix(in srgb, var(--surface) 88%, var(--accent)) 92%,
     transparent
   );
   backdrop-filter: blur(16px);
@@ -137,11 +110,14 @@ body:has(.login-tela-container) {
 .login-titulo-marca {
   display: block;
   font-family: var(--fonte-titulo);
-  font-size: 1.3rem;
+  /* B: wordmark grande em Bricolage, duas linhas ("ALUNOS / SESI" no
+     showcase). Aqui é uma linha só — o markup tem um span — mas o corpo
+     sobe ao do B (--fs-700, 1.8rem) com o mesmo aperto de tracking. */
+  font-size: clamp(1.6rem, 5vw, 2.1rem);
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--text);
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
 .login-sub-marca {
@@ -151,13 +127,9 @@ body:has(.login-tela-container) {
   letter-spacing: 0.16em;
   /* Texto de 0,68rem em caixa alta: aqui o contraste é o que decide. O fundo
      que conta é o do CARTÃO, não o da tela — este texto mora dentro dele, e o
-     cartão é um blend (`--surface` com azul, 92% de opacidade) que dá algo
-     perto de `#0e1e2e`. Sobre ele, `#6aa9dc` dá ~6,7:1; o `--azul-claro`
-     (`#4881ae`), candidato óbvio por já existir no tema, dá ~4,0:1 — abaixo do
-     piso de 4,5:1 para este corpo. A troca do turquesa por azul nesta tela não
-     foi por contraste (o turquesa antigo dava 8,38:1 sobre o fundo da tela,
-     mais que o novo); foi para a tela ter uma família de cor só. */
-  color: var(--login-acento);
+     cartão é um blend (`--surface` com o acento, 92% de opacidade). Sobre ele
+     o acento do B (teal) passa o piso de 4,5:1. */
+  color: var(--accent);
   text-transform: uppercase;
 }
 
@@ -169,11 +141,15 @@ body:has(.login-tela-container) {
 
 .login-abas {
   display: flex;
-  padding: 3px;
-  background: var(--surface-2);
-  border-radius: var(--raio-p);
+  /* B: abas por sublinhado, sem pílula de fundo — a barra vira uma régua e a
+     aba ativa marca com o traço do acento (sistema-b §abas). */
+  gap: 0.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
   margin-bottom: 1.25rem;
-  border: 1px solid var(--line-soft);
 }
 
 .login-aba-btn {
@@ -205,16 +181,17 @@ body:has(.login-tela-container) {
      linha só nessa faixa, que é o comportamento anterior a esta correção: a
      barra fica mais alta, mas nada sai de dentro dela. */
   white-space: nowrap;
-  padding: 0.5rem 0.3rem;
+  padding: 0.6rem 0.4rem;
   border: none;
-  border-radius: calc(var(--raio-p) - 3px);
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: transparent;
   color: var(--dim);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.16s var(--ease);
+  transition: color 0.16s var(--ease), border-color 0.16s var(--ease);
 }
 
 /* Ver o comentário de `.login-aba-btn`: sem isto, três células de uma linha só
@@ -226,9 +203,11 @@ body:has(.login-tela-container) {
 }
 
 .login-aba-ativa {
-  background: var(--surface);
+  /* B: a aba ativa é o traço do acento sob o rótulo, sem fundo. */
+  background: transparent;
   color: var(--text);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+  border-bottom-color: var(--accent);
+  box-shadow: none;
 }
 
 .login-form {
@@ -250,22 +229,18 @@ body:has(.login-tela-container) {
   color: var(--faint);
 }
 
-/* O botão do login deixa o gradiente ciano→azul do `.botao-primario-grande`
-   (vitrine-moderno.css) e vira azul chapado. Escopado aqui de propósito: a
-   classe é compartilhada por 13 arquivos, e a mudança é só desta tela. */
+/* O botão do login veste o acento do B (teal). O `.botao-primario-grande`
+   tem gradiente ciano→azul próprio (vitrine-moderno.css); aqui ele usa o
+   acento chapado, como o `.btn--primario` do showcase. */
 .login-tela-container .botao-primario-grande {
-  background: var(--azul);
-  box-shadow: 0 10px 25px -8px color-mix(in srgb, var(--azul) 70%, transparent);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 10px 25px -8px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .login-tela-container .botao-primario-grande:hover {
-  box-shadow: 0 14px 30px -6px color-mix(in srgb, var(--azul) 80%, transparent);
+  box-shadow: 0 14px 30px -6px color-mix(in srgb, var(--accent) 80%, transparent);
 }
-
-/* Os dois overrides que existiam aqui (hover do botão de tema e contorno de
-   foco) saíram quando o `--accent` passou a ser redefinido no container: os
-   dois puxam `var(--accent)`, então já chegam azuis. Antes eram necessários
-   porque só o `--accent` do `:root` existia. */
 
 /* ── LAYOUT DO CRM (Sidebar + Main) ────────────────────────────────────── */
 
