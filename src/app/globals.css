@@ -52,3 +52,6 @@
 /* Etapa 2, fatia 4 — família .esq dos loading.tsx (seletor novo; o app nunca
    teve skeleton). */
 @import "./styles/skeleton-2026.css";
+/* Etapa 2, fatia 6 — a CARA do B (forma de botão, sidebar, tabela, sombra).
+   Vem por último: sobrescreve forma, nunca JSX. */
+@import "./styles/b-visivel-2026.css";

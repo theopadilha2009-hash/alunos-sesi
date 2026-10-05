@@ -19,7 +19,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--fonte-texto);
-  font-size: 1rem;
+  font-size: var(--fs-400);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;

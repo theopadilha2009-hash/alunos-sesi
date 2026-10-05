@@ -42,7 +42,7 @@
 }
 
 .mural-titulo {
-  font-size: 1.75rem;
+  font-size: var(--fs-700);
   font-weight: 800;
   color: #ffffff;
   margin: 0 0 0.6rem;
