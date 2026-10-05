@@ -16,4 +16,26 @@
      real é --sala (cor do card: override do aluno ou da sala — tipos.ts).
      Alias de compatibilidade: quem portar tela do showcase lê o mesmo nome. */
   --cor-destaque: var(--sala);
+
+  /* ── ESCALA TIPOGRÁFICA (Etapa 2, fatia 6) ──────────────────────────────
+     O app tinha 401 declarações de font-size em 53 valores avulsos — um muro
+     de degraus de ~0.02rem na faixa 0.68–0.95 (57% de tudo). A escala do B
+     (sistema-b.css §2) colapsa esse muro em 3 degraus, com delta ≤6% no
+     pixel. Os nomes são os do showcase de propósito: quem portar tela lê o
+     mesmo token. --fs-050 é degrau EXTRA do app (o B não tem): preserva a
+     cauda micro 0.55–0.65 que vive sobre miniatura/overlay. */
+  --fs-050: 0.625rem;
+  --fs-100: 0.72rem;
+  --fs-200: 0.8rem;
+  --fs-300: 0.88rem;
+  --fs-400: 1rem;
+  --fs-500: 1.15rem;
+  --fs-600: 1.4rem;
+  --fs-700: 1.8rem;
+  --fs-800: 2.35rem;
+  --fs-900: 3.2rem;
+
+  /* altura de linha do B (§2): apertada p/ título, 1.6 p/ corpo */
+  --lh-apertado: 1.25;
+  --lh-titulo: 1.08;
 }

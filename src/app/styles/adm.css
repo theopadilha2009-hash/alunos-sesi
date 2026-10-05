@@ -27,7 +27,7 @@
 }
 
 .adm-header-titulo {
-  font-size: 1.85rem;
+  font-size: var(--fs-700);
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0 0 0.35rem;

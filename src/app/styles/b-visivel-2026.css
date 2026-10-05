@@ -1,0 +1,85 @@
+/* ==========================================================================
+   b-visivel-2026.css — Etapa 2, fatia 6: a CARA do conceito B que faltava.
+   As fatias 1-5 moveram tokens, tema claro e estrutura — e o app continuou
+   parecendo o app. Esta fatia muda o que APARECE: forma de botão, chrome da
+   sidebar, densidade da tabela, peso da sombra. Valores medidos contra
+   design/sistemas/sistema-b.css (o showcase aprovado), um a um.
+   Vem no FIM da cascata: sobrescreve forma, nunca o layout de JSX.
+   ========================================================================== */
+
+:root {
+  /* O B tem três pesos de sombra; o app só tinha o pesado (--sombra).
+     --sombra-suave = cartão em repouso (sistema-b.css:616). */
+  --sombra-suave: 0 1px 2px rgb(0 0 0 / 0.28), 0 8px 24px -16px rgb(0 0 0 / 0.5);
+}
+
+/* ── BOTÃO BASE: a caixa do B (sistema-b.css:347) ──────────────────────────
+   O `.botao` do app tinha raio 10px (--raio-p), sem altura mínima, e o hover
+   APAGAVA (opacity .88). O B: raio 12px (--raio-md), min-height 2.4rem, e o
+   hover LEVANTA (translateY -1px) — feedback, não desvanecimento. Cores por
+   família (primário/secundário) ficam onde estão; isto é só a caixa. */
+.botao {
+  border-radius: var(--raio-md);
+  min-height: 2.4rem;
+  padding: 0.62rem 1.15rem;
+  font-size: var(--fs-300);
+  transition:
+    background 0.14s var(--ease),
+    border-color 0.14s var(--ease),
+    color 0.14s var(--ease),
+    box-shadow 0.24s var(--ease),
+    transform 0.14s var(--ease);
+}
+
+.botao:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.botao:active {
+  transform: translateY(0);
+}
+
+/* ── SIDEBAR: o chrome do B ────────────────────────────────────────────────
+   O item ativo do app tinha glow (box-shadow --glow) e o hover DESLIZAVA
+   (translateX 2px) — assinatura do app antigo. O B tinge o item ativo de
+   accent (texto e ícone) e o hover só troca fundo/cor, sem sombra nem
+   deslocamento (sistema-b.css:1189). */
+.nav-item {
+  border-radius: var(--raio-p);
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+
+.nav-item:hover {
+  transform: none;
+}
+
+.nav-item-ativo {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: color-mix(in srgb, var(--accent) 70%, var(--text));
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: none;
+}
+
+.nav-item-ativo .nav-icone {
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+}
+
+/* ── TABELA: densidade e zebra do B ───────────────────────────────────────
+   A linha do app era ~40% mais alta e sem zebra (só hover). O B usa linhas
+   mais baixas com zebra em --surface-2 (sistema-b.css:877-925). Zebra fica
+   SÓ nas linhas pares de dados (não no thead) e cede ao hover. */
+.tabela-alunos tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface-2) 45%, transparent);
+}
+
+.tabela-alunos tbody tr:nth-child(even):hover {
+  background: color-mix(in srgb, var(--sala, var(--accent)) 10%, var(--surface-2));
+}
+
+/* ── CARTÕES: sombra do B em repouso ──────────────────────────────────────
+   O app só dava sombra no hover; o B tem sombra suave permanente no cartão
+   (sistema-b.css:620). Aplicado aos cards de aluno, que são a grade pública. */
+.aluno {
+  box-shadow: var(--sombra-suave);
+}
