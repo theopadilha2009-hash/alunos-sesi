@@ -1423,6 +1423,21 @@ body:has(.login-tela-container) {
   border-color: var(--accent);
 }
 
+/* Faixa de mídia do card de projeto: a foto E os stickers dela. É o
+   `position: relative` do sticker — ancorado ao card inteiro, o `x`/`y` livre
+   deixava o gif cair sobre a descrição ("gif em cima do texto"). `overflow:
+   hidden` fecha a faixa: o sticker pode ser clipado na borda da foto, mas
+   nunca desce para o texto. Sem foto, `.projeto-midia-vazia` segura a mesma
+   altura para o sticker não sumir. */
+.projeto-midia {
+  position: relative;
+  overflow: hidden;
+}
+
+.projeto-midia-vazia {
+  height: 110px;
+}
+
 .foto-projeto {
   width: 100%;
   height: 110px;
