@@ -1,0 +1,46 @@
+/* ==========================================================================
+   ilhas-2026.css — ilhas de tema: o app abre no CLARO, o login fica ESCURO.
+
+   O padrão do tema virou claro (`layout.tsx`: `data-theme="light"`). A tela de
+   login é a exceção pedida pelo Théo ("tirando a tela inicial"): ela veste o
+   conceito B escuro do showcase (`crm.css:4`) e continua assim.
+
+   O `data-theme` vive no `<html>`, então não dá para excluir uma subárvore por
+   seletor. A saída é a mesma ILHA que a fatia do currículo já usa na barra do
+   A4 (`claro-curriculo.css` §2): repinar os tokens do escuro no container do
+   login. Tudo que lê `var(--surface)`, `var(--accent)` etc. dentro dele volta
+   ao escuro sem tocar em uma linha do `crm.css`.
+
+   Fica no FIM dos @import de propósito: precisa vencer `claro-crm.css`, que
+   pinta `.login-card` no claro.
+   ========================================================================== */
+
+:root[data-theme="light"] .login-tela-container {
+  --bg: #090d12;
+  --surface: #10161f;
+  --surface-2: #16202c;
+  --surface-3: #1e2a38;
+  --text: #f8fafc;
+  --dim: #94a3b8;
+  --faint: #8291a8;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.04);
+  --fg: var(--text);
+  --border: var(--line);
+  --accent: #38c7bd;
+  --on-accent: #04211f;
+  --glow: rgba(56, 199, 189, 0.16);
+}
+
+/* O `<body>` do login pinta o "elástico" da rolagem (crm.css:51) e fica FORA
+   do container — `var(--bg)` aqui resolveria no `:root` (claro), não na ilha.
+   Por isso o valor vai literal. */
+:root[data-theme="light"] body:has(.login-tela-container) {
+  background: #090d12;
+}
+
+/* `claro-crm.css:66` troca a sombra preta do cartão pela névoa azulada do
+   claro. Dentro da ilha escura vale a sombra do `crm.css:120`. */
+:root[data-theme="light"] .login-card {
+  box-shadow: 0 25px 60px -20px rgb(0 0 0 / 0.85);
+}

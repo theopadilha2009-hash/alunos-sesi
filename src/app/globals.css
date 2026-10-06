@@ -60,3 +60,6 @@
 @import "./styles/b-unificado-2026.css";
 /* Etapa 2, fatia 8 — header do CRM sticky com blur (último item do QA da 7). */
 @import "./styles/b-header-2026.css";
+/* Ilhas de tema — o app abre no claro, o login fica escuro. Precisa vir por
+   último para vencer `claro-crm.css` (`.login-card`). */
+@import "./styles/ilhas-2026.css";
