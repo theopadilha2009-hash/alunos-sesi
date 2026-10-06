@@ -166,9 +166,15 @@
 }
 
 .curriculo-contatos-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.4rem 1.5rem;
+  /* flex-wrap, não grid de 2 colunas fixas: a coluna de 1fr media 314px e a
+     matrícula (SESI-SC-JVE-NOME-0000, 27ch) quebrava em 2 linhas junto com o
+     rótulo. Em flex cada item fica na largura do conteúdo e o `nowrap` do item
+     garante "tudo na mesma linha" — o e-mail institucional (medido até 55ch)
+     cabe sem transbordar. */
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 2.5rem;
+  row-gap: 0.4rem;
   font-size: 0.8rem;
 }
 
@@ -176,6 +182,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  white-space: nowrap;
 }
 
 .contato-rotulo {
