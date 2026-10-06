@@ -49,30 +49,6 @@
   border-color: var(--vermelho);
 }
 
-.cracha-cordao-presilha {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: -10px;
-  z-index: 2;
-}
-
-.cracha-fita {
-  width: 44px;
-  height: 24px;
-  background: linear-gradient(90deg, #38c7bd, #3b82f6, #38c7bd);
-  border-radius: 4px 4px 0 0;
-  border: 1px solid rgb(255 255 255 / 0.3);
-}
-
-.cracha-gancho {
-  width: 26px;
-  height: 12px;
-  background: #cbd5e1;
-  border-radius: 2px 2px 6px 6px;
-  border: 1px solid #64748b;
-}
-
 .cracha-card,
 .cracha-card-leve {
   --text: #ffffff !important;
