@@ -396,37 +396,40 @@ export function PerfilInterativo({
                 const stickersProj = stickersDoProjeto(p.id);
 
                 return (
-                  <div
-                    key={p.id}
-                    className="card-projeto-vitrine"
-                    style={{ position: "relative", overflow: "hidden" }}
-                  >
-                    {/* Stickers / GIFs específicos deste projeto */}
-                    {stickersProj.map((st) => (
-                      <div
-                        key={st.id}
-                        className="sticker-flutuante-proj"
-                        style={{
-                          position: "absolute",
-                          left: `${st.x}%`,
-                          top: `${st.y}%`,
-                          width: `${st.tamanho || 54}px`,
-                          transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
-                          pointerEvents: "none",
-                          zIndex: 4,
-                        }}
-                        title={st.rotulo || "Elemento visual"}
-                      >
-                        <img
-                          src={st.url}
-                          alt={st.rotulo || "Sticker"}
-                          style={{ width: "100%", height: "auto", display: "block" }}
-                        />
+                  <div key={p.id} className="card-projeto-vitrine">
+                    {/* Stickers / GIFs presos à FOTO do projeto — mesmo motivo
+                        do modal de perfil: ancorados ao card, o `x`/`y` livre
+                        deixava o gif sobre a descrição. */}
+                    {p.imagem || stickersProj.length > 0 ? (
+                      <div className="projeto-midia">
+                        {p.imagem ? (
+                          <img src={p.imagem} alt={p.titulo} className="foto-projeto" loading="lazy" />
+                        ) : (
+                          <div className="projeto-midia-vazia" aria-hidden="true" />
+                        )}
+                        {stickersProj.map((st) => (
+                          <div
+                            key={st.id}
+                            className="sticker-flutuante-proj"
+                            style={{
+                              position: "absolute",
+                              left: `${st.x}%`,
+                              top: `${st.y}%`,
+                              width: `${st.tamanho || 54}px`,
+                              transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
+                              pointerEvents: "none",
+                              zIndex: 4,
+                            }}
+                            title={st.rotulo || "Elemento visual"}
+                          >
+                            <img
+                              src={st.url}
+                              alt={st.rotulo || "Sticker"}
+                              style={{ width: "100%", height: "auto", display: "block" }}
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-
-                    {p.imagem ? (
-                      <img src={p.imagem} alt={p.titulo} className="foto-projeto" loading="lazy" />
                     ) : null}
                     <div className="conteudo-projeto">
                       <h4>{p.titulo}</h4>
