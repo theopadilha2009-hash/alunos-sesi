@@ -9,3 +9,4 @@
 - [As decisões são do Théo](decisoes-sao-do-theo.md) — neste projeto não há Ruan nem Daniel para decidir: recomendar e executar, não parar
 - [Acesso por código](acesso-por-codigo.md) — o aluno da planilha assume o perfil com um código ditado em voz alta; 12 dos 15 ainda esperam
 - [Showcase de design A|B](design-showcase.md) — Etapa 2 (port ao app) executada com B como alvo em 10 PRs; escolha por tela e Etapa 3 seguem abertas
+- [Feedback do PDF "Plataforma sesi"](feedback-pdf-plataforma-sesi.md) — 23 anotações do Théo (06/10); frente 1 (currículo + crachá) fechada, o resto é fix de design ou feature a decidir
