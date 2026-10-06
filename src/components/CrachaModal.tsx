@@ -170,11 +170,6 @@ export function CrachaModal({ aluno, role, onClose }: Props) {
           ✕
         </button>
 
-        <div className="cracha-cordao-presilha" aria-hidden="true">
-          <div className="cracha-fita" />
-          <div className="cracha-gancho" />
-        </div>
-
         {/* Card do Crachá: Iluminado, nítido e interativo em 3D como carta colecionável */}
         <div
           ref={cardRef}
