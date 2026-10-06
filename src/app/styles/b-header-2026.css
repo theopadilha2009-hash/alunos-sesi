@@ -52,9 +52,11 @@
   min-width: 0;
 }
 
-/* A busca gruda logo abaixo do header, não no topo — senão cobre o título. */
+/* A busca gruda logo abaixo do header, não no topo — senão cobre o título.
+   O +1px é respiro: --crm-header-h é arredondado para inteiro (126px) contra
+   a altura real fracionária (125.5px), e a folga zerava a 390px. */
 .crm-main .controles {
-  top: var(--crm-header-h);
+  top: calc(var(--crm-header-h) + 1px);
 }
 
 @media (max-width: 820px) {
