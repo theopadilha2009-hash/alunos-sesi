@@ -1,0 +1,66 @@
+/* ==========================================================================
+   b-header-2026.css — Etapa 2, fatia 8: o header do CRM gruda no topo.
+   Último item que o QA de 05/10 deixou em aberto na fatia 7 (b-unificado).
+   O B (sistema-b.css:284) tem o `.topo` sticky com blur; o app só tinha isso
+   na vitrine (`.controles`, vitrine.css:166) — o header do CRM rolava embora
+   e levava o título da aba e o botão "Editar Meu Perfil".
+
+   Dois detalhes que o sticky ingênuo erra:
+   1) `.crm-main` tem `padding: 2.5rem 3.5rem`. Um sticky preso à caixa de
+      conteúdo deixa o fundo mais estreito que o main, e o conteúdo rola
+      visível nas laterais. A correção é o full-bleed: margem negativa igual
+      ao padding lateral, recompensada no padding do próprio header — assim a
+      caixa do header cobre o padding do main.
+   2) `.controles` (a barra de busca/filtros) JÁ é `sticky; top: 0`. Dois
+      stickies no mesmo `top` se sobrepõem. A busca passa a grudar abaixo do
+      header, via a variável --crm-header-h (medida em produção por breakpoint).
+
+   Vem no fim da cascata, como as fatias 1-7: sobrescreve forma, nunca JSX.
+   ========================================================================== */
+
+:root {
+  /* Altura do header quando grudo. O CrmApp MEDE a altura real e sobrescreve
+     esta var em px (ResizeObserver) — porque o header quebra em flex-wrap e a
+     altura varia de ~111px a ~191px conforme a largura. Este valor em rem é
+     só o fallback para o 1º frame, antes da medição (7.9rem ≈ 1440px). */
+  --crm-header-h: 7.9rem;
+}
+
+.crm-header {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  /* sobe até o topo do main e devolve o respiro como padding — o título fica
+     na mesma posição de antes quando a página está no topo, mas ganha ar
+     quando gruda (sem isso o texto encostava na borda da viewport). */
+  margin-top: -1.25rem;
+  padding-top: 1.25rem;
+  /* full-bleed: cobre o padding lateral de 3.5rem do .crm-main */
+  margin-inline: -3.5rem;
+  padding-inline: 3.5rem;
+  /* fundo do B (sistema-b.css:286): véu do --bg + blur */
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+/* Bug PRÉ-EXISTENTE achado ao medir o header: o .crm-main é item de grid e
+   tinha `min-width: auto` (default), então o conteúdo esticava a coluna além
+   do track — 41px de overflow horizontal a 1440px (o header herdava a
+   largura estourada). `min-width: 0` deixa o item encolher até o track.
+   Medido: scrollWidth 1481 → 1440. */
+.crm-main {
+  min-width: 0;
+}
+
+/* A busca gruda logo abaixo do header, não no topo — senão cobre o título. */
+.crm-main .controles {
+  top: var(--crm-header-h);
+}
+
+@media (max-width: 820px) {
+  .crm-header {
+    /* o .crm-main cai para padding 1.25rem neste breakpoint */
+    margin-inline: -1.25rem;
+    padding-inline: 1.25rem;
+  }
+}

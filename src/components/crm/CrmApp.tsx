@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
@@ -139,6 +139,26 @@ export function CrmApp({
   // Com que sub-aba o Painel ADM abre. O atalho do Mural de Desafios escreve
   // aqui antes de trocar de aba — o painel monta depois, e pega o valor novo.
   const [subAbaAdm, setSubAbaAdm] = useState<"alunos" | "desafios">("alunos");
+
+  // O header gruda no topo (fatia 8) e a barra de busca gruda logo abaixo dele
+  // (top: var(--crm-header-h)). A altura do header NÃO é fixa: título e ações
+  // quebram em flex-wrap, e ela varia de ~111px a ~191px conforme a largura.
+  // Medimos a altura real e publicamos na variável — assim a busca nunca
+  // cobre o título, em nenhum breakpoint.
+  const headerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const medir = () =>
+      document.documentElement.style.setProperty(
+        "--crm-header-h",
+        `${Math.round(el.getBoundingClientRect().height)}px`,
+      );
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [aba]);
 
   // Mapeia alunos para a visualização na tela
   const naTela: AlunoNaTela[] = useMemo(() => {
@@ -624,7 +644,7 @@ export function CrmApp({
       {/* ── CONTEÚDO PRINCIPAL (ÁREA CENTRAL) ────────────────────────────── */}
       <main className="crm-main">
         {/* Topo do Header Central */}
-        <header className="crm-header">
+        <header className="crm-header" ref={headerRef}>
           <div>
             <span className="eyebrow">
               {aba === "portfolio"

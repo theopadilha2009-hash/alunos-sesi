@@ -58,3 +58,5 @@
 /* Etapa 2, fatia 7 — unificação das formas que ainda divergiam entre telas
    (modal, avatar, select, nav). Depois da fatia 6: fecha o que ela abriu. */
 @import "./styles/b-unificado-2026.css";
+/* Etapa 2, fatia 8 — header do CRM sticky com blur (último item do QA da 7). */
+@import "./styles/b-header-2026.css";
