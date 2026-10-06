@@ -20,7 +20,7 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#090d12",
+  themeColor: "#f8fafc",
   width: "device-width",
   initialScale: 1,
 };
@@ -55,7 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
-      data-theme="dark"
+      data-theme="light"
       className={`${manrope.variable} ${bricolage.variable}`}
       suppressHydrationWarning
     >
