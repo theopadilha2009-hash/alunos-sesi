@@ -376,9 +376,24 @@
 
 /* Impressão específica da folha A4 */
 @media print {
+  /* Só a folha do currículo sai no papel. O `.crm-layout` tem 14 filhos — a
+     sidebar, o main e os outros modais ficam MONTADOS atrás quando o currículo
+     abre — e o `.modal-perfil-breve` entrava no fluxo de impressão junto com o
+     A4: era o "baixar PDF duplica as páginas". O `:has()` escopa a regra para
+     não zerar a impressão do Catálogo, que usa o mesmo `.crm-layout` sem
+     currículo aberto. */
+  .crm-layout:has(.curriculo-folha-a4) > :not(.curriculo-modal-backdrop) {
+    display: none !important;
+  }
+
   .nao-imprimir,
-  .curriculo-top-bar,
+  .curriculo-top-bar {
+    display: none !important;
+  }
+
+  /* `position: fixed` repetiria a folha a cada página; estático flui uma vez. */
   .modal-backdrop.curriculo-modal-backdrop {
+    position: static !important;
     background: transparent !important;
     padding: 0 !important;
   }
