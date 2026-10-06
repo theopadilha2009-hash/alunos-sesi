@@ -8,4 +8,4 @@
 - [Pendências de decisão](pendencias-de-decisao.md) — o gate de moderação é intencional e já foi removido uma vez; o que mais fechou e o que segue aberto
 - [As decisões são do Théo](decisoes-sao-do-theo.md) — neste projeto não há Ruan nem Daniel para decidir: recomendar e executar, não parar
 - [Acesso por código](acesso-por-codigo.md) — o aluno da planilha assume o perfil com um código ditado em voz alta; 12 dos 15 ainda esperam
-- [Showcase de design A|B](design-showcase.md) — Etapa 2 (port ao app) executada com B como alvo em 5 PRs; escolha por tela e Etapa 3 seguem abertas
+- [Showcase de design A|B](design-showcase.md) — Etapa 2 (port ao app) executada com B como alvo em 10 PRs; escolha por tela e Etapa 3 seguem abertas
