@@ -130,6 +130,12 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   Playwright em `/alunos` (`reducedMotion: no-preference`): voto confirmado →
   chunk de `canvas-confetti` pedido; voto recusado (404 do mock) → chunk não
   pedido, contador 11→11 e recado na tela.
+- ✅ **p4 "muda um eu ccolo encima outro nao"** → **já resolvido pelo PR #103.**
+  É a MESMA anotação do p9 (o comentário de `StickerCanvas.tsx:190` a cita
+  literalmente: "muda um, eu clico em cima de outro não"). O arrasto com
+  `setPointerCapture` fechou as duas — com dois elementos empilhados o clique
+  caía no de cima, e o arrasto resolve sem depender de qual está na frente.
+  Ficou como "não mapeado" por engano até esta checagem.
 - ✅ **p2/p3 "apaga essa merda" / "apga tudo que tem a ver com isso aquiu"** →
   **resolvido, sem código novo.** As capturas dessas páginas são do tema
   ESCURO, e as anotações são texto SOLTO sob a captura — nenhuma seta/rabisco
@@ -138,12 +144,23 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   alunos: o próprio print de referência do Théo (o CRM claro "bom") contém os
   dois.
 
-**Páginas ainda pendentes (do Théo):** "Meu Perfil" como modal (p5 — pedido
-explícito: "janela nova onde tudo fica mais bem distribuído, pois o Meu Perfil
-tem muita poluição visual, e isso deveria ser rápido"), editar/apagar turmas no
-ADM (p5 — **feature**, não fix), dois "Lucas Bento" (p7 — **dado**, não
-código), apagar salas menos 9 (p9 — **dado/decisão**), botão de denúncia pra
-tudo (p1 — **feature**).
+**Frente 6 (p5 "Meu Perfil como janela") — FECHADA em 07/10:**
+- ✅ **p5 "clicando no meu perfil ele abre como se fosse uma janela nova onde
+  tudo fica mais bem distribuído, pois o meu perfil tem muita poluição visual,
+  e isso deveria ser rápido"** → **PR #112**. O editor era uma ABA do CRM:
+  dividia a tela com a sidebar e a moldura do header, e o conteúdo denso (hero
+  + 6 abas + barra de salvar) ficava espremido. Virou **janela**
+  (`MeuPerfilModal`): 76rem × 92vh, scroll interno, fechar no ✕/backdrop/ESC,
+  trava de foco e ESC respeitando o diálogo aninhado (com o crachá aberto
+  dentro, o 1º ESC fecha só ele). "Meu Perfil" saiu da navegação da sidebar e
+  da lista de abas; o card do usuário e o botão do header abrem a janela. O
+  breadcrumb do `PaginaMeuPerfil` saiu (ruído dentro da janela). As 6 abas, a
+  barra de salvar e o hero ficaram idênticos — a mudança é a moldura.
+
+**Páginas ainda pendentes (do Théo):** editar/apagar turmas no ADM (p5 —
+**feature**, não fix), dois "Lucas Bento" (p7 — **dado**, não código), apagar
+salas menos 9 (p9 — **dado/decisão**), botão de denúncia pra tudo (p1 —
+**feature**).
 
 > **p2/p3: a contradição está resolvida.** O "apaga tudo disso aí, parece um
 > limbo" era sobre o TEMA ESCURO (as capturas são escuras), não sobre os
