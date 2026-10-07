@@ -444,15 +444,28 @@
 
 .sticker-overlay-item {
   position: absolute;
-  cursor: pointer;
+  cursor: grab;
   z-index: 10;
   user-select: none;
+  /* Sem isto o navegador trata o arrasto como rolagem e o `pointermove` para
+     no meio do caminho no toque. */
+  touch-action: none;
+}
+
+.sticker-arrastando {
+  cursor: grabbing;
+  z-index: 12;
 }
 
 .sticker-overlay-item .sticker-img {
   width: 100%;
   height: auto;
   display: block;
+  /* O `draggable` nativo da `<img>` dispara `pointercancel` no primeiro
+     movimento e mata o arrasto do sticker. Desligado aqui, e o ponteiro passa
+     direto para o container, que é quem carrega os handlers de arrasto. */
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .sticker-bounding-box {

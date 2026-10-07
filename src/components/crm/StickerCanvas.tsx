@@ -66,6 +66,19 @@ const PRESETS_STICKERS: { rotulo: string; url: string; tipo: "gif" | "sticker" }
   },
 ];
 
+/**
+ * Onde o ponteiro caiu, em % do container do canvas, preso a 5-95.
+ *
+ * O 5-95 é o mesmo clamp que o servidor aplica na posição: sem ele o elemento
+ * pode ser largado com o centro fora da moldura e metade dele some na borda.
+ */
+function posicaoNoContainer(el: HTMLElement, clientX: number, clientY: number) {
+  const rect = el.getBoundingClientRect();
+  const x = Math.round(((clientX - rect.left) / rect.width) * 100);
+  const y = Math.round(((clientY - rect.top) / rect.height) * 100);
+  return { x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)) };
+}
+
 export function StickerCanvas({
   nomeAluno,
   fotoAluno,
@@ -171,6 +184,60 @@ export function StickerCanvas({
   function atualizarSticker(id: string, updates: Partial<StickerPerfil>) {
     const atualizados = stickers.map((s) => (s.id === id ? { ...s, ...updates } : s));
     onChangeStickers(atualizados);
+  }
+
+  /**
+   * Arrastar o elemento direto (p9 do PDF: "muda um, eu clico em cima de outro
+   * não").
+   *
+   * Antes só existia o clique-para-posicionar no canvas. Com dois elementos
+   * empilhados, o clique no ponto desejado caía no de CIMA — o `stopPropagation`
+   * dele só trocava a seleção, e o elemento que o aluno queria mover não saía do
+   * lugar. O arrasto resolve na raiz: você pega o elemento que quer mover e
+   * arrasta, sem depender de qual está por cima naquele pixel.
+   *
+   * O `setPointerCapture` é o que faz o arrasto sobreviver a passar por cima de
+   * outro elemento: os eventos continuam indo para quem capturou, não para o que
+   * está embaixo do ponteiro.
+   */
+  const arrastoRef = useRef<{ id: string; pai: HTMLElement | null } | null>(null);
+  const [arrastandoId, setArrastandoId] = useState<string | null>(null);
+
+  function iniciarArrasto(
+    st: StickerPerfil,
+    alvo: "banner" | "projeto",
+    projetoId: string | undefined,
+    ev: React.PointerEvent<HTMLDivElement>,
+  ) {
+    // O `preventDefault` é o que impede o arrasto NATIVO da `<img>` de começar.
+    // Sem ele o navegador assume o gesto no primeiro movimento, dispara
+    // `pointercancel` e mata a captura — o sticker anda dois pixels e trava.
+    // (Medido: 2 `pointermove` e um `pointercancel` no lugar de 10 movimentos.)
+    ev.preventDefault();
+    ev.stopPropagation();
+    setStickerSelecionadoId(st.id);
+    setAlvoAtivo(alvo);
+    if (projetoId) setProjetoAlvoId(projetoId);
+    arrastoRef.current = { id: st.id, pai: ev.currentTarget.parentElement };
+    setArrastandoId(st.id);
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+  }
+
+  function moverArrasto(ev: React.PointerEvent<HTMLDivElement>) {
+    const arrasto = arrastoRef.current;
+    if (!arrasto?.pai) return;
+    ev.stopPropagation();
+    atualizarSticker(arrasto.id, posicaoNoContainer(arrasto.pai, ev.clientX, ev.clientY));
+  }
+
+  function soltarArrasto(ev: React.PointerEvent<HTMLDivElement>) {
+    if (!arrastoRef.current) return;
+    ev.stopPropagation();
+    if (ev.currentTarget.hasPointerCapture(ev.pointerId)) {
+      ev.currentTarget.releasePointerCapture(ev.pointerId);
+    }
+    arrastoRef.current = null;
+    setArrastandoId(null);
   }
 
   /**
@@ -282,14 +349,10 @@ export function StickerCanvas({
   // Permite clicar diretamente no banner para posicionar ou retornar o sticker ao banner
   function handleCliqueCanvasBanner(ev: React.MouseEvent<HTMLDivElement>) {
     if (!stickerSelecionado) return;
-    const rect = ev.currentTarget.getBoundingClientRect();
-    const x = Math.round(((ev.clientX - rect.left) / rect.width) * 100);
-    const y = Math.round(((ev.clientY - rect.top) / rect.height) * 100);
     atualizarSticker(stickerSelecionado.id, {
       alvo: "banner",
       projetoId: undefined,
-      x: Math.max(5, Math.min(95, x)),
-      y: Math.max(5, Math.min(95, y)),
+      ...posicaoNoContainer(ev.currentTarget, ev.clientX, ev.clientY),
     });
     setAlvoAtivo("banner");
   }
@@ -297,14 +360,10 @@ export function StickerCanvas({
   // Permite clicar diretamente em um projeto para fixar o sticker nele
   function handleCliqueCanvasProjeto(projId: string, ev: React.MouseEvent<HTMLDivElement>) {
     if (!stickerSelecionado) return;
-    const rect = ev.currentTarget.getBoundingClientRect();
-    const x = Math.round(((ev.clientX - rect.left) / rect.width) * 100);
-    const y = Math.round(((ev.clientY - rect.top) / rect.height) * 100);
     atualizarSticker(stickerSelecionado.id, {
       alvo: "projeto",
       projetoId: projId,
-      x: Math.max(5, Math.min(95, x)),
-      y: Math.max(5, Math.min(95, y)),
+      ...posicaoNoContainer(ev.currentTarget, ev.clientX, ev.clientY),
     });
     setAlvoAtivo("projeto");
     setProjetoAlvoId(projId);
@@ -596,7 +655,9 @@ export function StickerCanvas({
         <div className="estudio-painel-canvas">
           <div className="canvas-header-info">
             <span className="canvas-tag">PRÉVIA INTERATIVA EM TEMPO REAL</span>
-            <span className="canvas-dica">Clique em qualquer ponto da tela para posicionar o elemento</span>
+            <span className="canvas-dica">
+              Arraste o elemento para movê-lo, ou clique num ponto da tela para fixá-lo ali
+            </span>
           </div>
 
           {/* Canvas 1: Banner Principal do Perfil */}
@@ -605,7 +666,7 @@ export function StickerCanvas({
               <span className="canvas-secao-titulo" style={{ margin: 0 }}>Visualização: Banner do Perfil</span>
               {stickerSelecionado ? (
                 <span className="canvas-drop-hint" style={{ fontSize: "0.75rem", color: "var(--accent)", fontWeight: 700 }}>
-                  🎯 Clique no banner para fixar ou mover aqui
+                  🎯 Arraste o elemento, ou clique aqui para fixá-lo
                 </span>
               ) : null}
             </div>
@@ -630,19 +691,23 @@ export function StickerCanvas({
                 return (
                   <div
                     key={st.id}
-                    className={`sticker-overlay-item ${isSelected ? "sticker-selecionado" : ""}`}
+                    className={`sticker-overlay-item ${isSelected ? "sticker-selecionado" : ""} ${arrastandoId === st.id ? "sticker-arrastando" : ""}`}
                     style={{
                       left: `${st.x}%`,
                       top: `${st.y}%`,
                       width: `${st.tamanho || 70}px`,
                       transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
                     }}
+                    onPointerDown={(e) => iniciarArrasto(st, "banner", undefined, e)}
+                    onPointerMove={moverArrasto}
+                    onPointerUp={soltarArrasto}
+                    onPointerCancel={soltarArrasto}
                     onClick={(e) => {
                       e.stopPropagation();
                       setStickerSelecionadoId(st.id);
                       setAlvoAtivo("banner");
                     }}
-                    title={`${st.rotulo} (Clique para editar)`}
+                    title={`${st.rotulo} (Arraste para mover)`}
                   >
                     <img src={st.url} alt={st.rotulo || "Sticker"} className="sticker-img" />
                     {isSelected ? <div className="sticker-bounding-box" /> : null}
@@ -668,7 +733,7 @@ export function StickerCanvas({
                 <span className="canvas-secao-titulo" style={{ margin: 0 }}>Visualização: Projetos com Elementos Fixados</span>
                 {stickerSelecionado ? (
                   <span className="canvas-drop-hint" style={{ fontSize: "0.75rem", color: "#60a5fa", fontWeight: 700 }}>
-                    🎯 Clique em qualquer projeto para fixar o elemento sobre ele
+                    🎯 Arraste o elemento sobre o projeto, ou clique para fixá-lo
                   </span>
                 ) : null}
               </div>
@@ -689,20 +754,24 @@ export function StickerCanvas({
                         return (
                           <div
                             key={st.id}
-                            className={`sticker-overlay-item ${isSelected ? "sticker-selecionado" : ""}`}
+                            className={`sticker-overlay-item ${isSelected ? "sticker-selecionado" : ""} ${arrastandoId === st.id ? "sticker-arrastando" : ""}`}
                             style={{
                               left: `${st.x}%`,
                               top: `${st.y}%`,
                               width: `${st.tamanho || 60}px`,
                               transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
                             }}
+                            onPointerDown={(e) => iniciarArrasto(st, "projeto", proj.id, e)}
+                            onPointerMove={moverArrasto}
+                            onPointerUp={soltarArrasto}
+                            onPointerCancel={soltarArrasto}
                             onClick={(e) => {
                               e.stopPropagation();
                               setStickerSelecionadoId(st.id);
                               setAlvoAtivo("projeto");
                               setProjetoAlvoId(proj.id);
                             }}
-                            title={`${st.rotulo} (Clique para editar)`}
+                            title={`${st.rotulo} (Arraste para mover)`}
                           >
                             <img src={st.url} alt={st.rotulo || "Sticker"} className="sticker-img" />
                             {isSelected ? <div className="sticker-bounding-box" /> : null}
