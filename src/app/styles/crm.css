@@ -2451,6 +2451,56 @@ body:has(.login-tela-container) {
   animation: fadeIn 0.2s var(--ease);
 }
 
+/* ── "MEU PERFIL" COMO JANELA (p5 do PDF) ──────────────────────────────────
+   O editor saiu da aba e virou modal: como aba, ele dividia a tela com a
+   sidebar e a moldura do CRM, e o conteúdo denso (hero + 6 abas + barra de
+   salvar) ficava espremido — o "muita poluição visual" da anotação. A janela
+   dá a ele a tela inteira, com largura para as duas colunas respirarem. O
+   scroll fica num filho (`.meu-perfil-scroll`) para o botão de fechar, irmão
+   absoluto, não rolar junto. */
+.modal-meu-perfil {
+  padding: 1.5rem;
+}
+
+.meu-perfil-janela {
+  position: relative;
+  width: min(100%, 76rem);
+  height: min(100%, 60rem);
+  max-height: 92vh;
+  border-radius: var(--raio-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--sombra-alta);
+  overflow: hidden;
+  animation: scaleUp 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.meu-perfil-scroll {
+  height: 100%;
+  overflow-y: auto;
+  /* O topo folga mais que os lados: ali vive o botão de fechar. */
+  padding: 2.75rem 1.75rem 1.75rem;
+}
+
+.meu-perfil-fechar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 30;
+  background: var(--surface-2);
+}
+
+@media (max-width: 640px) {
+  .modal-meu-perfil {
+    padding: 0.6rem;
+  }
+
+  .meu-perfil-scroll {
+    padding: 2.5rem 1rem 1rem;
+  }
+}
+
+
 .perfil-topo-bar {
   display: flex;
   align-items: center;

@@ -1009,16 +1009,10 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
 
   return (
     <div className="pagina-perfil-container">
-      {/* ── NAVEGAÇÃO DE TOPO / BREADCRUMB ─────────────────────────────────── */}
+      {/* Sem breadcrumb: dentro da janela (p5 do PDF) o "WORKSPACE CRM /
+          ESTUDANTES / nome" era ruído — o nome já abre o hero logo abaixo, e
+          não há navegação de seção para situar. Ficam só as ações. */}
       <div className="perfil-topo-bar">
-        <div className="perfil-breadcrumb">
-          <span className="crumb-secao">WORKSPACE CRM</span>
-          <span className="crumb-div">/</span>
-          <span className="crumb-secao">ESTUDANTES</span>
-          <span className="crumb-div">/</span>
-          <span className="crumb-atual">{nome || "Meu Perfil"}</span>
-        </div>
-
         <div className="perfil-topo-acoes">
           {alunoAtual ? (
             <button
