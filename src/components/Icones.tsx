@@ -292,6 +292,14 @@ export const IconePin = ({ tamanho = 14, className = "" }: Props) => (
   </Base>
 );
 
+export const IconeConstrucao = ({ tamanho = 16, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <path d="M3 18h18" />
+    <path d="M5 18a7 7 0 0 1 14 0" />
+    <path d="M10 11V5.5A1.5 1.5 0 0 1 11.5 4h1A1.5 1.5 0 0 1 14 5.5V11" />
+  </Base>
+);
+
 export const IconeCrop = ({ tamanho = 15, className = "" }: Props) => (
   <Base tamanho={tamanho} className={className}>
     <path d="M6 2v14a2 2 0 0 0 2 2h14" />

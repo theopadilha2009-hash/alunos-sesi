@@ -4206,3 +4206,108 @@ body:has(.login-tela-container) {
   color: #fff;
 }
 
+
+/* ── ABA "EM CONSTRUÇÃO" (src/components/crm/PaginaEmConstrucao.tsx) ────────
+   O espaço reservado do SESI no menu. A tela é token-first de propósito: no
+   claro ela veste os tokens do tokens.css e no escuro os mesmos, sem um bloco
+   light próprio. Os únicos literais são as duas listras da fita de obra —
+   convenção de sinalização, não papel, então valem iguais nos dois temas — e a
+   logo, que sai do `LogoSesi` (que já troca o PNG por tema). */
+
+.construcao-tela {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  padding: 2rem 1rem;
+}
+
+.construcao-cartao {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  width: min(34rem, 100%);
+  padding: 3rem 2rem 2.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  box-shadow: 0 24px 50px -18px rgb(15 23 42 / 0.22);
+}
+
+/* O `LogoSesi` é um `<span>` com `height` inline (64px) e as duas `<img>`
+   dentro; a largura sai do `aspect-ratio` do próprio componente. Aqui só
+   sobra o respiro. */
+.construcao-logo {
+  margin-bottom: 0.25rem;
+}
+
+.construcao-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--glow);
+  border-radius: 999px;
+}
+
+.construcao-titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: 1.6rem;
+  color: var(--text);
+}
+
+.construcao-texto {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--dim);
+}
+
+/* A fita de obra. Fica ancorada no topo do cartão, de ponta a ponta. */
+.construcao-fita {
+  width: calc(100% + 4rem);
+  height: 10px;
+  margin: 0.75rem -2rem 0;
+  background-image: repeating-linear-gradient(45deg, #facc15 0 8px, #111827 8px 16px);
+}
+
+.construcao-acoes {
+  margin-top: 0.75rem;
+}
+
+.construcao-btn {
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--raio-p);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.construcao-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -10px var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .construcao-btn {
+    transition: none;
+  }
+
+  .construcao-btn:hover {
+    transform: none;
+  }
+}
