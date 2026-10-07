@@ -125,6 +125,95 @@
   text-shadow: none;
 }
 
+/* src: crm.css:1273-1281 + ModalPerfilBreve.tsx — `.breve-topo-com-banner` é a
+   mesma ilha de foto do `.card-usuario-logado` acima, e o mesmo vazamento: o
+   scrim `rgba(11,20,24,.78)` é escuro nos dois temas, mas o nome, o chip de
+   sala e o "Validado" leem tokens do CLARO — texto escuro sobre foto
+   escurecida. Medido no aluno com banner: `h2` em rgb(15,23,42) sobre o scrim.
+
+   A classe vem do TSX em vez de um `:has([style*=...])`: o seletor de atributo
+   dependeria de como o React serializa o `backgroundImage` inline, e um
+   `background-image` que deixasse de ser emitido desligaria o conserto em
+   silêncio. Sem banner o topo é o gradiente claro do `crm.css` e o texto
+   escuro está certo — por isso a classe, e não a regra incondicional. */
+:root[data-theme="light"] .breve-topo-com-banner {
+  --text: #f8fafc;
+  --dim: #9fb0c4;
+  --faint: #8291a8;
+  --accent: #45d3c9;
+  --glow: rgba(69, 211, 201, 0.22);
+}
+
+/* `color` explícito, não só o token no container: o `h2` do `crm.css:1322` não
+   declara `color`, então herda do `body` — que é `var(--text)` do `:root`
+   (claro). Repinar `--text` no container não alcança um elemento que já herdou
+   de fora dele. */
+:root[data-theme="light"] .breve-topo-com-banner .breve-identificacao h2 {
+  color: #f8fafc;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+/* O "Validado" e as estrelas já têm par AA de papel (`claro-cracha.css`,
+   `claro-crm.css`); sobre o scrim voltam ao par de ilha. */
+:root[data-theme="light"] .breve-topo-com-banner .breve-link-validado {
+  color: #34d399;
+}
+
+:root[data-theme="light"] .breve-topo-com-banner .breve-estrelas {
+  color: var(--amarelo);
+}
+
+/* O chip de sala (`cracha.css:310`) monta o fundo com `color-mix` sobre
+   `--surface-2`. O token pinado acima já o leva ao escuro, mas o `color:
+   var(--text)` do próprio chip resolveu na cascata ANTES da pin (o valor do
+   elemento é calculado no `:root`) — então o fundo vira escuro e o texto
+   continua claro só por sorte de a pin acontecer no mesmo nó. Fixar o fundo
+   aqui é o que garante o par nos dois casos, sem depender da ordem. */
+:root[data-theme="light"] .breve-topo-com-banner .badge-sala-tabela {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Os selos de cargo têm par AA de PAPEL no claro (`cargos-badges.css:206+`):
+   pílula opaca pastel com texto escuro. Sobre o scrim eles ficam opacos no
+   meio da foto — o mesmo motivo pelo qual o arquivo-fonte já os pintava para
+   fundo escuro. Dentro da ilha volta a tinta translúcida de ilha, que é a do
+   tema escuro. */
+:root[data-theme="light"] .breve-topo-com-banner .badge-cargo-fixado {
+  background: rgba(16, 185, 129, 0.24);
+  border-color: rgba(16, 185, 129, 0.65);
+  color: #a7f3d0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .breve-topo-com-banner .badge-cargo-destaque {
+  background: rgba(234, 179, 8, 0.24);
+  border-color: rgba(234, 179, 8, 0.65);
+  color: #fef08a;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .breve-topo-com-banner .badge-cargo-super-adm {
+  background: rgba(245, 158, 11, 0.24);
+  border-color: rgba(245, 158, 11, 0.65);
+  color: #fef08a;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .breve-topo-com-banner .badge-cargo-adm {
+  background: rgba(56, 189, 248, 0.24);
+  border-color: rgba(56, 189, 248, 0.65);
+  color: #bae6fd;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] .breve-topo-com-banner .badge-cargo-extra {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #f1f5f9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
 /* src: crm.css:1145-1154 — .badge-tipo-midia: chip SOBRE A FOTO (scrim preto
    0.75), lê var(--accent), que no claro é azul escuro sobre preto. Pino o
    accent de ilha do showcase. */

@@ -159,8 +159,12 @@ export function ModalPerfilBreve({ aluno, onFechar, onAbrirCracha }: Props) {
           ref={dialogoRef}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* `breve-topo-com-banner` marca a ILHA de foto: com banner o topo é
+              escuro nos dois temas, e sem banner é o gradiente claro. O claro
+              usa a classe para devolver os tokens de ilha (`claro-crm.css`) —
+              sem ela o nome saía em tinta escura sobre o scrim. */}
           <header
-            className="breve-topo"
+            className={`breve-topo ${aluno.banner_url ? "breve-topo-com-banner" : ""}`}
             style={{
               ["--sala-cor" as string]: aluno.cor,
               position: "relative",
