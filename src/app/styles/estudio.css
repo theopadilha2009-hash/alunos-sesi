@@ -100,10 +100,21 @@
   color: var(--fg);
 }
 
+/* p8 do PDF: "vermelho significa erro ou algo errado e não dá para clicar". O
+   botão SELECIONADO usava o vermelho institucional do SESI — a cor que o resto
+   do app usa para perigo (`.btn-remover-capa-mini`, `.alerta-erro`) estava
+   marcando um estado normal de escolha, e o `!important` ainda o deixava com
+   cara de bloqueado. Passa para o mesmo par do `.nav-item-ativo`
+   (`crm.css:376`): tinta de acento + texto do tema. A seleção fica legível e o
+   vermelho volta a significar perigo. */
 .btn-alvo-ativo {
-  background: rgb(var(--vermelho-sesi-rgb) / 0.15) !important;
-  border-color: var(--vermelho-sesi) !important;
-  color: var(--vermelho-sesi-texto) !important;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2)) !important;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important;
+  color: var(--text) !important;
+}
+
+.btn-alvo-ativo .btn-alvo-opcao-icone {
+  color: var(--accent);
 }
 
 .campo-selecao-projeto {

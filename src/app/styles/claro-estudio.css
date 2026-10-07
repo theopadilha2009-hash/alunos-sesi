@@ -22,11 +22,11 @@
       claro (#02609e, 4,9:1 no papel) mantém a semântica de seleção/link.
       A família "sky" era só o brilho do tema escuro.
 
-   3. O chip ativo (.btn-alvo-ativo) mantém o fundo lavanda de marca e
-      escurece o texto com mix do próprio token --vermelho-sesi em --text:
-      o --vermelho-sesi-texto (#ff6666) é tinta para fundo ESCURO e daria
-      ~2,4:1 no papel; o --vermelho-sesi puro sobre a lavanda dá 3,4:1 e
-      reprova nos 12,8px. O mix a 80% fecha em 4,8:1 sem copiar hex novo.
+   3. O chip ativo (.btn-alvo-ativo) deixou de ser vermelho (p8 do PDF:
+      "vermelho significa erro ou algo errado e não dá para clicar"). Passou
+      a var(--accent) + var(--text), que resolvem nos dois temas sozinhos —
+      o mix de --vermelho-sesi que existia aqui para chegar em 4,8:1 virou
+      desnecessário.
 
    4. .canvas-drop-hint precisa de !important: o TSX pinta o segundo hint
       com style inline (StickerCanvas.tsx:670, literal #60a5fa), e fonte
@@ -47,12 +47,10 @@
 /* ── controles: chips, presets, perigo ──────────────────────────────────── */
 
 /* src: estudio.css:103-107 — .btn-alvo-ativo
-   Ver decisão 3 do cabeçalho. O fundo rgb(--vermelho-sesi-rgb / .15) e a
-   borda var(--vermelho-sesi) ficam: tint e traço de marca funcionam nos
-   dois temas. Fonte usa !important, o override precisa também. */
-:root[data-theme="light"] .btn-alvo-ativo {
-  color: color-mix(in srgb, var(--vermelho-sesi) 80%, var(--text)) !important;
-}
+   O chip selecionado deixou de ser vermelho (p8 do PDF: "vermelho significa
+   erro ou algo errado"). Agora usa var(--accent) + var(--text), que resolvem
+   nos dois temas sozinhos — o override de fonte que existia aqui (mix do
+   --vermelho-sesi para chegar em 4,8:1) virou desnecessário. */
 
 /* src: estudio.css:148-152 — .btn-preset-card:hover
    Borda hover rgba(255,255,255,.3) é clareamento progressivo de tema
