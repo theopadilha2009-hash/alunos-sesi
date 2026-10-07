@@ -6,7 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
 import { PaginaEmConstrucao } from "@/components/crm/PaginaEmConstrucao";
-import { PaginaMeuPerfil } from "@/components/crm/PaginaMeuPerfil";
+import { MeuPerfilModal } from "@/components/crm/MeuPerfilModal";
 import { PainelAdmIntegrado } from "@/components/crm/PainelAdmIntegrado";
 import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
 import {
@@ -23,7 +23,6 @@ import {
   IconeSala,
   IconeTabela,
   IconeTrofeu,
-  IconeUsuario,
 } from "@/components/Icones";
 import { LinhaCargos } from "@/components/CargosBadges";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
@@ -72,7 +71,6 @@ type AbaAtiva =
   | "projetos"
   | "desafios"
   | "tabelas"
-  | "perfil"
   | "adm"
   | "construcao";
 
@@ -145,6 +143,9 @@ export function CrmApp({
   const [alunoBreveSelecionado, setAlunoBreveSelecionado] = useState<AlunoNaTela | null>(null);
   const [alunoCracha, setAlunoCracha] = useState<AlunoNaTela | null>(null);
   const [cmdAberto, setCmdAberto] = useState(false);
+  // O editor "Meu Perfil" abre como JANELA (p5 do PDF), não como aba: ele é
+  // denso demais para dividir a tela com a sidebar e a moldura do CRM.
+  const [perfilAberto, setPerfilAberto] = useState(false);
   // Com que sub-aba o Painel ADM abre. O atalho do Mural de Desafios escreve
   // aqui antes de trocar de aba — o painel monta depois, e pega o valor novo.
   const [subAbaAdm, setSubAbaAdm] = useState<"alunos" | "desafios">("alunos");
@@ -524,16 +525,10 @@ export function CrmApp({
             <span className="nav-label">Tabelas & Alunos</span>
           </button>
 
-          <button
-            type="button"
-            className={`nav-item ${aba === "perfil" ? "nav-item-ativo" : ""}`}
-            onClick={() => setAba("perfil")}
-          >
-            <span className="nav-icone">
-              <IconeUsuario tamanho={18} />
-            </span>
-            <span className="nav-label">Meu Perfil</span>
-          </button>
+          {/* "Meu Perfil" NÃO é item de navegação: ele abre como janela (p5 do
+              PDF), pelo card do usuário no rodapé da sidebar ou pelo botão do
+              header. Como aba, o editor denso dividia a tela com a moldura do
+              CRM — o "muita poluição visual" da anotação. */}
 
           {/* A aba reservada do SESI (anotação da p.10 do PDF). Fica aqui, e
               não escondida atrás de um link, para ser alcançável e — mais
@@ -588,7 +583,7 @@ export function CrmApp({
         <div className="sidebar-rodape">
           <div
             className="card-usuario-logado"
-            onClick={() => setAba("perfil")}
+            onClick={() => setPerfilAberto(true)}
             title="Acessar meu perfil e editor completo"
           >
             {meuAlunoNaTela?.banner_url ? (
@@ -640,7 +635,7 @@ export function CrmApp({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setAba("perfil");
+                  setPerfilAberto(true);
                 }}
               >
                 <IconeEditar tamanho={14} />
@@ -688,11 +683,9 @@ export function CrmApp({
                   ? "Criações da Escola"
                   : aba === "tabelas"
                     ? "Gestão Tabular"
-                    : aba === "perfil"
-                      ? "Configurações de Estudante"
-                      : aba === "construcao"
-                        ? "Espaço SESI"
-                        : "Administração"}
+                    : aba === "construcao"
+                      ? "Espaço SESI"
+                      : "Administração"}
             </span>
             <h1 className="crm-header-titulo">
               {aba === "portfolio"
@@ -701,26 +694,22 @@ export function CrmApp({
                   ? "Criações & Projetos SESI"
                   : aba === "tabelas"
                     ? "Tabela de Alunos & Salas"
-                    : aba === "perfil"
-                      ? "Meu Perfil & Portfólio Pessoal"
-                      : aba === "construcao"
-                        ? "Ainda em construção"
-                        : "Painel do Administrador"}
+                    : aba === "construcao"
+                      ? "Ainda em construção"
+                      : "Painel do Administrador"}
             </h1>
           </div>
 
           <div className="crm-header-acoes">
             <TemaToggle />
-            {aba !== "perfil" ? (
-              <button
-                type="button"
-                className="botao botao-primario"
-                onClick={() => setAba("perfil")}
-              >
-                <IconeEditar tamanho={15} />
-                <span>Editar Meu Perfil</span>
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className="botao botao-primario"
+              onClick={() => setPerfilAberto(true)}
+            >
+              <IconeEditar tamanho={15} />
+              <span>Editar Meu Perfil</span>
+            </button>
           </div>
         </header>
 
@@ -1162,18 +1151,6 @@ export function CrmApp({
           </div>
         ) : null}
 
-        {/* ── ABA 4: MEU PERFIL (Página Completa Estilo Imagem 4) ──────── */}
-        {aba === "perfil" ? (
-          <div className="crm-secao-conteudo">
-            <PaginaMeuPerfil
-              usuario={usuario}
-              alunoAtual={meuAlunoNaTela}
-              salas={salas}
-              onAtualizarAluno={handleAtualizarMeuAluno}
-            />
-          </div>
-        ) : null}
-
         {/* ── ABA: EM CONSTRUÇÃO (espaço reservado do SESI) ────────────── */}
         {aba === "construcao" ? (
           <div className="crm-secao-conteudo">
@@ -1200,6 +1177,16 @@ export function CrmApp({
       </main>
 
       {/* ── MODAIS INTEGRADOS ────────────────────────────────────────────── */}
+      {perfilAberto ? (
+        <MeuPerfilModal
+          usuario={usuario}
+          alunoAtual={meuAlunoNaTela}
+          salas={salas}
+          onFechar={() => setPerfilAberto(false)}
+          onAtualizarAluno={handleAtualizarMeuAluno}
+        />
+      ) : null}
+
       {alunoBreveSelecionado ? (
         <ModalPerfilBreve
           aluno={alunoBreveSelecionado}
