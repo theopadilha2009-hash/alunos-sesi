@@ -90,12 +90,33 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   11 movimentos e destino exato depois. Fix: `preventDefault` no `pointerdown`
   + `-webkit-user-drag: none` na `<img>`.
 
+**Frente 4 (p5 e p6) — FECHADA em 07/10:**
+- ✅ **p5 "verde tá feio"** → **PR #107**. O "Turma sem alunos cadastrados." usa
+  `var(--verde)` (#38b95d), que é DADO de sala no `tokens.css` neutro — sobre o
+  card de papel claro dá ~2,9:1 em 11,5px e reprova AA. No claro desce para
+  `#15803d`, o mesmo par do showcase B que `claro-crm.css` já usa nos outros
+  status. **Achado no caminho:** o `.sala-cor-circulo` dos cards do ADM era
+  `var(--accent)` fixo — as 12 turmas saíam todas com o mesmo ponto azul, e a
+  cor da turma é identidade em todas as outras telas (`corDaSala`). Agora lê
+  `corDaSala(s.nome)`: 13 cards, 5 cores distintas.
+- ✅ **p6 "cargos feios pra crl"** → **PR #108**. A anotação apontava os selos do
+  topo do modal-breve; a investigação achou embaixo deles um defeito maior: com
+  banner, o `.breve-topo` é **ilha de foto** (scrim escuro nos dois temas), mas
+  nome/chip de sala/"Validado"/estrelas/selos liam tokens do CLARO — `h2` em
+  `rgb(15,23,42)` sobre o scrim. É o mesmo caso que `claro-crm.css` já resolve
+  para `.card-usuario-logado` com banner e `.perfil-hero-banner`; o modal-breve
+  tinha ficado de fora. Classe `breve-topo-com-banner` vem do TSX (não
+  `:has([style*=...])`, que dependeria da serialização do React).
+  **Pegadinha:** repinar `--text` no container NÃO alcança o `h2` — a regra do
+  `crm.css:1322` não declara `color`, então o elemento herda do `body`, que
+  resolveu `var(--text)` no `:root`, fora da ilha. O `h2` precisa de `color`
+  explícito.
+
 **Páginas 2-10 (pendentes, do Théo):** apagar faixa/banner do perfil (p2),
 grade do Portfólio (p3), "Meu Perfil"
-como modal (p5), editar/apagar turmas no ADM + verde feio (p5), cargos/badges
-feios (p6), dois "Lucas
-Bento" (p7), apagar salas menos 9 (p9), confete depois das
-estrelinhas (p9).
+como modal (p5), editar/apagar turmas no ADM (p5 — **feature**, não fix), dois
+"Lucas Bento" (p7 — **dado**, não código), apagar salas menos 9 (p9), confete
+depois das estrelinhas (p9 — **decisão**: hoje é otimista de propósito).
 
 > **CUIDADO nas p2/p3 (apagar).** O Théo respondeu "apaga tudo disso aí, parece
 > um limbo, deixa só a tela normal" — mas o print de referência que ele mandou
