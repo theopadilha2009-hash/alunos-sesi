@@ -302,6 +302,13 @@
   color: #b91c1c;
 }
 
+:root[data-theme="light"] .sala-lacuna-ok {
+  /* src: adm.css:322 — "Turma sem alunos cadastrados." em var(--verde) sobre o
+     card de papel; #38b95d rende ~2,9:1 em 11,5px. p5 do PDF: "verde tá feio".
+     Mesmo par AA do showcase B que os status acima já usam. */
+  color: #15803d;
+}
+
 :root[data-theme="light"] .alerta-banner.alerta-atencao svg {
   /* src: crm.css:1801 — ícone var(--amarelo), o caso 1,9:1 */
   color: #a16207;
