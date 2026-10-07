@@ -111,6 +111,14 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   `crm.css:1322` não declara `color`, então o elemento herda do `body`, que
   resolveu `var(--text)` no `:root`, fora da ilha. O `h2` precisa de `color`
   explícito.
+  **Furo fechado depois (PR #113, review independente):** o pin do #108 levou
+  só `--text/--dim/--faint/--accent/--glow`. Faltaram `--surface`,
+  `--surface-2` e `--on-accent`, que o **avatar de iniciais** (fundo
+  `color-mix(--accent/--sala 22%, --surface-2)`) e o **pill "Ver Crachá"**
+  (fundo `color-mix(--accent 12%, --surface)`) consomem — os dois moram DENTRO
+  do header com banner. No claro com banner davam 1,18:1 e 1,70:1. Agora
+  20,04:1 e 11,40:1. Lição: ao pinar uma ilha, olhar o CONSUMIDOR de cada
+  token, não só o texto.
 
 **Frente 5 (p4 e as p2/p3) — FECHADA em 07/10:**
 - ✅ **p4 "saio os confettis das estrelinhas depois que dá estrelinhas"** →

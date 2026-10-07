@@ -135,12 +135,22 @@
    dependeria de como o React serializa o `backgroundImage` inline, e um
    `background-image` que deixasse de ser emitido desligaria o conserto em
    silêncio. Sem banner o topo é o gradiente claro do `crm.css` e o texto
-   escuro está certo — por isso a classe, e não a regra incondicional. */
+   escuro está certo — por isso a classe, e não a regra incondicional.
+
+   `--surface`/`--surface-2`/`--on-accent` também entram: o avatar de iniciais
+   (`.avatar`, fundo `color-mix(--accent/--sala 22%, --surface-2)`) e o pill
+   "Ver Crachá" (`.btn-abrir-cracha-pill`, fundo `color-mix(--accent 12%,
+   --surface)`) moram DENTRO deste header. Sem os pinos, os dois liam o branco
+   do claro sobre a pílula teal — 1,7:1 no pill e 1,2:1 nas iniciais. É o mesmo
+   conjunto que a ilha irmã `.card-usuario-logado` já pina. */
 :root[data-theme="light"] .breve-topo-com-banner {
+  --surface: #131c27;
+  --surface-2: #1b2635;
   --text: #f8fafc;
   --dim: #9fb0c4;
   --faint: #8291a8;
   --accent: #45d3c9;
+  --on-accent: #04211f;
   --glow: rgba(69, 211, 201, 0.22);
 }
 
