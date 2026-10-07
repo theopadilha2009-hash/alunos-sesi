@@ -1059,14 +1059,20 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                 <span>Cartão NFC / Bio</span>
               </Link>
 
+              {/* p7 do PDF: "não entendi a parte de validar". O rótulo antigo
+                  ("Validar Matrícula") lia como um comando que altera algo —
+                  mas o botão só ABRE a página que comprova a autenticidade do
+                  crachá para quem recebe o documento. O novo rótulo diz o que
+                  acontece ("ver") e sobre o quê ("autenticidade do crachá"), e
+                  a `title` completa a frase. */}
               <Link
                 href={`/validar/${alunoAtual.slug}`}
                 target="_blank"
                 className="btn-perfil-acao"
-                title="Verificar autenticidade oficial da matrícula"
+                title="Abrir a página que comprova a autenticidade do crachá"
               >
                 <IconeEscudo tamanho={14} />
-                <span>Validar Matrícula</span>
+                <span>Ver autenticidade do crachá</span>
               </Link>
 
               <Link

@@ -69,6 +69,16 @@ export default async function PaginaValidarCracha({ params }: Props) {
           <span className="validar-tag-sistema">AUTENTICAÇÃO PÚBLICA DIGITAL</span>
         </header>
 
+        {/* p7 do PDF: "não entendi a parte de validar". A página abria direto no
+            selo verde e no código HMAC, sem dizer PARA QUE ela existe — quem
+            chega aqui (um professor, um recrutador) veio pelo QR do crachá e
+            precisa saber o que está vendo antes do jargão. */}
+        <p className="validar-explicacao">
+          Esta página confirma que o crachá apresentado é verdadeiro. Ela é aberta pela leitura do
+          QR Code do documento e mostra os dados que a escola tem registrados para este estudante —
+          se algum dado divergir do documento, o crachá não é deste aluno.
+        </p>
+
         {/* Banner do Selo Verde Oficial de Matrícula Ativa */}
         <div className="validar-selo-ativo-banner">
           <div className="selo-verde-icone-pulsante">
@@ -156,6 +166,9 @@ export default async function PaginaValidarCracha({ params }: Props) {
         <div className="validar-seguranca-footer">
           <div className="seguranca-hash-wrap">
             <span className="seguranca-hash-label">CÓDIGO DE INTEGRIDADE (HMAC-SHA256)</span>
+            <span className="seguranca-hash-ajuda">
+              É este código que um verificador confere com a escola para atestar o documento.
+            </span>
             <code className="seguranca-hash-codigo">
               SESI-SC-JVE-AUTH-{codigoDeIntegridade(aluno)}
             </code>
