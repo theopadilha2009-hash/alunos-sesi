@@ -112,24 +112,35 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   resolveu `var(--text)` no `:root`, fora da ilha. O `h2` precisa de `color`
   explícito.
 
-**Páginas 2-10 (pendentes, do Théo):** apagar faixa/banner do perfil (p2),
-grade do Portfólio (p3), "Meu Perfil"
-como modal (p5), editar/apagar turmas no ADM (p5 — **feature**, não fix), dois
-"Lucas Bento" (p7 — **dado**, não código), apagar salas menos 9 (p9), confete
-depois das estrelinhas (p9 — **decisão**: hoje é otimista de propósito).
+**Frente 5 (p4 e as p2/p3) — FECHADA em 07/10:**
+- ✅ **p4 "saio os confettis das estrelinhas depois que dá estrelinhas"** →
+  **PR #110**. As três telas que dão estrela (`CrmApp`, Vitrine pública,
+  `PerfilInterativo`) disparavam som e confete no CLIQUE, antes do `await` de
+  `/api/estrela`. Numa recusa (pendente, rate limit, sem cookie) a pessoa via a
+  festa e logo o número voltando ao de antes. Agora o efeito sai no caminho de
+  sucesso, junto com a contagem real; o voto segue otimista. Medido com
+  Playwright em `/alunos` (`reducedMotion: no-preference`): voto confirmado →
+  chunk de `canvas-confetti` pedido; voto recusado (404 do mock) → chunk não
+  pedido, contador 11→11 e recado na tela.
+- ✅ **p2/p3 "apaga essa merda" / "apga tudo que tem a ver com isso aquiu"** →
+  **resolvido, sem código novo.** As capturas dessas páginas são do tema
+  ESCURO, e as anotações são texto SOLTO sob a captura — nenhuma seta/rabisco
+  liga a um elemento (verificado no PDF renderizado). O alvo é o tema escuro,
+  que o **#99** já tirou. Não eram os chips de competência nem a grade de
+  alunos: o próprio print de referência do Théo (o CRM claro "bom") contém os
+  dois.
 
-> **CUIDADO nas p2/p3 (apagar).** O Théo respondeu "apaga tudo disso aí, parece
-> um limbo, deixa só a tela normal" — mas o print de referência que ele mandou
-> junto (o CRM claro "bom") **contém** o trilho de salas e os chips de
-> competência, que era o que eu tinha lido como alvo da remoção. Enquanto a
-> contradição não for resolvida com ele, **não apagar**. Mesma coisa no "apaga
-> essa parte do escuro": depois do #99 a leitura que fecha é a do print — o
-> claro é o padrão e o login é a única ilha escura.
+**Páginas ainda pendentes (do Théo):** "Meu Perfil" como modal (p5 — pedido
+explícito: "janela nova onde tudo fica mais bem distribuído, pois o Meu Perfil
+tem muita poluição visual, e isso deveria ser rápido"), editar/apagar turmas no
+ADM (p5 — **feature**, não fix), dois "Lucas Bento" (p7 — **dado**, não
+código), apagar salas menos 9 (p9 — **dado/decisão**), botão de denúncia pra
+tudo (p1 — **feature**).
 
-**O que a investigação de 06/10 achou (antes de o Théo decidir):**
-- **p9 "confete depois das estrelinhas"**: `estrelar` (`CrmApp.tsx:362`)
-  dispara o confete no clique, antes do servidor confirmar — de propósito
-  (feedback imediato). Mover para depois do `ok` é decisão.
+> **p2/p3: a contradição está resolvida.** O "apaga tudo disso aí, parece um
+> limbo" era sobre o TEMA ESCURO (as capturas são escuras), não sobre os
+> chips/grade — o print de referência do Théo contém os dois. Fechado pelo
+> **#99**: o claro é o padrão e o login é a única ilha escura.
 
 **Nota de leitura:** várias dessas podem ter sido cobertas pelas fatias 1-8
 (chips = fatia 3, cargos = fatia 3, banner = fatias 6-7, modais/avatar = fatia 7).
