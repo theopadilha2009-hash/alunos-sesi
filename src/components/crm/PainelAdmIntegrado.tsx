@@ -38,6 +38,7 @@ import {
   MAX_SUBTITULO,
   MAX_TITULO,
 } from "@/lib/desafios";
+import { corDaSala } from "@/lib/cores";
 import { contarLacunas, filtrarPorLacuna, ROTULO_LACUNA, type Lacuna } from "@/lib/lacunas";
 import { SENTINELA_NOVA_TURMA } from "@/lib/sala-do-aluno";
 import { TURMAS_OFICIAIS } from "@/lib/turmas";
@@ -776,7 +777,15 @@ export function PainelAdmIntegrado({
                 return (
                   <div key={s.id} className="sala-card-adm">
                     <div className="sala-card-topo">
-                      <span className="sala-cor-circulo" />
+                      {/* A cor da SALA, não o acento: o `.sala-cor-circulo` era
+                          sempre `var(--accent)`, então as 12 turmas saíam com o
+                          mesmo ponto azul — o mesmo defeito que o
+                          `corDaSala`/`corSala` existe para evitar nas outras
+                          telas (a cor é a identidade da turma). */}
+                      <span
+                        className="sala-cor-circulo"
+                        style={{ background: corDaSala(s.nome) }}
+                      />
                       <h4 className="sala-card-nome">{s.nome}</h4>
                     </div>
                     <div className="sala-card-dados">
