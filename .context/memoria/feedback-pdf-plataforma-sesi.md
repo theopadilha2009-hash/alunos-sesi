@@ -27,17 +27,54 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   `.crm-layout` sem currículo e seguiu igual (5 páginas, 17 linhas). Medido:
   1 página para os 17 alunos; a folha mais alta (Théo) = 749px de 1009px úteis.
 
+**Frente 2 (p3 e p10) — FECHADA em 06-07/10:**
+- ✅ **p3 "GIF em cima do texto"** → **PR #98**. O sticker era preso ao CARD
+  inteiro (`.card-projeto-vitrine`, com `x`/`y` livre em %), então caía sobre a
+  descrição. Fix: faixa `.projeto-midia` (a foto + os stickers dela) com
+  `position: relative; overflow: hidden` — o sticker pode ser clipado na borda
+  da foto, nunca desce para o texto. O `style` inline de posicionamento saiu do
+  card. Tocado em `ModalPerfilBreve.tsx` e `PerfilInterativo.tsx`.
+- ✅ **p10 "criar aba ainda em construção o sesi"** → **PR #100**. Item de menu
+  **Em construção** (ícone de capacete + selo "Em breve") entre "Meu Perfil" e
+  "Painel ADM"; tela `PaginaEmConstrucao` com a logo SESI, selo "Espaço
+  reservado", recado de área em preparação e botão **← Voltar ao Portfólio**
+  (o "não um limbo aleatório que não tem como sair"). A logo sai do `LogoSesi`
+  (`Roseta.tsx`), que já monta o par colorida/branca por tema — não duplicar
+  PNG. Achado no caminho: o header do CRM tinha um `else` que caía em "Painel
+  do Administrador" para QUALQUER aba fora das quatro mapeadas; a aba
+  **Mural de Desafios** ainda cai nele (defeito pré-existente, não tocado).
+
+**Tema — decidido e fechado em 06/10:**
+- ✅ **"o app abre no claro, o login continua escuro"** → **PR #99**. O Théo
+  respondeu com um print do CRM **claro** dizendo "só essa tela aí e tudo que
+  tem nela, não um limbo aleatório que não tem como sair" — ou seja, o claro é
+  o bom. `layout.tsx`: `data-theme="light"` + `themeColor: "#f8fafc"`. O login
+  virou **ilha de tema** (`ilhas-2026.css`, no FIM dos `@import`): o
+  `data-theme` vive no `<html>` e não dá para excluir uma subárvore por seletor,
+  então a tela repina os tokens do escuro no container `.login-tela-container`.
+  Detalhe que custou uma rodada: o `<body>` do login pinta o "elástico" da
+  rolagem e fica FORA do container — `var(--bg)` ali resolve no `:root`, então
+  o valor vai **literal**.
+
 **Página 1, ainda aberto:**
 - **"botão de denúncia pra tudo"** — **feature nova**, não fix. Exige decisão
   (o que denunciar, para onde vai, quem vê) e schema. Não começar sem o Théo.
 
 **Páginas 2-10 (pendentes, do Théo):** apagar faixa/banner do perfil (p2),
-grade do Portfólio (p3), GIF sobre o texto (p3), logo→home (p4), "Meu Perfil"
+grade do Portfólio (p3), logo→home (p4), "Meu Perfil"
 como modal (p5), editar/apagar turmas no ADM + verde feio (p5), cargos/badges
 feios (p6), não entendeu "Validar" (p7), chips quadrados (p7), dois "Lucas
 Bento" (p7), botão "Banner do Perfil" vermelho/não clicável (p8), mover
 sticker sobrepõe (p9), apagar salas menos 9 (p9), confete depois das
-estrelinhas (p9), aba "em construção" (p10).
+estrelinhas (p9).
+
+> **CUIDADO nas p2/p3 (apagar).** O Théo respondeu "apaga tudo disso aí, parece
+> um limbo, deixa só a tela normal" — mas o print de referência que ele mandou
+> junto (o CRM claro "bom") **contém** o trilho de salas e os chips de
+> competência, que era o que eu tinha lido como alvo da remoção. Enquanto a
+> contradição não for resolvida com ele, **não apagar**. Mesma coisa no "apaga
+> essa parte do escuro": depois do #99 a leitura que fecha é a do print — o
+> claro é o padrão e o login é a única ilha escura.
 
 **O que a investigação de 06/10 achou (antes de o Théo decidir):**
 - **p4 "logo → home"**: a marca da vitrine (`Topo`, `ds.tsx`) **já** linka para
