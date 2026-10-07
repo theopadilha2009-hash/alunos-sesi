@@ -270,11 +270,26 @@ body:has(.login-tela-container) {
   margin-bottom: 1.75rem;
 }
 
+/* A marca virou `<button>` (p4 do PDF: "logo → home"), então carrega o reset
+   de botão junto do layout — sem ele o `<button>` traz do navegador o fundo
+   cinza, a borda e a fonte do sistema, e a marca deixa de parecer a marca. */
 .sidebar-marca {
   display: flex;
   align-items: center;
   gap: 0.85rem;
   margin-bottom: 1.5rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-marca:hover .sidebar-titulo {
+  color: var(--accent);
 }
 
 .sidebar-titulo {

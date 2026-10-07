@@ -446,13 +446,22 @@ export function CrmApp({
       <aside className="crm-sidebar">
         {/* Topo da Sidebar: Marca & Workspace */}
         <div className="sidebar-topo">
-          <div className="sidebar-marca">
+          {/* "logo → home" (p4 do PDF). A home do CRM é o Portfólio — a raiz
+              `/` é o login, então apontar para lá seria logout disfarçado. Na
+              vitrine a marca já é link (`/alunos`); aqui ela era um `<div>`
+              morto, e o clique não fazia nada. */}
+          <button
+            type="button"
+            className="sidebar-marca"
+            onClick={() => setAba("portfolio")}
+            title="Ir para o Portfólio"
+          >
             <Roseta tamanho={28} />
             <div>
               <span className="sidebar-titulo">ALUNOS SESI</span>
               <span className="sidebar-sub">WORKSPACE CRM</span>
             </div>
-          </div>
+          </button>
 
           <button
             type="button"
