@@ -176,11 +176,6 @@ export function PerfilInterativo({
     setEstrelado(proximoEstrelado);
     setEstrelas((prev) => Math.max(0, prev + (proximoEstrelado ? 1 : -1)));
 
-    if (proximoEstrelado) {
-      tocarSomEstrela();
-      dispararConfetes(ev.clientX, ev.clientY);
-    }
-
     // Desfaz o otimismo. Antes disto o `if (resp.ok)` sem `else` deixava a
     // estrela acesa na tela mesmo quando o servidor recusava — o número subia,
     // ninguém tinha votado, e o visitante só descobria no próximo carregamento.
@@ -208,6 +203,13 @@ export function PerfilInterativo({
 
       setEstrelas(resultado.estrelas);
       setEstrelado(resultado.votado);
+
+      // Som e confete só depois do "ok": no clique eles apareciam mesmo com o
+      // servidor recusando, e a estrela voltava logo em seguida.
+      if (proximoEstrelado && resultado.votado) {
+        tocarSomEstrela();
+        dispararConfetes(ev.clientX, ev.clientY);
+      }
     } catch {
       desfazer();
       setRecado("Não deu para votar agora. Confira a conexão e tente de novo.");

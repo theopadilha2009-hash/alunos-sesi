@@ -146,16 +146,6 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
     setOcupado(id);
     setRecado(null);
 
-    // Efeito áudio e confete festivo quando dá estrela
-    if (!jaTem) {
-      tocarSomEstrela();
-      if (ev) {
-        dispararConfetes(ev.clientX, ev.clientY);
-      } else {
-        dispararConfetes();
-      }
-    }
-
     // Otimista
     setMeus((p) => (jaTem ? p.filter((x) => x !== id) : [...p, id]));
     setLista((p) =>
@@ -208,6 +198,14 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
             : [...p, id]
           : p.filter((x) => x !== id),
       );
+
+      // Som e confete só com o voto confirmado pelo servidor — no clique eles
+      // apareciam mesmo quando a resposta era uma recusa, e o número voltava.
+      if (!jaTem && resultado.votado) {
+        tocarSomEstrela();
+        if (ev) dispararConfetes(ev.clientX, ev.clientY);
+        else dispararConfetes();
+      }
     } catch {
       // Frase própria, como nas outras duas telas: a `message` de um `fetch`
       // que falha é "Failed to fetch" — texto de biblioteca, em inglês, na cara

@@ -337,7 +337,7 @@ export function CrmApp({
     return arr;
   }, [naTela]);
 
-  // Voto de estrela otimista, com som e confetes.
+  // Voto de estrela otimista; som e confete só depois do "ok" do servidor.
   //
   // Quem confirma o resultado é a resposta do servidor, não o que a tela
   // pintou. Quando ele recusa — perfil pendente, rate limit, navegador sem
@@ -367,13 +367,6 @@ export function CrmApp({
           : a,
       ),
     );
-
-    if (!eraEstrelado) {
-      tocarSomEstrela();
-      if (ev) {
-        dispararConfetes(ev.clientX, ev.clientY);
-      }
-    }
 
     function desfazer() {
       setMeus(meusAnteriores);
@@ -412,6 +405,14 @@ export function CrmApp({
             : [...antes, alunoId]
           : antes.filter((id) => id !== alunoId),
       );
+
+      // Som e confete SÓ depois que o servidor confirma o voto. Antes eles
+      // disparavam no clique, então uma recusa (perfil pendente, rate limit,
+      // sem cookie) mostrava a festa e o número voltando logo em seguida.
+      if (!eraEstrelado && resultado.votado) {
+        tocarSomEstrela();
+        if (ev) dispararConfetes(ev.clientX, ev.clientY);
+      }
     } catch {
       desfazer();
       setRecado("Não deu para votar agora. Confira a conexão e tente de novo.");
