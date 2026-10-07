@@ -597,10 +597,10 @@ export function PerfilInterativo({
                 href={`/validar/${aluno.slug}`}
                 target="_blank"
                 className="botao botao-fraco"
-                title="Página de verificação com selo verde oficial do SESI"
+                title="Abrir a página que comprova a autenticidade do crachá"
               >
                 <IconeEscudo tamanho={14} />
-                <span>Validar Matrícula SESI</span>
+                <span>Ver autenticidade do crachá</span>
               </Link>
 
               <button

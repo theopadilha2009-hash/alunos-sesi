@@ -1390,11 +1390,15 @@ body:has(.login-tela-container) {
   background: var(--surface-3, var(--surface-2));
 }
 
+/* p7 do PDF ("esses quadrados", "horroroso"). Era o ÚNICO chip da tabela com
+   raio 6px — os de sala (`.tabela-sala-tag`) e os selos já eram pílula, então
+   na mesma linha o olho pegava a divergência. Vira pílula como os vizinhos;
+   o resto (borda, fundo, tipografia) fica igual. */
 .tag-habilidade-clean {
   display: inline-flex;
   align-items: center;
-  padding: 0.22rem 0.55rem;
-  border-radius: 6px;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   color: var(--text);
