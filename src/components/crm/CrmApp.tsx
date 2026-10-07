@@ -5,11 +5,13 @@ import { logoutAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
+import { PaginaEmConstrucao } from "@/components/crm/PaginaEmConstrucao";
 import { PaginaMeuPerfil } from "@/components/crm/PaginaMeuPerfil";
 import { PainelAdmIntegrado } from "@/components/crm/PainelAdmIntegrado";
 import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
 import {
   IconeCards,
+  IconeConstrucao,
   IconeCracha,
   IconeEditar,
   IconeEscudo,
@@ -65,7 +67,14 @@ type Props = {
   meusEnvios?: SubmissaoDesafio[];
 };
 
-type AbaAtiva = "portfolio" | "projetos" | "desafios" | "tabelas" | "perfil" | "adm";
+type AbaAtiva =
+  | "portfolio"
+  | "projetos"
+  | "desafios"
+  | "tabelas"
+  | "perfil"
+  | "adm"
+  | "construcao";
 
 export function CrmApp({
   usuario,
@@ -516,6 +525,22 @@ export function CrmApp({
             <span className="nav-label">Meu Perfil</span>
           </button>
 
+          {/* A aba reservada do SESI (anotação da p.10 do PDF). Fica aqui, e
+              não escondida atrás de um link, para ser alcançável e — mais
+              importante — para ter volta: a tela abre com o botão de retorno
+              ao Portfólio, que é o "não um limbo aleatório" pedido. */}
+          <button
+            type="button"
+            className={`nav-item ${aba === "construcao" ? "nav-item-ativo" : ""}`}
+            onClick={() => setAba("construcao")}
+          >
+            <span className="nav-icone">
+              <IconeConstrucao tamanho={18} />
+            </span>
+            <span className="nav-label">Em construção</span>
+            <span className="nav-badge">Em breve</span>
+          </button>
+
           {ehSuperAdm ? (
             <button
               type="button"
@@ -655,7 +680,9 @@ export function CrmApp({
                     ? "Gestão Tabular"
                     : aba === "perfil"
                       ? "Configurações de Estudante"
-                      : "Administração"}
+                      : aba === "construcao"
+                        ? "Espaço SESI"
+                        : "Administração"}
             </span>
             <h1 className="crm-header-titulo">
               {aba === "portfolio"
@@ -666,7 +693,9 @@ export function CrmApp({
                     ? "Tabela de Alunos & Salas"
                     : aba === "perfil"
                       ? "Meu Perfil & Portfólio Pessoal"
-                      : "Painel do Administrador"}
+                      : aba === "construcao"
+                        ? "Ainda em construção"
+                        : "Painel do Administrador"}
             </h1>
           </div>
 
@@ -1132,6 +1161,13 @@ export function CrmApp({
               salas={salas}
               onAtualizarAluno={handleAtualizarMeuAluno}
             />
+          </div>
+        ) : null}
+
+        {/* ── ABA: EM CONSTRUÇÃO (espaço reservado do SESI) ────────────── */}
+        {aba === "construcao" ? (
+          <div className="crm-secao-conteudo">
+            <PaginaEmConstrucao onVoltar={() => setAba("portfolio")} />
           </div>
         ) : null}
 
