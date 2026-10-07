@@ -60,12 +60,41 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
 - **"botão de denúncia pra tudo"** — **feature nova**, não fix. Exige decisão
   (o que denunciar, para onde vai, quem vê) e schema. Não começar sem o Théo.
 
+**Frente 3 (p4, p7, p8, p9) — FECHADA em 07/10:**
+- ✅ **p4 "logo → home"** → **PR #102**. A marca da sidebar do CRM era um
+  `<div>` morto. Virou `<button>` que volta ao **Portfólio** (não `/`: a raiz é
+  o login, então seria logout disfarçado). Carrega o reset de botão junto, senão
+  o navegador traz o cinza padrão e a marca deixa de parecer a marca.
+- ✅ **p7 "esses quadrados" / "horroroso"** → **PR #104**. O
+  `.tag-habilidade-clean` era o ÚNICO chip da tabela com `border-radius: 6px`;
+  os de sala ao lado e os selos já eram pílula. Vira pílula como os vizinhos.
+  (A hipótese antiga — `.nav-item` ou `.btn-alvo-opcao` — estava errada.)
+- ✅ **p7 "não entendi a parte de validar"** → **PR #104**. O rótulo "Validar
+  Matrícula" lia como comando que altera algo; virou "Ver autenticidade do
+  crachá" nos dois lugares (`PaginaMeuPerfil`, `PerfilInterativo`). E a página
+  `/validar/[slug]` ganhou uma frase de abertura (o que ela confirma, que vem do
+  QR, e que dado divergente = documento falso) + uma linha explicando o código
+  de integridade, que antes era só o jargão "HMAC-SHA256".
+- ✅ **p8 "botão vermelho significa erro"** → **PR #105**. O `.btn-alvo-ativo`
+  usava o vermelho institucional — a mesma cor de PERIGO do resto do app — para
+  marcar o item SELECIONADO. Passou para o par do `.nav-item-ativo`
+  (`--accent` + `--text`), que resolve nos dois temas sozinho; o override de
+  claro que existia só para consertar o contraste do vermelho saiu junto.
+- ✅ **p9 "mover sticker sobrepõe"** → **PR #103**. Com dois elementos
+  empilhados, o clique caía no de CIMA e o `stopPropagation` dele só trocava a
+  seleção — o de baixo não saía do lugar. Agora o elemento é **arrastável**
+  (`setPointerCapture`), e o que faz o arrasto sobreviver a passar por cima de
+  outro é a captura. **Pegadinha que custou uma rodada:** o `draggable` nativo
+  da `<img>` assume o gesto e dispara `pointercancel` no primeiro movimento — o
+  sticker anda 2px e trava. Medido: 2 `pointermove` + 1 `pointercancel` antes,
+  11 movimentos e destino exato depois. Fix: `preventDefault` no `pointerdown`
+  + `-webkit-user-drag: none` na `<img>`.
+
 **Páginas 2-10 (pendentes, do Théo):** apagar faixa/banner do perfil (p2),
-grade do Portfólio (p3), logo→home (p4), "Meu Perfil"
+grade do Portfólio (p3), "Meu Perfil"
 como modal (p5), editar/apagar turmas no ADM + verde feio (p5), cargos/badges
-feios (p6), não entendeu "Validar" (p7), chips quadrados (p7), dois "Lucas
-Bento" (p7), botão "Banner do Perfil" vermelho/não clicável (p8), mover
-sticker sobrepõe (p9), apagar salas menos 9 (p9), confete depois das
+feios (p6), dois "Lucas
+Bento" (p7), apagar salas menos 9 (p9), confete depois das
 estrelinhas (p9).
 
 > **CUIDADO nas p2/p3 (apagar).** O Théo respondeu "apaga tudo disso aí, parece
@@ -77,20 +106,9 @@ estrelinhas (p9).
 > claro é o padrão e o login é a única ilha escura.
 
 **O que a investigação de 06/10 achou (antes de o Théo decidir):**
-- **p4 "logo → home"**: a marca da vitrine (`Topo`, `ds.tsx`) **já** linka para
-  `/alunos`, com comentário explicando (a raiz `/` é o login do CRM). Pode ser
-  ambíguo — a marca da sidebar do CRM (`CrmApp.tsx:440`) é `div`, não link.
-- **p7 "quadrados horríveis"**: `.selo` já é pílula (`border-radius: 999px`);
-  os quadrados são provavelmente `.nav-item` ou `.btn-alvo-opcao` (raio 8px) —
-  precisa o Théo apontar.
 - **p9 "confete depois das estrelinhas"**: `estrelar` (`CrmApp.tsx:362`)
   dispara o confete no clique, antes do servidor confirmar — de propósito
   (feedback imediato). Mover para depois do `ok` é decisão.
-- **p8 "botão vermelho parece erro"**: `.btn-alvo-ativo` (`estudio.css:103`)
-  usa `--vermelho-sesi` para o item SELECIONADO — o vermelho institucional
-  virou cor de erro. Trocar para `--accent` casa com `.nav-item-ativo`, mas o
-  claro tem "decisão 3" documentada (`claro-estudio.css`) sobre esse chip;
-  mudar é decisão de design.
 
 **Nota de leitura:** várias dessas podem ter sido cobertas pelas fatias 1-8
 (chips = fatia 3, cargos = fatia 3, banner = fatias 6-7, modais/avatar = fatia 7).
