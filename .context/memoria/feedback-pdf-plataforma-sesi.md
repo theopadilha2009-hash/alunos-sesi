@@ -156,6 +156,17 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   da lista de abas; o card do usuário e o botão do header abrem a janela. O
   breadcrumb do `PaginaMeuPerfil` saiu (ruído dentro da janela). As 6 abas, a
   barra de salvar e o hero ficaram idênticos — a mudança é a moldura.
+  **Regressão que ela causou (fechada no PR #115):** o mini-currículo A4
+  imprimia **em branco**. A regra `@media print` do #97 esconde os filhos
+  diretos do `.crm-layout` exceto `.curriculo-modal-backdrop` — mas com o editor
+  em modal o currículo virou descendente de `.modal-meu-perfil`, que É filho
+  direto do `.crm-layout`. O `display:none` pegava o modal inteiro (medido:
+  folha com largura 0). Fix: abrir exceção para `.modal-meu-perfil` (e
+  `display:block` nele — o `.modal-backdrop` é `grid`, e como item de grid a
+  caixa encolhia ao conteúdo) + `.pagina-perfil-container:has(.curriculo-folha-a4)`
+  escondendo os irmãos da folha. **Lição:** qualquer coisa que passe a abrir
+  dentro de outro modal herda as regras de impressão do modal de fora; testar
+  impressão é parte de mexer em aninhamento.
 
 **Páginas ainda pendentes (do Théo):** editar/apagar turmas no ADM (p5 —
 **feature**, não fix), dois "Lucas Bento" (p7 — **dado**, não código), apagar
