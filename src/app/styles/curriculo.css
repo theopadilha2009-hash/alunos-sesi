@@ -381,8 +381,55 @@
      abre — e o `.modal-perfil-breve` entrava no fluxo de impressão junto com o
      A4: era o "baixar PDF duplica as páginas". O `:has()` escopa a regra para
      não zerar a impressão do Catálogo, que usa o mesmo `.crm-layout` sem
-     currículo aberto. */
-  .crm-layout:has(.curriculo-folha-a4) > :not(.curriculo-modal-backdrop) {
+     currículo aberto.
+
+     A exceção agora cobre TAMBÉM o modal "Meu Perfil": desde que o editor virou
+     janela (p5 do PDF), o currículo aberto por ele é descendente de
+     `.modal-meu-perfil`, que é filho direto do `.crm-layout` — sem esta
+     exceção, o `display: none` pegava o modal inteiro e a folha imprimia em
+     branco (medido: largura 0). */
+  .crm-layout:has(.curriculo-folha-a4)
+    > :not(.curriculo-modal-backdrop):not(.modal-meu-perfil) {
+    display: none !important;
+  }
+
+  /* O modal do Meu Perfil continua no fluxo, mas o véu e a caixa somem: só a
+     folha (que é neta dele) precisa aparecer. Sem isto o backdrop pinta o fundo
+     escuro e a caixa impõe altura/scroll — a folha sairia recortada.
+     `display: block` é obrigatório: o `.modal-backdrop` é `grid` com
+     `place-items: center`, e como item de grid a caixa encolhe ao conteúdo — a
+     folha media 296px de largura (A4 pede ~794) e virava 2 páginas. */
+  .modal-meu-perfil {
+    display: block !important;
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .meu-perfil-janela {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .meu-perfil-scroll {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* Dentro do modal, o currículo é filho do `.pagina-perfil-container`: mesma
+     ideia, escopada — só o backdrop do currículo sobrevive. */
+  .pagina-perfil-container:has(.curriculo-folha-a4) > :not(.curriculo-modal-backdrop) {
+    display: none !important;
+  }
+
+  .meu-perfil-fechar {
     display: none !important;
   }
 
