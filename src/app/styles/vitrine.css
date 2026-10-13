@@ -1393,7 +1393,11 @@ body::before {
   margin: 0;
   font-size: 0.8rem;
   color: var(--dim);
-  max-width: 28ch;
+  /* 18ch e não 28ch: com 28 a coluna Aluno inflava para 376px e empurrava a
+     coluna de ações (Crachá & Perfil) para fora da tela em 1440px. A bio é
+     secundária — o nome e os selos identificam a linha, e o perfil completo
+     (com a bio inteira) abre ao clicar na linha. */
+  max-width: 18ch;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

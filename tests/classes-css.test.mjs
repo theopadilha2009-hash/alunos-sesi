@@ -71,7 +71,6 @@ const CAIXA = "container sem estilo com filhos estilizados";
 const SEM_CSS = {
   "adm-header-info": CAIXA,
   "aviso-senha-invalida": INLINE,
-  "badge-rede-texto": TEXTO,
   "bloco-cabecalho-tabela": CAIXA,
   "breve-secao": CAIXA,
   "btn-confirmar-submissao": BASE,
