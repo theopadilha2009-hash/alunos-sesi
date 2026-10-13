@@ -11,3 +11,4 @@
 - [Showcase de design A|B](design-showcase.md) — Etapa 2 (port ao app) executada com B como alvo em 10 PRs; escolha por tela e Etapa 3 seguem abertas
 - [Feedback do PDF "Plataforma sesi"](feedback-pdf-plataforma-sesi.md) — 23 anotações do Théo (06/10); frente 1 (currículo + crachá) fechada, o resto é fix de design ou feature a decidir
 - [Auditoria visual das 16 telas](auditoria-visual-16-telas.md) — 60+ achados em HTML (08-09/10); o defeito que mais repete é token do escuro consumido no claro, e o sticker do cartão público cai fora do lugar
+- [Tabela cortada e o falso "pesado"](tabela-corte-e-o-falso-peso.md) — o corte da coluna de ações (fix #119) e a medição que não achou lentidão nenhuma; a porta 3000 desta máquina é de outro projeto
