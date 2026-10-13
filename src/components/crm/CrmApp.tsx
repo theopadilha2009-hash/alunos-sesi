@@ -5,13 +5,12 @@ import { logoutAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
-import { PaginaEmConstrucao } from "@/components/crm/PaginaEmConstrucao";
+import { PaginaOlisesi } from "@/components/crm/PaginaOlisesi";
 import { MeuPerfilModal } from "@/components/crm/MeuPerfilModal";
 import { PainelAdmIntegrado } from "@/components/crm/PainelAdmIntegrado";
 import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
 import {
   IconeCards,
-  IconeConstrucao,
   IconeCracha,
   IconeEditar,
   IconeEscudo,
@@ -72,7 +71,7 @@ type AbaAtiva =
   | "desafios"
   | "tabelas"
   | "adm"
-  | "construcao";
+  | "olisesi";
 
 export function CrmApp({
   usuario,
@@ -530,20 +529,22 @@ export function CrmApp({
               header. Como aba, o editor denso dividia a tela com a moldura do
               CRM — o "muita poluição visual" da anotação. */}
 
-          {/* A aba reservada do SESI (anotação da p.10 do PDF). Fica aqui, e
-              não escondida atrás de um link, para ser alcançável e — mais
-              importante — para ter volta: a tela abre com o botão de retorno
-              ao Portfólio, que é o "não um limbo aleatório" pedido. */}
+          {/* A aba das Olimpíadas SESI (anotação da p.10 do PDF: "criara aba
+              ainda em construcao olisesi"). Substitui o antigo espaço reservado
+              "Em construção". Fica aqui, e não escondida atrás de um link, para
+              ser alcançável e — mais importante — para ter volta: a tela abre
+              com o botão de retorno ao Portfólio, que é o "não um limbo
+              aleatório" pedido. Sem badge: o selo "Em breve" era do espaço
+              reservado; agora a tela tem conteúdo. */}
           <button
             type="button"
-            className={`nav-item ${aba === "construcao" ? "nav-item-ativo" : ""}`}
-            onClick={() => setAba("construcao")}
+            className={`nav-item ${aba === "olisesi" ? "nav-item-ativo" : ""}`}
+            onClick={() => setAba("olisesi")}
           >
             <span className="nav-icone">
-              <IconeConstrucao tamanho={18} />
+              <IconeTrofeu tamanho={18} />
             </span>
-            <span className="nav-label">Em construção</span>
-            <span className="nav-badge">Em breve</span>
+            <span className="nav-label">Olimpíadas SESI</span>
           </button>
 
           {ehSuperAdm ? (
@@ -683,9 +684,11 @@ export function CrmApp({
                   ? "Criações da Escola"
                   : aba === "tabelas"
                     ? "Gestão Tabular"
-                    : aba === "construcao"
-                      ? "Espaço SESI"
-                      : "Administração"}
+                    : aba === "desafios"
+                      ? "Desafios da Escola"
+                      : aba === "olisesi"
+                        ? "Escola SESI"
+                        : "Administração"}
             </span>
             <h1 className="crm-header-titulo">
               {aba === "portfolio"
@@ -694,9 +697,11 @@ export function CrmApp({
                   ? "Criações & Projetos SESI"
                   : aba === "tabelas"
                     ? "Tabela de Alunos & Salas"
-                    : aba === "construcao"
-                      ? "Ainda em construção"
-                      : "Painel do Administrador"}
+                    : aba === "desafios"
+                      ? "Mural de Desafios"
+                      : aba === "olisesi"
+                        ? "Olimpíadas SESI"
+                        : "Painel do Administrador"}
             </h1>
           </div>
 
@@ -1151,10 +1156,10 @@ export function CrmApp({
           </div>
         ) : null}
 
-        {/* ── ABA: EM CONSTRUÇÃO (espaço reservado do SESI) ────────────── */}
-        {aba === "construcao" ? (
+        {/* ── ABA: OLIMPÍADAS SESI (capa do evento) ────────────────────── */}
+        {aba === "olisesi" ? (
           <div className="crm-secao-conteudo">
-            <PaginaEmConstrucao onVoltar={() => setAba("portfolio")} />
+            <PaginaOlisesi onVoltar={() => setAba("portfolio")} />
           </div>
         ) : null}
 
