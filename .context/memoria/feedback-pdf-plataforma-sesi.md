@@ -168,6 +168,20 @@ pediu: "faz a primeira frente que você sabe, deixa os pendentes depois".
   dentro de outro modal herda as regras de impressão do modal de fora; testar
   impressão é parte de mexer em aninhamento.
 
+**Frente 7 (p10 "olisesi") — FECHADA em 13/10:**
+- ✅ **p10 "criara aba ainda em construcao olisesi"** → **PR #117**. A aba
+  reservada "Em construção" (criada pelo #100) virou a **capa das Olimpíadas
+  SESI**: menu com troféu, roseta oficial (`LogoSesi iconeApenas`), título
+  OLISESI e faixa com as seis cores da marca (`CORES_SALA`). Decisões do Théo
+  na hora: **só a capa** por enquanto, **sem contagem regressiva**, **sem
+  conteúdo inventado** — modalidades/datas/regras seguem pendentes com ele.
+  Token-first (mesma regra veste claro/escuro); CSS `.olisesi-*` no FIM da
+  cascata; o bloco `.construcao-*` e o `IconeConstrucao` saíram junto (órfãos).
+  Medido: contraste do título 17,85:1 no claro e 17,35:1 no escuro; zero
+  overflow em 1440px e 390px. **Bônus:** o ternário do header não cobria a aba
+  `desafios` — ela caía no fallback e mostrava "Painel do Administrador"
+  (defeito pré-existente registrado na p10 do #100); corrigido no mesmo PR.
+
 **Páginas ainda pendentes (do Théo):** editar/apagar turmas no ADM (p5 —
 **feature**, não fix), dois "Lucas Bento" (p7 — **dado**, não código), apagar
 salas menos 9 (p9 — **dado/decisão**), botão de denúncia pra tudo (p1 —
@@ -183,3 +197,20 @@ salas menos 9 (p9 — **dado/decisão**), botão de denúncia pra tudo (p1 —
 As que são **dado ou funcionalidade** (dois Lucas, apagar salas, PDF duplicando,
 botão de denúncia) o redesign não tocou. Ver [[design-showcase]] e
 [[decisoes-sao-do-theo]].
+
+**Correção do Théo (09/10/2026) — como trabalhar daqui pra frente:**
+Ele rejeitou a auditoria visual que eu produzi ([[auditoria-visual-16-telas]]),
+dizendo que "não faz sentido" e que eu estava "fazendo coisa que não precisa".
+A instrução dele: *"eu te dei um documento exatamente bem certinho como eu queria
+que você fizesse... olha o documento que eu te entreguei"*. Duas lições:
+1. **A fonte de verdade é o PDF dele, não um diagnóstico meu.** Varrer o app
+   inteiro e devolver 60 achados é ruído; ele quer as anotações DELE resolvidas,
+   uma frente por vez, como no `/goal` ("faz a primeira frente que você sabe").
+2. **Deixar explícito quando nada foi tocado.** Ele leu o relatório como se fosse
+   um redesign e perguntou por que "o login mudou" / "a tabela mudou" — o HTML só
+   continha capturas do sistema atual. Ao entregar diagnóstico, dizer na primeira
+   linha que o app não foi alterado.
+   Críticas dele na ocasião: emojis no relatório ("horrível"), análise do tema
+   escuro (que ele já tinha mandado apagar no PDF), e a tabela de alunos (que ele
+   **gosta como está** — não mexer). Pediu dois itens novos: a aba "Em construção"
+   virar **Olimpíadas SESI** ("só faz um projetinho legal aí") e o 404 não existir.
