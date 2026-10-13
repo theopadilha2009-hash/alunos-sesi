@@ -63,3 +63,6 @@
 /* Ilhas de tema — o app abre no claro, o login fica escuro. Precisa vir por
    último para vencer `claro-crm.css` (`.login-card`). */
 @import "./styles/ilhas-2026.css";
+/* Aba "Olimpíadas SESI" (substitui a reservada "Em construção", p10 do PDF).
+   Seletor novo (.olisesi-*), então entra no FIM como os demais. */
+@import "./styles/olisesi.css";

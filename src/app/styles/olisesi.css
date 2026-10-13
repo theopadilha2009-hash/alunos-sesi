@@ -1,0 +1,122 @@
+/* ── ABA "OLIMPÍADAS SESI" (src/components/crm/PaginaOlisesi.tsx) ────────────
+   Substitui a tela reservada "Em construção" (anotação p10 do PDF).
+
+   Token-first de propósito: no claro veste os tokens do tokens.css e no escuro
+   os mesmos, sem bloco light próprio — mesma regra da tela que esta substitui.
+   As únicas cores que não são token são as faixas decorativas do topo, que vêm
+   de `CORES_SALA` via `--sala` inline no TSX (a paleta da marca, determinística
+   por turma) — nunca um hex solto aqui. */
+
+.olisesi-tela {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  padding: 2rem 1rem;
+}
+
+.olisesi-cartao {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.7rem;
+  width: min(38rem, 100%);
+  padding: 3.5rem 2rem 2.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-alta);
+}
+
+/* A faixa de abertura: uma barra fina no topo com as seis cores da marca,
+   ecoando a roseta logo abaixo. Fica ancorada de ponta a ponta. */
+.olisesi-faixas {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  height: 6px;
+}
+
+.olisesi-faixas span {
+  flex: 1;
+  background: var(--sala);
+}
+
+.olisesi-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--glow);
+  border-radius: var(--raio-p);
+}
+
+/* O `LogoSesi` é um `<span>` com `height` inline e as duas `<img>` dentro; a
+   largura sai do `aspect-ratio` do próprio componente. Aqui só sobra o respiro. */
+.olisesi-logo {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.olisesi-titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.olisesi-subtitulo {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+.olisesi-texto {
+  margin: 0.5rem 0 0;
+  max-width: 30rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--dim);
+}
+
+.olisesi-acoes {
+  margin-top: 1.25rem;
+}
+
+.olisesi-btn {
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--raio-p);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.olisesi-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -10px var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .olisesi-btn {
+    transition: none;
+  }
+
+  .olisesi-btn:hover {
+    transform: none;
+  }
+}
