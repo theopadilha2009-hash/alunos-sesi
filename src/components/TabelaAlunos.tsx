@@ -43,8 +43,13 @@ export function TabelaAlunos({
             <th scope="col">Aluno</th>
             {!ocultarColunaSala ? <th scope="col">Sala</th> : null}
             <th scope="col">Habilidades & Foco</th>
-            <th scope="col" style={{ minWidth: "16rem" }}>
-              Redes Profissionais (LinkedIn / GitHub)
+            {/* "Redes" e não "Redes Profissionais (LinkedIn / GitHub)": o rótulo
+                longo forçava 256px só de cabeçalho e empurrava a coluna de
+                ações (Crachá & Perfil) para fora da tela — medido: 265px de
+                corte em 1440px. Os ícones de LinkedIn/GitHub já dizem de que
+                rede se trata. O `title` preserva o texto completo. */}
+            <th scope="col" title="Redes Profissionais (LinkedIn / GitHub)">
+              Redes
             </th>
             <th scope="col" style={{ textAlign: "right" }}>
               Estrelas
@@ -134,7 +139,7 @@ export function TabelaAlunos({
                 <td>
                   {aluno.habilidades && aluno.habilidades.length > 0 ? (
                     <div className="tabela-habilidades-clean">
-                      {aluno.habilidades.slice(0, 3).map((hab) => (
+                      {aluno.habilidades.slice(0, 2).map((hab) => (
                         <span key={hab} className="tag-habilidade-clean">
                           {hab}
                         </span>
@@ -211,8 +216,9 @@ export function TabelaAlunos({
                         className="mini botao-ver-perfil-acao"
                         onClick={() => onSelecionarAluno(aluno)}
                         title={`Ver perfil completo de ${aluno.nome}`}
+                        aria-label={`Ver perfil completo de ${aluno.nome}`}
                       >
-                        Perfil →
+                        <span className="botao-perfil-texto">Perfil</span> →
                       </button>
                     ) : null}
                   </div>

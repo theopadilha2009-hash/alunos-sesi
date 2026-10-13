@@ -2205,8 +2205,48 @@ body:has(.login-tela-container) {
   border-collapse: collapse;
 }
 
+/* Dentro da tabela os badges de rede perdem o rótulo e ficam só o ícone: com
+   o texto, LinkedIn + GitHub ocupavam 178px e quebravam em duas linhas,
+   empurrando a coluna de ações (Crachá & Perfil) para fora da tela. O `title`
+   do badge segue dizendo o que é. Escopado em `.tabela-alunos` — fora dela
+   (perfil, modal) o badge continua com rótulo. */
+.tabela-alunos .badge-rede {
+  padding: 0.4rem;
+  gap: 0;
+}
+
+.tabela-alunos .badge-rede .badge-rede-texto {
+  display: none;
+}
+
+.tabela-alunos .grupo-redes-destacadas {
+  flex-wrap: nowrap;
+}
+
+/* As duas colunas de ação são estreitas por natureza (estrela e dois botões
+   curtos): travar a largura delas devolve o último fio de espaço para a
+   coluna Aluno e fecha os ~14px que faltavam. */
+.tabela-alunos th:nth-child(5),
+.tabela-alunos td:nth-child(5) {
+  width: 5.5rem;
+}
+
+.tabela-alunos th:nth-child(6),
+.tabela-alunos td:nth-child(6) {
+  width: 9rem;
+}
+
+/* As colunas de dado (Habilidades, Sala, Redes) não devem ser esticadas pela
+   largura mínima do conteúdo: sem isto a coluna de Habilidades herdava a
+   largura do maior rótulo e empurrava a de ações para fora. `min-width: 0`
+   deixa a célula encolher e o `nowrap` do conteúdo decide o piso real. */
+.tabela-alunos td,
 .tabela-alunos th {
-  padding: 1.15rem 1.4rem;
+  min-width: 0;
+}
+
+.tabela-alunos th {
+  padding: 0.9rem 0.7rem;
   background: var(--surface-2);
   border-bottom: 1px solid var(--line);
   font-family: var(--fonte-titulo);
@@ -2214,7 +2254,11 @@ body:has(.login-tela-container) {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--faint);
+  /* `--dim` e não `--faint`: medido em ~4,35:1 sobre `--surface-2`, abaixo do
+     mínimo AA para texto pequeno em caixa alta. `--dim` dá ~7:1. */
+  color: var(--dim);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
 }
 
 .tabela-linha {
@@ -2227,14 +2271,39 @@ body:has(.login-tela-container) {
 }
 
 .tabela-linha td {
-  padding: 1.25rem 1.4rem;
+  padding: 0.8rem 0.6rem;
   vertical-align: middle;
 }
 
 .tabela-aluno-celula {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
+  /* Teto da coluna Aluno: sem isto ela absorvia todo o espaço livre da tabela
+     (376px) e a coluna de ações (Crachá & Perfil) saía da tela. */
+  max-width: 15.5rem;
+}
+
+.tabela-aluno-celula > div {
+  min-width: 0;
+}
+
+/* O nome e os selos dividem a linha: quando o nome é longo, os selos descem
+   para a segunda linha em vez de espremer o nome até "Be...". Assim o nome
+   usa toda a largura disponível e só trunca se ainda não couber sozinho. */
+.tabela-nome-wrap {
+  min-width: 0;
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+
+.tabela-aluno-nome-btn,
+.tabela-aluno-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  text-align: left;
 }
 
 .mini-avatar {
@@ -2251,7 +2320,7 @@ body:has(.login-tela-container) {
 }
 
 .tabela-aluno-nome-btn {
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   font-weight: 800;
 }
 
@@ -2314,6 +2383,16 @@ body:has(.login-tela-container) {
   justify-content: center;
 }
 
+/* Na largura do desktop o botão de perfil perde o rótulo e fica só a seta —
+   é o que fecha os últimos px do corte. O `aria-label` e o `title` mantêm o
+   significado para leitor de tela e para o mouse. Em telas estreitas, onde a
+   tabela rola de lado de qualquer forma, o rótulo volta. */
+@media (min-width: 1100px) {
+  .tabela-alunos .botao-perfil-texto {
+    display: none;
+  }
+}
+
 .botao-ver-perfil-acao {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
@@ -2323,10 +2402,14 @@ body:has(.login-tela-container) {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-/* Otimização de Performance nos Elementos Repetidos */
+/* Otimização de Performance nos Elementos Repetidos.
+   O `contain-intrinsic-size` reservava 70px, mas as linhas reais medem 94-124px
+   (avatar de 44px + padding + bio/chips). A reserva subdimensionada fazia a
+   barra de rolagem "pulsar" conforme as linhas entravam. 110px fica dentro da
+   faixa real medida. */
 .tabela-linha {
   content-visibility: auto;
-  contain-intrinsic-size: 70px;
+  contain-intrinsic-size: 110px;
 }
 
 /* ── Botão Rápido de Crachá na Sidebar ───────────────────────────────────── */
