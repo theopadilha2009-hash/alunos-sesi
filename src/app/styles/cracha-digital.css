@@ -61,7 +61,12 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: var(--vermelho-sesi);
+  /* `--vermelho-sesi-texto` (#ff6666), não `--vermelho-sesi` (#e30613): o
+     documento de validação é uma ILHA ESCURA nos dois temas (claro-cracha.css),
+     e o vermelho institucional cru é tinta de FUNDO — como texto sobre escuro
+     rende ~3,7:1. O `-texto` é o par tinte feito para isso, o mesmo que o
+     `.nfc-*` já usa. */
+  color: var(--vermelho-sesi-texto);
   text-transform: uppercase;
 }
 
