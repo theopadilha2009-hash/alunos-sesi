@@ -1,6 +1,6 @@
 ---
 name: rotacionar-tokens-do-transcript
-description: Os tokens da Vercel, do Supabase e um PAT do GitHub passaram pelo chat e continuam válidos — pendente de rotação
+description: Quatro tokens (Vercel ×2, Supabase, PAT do GitHub) passaram pelo chat e nenhum foi rotacionado; varredura do git em 15/10 confirmou que nenhum vazou para o repo
 metadata:
   type: project
 ---
@@ -17,6 +17,18 @@ produção. Nenhum dos dois foi usado (as migrations foram aplicadas pelo
 `scripts/db-query.sh`, que lê `SUPABASE_DB_URL` do `.env.local`; o GitHub foi
 acessado via `gh`, já autenticado). Os valores ficaram no transcript de qualquer
 forma.
+
+**Em 2026-10-15 o Théo colou um quarto token (`vcp_…`) no chat**, e foi avisado na
+hora para não repetir o valor. No mesmo dia rodei uma varredura do git para checar
+se algum desses segredos tinha chegado ao repositório. **Não chegou nenhum.** O
+`git log --all -S` acusa os padrões (`vcp_`, `sbp_`, `github_pat_`) em três
+lugares, e os três são inofensivos: o `.env.example` (só NOMES de chave, valores
+em branco — é o único arquivo `.env*` versionado), esta própria memória (que cita
+os prefixos como texto) e o `tests/debug.test.mjs`, que usa um token **de mentira**
+(`sbp_abcdefghijklmnopqrstuvwxyz…`) para testar o `mascararSegredos`. Conclusão: o
+vazamento está confinado ao **transcript e ao `.env.local`** (gitignored) — o
+repositório público está limpo. Isso não reduz nada da urgência da rotação (o
+transcript é o que vaza), mas elimina a hipótese de segredo em repo público.
 
 **Why:** token que passou por transcript é token vazado por definição. Não há como
 saber quem leu, e os três dão acesso de escrita: o da Vercel publica em produção,
