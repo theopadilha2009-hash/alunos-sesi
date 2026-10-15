@@ -400,7 +400,11 @@
 
 .nfc-sticker-item {
   position: absolute;
-  transform: translate(-50%, -50%);
+  /* Sem `transform` aqui de propósito: quem posiciona é o `transform` inline da
+     página, `translate(-50%, -50%) rotate(...)` — o mesmo do Estúdio
+     (`StickerCanvas`). Declarar o translate só no CSS NÃO bastava: o inline
+     sobrescreve o transform inteiro, e o sticker caía com o canto (não o centro)
+     no ponto escolhido. Espelhar o Estúdio é o que mantém os dois iguais. */
   pointer-events: none;
   z-index: 5;
 }

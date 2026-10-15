@@ -118,7 +118,12 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
                 left: `${st.x}%`,
                 top: `${st.y}%`,
                 width: `${st.tamanho || LIMITES_STICKERS.tamanhoPadrao}px`,
-                transform: `rotate(${st.rotacao || 0}deg)`,
+                // O MESMO transform do Estúdio (`StickerCanvas`): sem o
+                // `translate(-50%, -50%)` junto do `rotate`, o `transform` inline
+                // sobrescreve o do CSS e o CANTO do sticker (não o centro) caía no
+                // ponto escolhido — a posição pública saía diferente da que o
+                // aluno viu ao arrastar.
+                transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
               }}
               title={st.rotulo || undefined}
             >
@@ -283,7 +288,10 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
                         left: `${st.x}%`,
                         top: `${st.y}%`,
                         width: `${st.tamanho || LIMITES_STICKERS.tamanhoPadrao}px`,
-                        transform: `rotate(${st.rotacao || 0}deg)`,
+                        // Mesmo par do Estúdio, pela mesma razão do sticker do
+                        // banner logo acima — a `.nfc-projeto-sticker` nem declara
+                        // transform próprio, então ele tem que vir inteiro daqui.
+                        transform: `translate(-50%, -50%) rotate(${st.rotacao || 0}deg)`,
                       }}
                       title={st.rotulo || undefined}
                     >
