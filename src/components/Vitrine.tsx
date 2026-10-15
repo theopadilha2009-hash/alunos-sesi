@@ -286,7 +286,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
                   </div>
                   <h3 className="hall-nome">{aluno.nome}</h3>
                   {aluno.sala ? (
-                    <span className="hall-sala" style={{ color: aluno.corSala }}>
+                    <span className="hall-sala" style={{ ["--sala-cor" as string]: aluno.corSala }}>
                       {aluno.sala}
                     </span>
                   ) : null}

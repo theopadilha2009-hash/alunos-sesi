@@ -1096,6 +1096,11 @@ body::before {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 0.8rem;
+  /* Mesmo corte do `.aluno-sala` logo acima: 55% da cor da turma misturada ao
+     `--text`, e não a cor crua. O amarelo da paleta fica em ~1,9:1 sobre o
+     fundo claro — misturar mantém a identidade da turma sem apagar o rótulo.
+     A cor da turma chega por `--sala-cor` (inline no `Vitrine.tsx`). */
+  color: color-mix(in srgb, var(--sala-cor, var(--dim)) 55%, var(--text));
 }
 
 .hall-pes {
