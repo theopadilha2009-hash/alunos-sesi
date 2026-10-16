@@ -1,8 +1,11 @@
 ---
 name: feedback-pdf-plataforma-sesi
-description: As 23 anotações do PDF "Plataforma sesi (1)" (Théo, 06/10) — o que já fechou, o que é fix de design e o que é feature/decisão
+description: "As 23 anotações do PDF \"Plataforma sesi (1)\" (Théo, 06/10) — o que já fechou, o que é fix de design e o que é feature/decisão"
 metadata:
+  node_type: memory
   type: project
+  originSessionId: bb0e7c1a-2b9f-412a-942d-f8deab83faeb
+  modified: 2026-10-16T19:48:16.270Z
 ---
 
 Em 06/10/2026 o Théo mandou `~/Downloads/Plataforma sesi (1).pdf` (10 páginas,
@@ -213,4 +216,6 @@ que você fizesse... olha o documento que eu te entreguei"*. Duas lições:
    Críticas dele na ocasião: emojis no relatório ("horrível"), análise do tema
    escuro (que ele já tinha mandado apagar no PDF), e a tabela de alunos (que ele
    **gosta como está** — não mexer). Pediu dois itens novos: a aba "Em construção"
-   virar **Olimpíadas SESI** ("só faz um projetinho legal aí") e o 404 não existir.
+   virar **Olimpíadas SESI** ("só faz um projetinho legal aí") e o 404 não existir
+   — o 404 **já existia**: o `not-found.tsx` custom entrou no PR #29, verificado
+   em 16/10/2026.
