@@ -6,6 +6,7 @@ import { LoginTela } from "@/components/crm/LoginTela";
 import { Roseta } from "@/components/Roseta";
 import { obterSessao } from "@/lib/auth";
 import {
+  alunoIdDoUsuario,
   listarAcessos,
   listarAlunos,
   listarDesafios,
@@ -117,6 +118,12 @@ export default async function PaginaPrincipal() {
   return (
     <CrmApp
       usuario={sessao}
+      // Do BANCO, não do token: um login anterior ao vínculo anda com
+      // `alunoId` vazio até relogar, e o card do usuário precisa do aluno.
+      meuAlunoId={
+        sessao.alunoId ??
+        (sessao.role === "super_adm" ? await alunoIdDoUsuario(sessao.id) : null)
+      }
       alunosIniciais={alunos}
       salas={salas}
       retrato={retrato}

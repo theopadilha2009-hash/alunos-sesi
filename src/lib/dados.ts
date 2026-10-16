@@ -127,6 +127,25 @@ export async function listarAcessos(): Promise<string[]> {
   return (data ?? []).map((u) => u.aluno_id as string);
 }
 
+/**
+ * O `aluno_id` de um usuário, lido do BANCO e não do token.
+ *
+ * O token carrega o retrato do login: quem logou antes de o vínculo existir
+ * anda com `alunoId` vazio por até 30 dias. Antes, quem preenchia essa lacuna
+ * era um slug chumbado (`alunoPorSlug("theo-padilha")`) — renomear o slug
+ * quebrava o save do perfil, a troca de senha e o envio de desafio em
+ * silêncio. O vínculo de verdade mora em `usuarios.aluno_id`, e é daqui que
+ * ele passa a vir.
+ */
+export async function alunoIdDoUsuario(usuarioId: string): Promise<string | null> {
+  const { data } = await clienteAdmin()
+    .from("usuarios")
+    .select("aluno_id")
+    .eq("id", usuarioId)
+    .maybeSingle();
+  return (data?.aluno_id as string | null) ?? null;
+}
+
 export async function listarRetrato(): Promise<RetratoSala[]> {
   const agora = Date.now();
   if (cacheRetrato && cacheRetrato.expira > agora) {
