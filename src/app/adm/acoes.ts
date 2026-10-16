@@ -23,7 +23,7 @@ import { tomDaImportacao } from "@/lib/importacao";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { alvoDaSala } from "@/lib/sala-do-aluno";
 import { SENHA_BLOQUEADA } from "@/lib/senha";
-import { sanitizarTexto } from "@/lib/seguranca";
+import { sanitizarEmail, sanitizarTexto } from "@/lib/seguranca";
 import { obterSessao } from "@/lib/auth";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
 import { slugUnico } from "@/lib/slug";
@@ -346,6 +346,47 @@ export async function criarAluno(
   }
   revalidar();
   return { ok: true, mensagem: `${nome} entrou na turma.` };
+}
+
+/**
+ * Corrige o nome e o e-mail de um aluno sem sair do painel.
+ *
+ * Era SQL manual: o erro de digitação que veio da planilha só se consertava
+ * direto no banco. O e-mail segue a regra de sempre (`sanitizarEmail` — só o
+ * domínio da escola, `null` quando não informou). O slug NÃO se recalcula de
+ * propósito: ele é o endereço do perfil que o aluno já divulgou; mudar o
+ * endereço é outra decisão, não um conserto de nome.
+ */
+export async function editarAluno(
+  _estado: Estado,
+  formData: FormData,
+): Promise<Estado> {
+  await exigirAdm();
+
+  const id = texto(formData, "id");
+  const nome = texto(formData, "nome");
+  if (!RE_UUID.test(id)) return { ok: false, mensagem: "Aluno inválido." };
+  if (nome.length < 2) return { ok: false, mensagem: "Nome muito curto." };
+
+  const emailBruto = texto(formData, "email");
+  const email = sanitizarEmail(emailBruto);
+  if (emailBruto && !email) {
+    return {
+      ok: false,
+      mensagem: "Este e-mail não é do domínio da escola (@estudante.sesisenai.org.br).",
+    };
+  }
+
+  const { error } = await clienteAdmin()
+    .from("alunos")
+    .update({ nome, email: email ?? null })
+    .eq("id", id);
+  if (error) {
+    logger.error("ADM", `Falha ao editar ${nome}`, error);
+    return { ok: false, mensagem: "Não foi possível salvar agora. Tente de novo." };
+  }
+  revalidar();
+  return { ok: true, mensagem: `${nome} atualizado.` };
 }
 
 /**

@@ -21,6 +21,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     aluno.bio ||
     `Conheça as competências, projetos e redes profissionais de ${aluno.nome} na Escola SESI.`;
 
+  // A prévia do link (WhatsApp, LinkedIn, Slack) mostra a capa do aluno — o
+  // banner, e na falta dele a foto. Só URL absoluta: data URL não serve de
+  // og:image, e o que o perfil guarda em produção é a URL do Blob.
+  const imagem = [aluno.banner_url, aluno.foto_url].find(
+    (url): url is string => typeof url === "string" && url.startsWith("https://"),
+  );
+
   return {
     title: titulo,
     description: descricao,
@@ -35,11 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: descricao,
       type: "profile",
       locale: "pt_BR",
+      images: imagem ? [{ url: imagem, alt: aluno.nome }] : undefined,
     },
     twitter: {
-      card: "summary",
+      card: imagem ? "summary_large_image" : "summary",
       title: titulo,
       description: descricao,
+      images: imagem ? [imagem] : undefined,
     },
   };
 }

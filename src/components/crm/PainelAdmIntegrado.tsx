@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { Fragment, useActionState, useEffect, useMemo, useState } from "react";
 import {
   alternar,
   criarAluno,
   decidirSubmissaoAction,
+  editarAluno,
   gerarCodigoAtivacao,
   importarLista,
   mudarSalaDoAluno,
@@ -16,6 +17,7 @@ import {
   IconeCheck,
   IconeChave,
   IconeCracha,
+  IconeEditar,
   IconeEscudo,
   IconeEstrela,
   IconeLixeira,
@@ -87,6 +89,8 @@ export function PainelAdmIntegrado({
   const [busca, setBusca] = useState("");
   const [salaFiltro, setSalaFiltro] = useState<string>("todas");
   const [lacuna, setLacuna] = useState<Lacuna | null>(null);
+  /** A linha com a edição de nome/e-mail aberta — uma por vez. */
+  const [editandoId, setEditandoId] = useState<string | null>(null);
 
   // Unifica turmas oficiais padronizadas com turmas já salvas no banco
   const opcoesTurmas = useMemo(() => {
@@ -463,7 +467,8 @@ export function PainelAdmIntegrado({
                   </tr>
                 ) : (
                   alunosFiltrados.map((a) => (
-                    <tr key={a.id} className="tabela-linha" style={{ ["--sala-cor" as string]: a.cor }}>
+                    <Fragment key={a.id}>
+                    <tr className="tabela-linha" style={{ ["--sala-cor" as string]: a.cor }}>
                       <td>
                         <div className="tabela-aluno-celula">
                           <Avatar
@@ -549,6 +554,19 @@ export function PainelAdmIntegrado({
                             <IconeCracha tamanho={14} />
                           </button>
 
+                          {/* Corrige nome/e-mail sem sair do painel. Uma linha
+                              aberta por vez — clicar no lápis de outra fecha
+                              a anterior. */}
+                          <button
+                            type="button"
+                            className="btn-acao-tabela"
+                            onClick={() => setEditandoId(editandoId === a.id ? null : a.id)}
+                            aria-expanded={editandoId === a.id}
+                            title="Editar nome e e-mail"
+                          >
+                            <IconeEditar tamanho={14} />
+                          </button>
+
                           {/* Só para quem ainda não tem login. Emitir código de
                               quem já tem trocaria a senha em uso por um código,
                               deixando o aluno de fora até resgatar. */}
@@ -586,6 +604,10 @@ export function PainelAdmIntegrado({
                         </div>
                       </td>
                     </tr>
+                    {editandoId === a.id ? (
+                      <LinhaEditarAluno aluno={a} onFechar={() => setEditandoId(null)} />
+                    ) : null}
+                    </Fragment>
                   ))
                 )}
               </tbody>
@@ -1062,6 +1084,81 @@ export function PainelAdmIntegrado({
         </section>
       </div>
     </div>
+  );
+}
+
+// ── edição de UMA linha ──────────────────────────────────────────────────
+
+/**
+ * O form de edição de nome/e-mail de UMA linha, com o resultado da própria
+ * ação.
+ *
+ * Mesmo desenho do `SeletorSala`: componente à parte porque o
+ * `useActionState` é por linha — a recusa aparece onde o ADM está olhando,
+ * ao lado dos campos, e o sucesso fecha a edição por si só. A linha some do
+ * fluxo quando fechada: zero poluição enquanto ninguém está editando.
+ */
+function LinhaEditarAluno({
+  aluno,
+  onFechar,
+}: {
+  aluno: AlunoNaTela;
+  onFechar: () => void;
+}) {
+  const [estado, salvar, pendente] = useActionState(editarAluno, ESTADO_INICIAL);
+
+  // O efeito depende só do `estado` (objeto novo a cada resposta), nunca do
+  // `onFechar` — mesma razão do `SeletorSala`: colocá-lo nas dependências
+  // rodaria o efeito a cada render do pai.
+  useEffect(() => {
+    if (estado.ok) onFechar();
+  }, [estado]);
+
+  return (
+    <tr>
+      <td colSpan={6}>
+        <form
+          action={salvar}
+          style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "end" }}
+        >
+          <input type="hidden" name="id" value={aluno.id} />
+          <label className="campo-form">
+            <span className="label-texto">Nome</span>
+            <input
+              type="text"
+              name="nome"
+              className="input-texto"
+              defaultValue={aluno.nome}
+              required
+              minLength={2}
+              maxLength={120}
+            />
+          </label>
+          <label className="campo-form">
+            <span className="label-texto">E-mail da escola (opcional)</span>
+            <input
+              type="text"
+              name="email"
+              className="input-texto"
+              defaultValue={aluno.email ?? ""}
+              maxLength={120}
+              placeholder="aluno@estudante.sesisenai.org.br"
+            />
+          </label>
+          <button type="submit" className="botao" disabled={pendente}>
+            {pendente ? "Salvando…" : "Salvar"}
+          </button>
+          <button type="button" className="botao botao-fraco" onClick={onFechar}>
+            Cancelar
+          </button>
+          {!estado.ok && estado.mensagem ? (
+            <span className="recado recado-erro" role="status">
+              {estado.mensagem}
+            </span>
+          ) : null}
+        </form>
+      </td>
+    </tr>
   );
 }
 
