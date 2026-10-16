@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 19e12991-e45f-4f11-b062-9aa898ea5c51
-  modified: 2026-10-02T20:05:00.000Z
+  modified: 2026-10-16T22:15:24.545Z
 ---
 
 Levantado em 2026-09-25, ao fechar a onda 3/4. Nada aqui é oversight: cada item foi
@@ -13,6 +13,27 @@ identificado e medido. Os que sobraram esperam decisão; os que fecharam estão 
 pelo motivo inverso — parecem bug pra quem lê o código depois.
 
 **Já resolvido, não reabra sem falar com o Théo:**
+
+- **Fechado em 16/10/2026, lote "termina tudo" (#133–#136):** (a) **o claro é
+  o ÚNICO tema** — o Théo autorizou o R1 e o alternador saiu dos três cantos
+  (topo, CRM, login), do ⌘K e do layout; TemaToggle/TemaHidratacao/tema.ts saíram
+  do disco. **O CSS escuro em si FICA** — atalho assumido no commit: ainda serve
+  à ilha do login; apagar é cirurgia de meio CSS com QA visual de 16 telas,
+  revisitar só quando o claro virar identidade fechada. Um `sesi.tema: dark`
+  salvo em localStorage de visita antiga nunca mais é reaplicado. (b) **O cargo
+  `adm` saiu do CHECK** (migration 022, aplicada em produção e conferida por
+  `pg_constraint`) e do tipo/badge — o item "removê-lo é decisão" fechou: nenhum
+  portador medido. (c) **`resetarAcesso` existe** (`adm/acoes.ts`): a chave na
+  linha de quem TEM login derruba a senha para `SENHA_BLOQUEADA`, volta o
+  username para `pendente-<id>` e emite código novo — é a "recuperar senha" da
+  casa (não há SMTP); NÃO confundir com o botão de chave de quem não tem acesso,
+  que só emite. (d) **O seed de projetos do theo-padilha saiu do banco**
+  (migration 023, `UPDATE 1` conferido — 0 projetos, 0 mídias): a condição casa
+  pelo conteúdo do seed, então jsonb reescrito com conteúdo real não é tocado.
+  (e) **"Turma atualizada." saiu** — a confirmação é a pintura da select.
+  (f) **Badge de estrelas novas** no card do usuário do CRM: delta contra o
+  localStorage (`sesi.estrelas.<alunoId>`), porque o banco não guarda histórico
+  de voto — é "desde sua última visita", não "na semana".
 
 - **O gate de moderação de cadastro é intencional — e já foi removido uma vez.**
   Em 30/09 o commit `705716c` ("remove exigência de aprovação") tirou o gate de
