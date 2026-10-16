@@ -248,7 +248,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
           />
         </div>
         <div className="numero card-metrica">
-          <b style={{ color: "var(--amarelo)" }}>★ {totalEstrelas}</b>
+          <b>★ {totalEstrelas}</b>
           <span>estrelas trocadas</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--amarelo)" }} />
         </div>
