@@ -34,10 +34,16 @@ export function CartaoAluno({
             <Link href={`/alunos/${aluno.slug}`}>{aluno.nome}</Link>
           </h3>
           {aluno.sala ? (
-            <span className="aluno-sala">
+            // A turma agora tem página própria: o rótulo que era só cor vira a
+            // porta de entrada natural para ela.
+            <Link
+              href={`/turmas/${encodeURIComponent(aluno.sala)}`}
+              className="aluno-sala"
+              title="Abrir a página da turma"
+            >
               <span className="ponto" style={{ background: aluno.corSala }} />
               {aluno.sala}
-            </span>
+            </Link>
           ) : null}
         </div>
       </div>
