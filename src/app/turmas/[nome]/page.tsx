@@ -23,22 +23,48 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TurmaPage({ params }: Props) {
   const { nome } = await params;
 
+  let sala: Awaited<ReturnType<typeof listarSalas>>[number] | undefined;
+  let alunos: Awaited<ReturnType<typeof listarAlunos>> = [];
   try {
     // A identidade de turma é `chaveDaSala` (trim + caixa alta), NÃO o `fold` de
     // busca — o mesmo motivo do `garantirSala`: "dsm3" e "DSM3" abrem a mesma
     // turma, e "3A" NÃO é a turma "3ºA".
     const salas = await listarSalas();
-    const sala = salas.find((s) => chaveDaSala(s.nome) === chaveDaSala(nome));
-    if (!sala) notFound();
+    sala = salas.find((s) => chaveDaSala(s.nome) === chaveDaSala(nome));
 
     // Mesmo gate da vitrine: `listarAlunos` já devolve só aprovados. O filtro de
     // sala fica aqui em vez de uma query nova — uma fonte só para as três telas
     // que leem alunos, e o cache de 15 s vale para as duas.
-    const alunos = (await listarAlunos())
-      .filter((a) => a.sala_id === sala.id)
-      .sort((a, b) => b.estrelas - a.estrelas || a.nome.localeCompare(b.nome));
+    const salaId = sala?.id;
+    if (salaId) {
+      alunos = (await listarAlunos())
+        .filter((a) => a.sala_id === salaId)
+        .sort((a, b) => b.estrelas - a.estrelas || a.nome.localeCompare(b.nome));
+    }
+  } catch (erro) {
+    // Falha de leitura NÃO é turma vazia — mesmo desenho da `/alunos`: um banco
+    // fora do ar não pode virar "ninguém publicado" na tela.
+    console.error("[turmas] falha ao ler do Supabase:", erro);
+    return (
+      <>
+        <Topo />
+        <main className="wrap" style={{ paddingBlock: "3rem" }}>
+          <Vazio titulo="Não conseguimos carregar a turma agora.">
+            O banco de dados não respondeu. Tente de novo em alguns instantes —
+            isto não é a lista vazia, é falha de leitura.
+          </Vazio>
+        </main>
+        <Rodape>Se persistir, avise o ADM.</Rodape>
+      </>
+    );
+  }
 
-    const cor = corDaSala(sala.nome);
+  // FORA do try, e é a lição do primeiro deploy: `notFound()` lança um erro de
+  // roteamento, e dentro do catch acima ele era engolido — turma inexistente
+  // virava 200 com a tela de "banco fora do ar".
+  if (!sala) notFound();
+
+  const cor = corDaSala(sala.nome);
 
     return (
       <>
@@ -131,21 +157,4 @@ export default async function TurmaPage({ params }: Props) {
         <Rodape>Clique no aluno para abrir o portfólio completo.</Rodape>
       </>
     );
-  } catch (erro) {
-    // Falha de leitura NÃO é turma vazia — mesmo desenho da `/alunos`: um banco
-    // fora do ar não pode virar "ninguém publicado" na tela.
-    console.error("[turmas] falha ao ler do Supabase:", erro);
-    return (
-      <>
-        <Topo />
-        <main className="wrap" style={{ paddingBlock: "3rem" }}>
-          <Vazio titulo="Não conseguimos carregar a turma agora.">
-            O banco de dados não respondeu. Tente de novo em alguns instantes —
-            isto não é a lista vazia, é falha de leitura.
-          </Vazio>
-        </main>
-        <Rodape>Se persistir, avise o ADM.</Rodape>
-      </>
-    );
-  }
 }
