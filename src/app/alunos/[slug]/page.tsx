@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Rodape, Topo } from "@/components/ds";
 import { PerfilInterativo } from "@/components/PerfilInterativo";
 import { corDaSala, corDoAluno } from "@/lib/cores";
-import { alunoPorSlug, listarSalas, votosDoVisitante } from "@/lib/dados";
+import { alunoPorSlug, contarVisitas, listarSalas, votosDoVisitante } from "@/lib/dados";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 
 type Props = PageProps<"/alunos/[slug]">;
@@ -79,6 +79,9 @@ export default async function PerfilPage({ params, searchParams }: Props) {
   // existe — dizer que ele existe transformaria a moderação em vitrine.
   if (!aluno || !aluno.aprovado) notFound();
 
+  // Depois do gate: perfil pendente nem contagem merece.
+  const visitas = await contarVisitas(aluno.id);
+
   const sala = aluno.sala_id
     ? (salas.find((s) => s.id === aluno.sala_id)?.nome ?? null)
     : null;
@@ -98,6 +101,7 @@ export default async function PerfilPage({ params, searchParams }: Props) {
           salaNome={sala}
           estreladoInicial={meusVotos.includes(aluno.id)}
           abrirCurriculo={curriculo === "1"}
+          visitas={visitas}
         />
       </main>
 

@@ -46,6 +46,13 @@ type Props = {
    * clicava e caía no perfil sem nada abrir.
    */
   abrirCurriculo?: boolean;
+  /**
+   * Visitas acumuladas do perfil (tabela `visitas_perfil`, uma linha por
+   * visitante por dia). Obrigatória como a `estreladoInicial`: se a página
+   * esquecer de contar, o número some — e o silêncio pareceria "ninguém
+   * visitou", que é mentira.
+   */
+  visitas: number;
 };
 
 export function PerfilInterativo({
@@ -53,6 +60,7 @@ export function PerfilInterativo({
   salaNome,
   estreladoInicial,
   abrirCurriculo = false,
+  visitas,
 }: Props) {
   const [crachaAberto, setCrachaAberto] = useState(false);
   const [curriculoAberto, setCurriculoAberto] = useState(abrirCurriculo);
@@ -66,6 +74,22 @@ export function PerfilInterativo({
   // vez do inicializador do useState, que faria o HTML do servidor divergir do
   // primeiro render do cliente.
   const [comSom, setComSom] = useState(true);
+
+  // A visita se marca do CLIENTE de propósito: o prefetch de <Link> da vitrine
+  // carrega o HTML do perfil sem executar efeito, então só navegação real
+  // chega aqui — uma por montagem. A resposta é ignorada (a rota é 204 sempre,
+  // de propósito): recarregamento no mesmo dia não infla, a PK cuida disso.
+  useEffect(() => {
+    void fetch("/api/visita", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug: aluno.slug }),
+      keepalive: true,
+    }).catch(() => {
+      // Sem rede, sem visita — não é erro de tela.
+    });
+    // O slug do aluno não muda durante a montagem: uma marca por abertura.
+  }, []);
 
   // Apoio de Competências (+1 estilo LinkedIn) com animação de +1 e bloqueio de cliques repetidos
   const [votos, setVotos] = useState<Record<string, number>>(aluno.habilidades_votos || {});
@@ -548,6 +572,15 @@ export function PerfilInterativo({
               >
                 {comSom ? <IconeSom tamanho={15} /> : <IconeSomMudo tamanho={15} />}
               </button>
+
+              {/* Contagem, não vitrine de engajamento: o número é o que faz o
+                  dono cuidar do perfil. Sem visitante nenhum, a linha some —
+                  bloco vazio marcaria ausência. */}
+              {visitas > 0 ? (
+                <span style={{ color: "var(--dim)", fontSize: "0.85rem" }}>
+                  {visitas} {visitas === 1 ? "visita" : "visitas"}
+                </span>
+              ) : null}
             </div>
           </div>
 
