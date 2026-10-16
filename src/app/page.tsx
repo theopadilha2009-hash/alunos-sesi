@@ -1,7 +1,9 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CrmApp } from "@/components/crm/CrmApp";
 import { LoginTela } from "@/components/crm/LoginTela";
+import { Roseta } from "@/components/Roseta";
 import { obterSessao } from "@/lib/auth";
 import {
   listarAcessos,
@@ -26,9 +28,60 @@ export const dynamic = "force-dynamic";
 export default async function PaginaPrincipal() {
   const sessao = await obterSessao();
 
-  // Se não estiver logado, a abertura vai DIRETO para o Login e Senha
+  // Sem sessão, a abertura é a landing: o visitante de fora — que só tem o
+  // link da raiz — vê o que é o programa e para onde ir, em vez de cair num
+  // formulário de usuário e senha sem contexto (p1/p4 do PDF do Théo eram
+  // essa porta cega). O login fica AO LADO, no mesmo lugar de sempre: nada do
+  // fluxo de autenticação se move, o que muda é o que cerca o formulário.
+  // Estilos inline de propósito — classe nova aqui seria órfã do teste.
   if (!sessao) {
-    return <LoginTela />;
+    return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 26rem), 1fr))",
+          gap: "2rem",
+          alignItems: "center",
+          justifyContent: "center",
+          maxWidth: "76rem",
+          margin: "0 auto",
+          padding: "clamp(1.5rem, 4vw, 3rem)",
+          minHeight: "100svh",
+        }}
+      >
+        <section style={{ display: "grid", gap: "1rem", justifyItems: "start" }}>
+          <Roseta tamanho={56} />
+          <h1
+            style={{
+              fontSize: "clamp(2.2rem, 6vw, 3.5rem)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.04em",
+              margin: 0,
+            }}
+          >
+            Alunos SESI SENAI
+          </h1>
+          <p
+            style={{
+              color: "var(--dim)",
+              fontSize: "1.05rem",
+              lineHeight: 1.6,
+              maxWidth: "34rem",
+              margin: 0,
+            }}
+          >
+            Portfólios, crachás digitais e projetos reais dos estudantes de
+            Desenvolvimento de Sistemas do SESI SENAI Joinville.
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link href="/alunos" className="botao botao-primario">
+              Ver a turma
+            </Link>
+          </div>
+        </section>
+        <LoginTela />
+      </div>
+    );
   }
 
   // Usuário autenticado: carrega os dados e abre o CRM Escolar
