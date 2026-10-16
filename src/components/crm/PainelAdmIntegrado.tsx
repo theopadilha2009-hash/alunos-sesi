@@ -11,6 +11,7 @@ import {
   mudarSalaDoAluno,
   publicarDesafioAction,
   removerAluno,
+  resetarAcesso,
 } from "@/app/adm/acoes";
 import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL } from "@/app/adm/estado";
 import {
@@ -166,6 +167,13 @@ export function PainelAdmIntegrado({
     gerarCodigoAtivacao,
     ESTADO_CODIGO_INICIAL,
   );
+  const [estadoReset, formReset, resetando] = useActionState(
+    resetarAcesso,
+    ESTADO_CODIGO_INICIAL,
+  );
+  // Os dois caminhos de código (emitir para quem não tem acesso; resetar quem
+  // tem) mostram o resultado no MESMO bloco — o ADM lê um código por vez.
+  const codigoAtivo = estadoCodigo.codigo ? estadoCodigo : estadoReset;
   const [estadoDesafio, formDesafio, publicando] = useActionState(
     publicarDesafioAction,
     ESTADO_INICIAL,
@@ -423,12 +431,12 @@ export function PainelAdmIntegrado({
 
           {/* O código aparece UMA vez: o banco guarda só o hash. Se o ADM
               fechar a tela antes de passar para o aluno, emite outro. */}
-          {estadoCodigo.codigo ? (
+          {codigoAtivo.codigo ? (
             <div className="adm-codigo-ativacao" role="status">
               <IconeChave tamanho={18} />
               <div>
-                <strong>Código de {estadoCodigo.paraQuem}</strong>
-                <code className="adm-codigo-valor">{estadoCodigo.codigo}</code>
+                <strong>Código de {codigoAtivo.paraQuem}</strong>
+                <code className="adm-codigo-valor">{codigoAtivo.codigo}</code>
                 <span className="dica-campo">
                   Vale uma vez, por 7 dias. Anote agora e passe para o aluno — ele não
                   aparece de novo.
@@ -437,9 +445,9 @@ export function PainelAdmIntegrado({
             </div>
           ) : null}
 
-          {estadoCodigo.mensagem ? (
+          {codigoAtivo.mensagem ? (
             <p className="recado recado-erro" role="alert">
-              {estadoCodigo.mensagem}
+              {codigoAtivo.mensagem}
             </p>
           ) : null}
 
@@ -582,7 +590,34 @@ export function PainelAdmIntegrado({
                                 <IconeChave tamanho={14} />
                               </button>
                             </form>
-                          ) : null}
+                          ) : (
+                            /* Quem TEM login e esqueceu a senha: a chave vira
+                                reset — derruba a senha atual e devolve o aluno
+                                ao fluxo do código. Com confirm, porque derruba
+                                sessão e não tem como o ADM desfazer. */
+                            <form
+                              action={formReset}
+                              onSubmit={(e) => {
+                                if (
+                                  !confirm(
+                                    `Resetar o acesso de ${a.nome}? A senha atual deixa de valer e ele reativa o perfil com o código novo.`,
+                                  )
+                                ) {
+                                  e.preventDefault();
+                                }
+                              }}
+                            >
+                              <input type="hidden" name="alunoId" value={a.id} />
+                              <button
+                                type="submit"
+                                className="btn-acao-tabela"
+                                title="Resetar acesso: derruba a senha e gera código novo de ativação"
+                                disabled={resetando}
+                              >
+                                <IconeChave tamanho={14} />
+                              </button>
+                            </form>
+                          )}
 
                           <form
                             action={removerAluno}
