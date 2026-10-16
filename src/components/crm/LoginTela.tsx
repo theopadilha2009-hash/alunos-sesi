@@ -7,7 +7,6 @@ import {
   loginAction,
 } from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
-import { TemaToggle } from "@/components/TemaToggle";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { DOMINIO_EMAIL_ESCOLA } from "@/lib/limites";
 import { TURMAS_OFICIAIS } from "@/lib/turmas";
@@ -56,9 +55,6 @@ export function LoginTela() {
       <div className="login-mesh-glow" aria-hidden="true" />
 
       <div className="login-card">
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.8rem" }}>
-          <TemaToggle />
-        </div>
         <header className="login-topo">
           <div className="login-marca">
             <Roseta tamanho={38} />

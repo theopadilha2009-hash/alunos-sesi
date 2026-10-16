@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Roseta } from "@/components/Roseta";
-import { TemaToggle } from "@/components/TemaToggle";
 
 export function Topo({
   voltar,
@@ -27,7 +26,6 @@ export function Topo({
               {voltar.texto}
             </Link>
           ) : null}
-          <TemaToggle />
         </nav>
       </div>
     </header>

@@ -27,7 +27,6 @@ import { LinhaCargos } from "@/components/CargosBadges";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
-import { TemaToggle } from "@/components/TemaToggle";
 import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
@@ -735,7 +734,6 @@ export function CrmApp({
           </div>
 
           <div className="crm-header-acoes">
-            <TemaToggle />
             <button
               type="button"
               className="botao botao-primario"

@@ -4,7 +4,6 @@ import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { NONCE_HEADER } from "@/lib/csp";
 import { URL_BASE } from "@/lib/links";
-import { TemaHidratacao } from "@/components/TemaHidratacao";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -60,24 +59,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        {/* Roda antes da primeira pintura: sem isso a página aparece escura
-            e pisca para clara quando o React hidrata. A cor da barra do PWA
-            (`theme-color`) é sincronizada aqui pelo mesmo motivo: quem escolhe
-            o tema no alternador passa por `aplicarTema`, mas quem só recarrega
-            a página com um tema salvo não passava por lugar nenhum e a barra
-            ficava escura sobre uma tela clara. As duas cores são as mesmas de
-            `COR_DA_BARRA`, em `src/lib/tema.ts` — este script é string e não
-            pode importar de lá. */}
+        {/* O registro do service worker roda cedo e inline. O tema NÃO é mais
+            lido do localStorage de propósito (R1): o claro é o único tema, o
+            `data-theme="light"` do <html> acima vale para todos, e um tema
+            salvo de visitas antigas nunca mais é reaplicado. */}
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('sesi.tema');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',t==='light'?'#f8fafc':'#090d12')}}catch(e){};if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
+              "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
           }}
         />
       </head>
       <body>
-        <TemaHidratacao />
         {children}
         {/* Web Vitals e uso anônimo. Em produção o script é servido de
             /_vercel/insights (mesma origem), então passa no `script-src 'self'`

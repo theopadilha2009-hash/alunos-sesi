@@ -1,8 +1,9 @@
 /**
  * Efeitos festivos: som de estrela e confetes.
  *
- * Os dois são opcionais. O gate mora aqui — mute persistido (`sesi.som`, mesmo
- * padrão de `tema.ts`) e `prefers-reduced-motion` — e o `canvas-confetti` só é
+ * Os dois são opcionais. O gate mora aqui — mute persistido (`sesi.som`,
+ * localStorage como a preferência de tema que já existiu) e
+ * `prefers-reduced-motion` — e o `canvas-confetti` só é
  * baixado quando o efeito realmente vai tocar. Quem quiser oferecer um botão
  * de ligar/desligar chama `definirSom`; UI não mora neste módulo.
  */

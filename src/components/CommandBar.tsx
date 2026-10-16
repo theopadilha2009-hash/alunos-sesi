@@ -12,10 +12,8 @@ import {
   IconeEscudo,
   IconeEstrela,
   IconeLink,
-  IconeSolLua,
   IconeUsuario,
 } from "@/components/Icones";
-import { aplicarTema, salvarTema, type Tema } from "@/lib/tema";
 import type { AlunoNaTela, Sala } from "@/lib/tipos";
 
 type Props = {
@@ -161,20 +159,6 @@ export function CommandBar({
         icone: <IconeUsuario tamanho={16} />,
         executar: () => {
           onSelecionarSala?.("Todas");
-          onFechar();
-        },
-      },
-      {
-        tipo: "acao",
-        id: "acao-tema",
-        titulo: "Alternar Tema Claro / Escuro",
-        subtitulo: "Muda o contraste de exibição do sistema",
-        icone: <IconeSolLua tamanho={16} />,
-        executar: () => {
-          const atual = document.documentElement.getAttribute("data-theme") ?? "dark";
-          const proximo: Tema = atual === "dark" ? "light" : "dark";
-          aplicarTema(proximo);
-          salvarTema(proximo);
           onFechar();
         },
       },
