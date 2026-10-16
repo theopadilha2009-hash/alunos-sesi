@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
@@ -253,6 +254,41 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
           <div className="metrica-barra" style={{ width: "100%", background: "var(--amarelo)" }} />
         </div>
       </section>
+
+      {/* A curadoria do ADM (botão ☆ Destacar do painel) com porta de entrada
+          própria na vitrine. Faixa fina de links — não grade de cartões — para
+          não competir com o Hall da Fama logo abaixo. Some inteira quando não
+          há ninguém marcado ou quando há filtro ativo: bloco no meio de uma
+          busca é ruído, não vitrine. */}
+      {alunos.some((a) => a.destaque) && query === "" && sala === TODAS ? (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+            alignItems: "center",
+            padding: "0.6rem 1rem",
+            marginBottom: "1.5rem",
+            borderRadius: "var(--raio)",
+            background: "color-mix(in srgb, var(--amarelo) 14%, var(--surface))",
+            border: "1px solid color-mix(in srgb, var(--amarelo) 35%, transparent)",
+            fontSize: "0.92rem",
+          }}
+        >
+          <span style={{ color: "var(--dim)" }}>⭐ Destaque da escola:</span>
+          {alunos
+            .filter((a) => a.destaque)
+            .map((a) => (
+              <Link
+                key={a.id}
+                href={`/alunos/${a.slug}`}
+                style={{ color: "var(--text)", fontWeight: 600 }}
+              >
+                {a.nome}
+              </Link>
+            ))}
+        </div>
+      ) : null}
 
       {/* Hall da Fama / Destaques da Turma (se houver alunos estrelados) */}
       {hallDaFama.length > 0 && query === "" && sala === TODAS ? (
