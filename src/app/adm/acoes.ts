@@ -510,6 +510,86 @@ export async function gerarCodigoAtivacao(
 }
 
 /**
+ * Derruba a senha de quem a esqueceu e volta o aluno para o fluxo do código.
+ *
+ * É a "recuperar senha" que este app consegue sustentar: não há SMTP, então a
+ * recuperação por e-mail não existe — o caminho da casa é o professor ditando
+ * o código em voz alta (ver [[acesso-por-codigo]]). Aqui o ADM reseta a conta
+ * para `SENHA_BLOQUEADA` (o mesmo estado de quem nunca ativou) e já emite o
+ * código novo na mesma resposta; o aluno resgata na aba "Ativar" e define a
+ * senha nova, como na primeira vez.
+ *
+ * O `username` volta para o provisório `pendente-<id>` de propósito: no
+ * resgate o aluno escolhe o dele de novo, e o nome antigo fica livre — quem
+ * esqueceu a senha costuma ter esquecido também qual era. O efeito colateral é
+ * o desejado: a sessão atual do aluno cai, porque a senha que a sustentava não
+ * é mais a gravada.
+ */
+export async function resetarAcesso(
+  _estado: EstadoCodigo,
+  formData: FormData,
+): Promise<EstadoCodigo> {
+  await exigirAdm();
+
+  const alunoId = texto(formData, "alunoId");
+  if (!RE_UUID.test(alunoId)) {
+    return { ok: false, mensagem: "Aluno inválido." };
+  }
+
+  const db = clienteAdmin();
+
+  const { data: aluno } = await db
+    .from("alunos")
+    .select("id,nome")
+    .eq("id", alunoId)
+    .maybeSingle();
+  if (!aluno) {
+    return { ok: false, mensagem: "Aluno não encontrado." };
+  }
+
+  const { data: existente } = await db
+    .from("usuarios")
+    .select("id,senha_hash")
+    .eq("aluno_id", alunoId)
+    .maybeSingle();
+
+  // Sem linha, ou com a senha já bloqueada, o caminho é o botão de emitir
+  // código — resetar aqui seria derrubar uma conta que já está no estado de
+  // espera e confundir o ADM com dois botões para a mesma coisa.
+  if (!existente || existente.senha_hash === SENHA_BLOQUEADA) {
+    return {
+      ok: false,
+      mensagem: `${aluno.nome} ainda não tem acesso ativo — use o código de ativação.`,
+    };
+  }
+
+  const codigo = gerarCodigo();
+  const { error } = await db
+    .from("usuarios")
+    .update({
+      username: `pendente-${alunoId.replace(/-/g, "")}`,
+      senha_hash: SENHA_BLOQUEADA,
+      codigo_hash: hashCodigo(codigo),
+      codigo_expira_em: new Date(Date.now() + VALIDADE_CODIGO_MS).toISOString(),
+    })
+    .eq("id", existente.id);
+  if (error) {
+    logger.error("ADM", `Falha ao resetar o acesso de ${aluno.nome}`, error);
+    return { ok: false, mensagem: "Não deu para resetar agora. Tente de novo." };
+  }
+
+  logger.info("ADM", `Acesso resetado; código novo emitido para ${aluno.nome}`);
+  revalidar();
+
+  return {
+    ok: true,
+    mensagem: "",
+    codigo: formatarCodigo(codigo),
+    paraQuem: aluno.nome as string,
+  };
+}
+
+/**
  * Aprova ou desaprova — no estado que o cliente mandou, não no inverso do que
  * está no banco.
  *
