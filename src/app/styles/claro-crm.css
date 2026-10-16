@@ -427,3 +427,16 @@
   /* src: crm.css:1906 — rótulo uppercase var(--amarelo) sobre surface-2 */
   color: #a16207;
 }
+
+/* O painel do ADM (`PainelAdmIntegrado`, dentro do CRM) pinta quatro rótulos
+   com o `--amarelo` CRU — que é cor de FUNDO, não de texto: sobre o tema claro
+   rende 1,83:1. Aqui entra o mesmo corte que o `claro-vitrine.css` já usa para
+   o amarelo (42% da cor misturada ao `--text`), que passa AA nos três fundos
+   claros — 6,07:1 no --bg, o menor dos três. `--amarelo` cru fica onde é fundo:
+   as barras, bordas e os tints de `color-mix`. */
+:root[data-theme="light"] .adm-header-badge,
+:root[data-theme="light"] .toggle-destaque-ativo,
+:root[data-theme="light"] .toggle-pendente-ativo,
+:root[data-theme="light"] .pill-pendente {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}

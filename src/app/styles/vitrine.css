@@ -152,6 +152,10 @@
   font-size: 1.7rem;
   line-height: 1.1;
   letter-spacing: -0.03em;
+  /* A cor morava INLINE no `Vitrine.tsx`, e por isso nenhum `claro-*.css`
+     alcançava — no claro ficava em 1,83:1. Aqui é a base (escura, igual ao que o
+     inline fazia); o `claro-vitrine.css` traz o corte do claro. */
+  color: var(--amarelo);
 }
 
 .numero span {

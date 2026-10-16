@@ -283,3 +283,11 @@
    . insignias.css: nenhum literal, nenhum hex, nenhum rgb — 100% token. Nada
      a tratar, por isso não há seção vazia aqui.
    ────────────────────────────────────────────────────────────────────────── */
+
+/* `.numero b` — a métrica de estrelas da vitrine. O amarelo vinha INLINE no
+   `Vitrine.tsx` e por isso nenhum `claro-*.css` alcançava: ficava em 1,83:1 no
+   claro. A cor foi para o `vitrine.css` (base escura inalterada) e aqui ganha
+   o mesmo corte dos outros amarelos do claro. */
+:root[data-theme="light"] .numero b {
+  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
+}
