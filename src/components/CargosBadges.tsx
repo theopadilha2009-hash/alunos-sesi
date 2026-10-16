@@ -31,7 +31,7 @@ function BadgeTurma({
 }
 
 type BadgeCargoProps = {
-  role?: "super_adm" | "adm" | "aluno" | string | null;
+  role?: "super_adm" | "aluno" | string | null;
   tamanho?: TamanhoBadge;
   className?: string;
 };
@@ -49,18 +49,6 @@ function BadgeCargo({
       >
         <IconeEscudo tamanho={tamanho === "pequeno" ? 10 : tamanho === "grande" ? 14 : 12} />
         <span className="badge-cargo-texto">Super ADM</span>
-      </span>
-    );
-  }
-
-  if (role === "adm") {
-    return (
-      <span
-        className={`badge-cargo badge-cargo-adm badge-${tamanho} ${className}`}
-        title="Administrador da Plataforma"
-      >
-        <IconeEscudo tamanho={tamanho === "pequeno" ? 10 : tamanho === "grande" ? 14 : 12} />
-        <span className="badge-cargo-texto">ADM</span>
       </span>
     );
   }
@@ -142,7 +130,7 @@ type LinhaCargosProps = {
     fixado?: boolean | null;
     destaque?: boolean | null;
   } | null;
-  role?: "super_adm" | "adm" | "aluno" | string | null;
+  role?: "super_adm" | "aluno" | string | null;
   showSala?: boolean;
   tamanho?: TamanhoBadge;
   className?: string;
@@ -160,8 +148,7 @@ export function LinhaCargos({
   if (!aluno && !role) return null;
 
   const ehSuper = role === "super_adm";
-  const ehAdm = role === "adm";
-  const temRole = ehSuper || ehAdm;
+  const temRole = ehSuper;
   const temFixado = Boolean(aluno?.fixado);
   const temDestaque = Boolean(aluno?.destaque);
 

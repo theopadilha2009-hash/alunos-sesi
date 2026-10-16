@@ -215,6 +215,30 @@ export function CrmApp({
     }
   }, [meuAlunoNaTela]);
 
+  // Estrelas recebidas desde a última visita. O banco não guarda histórico de
+  // voto — só o total atual —, então a "novidade" é o delta contra o que este
+  // navegador viu por último (localStorage): o total novo substitui o salvo e a
+  // diferença vira badge até a próxima carga. Sem localStorage a badge não
+  // nasce; é bônus, não fluxo.
+  const [estrelasNovas, setEstrelasNovas] = useState(0);
+  const estrelasAtuais = meuAlunoNaTela?.estrelas ?? 0;
+  const meuAlunoId = meuAlunoNaTela?.id;
+  useEffect(() => {
+    if (!meuAlunoId) return;
+    try {
+      const chave = `sesi.estrelas.${meuAlunoId}`;
+      const visto = Number(localStorage.getItem(chave) ?? "0");
+      if (Number.isFinite(visto) && estrelasAtuais > visto) {
+        setEstrelasNovas(estrelasAtuais - visto);
+      }
+      if (estrelasAtuais !== visto) {
+        localStorage.setItem(chave, String(estrelasAtuais));
+      }
+    } catch {
+      // localStorage pode estar bloqueado: nada muda na tela.
+    }
+  }, [meuAlunoId, estrelasAtuais]);
+
   // Filtro de alunos visíveis no Portfólio
   const visiveis = useMemo(() => {
     const filtrados = filtrarAlunos(
@@ -620,6 +644,11 @@ export function CrmApp({
                     tamanho="pequeno"
                   />
                 </div>
+                {estrelasNovas > 0 ? (
+                  <span style={{ color: "var(--amarelo)", fontSize: "0.72rem", fontWeight: 700 }}>
+                    +{estrelasNovas} ★ novas
+                  </span>
+                ) : null}
               </div>
 
               <button

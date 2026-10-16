@@ -197,7 +197,7 @@ export type AlunoNaTela = Aluno & {
 export type UsuarioSessao = {
   id: string;
   username: string;
-  role: "super_adm" | "adm" | "aluno";
+  role: "super_adm" | "aluno";
   alunoId?: string | null;
   nome?: string | null;
   sala?: string | null;

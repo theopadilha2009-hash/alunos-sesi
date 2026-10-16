@@ -632,7 +632,9 @@ export async function mudarSalaDoAluno(
   }
 
   revalidar();
-  return { ok: true, mensagem: "Turma atualizada." };
+  // A confirmação é a própria pintura da select — mensagem aqui ninguém
+  // renderiza, então sai do disco em vez de ficar string morta.
+  return { ok: true, mensagem: "" };
 }
 
 /**
