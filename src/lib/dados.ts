@@ -146,6 +146,40 @@ export async function alunoIdDoUsuario(usuarioId: string): Promise<string | null
   return (data?.aluno_id as string | null) ?? null;
 }
 
+/**
+ * Marca a visita de hoje do visitante ao perfil. Telemetria: erro não lança —
+ * o contador é bônus, e nenhuma falha aqui pode derrubar a renderização do
+ * perfil; vai para o log e o número de hoje fica sem a visita.
+ *
+ * O `on conflict` é o que faz o recarregamento não inflar: a PK
+ * (aluno, visitante, dia) só aceita a primeira linha do dia.
+ */
+export async function registrarVisita(alunoId: string, visitanteId: string): Promise<void> {
+  const { error } = await clientePublico()
+    .from("visitas_perfil")
+    .upsert(
+      { aluno_id: alunoId, visitante_id: visitanteId },
+      { onConflict: "aluno_id,visitante_id,dia", ignoreDuplicates: true },
+    );
+  if (error) {
+    logger.error("DADOS", "Erro ao registrar visita", error);
+  }
+}
+
+/** Total de visitas acumuladas do perfil. Falha vira 0 com log — a contagem
+ * não é prova de vínculo nem ranking, é número de vitrine. */
+export async function contarVisitas(alunoId: string): Promise<number> {
+  const { count, error } = await clientePublico()
+    .from("visitas_perfil")
+    .select("*", { count: "exact", head: true })
+    .eq("aluno_id", alunoId);
+  if (error) {
+    logger.error("DADOS", "Erro ao contar visitas", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export async function listarRetrato(): Promise<RetratoSala[]> {
   const agora = Date.now();
   if (cacheRetrato && cacheRetrato.expira > agora) {
