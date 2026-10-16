@@ -38,30 +38,36 @@ type Props = {
 // galeria abria com um quadrado quebrado para todo aluno. O GIF saiu da lista em
 // 30/09/2026 e só volta com um id conferido no `curl`, porque um preset morto é
 // pior que preset nenhum: ele parece defeito do perfil, não de quem escolheu.
+//
+// `200.gif` e não `giphy.gif` (16/10/2026): o ORIGINAL é 8-11x maior que o
+// exibido — o "Retro Arcade" tem 2,3 MB e a galeria o desenha a 44px
+// (`.preset-thumb`). Medido: abrir o editor baixava 5,9 MB de imagem. O `/200.gif`
+// é o MESMO GIF a 200px (≥4x o thumb), invisível na tela. Só ids com a variante
+// conferida por `curl` entram — `unQ3IJU2RG7DO` dá 404 nela e saiu da lista.
 const PRESETS_STICKERS: { rotulo: string; url: string; tipo: "gif" | "sticker" }[] = [
   {
     rotulo: "Homem-Aranha Pixel Art",
-    url: "https://media.giphy.com/media/10bKPDUM5H7m7u/giphy.gif",
+    url: "https://media.giphy.com/media/10bKPDUM5H7m7u/200.gif",
     tipo: "gif",
   },
   {
     rotulo: "Retro Arcade / Code",
-    url: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif",
+    url: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/200.gif",
     tipo: "gif",
   },
   {
     rotulo: "Foguete / Launch Pixel",
-    url: "https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif",
+    url: "https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/200.gif",
     tipo: "gif",
   },
   {
     rotulo: "Holograma Cyberpunk",
-    url: "https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif",
+    url: "https://media.giphy.com/media/3o7btPCcdNniyf0ArS/200.gif",
     tipo: "gif",
   },
   {
     rotulo: "Pixel Heart 8-bit",
-    url: "https://media.giphy.com/media/l41lFw057lAJQMwg0/giphy.gif",
+    url: "https://media.giphy.com/media/l41lFw057lAJQMwg0/200.gif",
     tipo: "gif",
   },
 ];
