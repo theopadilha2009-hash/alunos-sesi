@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
 import {
   IconeCheck,
   IconeCrop,
   IconeSparkles,
 } from "@/components/Icones";
-import { blobDoDataUrl, caminhoDaMidia, nomeDaImagem } from "@/lib/blob";
+import { blobDoDataUrl, caminhoDaMidia, enviarAoBlob, nomeDaImagem } from "@/lib/blob";
+import { logger } from "@/lib/debug";
 import { useTravaDeFoco } from "@/lib/foco";
 import { LADO_CAPA, MAX_DATA_URL_CAPA, PROPORCAO_CAPA } from "@/lib/limites";
 
@@ -124,18 +124,21 @@ export async function subirBannerBlob(
   const timeout = setTimeout(() => controle.abort(), 6000);
   try {
     const arquivo = blobDoDataUrl(dataUrl);
-    const { url } = await upload(
+    const url = await enviarAoBlob(
       caminhoDaMidia(alunoId, nomeDaImagem(arquivo.type)),
       arquivo,
       {
-        access: "public",
-        handleUploadUrl: "/api/upload",
         clientPayload: JSON.stringify({ campo: "capa" }),
         abortSignal: controle.signal,
       },
     );
     return url || null;
-  } catch {
+  } catch (erro) {
+    // O data URL já está aplicado na tela; esta falha é só de persistência, e a
+    // UI não muda. O `enviarAoBlob` é o que faz as recusas da rota chegarem com
+    // a frase da casa — o `upload()` cru que estava aqui lançava "Failed to
+    // retrieve the client token" sem ler o corpo da resposta.
+    logger.warn("BANNER", "Falha ao subir o banner para o Blob", erro);
     return null;
   } finally {
     clearTimeout(timeout);
