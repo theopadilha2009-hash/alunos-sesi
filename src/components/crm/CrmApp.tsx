@@ -47,6 +47,11 @@ import type {
 
 type Props = {
   usuario: UsuarioSessao;
+  /**
+   * O aluno da sessão resolvido NO SERVIDOR pelo banco (`usuarios.aluno_id`),
+   * e não pelo token: um login anterior ao vínculo anda com `alunoId` vazio.
+   */
+  meuAlunoId?: string | null;
   alunosIniciais: Aluno[];
   salas: Sala[];
   retrato: RetratoSala[];
@@ -74,6 +79,7 @@ type AbaAtiva =
 
 export function CrmApp({
   usuario,
+  meuAlunoId,
   alunosIniciais,
   salas,
   retrato,
@@ -187,20 +193,14 @@ export function CrmApp({
     });
   }, [lista, salas]);
 
-  // Aluno correspondente ao usuário logado
+  // Aluno correspondente ao usuário logado — o id vem da sessão e, na falta
+  // dela (login anterior ao vínculo), da leitura do banco que o servidor já
+  // fez (`meuAlunoId`). Nada de slug chumbado: renomear o slug não quebra
+  // mais a ligação.
   const meuAlunoNaTela = useMemo(() => {
-    if (usuario.alunoId) {
-      return naTela.find((a) => a.id === usuario.alunoId) ?? null;
-    }
-    return (
-      naTela.find(
-        (a) =>
-          a.slug === "theo-padilha" ||
-          a.slug === "telor-de-espadilha" ||
-          a.id === "a1417080-b591-4cc9-8558-5650a3da0546",
-      ) ?? null
-    );
-  }, [naTela, usuario.alunoId]);
+    const meuId = usuario.alunoId ?? meuAlunoId ?? null;
+    return meuId ? (naTela.find((a) => a.id === meuId) ?? null) : null;
+  }, [naTela, usuario.alunoId, meuAlunoId]);
 
   // Suporte a PWA shortcuts (?aba=desafios, ?aba=cracha)
   useEffect(() => {
@@ -221,11 +221,11 @@ export function CrmApp({
   // nasce; é bônus, não fluxo.
   const [estrelasNovas, setEstrelasNovas] = useState(0);
   const estrelasAtuais = meuAlunoNaTela?.estrelas ?? 0;
-  const meuAlunoId = meuAlunoNaTela?.id;
+  const meuAlunoCardId = meuAlunoNaTela?.id;
   useEffect(() => {
-    if (!meuAlunoId) return;
+    if (!meuAlunoCardId) return;
     try {
-      const chave = `sesi.estrelas.${meuAlunoId}`;
+      const chave = `sesi.estrelas.${meuAlunoCardId}`;
       const visto = Number(localStorage.getItem(chave) ?? "0");
       if (Number.isFinite(visto) && estrelasAtuais > visto) {
         setEstrelasNovas(estrelasAtuais - visto);

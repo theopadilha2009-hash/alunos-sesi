@@ -30,7 +30,7 @@ import { slugUnico } from "@/lib/slug";
 import { clienteAdmin } from "@/lib/supabase/admin";
 
 /**
- * Toda ação do painel começa por `exigirAdm()`.
+ * Toda ação do painel começa pela checagem de `podeAdm()`.
  *
  * Aceita tanto o cookie legado `COOKIE_ADM` quanto a sessão de `super_adm`
  * autenticada no CRM.
@@ -45,13 +45,21 @@ import { clienteAdmin } from "@/lib/supabase/admin";
  * aceitava também o papel `adm` — que nenhuma tela dá, porque a interface
  * nunca deixa alguém chegar nele. Autorizar a mais no servidor é autorizar o
  * que ninguém pediu; os dois gates dizem a mesma coisa de propósito.
+ *
+ * QUEM TEM ESTADO recebe a RECUSA (`recusaAdm`) em vez de ver a ação lançar:
+ * uma Server Action que lança devolve erro genérico do Next, e o
+ * `useActionState` fica sem resposta — a pintura otimista ficava de pé sem
+ * frase nem desfazer (o ADM rebaixado no banco com cookie válido). As ações
+ * SEM estado (`removerAluno`, `aprovarAluno`, `alternar`,
+ * `decidirSubmissaoAction`) continuam no `throw`: não há estado para receber
+ * a recusa, e a tela de erro é o que torna o bloqueio visível.
  */
-async function exigirAdm() {
+async function podeAdm(): Promise<boolean> {
   const jar = await cookies();
-  if (crachaValido(jar.get(COOKIE_ADM)?.value)) return;
+  if (crachaValido(jar.get(COOKIE_ADM)?.value)) return true;
 
   const sessao = await obterSessao();
-  if (!sessao) throw new Error("Acesso restrito ao ADM.");
+  if (!sessao) return false;
 
   const { data } = await clienteAdmin()
     .from("usuarios")
@@ -59,9 +67,13 @@ async function exigirAdm() {
     .eq("id", sessao.id)
     .maybeSingle();
 
-  if (data?.role !== "super_adm") {
-    throw new Error("Acesso restrito ao ADM.");
-  }
+  return data?.role === "super_adm";
+}
+
+/** Objeto NOVO por chamada: a mesma referência duas vezes faria efeitos que
+ * dependem do estado por identidade dormirem na segunda recusa. */
+function recusaAdm(): Estado {
+  return { ok: false, mensagem: "Acesso restrito ao ADM." };
 }
 
 function revalidar() {
@@ -149,7 +161,7 @@ export async function importarLista(
   _estado: Estado,
   formData: FormData,
 ): Promise<Estado> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const bruto = String(formData.get("lista") ?? "");
   const lido = parseLista(bruto);
@@ -310,7 +322,7 @@ export async function criarAluno(
   _estado: Estado,
   formData: FormData,
 ): Promise<Estado> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const nome = texto(formData, "nome");
   const sala = texto(formData, "sala");
@@ -361,7 +373,7 @@ export async function editarAluno(
   _estado: Estado,
   formData: FormData,
 ): Promise<Estado> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const id = texto(formData, "id");
   const nome = texto(formData, "nome");
@@ -394,7 +406,7 @@ export async function editarAluno(
  * lista, sem `useActionState` — não há o que mostrar de volta.
  */
 export async function removerAluno(formData: FormData): Promise<void> {
-  await exigirAdm();
+  if (!(await podeAdm())) throw new Error("Acesso restrito ao ADM.");
   const id = texto(formData, "id");
   if (!id) return;
   await clienteAdmin().from("alunos").delete().eq("id", id);
@@ -435,7 +447,7 @@ export async function gerarCodigoAtivacao(
   _estado: EstadoCodigo,
   formData: FormData,
 ): Promise<EstadoCodigo> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const alunoId = texto(formData, "alunoId");
   if (!RE_UUID.test(alunoId)) {
@@ -529,7 +541,7 @@ export async function resetarAcesso(
   _estado: EstadoCodigo,
   formData: FormData,
 ): Promise<EstadoCodigo> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const alunoId = texto(formData, "alunoId");
   if (!RE_UUID.test(alunoId)) {
@@ -600,7 +612,7 @@ export async function resetarAcesso(
  * lugar, sem leitura no meio. Quem desenha o botão já sabe o estado da linha.
  */
 export async function aprovarAluno(formData: FormData): Promise<void> {
-  await exigirAdm();
+  if (!(await podeAdm())) throw new Error("Acesso restrito ao ADM.");
 
   const id = texto(formData, "id");
   const aprovado = texto(formData, "aprovado");
@@ -619,7 +631,7 @@ export async function aprovarAluno(formData: FormData): Promise<void> {
  * o valor desejado vem do formulário e o servidor só grava.
  */
 export async function alternar(formData: FormData): Promise<void> {
-  await exigirAdm();
+  if (!(await podeAdm())) throw new Error("Acesso restrito ao ADM.");
 
   const id = texto(formData, "id");
   const campo = texto(formData, "campo");
@@ -674,7 +686,7 @@ export async function mudarSalaDoAluno(
   _estado: Estado,
   formData: FormData,
 ): Promise<Estado> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const alunoId = texto(formData, "alunoId");
   if (!alunoId) return { ok: false, mensagem: "Aluno inválido." };
@@ -731,7 +743,7 @@ export async function publicarDesafioAction(
   _estado: Estado,
   formData: FormData,
 ): Promise<Estado> {
-  await exigirAdm();
+  if (!(await podeAdm())) return recusaAdm();
 
   const dados: DesafioNovo = {
     titulo: sanitizarTexto(texto(formData, "titulo"), MAX_TITULO),
@@ -776,7 +788,7 @@ export async function publicarDesafioAction(
  * autorização e não entra de carona aqui.
  */
 export async function decidirSubmissaoAction(formData: FormData): Promise<void> {
-  await exigirAdm();
+  if (!(await podeAdm())) throw new Error("Acesso restrito ao ADM.");
 
   const id = texto(formData, "submissaoId");
   if (!id) return;

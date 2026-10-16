@@ -11,7 +11,7 @@ import {
   obterSessao,
   registrarUsuario,
 } from "@/lib/auth";
-import { apoiarHabilidade, atualizarPerfilAluno, alunoPorSlug, desafioAtivo, submeterDesafio } from "@/lib/dados";
+import { apoiarHabilidade, atualizarPerfilAluno, alunoIdDoUsuario, desafioAtivo, submeterDesafio } from "@/lib/dados";
 import { logger } from "@/lib/debug";
 import type { RepoGithub } from "@/lib/github";
 import { habilidadePermitida } from "@/lib/habilidades";
@@ -113,8 +113,9 @@ export async function salvarPerfilAction(
 
   let alunoId = sessao.alunoId;
   if (!alunoId && sessao.role === "super_adm") {
-    const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
-    if (theo) alunoId = theo.id;
+    // O vínculo vem do BANCO — o slug chumbado que estava aqui quebrava em
+    // silêncio quando o slug era renomeado.
+    alunoId = await alunoIdDoUsuario(sessao.id);
   }
 
   if (!alunoId) {
@@ -406,8 +407,9 @@ export async function alterarSegurancaAction(
   // 2. Atualização de Nome Visual e E-mail no Perfil
   let alunoId = sessao.alunoId;
   if (!alunoId && sessao.role === "super_adm") {
-    const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
-    if (theo) alunoId = theo.id;
+    // O vínculo vem do BANCO — o slug chumbado que estava aqui quebrava em
+    // silêncio quando o slug era renomeado.
+    alunoId = await alunoIdDoUsuario(sessao.id);
   }
 
   if (alunoId) {
@@ -542,8 +544,9 @@ export async function submeterDesafioAction(
 
   let alunoId = sessao.alunoId;
   if (!alunoId && sessao.role === "super_adm") {
-    const theo = (await alunoPorSlug("theo-padilha")) || (await alunoPorSlug("telor-de-espadilha"));
-    if (theo) alunoId = theo.id;
+    // O vínculo vem do BANCO — o slug chumbado que estava aqui quebrava em
+    // silêncio quando o slug era renomeado.
+    alunoId = await alunoIdDoUsuario(sessao.id);
   }
 
   if (!alunoId) {
