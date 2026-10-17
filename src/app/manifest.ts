@@ -18,24 +18,30 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     orientation: "portrait-primary",
     categories: ["education", "productivity", "utilities"],
-    background_color: "#090d12",
-    theme_color: "#090d12",
-    // atalho: os PNGs abaixo são wordmarks (165x64 e 264x64) declarados como
-    // 192 e 512. O app instala porque o Chrome confia no `sizes` declarado, mas
-    // o ícone renderiza espremido, e `purpose: "maskable"` recortaria a palavra
-    // na forma do sistema. Trocar por ícones quadrados de verdade — é peça de
-    // design, o wordmark não vira ícone. Enquanto isso, o `sizes` fica como
-    // está: corrigir para o tamanho real (não quadrado) quebraria a instalação.
+    // Cores do CLARO, o único tema (R1): o escuro aqui era resíduo de quando o
+    // app abria escuro.
+    background_color: "#f8fafc",
+    theme_color: "#f8fafc",
+    // Quadrados de verdade, gerados a partir do wordmark oficial pelo
+    // `scripts/gerar-icones.mjs` — antes eram os wordmarks (165x64 e 264x64)
+    // declarados como 192/512, e o ícone instalava espremido. O maskable leva
+    // arte a 60% da largura, que cabe inteira na safe zone circular.
     icons: [
       {
-        src: "/logo-sesi-icone.png",
+        src: "/pwa-192.png",
         sizes: "192x192",
         type: "image/png",
       },
       {
-        src: "/logo-sesi.png",
+        src: "/pwa-512.png",
         sizes: "512x512",
         type: "image/png",
+      },
+      {
+        src: "/pwa-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
     shortcuts: [
@@ -44,14 +50,14 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Crachá",
         description: "Acesso rápido ao crachá e identidade estudantil",
         url: "/?aba=cracha",
-        icons: [{ src: "/logo-sesi-icone.png", sizes: "192x192" }],
+        icons: [{ src: "/pwa-192.png", sizes: "192x192" }],
       },
       {
         name: "Mural de Desafios",
         short_name: "Desafios",
         description: "Ver hackathons e desafios abertos no SESI",
         url: "/?aba=desafios",
-        icons: [{ src: "/logo-sesi-icone.png", sizes: "192x192" }],
+        icons: [{ src: "/pwa-192.png", sizes: "192x192" }],
       },
     ],
   };
