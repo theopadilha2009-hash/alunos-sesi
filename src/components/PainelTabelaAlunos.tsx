@@ -51,12 +51,12 @@ export function PainelTabelaAlunos({
     });
   }, [alunos, busca, sala, soFixados, comRedes]);
 
-  const ativo = (valor: boolean) => (valor ? " frutiger-chip-ativo" : "");
+  const ativo = (valor: boolean) => (valor ? " tb-chip-ativo" : "");
 
   return (
     <>
-      <div className="frutiger-filtros">
-        <div className="frutiger-busca">
+      <div className="tb-filtros">
+        <div className="tb-busca">
           <IconeBusca tamanho={15} />
           <input
             type="search"
@@ -67,22 +67,22 @@ export function PainelTabelaAlunos({
           />
         </div>
 
-        <div className="frutiger-chips" role="group" aria-label="Filtrar por sala">
+        <div className="tb-chips" role="group" aria-label="Filtrar por sala">
           <button
             type="button"
-            className={`frutiger-chip${sala === TODAS ? " frutiger-chip-ativo" : ""}`}
+            className={`tb-chip${sala === TODAS ? " tb-chip-ativo" : ""}`}
             aria-pressed={sala === TODAS}
             onClick={() => setSala(TODAS)}
           >
             Todas as salas
-            <span className="frutiger-chip-conta">{alunos.length}</span>
+            <span className="tb-chip-conta">{alunos.length}</span>
           </button>
 
           {salas.map((s) => (
             <button
               key={s.id}
               type="button"
-              className={`frutiger-chip${sala === s.id ? " frutiger-chip-ativo" : ""}`}
+              className={`tb-chip tb-chip-sala${sala === s.id ? " tb-chip-ativo" : ""}`}
               style={{ ["--sala-cor" as string]: corDaSala(s.nome) }}
               aria-pressed={sala === s.id}
               onClick={() => setSala(sala === s.id ? TODAS : s.id)}
@@ -92,11 +92,11 @@ export function PainelTabelaAlunos({
             </button>
           ))}
 
-          <span className="frutiger-chip-divisoria" aria-hidden="true" />
+          <span className="tb-chip-divisoria" aria-hidden="true" />
 
           <button
             type="button"
-            className={`frutiger-chip${sala === ESTRELADOS ? " frutiger-chip-ativo" : ""}`}
+            className={`tb-chip${sala === ESTRELADOS ? " tb-chip-ativo" : ""}`}
             aria-pressed={sala === ESTRELADOS}
             onClick={() => setSala(sala === ESTRELADOS ? TODAS : ESTRELADOS)}
           >
@@ -104,7 +104,7 @@ export function PainelTabelaAlunos({
           </button>
           <button
             type="button"
-            className={`frutiger-chip${ativo(soFixados)}`}
+            className={`tb-chip${ativo(soFixados)}`}
             aria-pressed={soFixados}
             onClick={() => setSoFixados(!soFixados)}
           >
@@ -112,7 +112,7 @@ export function PainelTabelaAlunos({
           </button>
           <button
             type="button"
-            className={`frutiger-chip${ativo(comRedes)}`}
+            className={`tb-chip${ativo(comRedes)}`}
             aria-pressed={comRedes}
             onClick={() => setComRedes(!comRedes)}
           >
@@ -122,7 +122,7 @@ export function PainelTabelaAlunos({
 
         {/* A contagem prova que o filtro pegou — sem ela, "poucos resultados"
             lê como dado sumido. */}
-        <p className="frutiger-contagem" role="status">
+        <p className="tb-contagem" role="status">
           {naTela.length} de {alunos.length} estudantes
         </p>
       </div>

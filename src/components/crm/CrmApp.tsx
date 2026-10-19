@@ -1155,7 +1155,7 @@ export function CrmApp({
 
         {/* ── ABA 3: TABELAS & ALUNOS ──────────────────────────────────── */}
         {aba === "tabelas" ? (
-          <div className="crm-secao-conteudo aba-frutiger">
+          <div className="crm-secao-conteudo aba-tabelas">
             <div className="bloco-cabecalho-tabela">
               <h2>Tabela Geral de Estudantes SESI</h2>
               {/* O texto antigo prometia filtros que a aba nunca teve (e os da
