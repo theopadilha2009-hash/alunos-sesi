@@ -1,0 +1,78 @@
+/* ==========================================================================
+   animacoes-2026.css — movimento pedido pelo Théo (19/10/2026):
+   1. a troca de tema cobre a tela como tinta, partindo do clique (View
+      Transitions: o snapshot do NOVO tema cresce num clip-path circular —
+      a animação em si vive em src/lib/tema.ts);
+   2. números de dados contam de 0 até o valor quando entram na tela.
+   Seletor novo (utilitários ::view-transition, .alternador-tema,
+   .numero-animado), então vive no FIM da cascata.
+   ========================================================================== */
+
+/* Desliga o cross-fade padrão da transição: quem cobre é a tinta do novo
+   tema, animada por JS. O novo fica POR CIMA do velho (z-index 2) — é ele
+   que avança. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* ── Alternador de tema ─────────────────────────────────────────────── */
+.alternador-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--dim);
+  cursor: pointer;
+  transition:
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+
+.alternador-tema:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 0 0 4px var(--glow);
+  transform: translateY(-1px);
+}
+
+.alternador-tema:active {
+  transform: translateY(0);
+}
+
+/* O botão oferta o tema de destino: lua no claro, sol no escuro. */
+:root[data-theme="light"] .alternador-tema-lua {
+  display: none;
+}
+
+:root[data-theme="dark"] .alternador-tema-sol {
+  display: none;
+}
+
+/* Interface, não conteúdo: fora do papel. */
+@media print {
+  .alternador-tema {
+    display: none;
+  }
+}
+
+/* ── Número que conta ───────────────────────────────────────────────── */
+/* Dígitos tabulares: a largura não pulsa enquanto o valor sobe. */
+.numero-animado {
+  font-variant-numeric: tabular-nums;
+}

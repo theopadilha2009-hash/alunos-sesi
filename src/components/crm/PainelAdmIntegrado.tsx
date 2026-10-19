@@ -14,6 +14,7 @@ import {
   resetarAcesso,
 } from "@/app/adm/acoes";
 import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL } from "@/app/adm/estado";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import {
   IconeCheck,
   IconeChave,
@@ -265,7 +266,9 @@ export function PainelAdmIntegrado({
             <IconeUsuario tamanho={18} />
           </div>
           <div className="metrica-textos">
-            <span className="metrica-numero">{alunos.length}</span>
+            <span className="metrica-numero">
+              <NumeroAnimado valor={alunos.length} />
+            </span>
             <span className="metrica-legenda">Estudantes Cadastrados</span>
           </div>
         </div>
@@ -275,7 +278,9 @@ export function PainelAdmIntegrado({
             <IconeSala tamanho={18} />
           </div>
           <div className="metrica-textos">
-            <span className="metrica-numero">{salas.length}</span>
+            <span className="metrica-numero">
+              <NumeroAnimado valor={salas.length} />
+            </span>
             <span className="metrica-legenda">Salas / Turmas Ativas</span>
           </div>
         </div>
@@ -285,7 +290,9 @@ export function PainelAdmIntegrado({
             <IconeEstrela preenchida tamanho={18} />
           </div>
           <div className="metrica-textos">
-            <span className="metrica-numero">{totalDestaques}</span>
+            <span className="metrica-numero">
+              <NumeroAnimado valor={totalDestaques} />
+            </span>
             <span className="metrica-legenda">Destaques Super ADM</span>
           </div>
         </div>
@@ -295,7 +302,9 @@ export function PainelAdmIntegrado({
             <IconeCheck tamanho={18} />
           </div>
           <div className="metrica-textos">
-            <span className="metrica-numero">{totalComRedes}</span>
+            <span className="metrica-numero">
+              <NumeroAnimado valor={totalComRedes} />
+            </span>
             <span className="metrica-legenda">Perfis com Redes Conectadas</span>
           </div>
         </div>

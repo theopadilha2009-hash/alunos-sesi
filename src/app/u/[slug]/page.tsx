@@ -14,6 +14,7 @@ import {
 import { IconeGitHub, IconeInstagram, IconeLinkedIn } from "@/components/RedesBadges";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { BadgeDestaque, BadgeFixado } from "@/components/CargosBadges";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { alunoPorSlug, listarSalas } from "@/lib/dados";
 import { LIMITES_STICKERS, MAX_VIDEOS } from "@/lib/limites";
 
@@ -150,7 +151,7 @@ export default async function PaginaCartaoNfcBio({ params }: Props) {
           <div className="nfc-reconhecimentos">
             <span className="nfc-stat-item">
               <IconeEstrela preenchida tamanho={13} />
-              <strong>{aluno.estrelas}</strong> reconhecimentos
+              <strong><NumeroAnimado valor={aluno.estrelas} /></strong> reconhecimentos
             </span>
             {aluno.fixado ? <BadgeFixado tamanho="pequeno" /> : null}
             {aluno.destaque ? <BadgeDestaque tamanho="pequeno" /> : null}

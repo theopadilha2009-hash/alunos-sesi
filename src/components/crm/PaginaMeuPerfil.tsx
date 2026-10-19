@@ -5,6 +5,7 @@ import Link from "next/link";
 import { alterarSegurancaAction, salvarPerfilAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
 import { CrachaModal } from "@/components/CrachaModal";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import {
   IconeCheck,
   IconeCopiar,
@@ -1603,15 +1604,21 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               </div>
               <div className="stat-linha">
                 <span className="stat-titulo">Estrelas Recebidas</span>
-                <span className="stat-valor">{alunoAtual?.estrelas ?? 0}</span>
+                <span className="stat-valor">
+                  <NumeroAnimado valor={alunoAtual?.estrelas ?? 0} />
+                </span>
               </div>
               <div className="stat-linha">
                 <span className="stat-titulo">Projetos Ativos</span>
-                <span className="stat-valor">{projetos.length}</span>
+                <span className="stat-valor">
+                  <NumeroAnimado valor={projetos.length} />
+                </span>
               </div>
               <div className="stat-linha">
                 <span className="stat-titulo">Mídias na Galeria</span>
-                <span className="stat-valor">{midias.length}</span>
+                <span className="stat-valor">
+                  <NumeroAnimado valor={midias.length} />
+                </span>
               </div>
               <div className="stat-linha">
                 <span className="stat-titulo">Nível de Permissão</span>

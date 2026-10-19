@@ -66,3 +66,6 @@
 /* Aba "Olimpíadas SESI" (substitui a reservada "Em construção", p10 do PDF).
    Seletor novo (.olisesi-*), então entra no FIM como os demais. */
 @import "./styles/olisesi.css";
+/* Movimento pedido pelo Théo: tinta da troca de tema (::view-transition) e
+   o .numero-animado que conta. Seletor novo — FIM da cascata. */
+@import "./styles/animacoes-2026.css";
