@@ -55,6 +55,67 @@ export function normalizarLinkedin(bruto: unknown): string | null {
     : null;
 }
 
+/** Handle do Instagram: letras, números, ponto e _, até 30. */
+const RE_INSTAGRAM_HANDLE = /^[A-Za-z0-9._]{1,30}$/;
+
+/** Devolve o @handle do Instagram, ou null se não der para aproveitar. */
+export function normalizarInstagram(bruto: unknown): string | null {
+  const s = String(bruto ?? "").trim();
+  if (!s) return null;
+  const handle = s
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/[/?#].*$/, "")
+    .trim();
+  return RE_INSTAGRAM_HANDLE.test(handle) ? `@${handle}` : null;
+}
+
+export type LinksSociais = {
+  linkedin: string | null;
+  github: string | null;
+  instagram: string | null;
+};
+
+/**
+ * Campo preenchido que não vira link válido é ERRO, não remoção — mesmo
+ * contrato do e-mail em `acoes-crm.ts`. Antes cada normalizador devolvia null
+ * em silêncio, o update gravava null por cima do valor que já estava salvo e
+ * a tela dizia "atualizado": bastava um `_` no handle do GitHub para o aluno
+ * perder o link que já tinha.
+ */
+export function processarLinksSociais(
+  linkedinBruto: string,
+  githubBruto: string,
+  instagramBruto: string,
+): { links: LinksSociais | null; erro: string | null } {
+  const linkedin = normalizarLinkedin(linkedinBruto);
+  if (linkedinBruto && !linkedin) {
+    return {
+      links: null,
+      erro:
+        "O LinkedIn precisa ser o endereço linkedin.com/in/seu-usuario (letras, números, hífen, ponto e _).",
+    };
+  }
+  const github = normalizarGithub(githubBruto);
+  if (githubBruto && !github) {
+    return {
+      links: null,
+      erro:
+        "O usuário do GitHub aceita só letras, números e hífen (ex: usuario ou github.com/usuario).",
+    };
+  }
+  const instagram = normalizarInstagram(instagramBruto);
+  if (instagramBruto && !instagram) {
+    return {
+      links: null,
+      erro:
+        "O usuário do Instagram aceita só letras, números, ponto e _ (ex: @usuario).",
+    };
+  }
+  return { links: { linkedin, github, instagram }, erro: null };
+}
+
 /** Do handle guardado para a URL que o cartão abre. */
 export function urlGithub(handle: string | null | undefined): string | null {
   return handle ? `https://github.com/${handle}` : null;
