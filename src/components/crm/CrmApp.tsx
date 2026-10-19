@@ -10,6 +10,7 @@ import { PaginaOlisesi } from "@/components/crm/PaginaOlisesi";
 import { MeuPerfilModal } from "@/components/crm/MeuPerfilModal";
 import { PainelAdmIntegrado } from "@/components/crm/PainelAdmIntegrado";
 import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
+import { PainelTabelaAlunos } from "@/components/PainelTabelaAlunos";
 import {
   IconeCards,
   IconeCracha,
@@ -1154,28 +1155,26 @@ export function CrmApp({
 
         {/* ── ABA 3: TABELAS & ALUNOS ──────────────────────────────────── */}
         {aba === "tabelas" ? (
-          <div className="crm-secao-conteudo">
+          <div className="crm-secao-conteudo aba-frutiger">
             <div className="bloco-cabecalho-tabela">
               <h2>Tabela Geral de Estudantes SESI</h2>
-              {/* O texto antigo prometia "filtros por sala, status de fixação e
-                  redes profissionais" que esta aba nunca teve — e, pior, os da
-                  aba Portfólio continuavam valendo aqui sem aparecer. Agora a
-                  lista é a turma inteira, e a frase diz o que a tela entrega. */}
+              {/* O texto antigo prometia filtros que a aba nunca teve (e os da
+                  Portfólio vazavam pra cá, invisíveis). Desde 19/10/2026 os
+                  filtros existem de verdade — moram no PainelTabelaAlunos,
+                  locais da aba, e a frase volta a prometer o que a tela
+                  entrega. */}
               <p>
-                Visualização tabular completa da turma: sala, estrelas, fixação e redes
+                Busque e filtre a turma inteira: sala, estrelados, fixação e redes
                 profissionais.
               </p>
             </div>
 
-            {/* `naTela`, e não `visiveis`: os filtros da aba Portfólio (busca,
-                sala, estrelados, competência) sobrevivem à troca de aba porque
-                moram no estado do `CrmApp`, mas os controles que os produzem só
-                são desenhados na aba do Portfólio. A tabela aparecia filtrada
-                sem nada na tela explicando por quê — e o próprio cabeçalho
-                acima promete "visualização tabular completa". Um F5, que zera o
-                estado, "consertava" a tela e escondia a causa. */}
-            <TabelaAlunos
+            {/* Filtros locais da aba (PainelTabelaAlunos), não os do CrmApp:
+                a tabela aparecia filtrada sem nada na tela explicando por quê
+                quando os controles da Portfólio vazavam pra cá. */}
+            <PainelTabelaAlunos
               alunos={naTela}
+              salas={salas}
               meusVotos={meus}
               ocupado={ocupado}
               onEstrelar={estrelar}

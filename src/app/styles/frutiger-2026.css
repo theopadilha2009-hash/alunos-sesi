@@ -1,0 +1,254 @@
+/* ==========================================================================
+   frutiger-2026.css — a aba Tabelas & Alunos no material de vidro pedido
+   pelo Théo (19/10/2026): "mais iPhone, bolha de vidro, cores reais, tipo
+   Frutiger Aero".
+
+   O que é aqui e o que não é:
+   - O vidro é MATERIAL, não enfeite: fundo atmosférico (céu no claro,
+     petróleo com aurora no escuro) e superfícies que borram e saturam o que
+     passa por trás. Nenhum brilho decorativo solto.
+   - TUDO escopado em `.aba-frutiger` (o wrapper da aba no CrmApp): nenhum
+     pixel fora desta tela muda. A TabelaAlunos reutilizada na Portfólio
+     segue no visual de lá.
+   - As cores de sala (nascidas em lib/cores) viram bolhas SATURADAS — a cor
+     tem função: identificar a turma de relance. Chips vivos, resto quieto.
+   Arquivo novo com seletor novo (.aba-frutiger, .frutiger-*): FIM da cascata.
+   ========================================================================== */
+
+/* ── O palco atmosférico ──────────────────────────────────────────────── */
+/* Claro: céu de meio-dia. Escuro (padrão do :root): petróleo com aurora. */
+.aba-frutiger {
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgb(63 194 188 / 0.3), transparent 58%),
+    radial-gradient(110% 80% at 95% 8%, rgb(72 129 174 / 0.24), transparent 62%),
+    linear-gradient(180deg, #dcefff 0%, #f0f9ff 45%, #e3f7ec 100%);
+}
+
+:root[data-theme="dark"] .aba-frutiger {
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgb(63 194 188 / 0.16), transparent 55%),
+    radial-gradient(110% 80% at 95% 8%, rgb(45 146 158 / 0.18), transparent 60%),
+    linear-gradient(180deg, #0a0f16 0%, #0c1420 48%, #0d1a17 100%);
+}
+
+/* ── O material de vidro ──────────────────────────────────────────────── */
+/* Cabeçalho da seção, painel de filtros e a mesa da tabela vestem o mesmo
+   vidro: blur + saturação, borda branca translúcida e o brilho especular
+   de 1px no topo — a assinatura do aqua. */
+.aba-frutiger .bloco-cabecalho-tabela,
+.aba-frutiger .frutiger-filtros,
+.aba-frutiger .tabela-container {
+  background: rgb(255 255 255 / 0.42);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: var(--raio);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.75),
+    0 18px 45px -22px rgb(2 96 158 / 0.28);
+}
+
+/* O bloco de cabeçalho nunca teve estilo próprio (esteve na lista de
+   dívida do teste de classes): dentro do vidro, ele precisa do ar interno. */
+.aba-frutiger .bloco-cabecalho-tabela {
+  padding: 1.15rem 1.35rem;
+}
+
+.aba-frutiger .bloco-cabecalho-tabela h2 {
+  margin: 0 0 0.35rem;
+}
+
+.aba-frutiger .bloco-cabecalho-tabela p {
+  margin: 0;
+}
+
+:root[data-theme="dark"] .aba-frutiger .bloco-cabecalho-tabela,
+:root[data-theme="dark"] .aba-frutiger .frutiger-filtros,
+:root[data-theme="dark"] .aba-frutiger .tabela-container {
+  background: rgb(18 25 35 / 0.62);
+  border-color: rgb(255 255 255 / 0.12);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    0 18px 45px -18px rgb(0 0 0 / 0.55);
+}
+
+/* Vidro sem blur disponível: o translúcido puro vira leite — aí o painel
+   precisa fechar, senão o texto compete com o que está atrás. */
+@supports not (backdrop-filter: blur(1px)) {
+  .aba-frutiger .bloco-cabecalho-tabela,
+  .aba-frutiger .frutiger-filtros,
+  .aba-frutiger .tabela-container {
+    background: var(--surface);
+  }
+}
+
+.aba-frutiger .tabela-container {
+  overflow-x: auto;
+}
+
+/* ── Painel de filtros ────────────────────────────────────────────────── */
+.frutiger-filtros {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.4rem;
+}
+
+.frutiger-busca {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 65%, transparent);
+  color: var(--dim);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.frutiger-busca:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 4px var(--glow);
+}
+
+.frutiger-busca input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.frutiger-busca input::placeholder {
+  color: var(--faint);
+}
+
+.frutiger-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* A bolha: translúcida, com brilho no topo. O ativo é PREENCHIDO com a cor
+   (a da sala quando ela é de sala) — é o filtro que está valendo que fala. */
+.frutiger-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  color: var(--dim);
+  font-family: var(--fonte-texto);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    background 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    transform 0.18s var(--ease);
+}
+
+.frutiger-chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--sala-cor, var(--accent)) 50%, transparent);
+  transform: translateY(-1px);
+}
+
+.frutiger-chip:focus-visible,
+.frutiger-busca input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.frutiger-chip-ativo {
+  color: var(--on-accent);
+  border-color: transparent;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sala-cor, var(--accent)) 92%, white 8%),
+    var(--sala-cor, var(--accent))
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    0 6px 16px -6px color-mix(in srgb, var(--sala-cor, var(--accent)) 65%, transparent);
+}
+
+.frutiger-chip-conta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.frutiger-chip .ponto-sala {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sala-cor);
+}
+
+.frutiger-chip-divisoria {
+  width: 1px;
+  height: 1.35rem;
+  margin-inline: 0.25rem;
+  background: var(--line);
+}
+
+.frutiger-contagem {
+  margin: 0;
+  color: var(--faint);
+  font-size: 0.8rem;
+}
+
+/* ── A mesa ───────────────────────────────────────────────────────────── */
+/* O cabeçalho da tabela larga o cinza chapado: linha de luz no lugar. */
+.aba-frutiger .tabela-alunos th {
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+}
+
+.aba-frutiger .tabela-linha:hover {
+  background: color-mix(in srgb, var(--sala-cor, var(--accent)) 9%, transparent);
+}
+
+/* ── Chips de sala como bolhas de fruta ───────────────────────────────── */
+/* A cor deixa de ser pastel lavado: 38% da cor viva sobre o vidro, borda na
+   cor cheia, ponto cheio. Mesma cor do banco, mais presença — é ela que
+   identifica a turma de relance. */
+.aba-frutiger .badge-sala-tabela {
+  background: color-mix(in srgb, var(--sala-cor) 34%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sala-cor) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    0 4px 12px -4px color-mix(in srgb, var(--sala-cor) 55%, transparent);
+  font-weight: 700;
+}
+
+:root[data-theme="dark"] .aba-frutiger .badge-sala-tabela {
+  background: color-mix(in srgb, var(--sala-cor) 28%, transparent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+
+.aba-frutiger .tag-habilidade-clean {
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── Movimento ────────────────────────────────────────────────────────── */
+/* Só hover/resposta — nada anima sozinho aqui. Quem pede menos movimento
+   ganha as trocas secas. */
+@media (prefers-reduced-motion: reduce) {
+  .aba-frutiger .frutiger-chip,
+  .aba-frutiger .frutiger-busca {
+    transition: none;
+  }
+}
