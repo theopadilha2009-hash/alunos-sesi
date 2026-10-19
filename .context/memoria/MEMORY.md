@@ -5,7 +5,7 @@
 - [Rotacionar os tokens do transcript](rotacionar-tokens-do-transcript.md) — quatro tokens (Vercel ×2, Supabase, PAT do GitHub) passaram pelo chat e nenhum foi rotacionado; a varredura do git de 15/10 mostrou que o repo está limpo
 - [O segundo app não foi definido](segundo-app-nao-definido.md) — o Théo falou em "dois apps"; só a Vitrine foi entregue
 - [O alternador de tema voltou](alternador-de-tema-voltou.md) — PR #147 (19/10): tinta da View Transitions + números que contam; R1 atualizada com a chave `sesi.tema.v2`, não desfeita
-- [A direção visual Frutiger Aero](frutiger-aero-redesign.md) — PR #150 (19/10): vidro escopado em `.aba-frutiger` nos 2 temas, chips de sala saturados; Tabelas & Alunos primeiro, espalhar depois se o Théo aprovar
+- [A direção visual Frutiger Aero](direcao-visual-tabelas.md) — PR #150 + fix (19/10): o Frutiger completo foi rejeitado no mesmo dia ("ficou demais"); a direção real é flat simples, sem sombra — padrão em `.aba-tabelas` e `.tb-*`
 - [Infra e deploy](infra-deploy.md) — onde o app está publicado, onde vivem as chaves e qual URL usar no smoke test
 - [Pendências de decisão](pendencias-de-decisao.md) — o gate de moderação é intencional e já foi removido uma vez; o que mais fechou e o que segue aberto
 - [As decisões são do Théo](decisoes-sao-do-theo.md) — neste projeto não há Ruan nem Daniel para decidir: recomendar e executar, não parar

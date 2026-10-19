@@ -1,0 +1,168 @@
+/* ==========================================================================
+   tabelas-2026.css — a aba Tabelas & Alunos.
+
+   A primeira versão (19/10/2026) veio como Frutiger Aero completo — céu de
+   fundo, vidro, bolhas com sombra — e o Théo rejeitou no mesmo dia: "quero
+   algo bonito simples, esquece tudo, cores de verdade, nada de sombra, como
+   um cargo normal feito por um humano". Ficou o que importa: os filtros que
+   a aba pediu, a cor da sala como identidade, superfície flat. SEM sombra,
+   SEM gradiente, SEM blur, SEM transform.
+
+   Tudo escopado em `.aba-tabelas` (o wrapper da aba no CrmApp): nenhum pixel
+   fora desta tela muda. FIM da cascata.
+   ========================================================================== */
+
+/* ── Painéis: caixa sólida discreta ───────────────────────────────────── */
+.tb-filtros,
+.aba-tabelas .tabela-container {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+}
+
+.tb-filtros {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.4rem;
+}
+
+/* O bloco de cabeçalho é texto solto, sem caixa — era assim antes e é o que
+   um humano escreve: título, frase, e a ferramenta embaixo. */
+.aba-tabelas .bloco-cabecalho-tabela {
+  padding: 1.15rem 1.35rem;
+}
+
+.aba-tabelas .bloco-cabecalho-tabela h2 {
+  margin: 0 0 0.35rem;
+}
+
+.aba-tabelas .bloco-cabecalho-tabela p {
+  margin: 0;
+}
+
+/* ── Busca ────────────────────────────────────────────────────────────── */
+.tb-busca {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--dim);
+  transition: border-color 0.18s var(--ease);
+}
+
+.tb-busca:focus-within {
+  border-color: var(--accent);
+}
+
+.tb-busca input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--fonte-texto);
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.tb-busca input::placeholder {
+  color: var(--faint);
+}
+
+/* ── Chips ────────────────────────────────────────────────────────────── */
+/* Inativo: contorno quieto. Ativo: preenchido — neutro quando o filtro é
+   neutro, na cor da sala quando é de sala. Sem 3D: cor chapada, ponto final. */
+.tb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  font-family: var(--fonte-texto);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    background 0.15s var(--ease);
+}
+
+.tb-chip:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.tb-chip:focus-visible,
+.tb-busca input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tb-chip-ativo {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+.tb-chip-ativo.tb-chip-sala {
+  /* A cor da sala escurecida um passo para o branco ler por cima. */
+  background: color-mix(in srgb, var(--sala-cor) 78%, black);
+  border-color: color-mix(in srgb, var(--sala-cor) 78%, black);
+  color: #fff;
+}
+
+.tb-chip-conta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.tb-chip .ponto-sala {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sala-cor);
+}
+
+.tb-chip-divisoria {
+  width: 1px;
+  height: 1.35rem;
+  margin-inline: 0.25rem;
+  background: var(--line);
+}
+
+.tb-contagem {
+  margin: 0;
+  color: var(--faint);
+  font-size: 0.8rem;
+}
+
+/* ── Chip de sala na tabela ───────────────────────────────────────────── */
+/* Fundo lavado da própria cor, ponto cheio, sem borda colorida, sem sombra. */
+.aba-tabelas .badge-sala-tabela {
+  background: color-mix(in srgb, var(--sala-cor) 14%, transparent);
+  font-weight: 700;
+}
+
+/* ── Movimento ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .tb-chip,
+  .tb-busca {
+    transition: none;
+  }
+}
