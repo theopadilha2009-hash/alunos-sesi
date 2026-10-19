@@ -19,6 +19,7 @@ import {
   IconeSom,
   IconeSomMudo,
 } from "@/components/Icones";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { copiarTexto } from "@/lib/clipboard";
@@ -568,7 +569,9 @@ export function PerfilInterativo({
                 title="Dar estrela de reconhecimento ao aluno"
               >
                 <IconeEstrela preenchida={estrelado} tamanho={16} />
-                <span>{estrelas} estrelas recebidas</span>
+                <span>
+                  <NumeroAnimado valor={estrelas} duracaoMs={900} /> estrelas recebidas
+                </span>
               </button>
 
               <button
@@ -586,7 +589,8 @@ export function PerfilInterativo({
                   bloco vazio marcaria ausência. */}
               {visitasNaTela > 0 ? (
                 <span style={{ color: "var(--dim)", fontSize: "0.85rem" }}>
-                  {visitasNaTela} {visitasNaTela === 1 ? "visita" : "visitas"}
+                  <NumeroAnimado valor={visitasNaTela} />{" "}
+                  {visitasNaTela === 1 ? "visita" : "visitas"}
                 </span>
               ) : null}
             </div>

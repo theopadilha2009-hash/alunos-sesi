@@ -4,6 +4,7 @@ import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { NONCE_HEADER } from "@/lib/csp";
 import { URL_BASE } from "@/lib/links";
+import { scriptTemaSalvo } from "@/lib/tema";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -59,16 +60,22 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        {/* O registro do service worker roda cedo e inline. O tema NÃO é mais
-            lido do localStorage de propósito (R1): o claro é o único tema, o
-            `data-theme="light"` do <html> acima vale para todos, e um tema
-            salvo de visitas antigas nunca mais é reaplicado. */}
+        {/* O registro do service worker roda cedo e inline. O tema salvo roda
+            logo depois, também inline e antes do primeiro paint. A decisão R1
+            continua valendo no espírito: a chave antiga do tema morreu e
+            nenhum valor órfão de visita antiga é reaplicado. O alternador
+            (pedido de 19/10/2026) escreve em `sesi.tema.v2`, chave NOVA —
+            quem nunca clicou fica no `data-theme="light"` do <html> acima. */}
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
               "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
           }}
+        />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: scriptTemaSalvo() }}
         />
       </head>
       <body>

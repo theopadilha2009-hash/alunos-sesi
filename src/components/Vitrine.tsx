@@ -6,6 +6,7 @@ import { Avatar } from "@/components/Avatar";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
@@ -223,17 +224,17 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
       {/* Retrato / Métricas da Turma com Progresso Visual */}
       <section className="retrato" aria-label="Retrato da turma">
         <div className="numero card-metrica">
-          <b>{total}</b>
+          <b><NumeroAnimado valor={total} /></b>
           <span>alunos na rede</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--accent)" }} />
         </div>
         <div className="numero card-metrica">
-          <b>{salasComAlunos}</b>
+          <b><NumeroAnimado valor={salasComAlunos} /></b>
           <span>salas ativas</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--verde)" }} />
         </div>
         <div className="numero card-metrica">
-          <b>{percentual(comLinkedin)}%</b>
+          <b><NumeroAnimado valor={percentual(comLinkedin)} />%</b>
           <span>com LinkedIn</span>
           <div
             className="metrica-barra"
@@ -241,7 +242,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
           />
         </div>
         <div className="numero card-metrica">
-          <b>{percentual(comGithub)}%</b>
+          <b><NumeroAnimado valor={percentual(comGithub)} />%</b>
           <span>com GitHub</span>
           <div
             className="metrica-barra"
@@ -249,7 +250,7 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
           />
         </div>
         <div className="numero card-metrica">
-          <b>★ {totalEstrelas}</b>
+          <b>★ <NumeroAnimado valor={totalEstrelas} /></b>
           <span>estrelas trocadas</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--amarelo)" }} />
         </div>

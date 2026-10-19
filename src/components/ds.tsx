@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AlternadorTema } from "@/components/AlternadorTema";
 import { Roseta } from "@/components/Roseta";
 
 export function Topo({
@@ -21,6 +22,7 @@ export function Topo({
           </span>
         </Link>
         <nav className="topo-nav">
+          <AlternadorTema />
           {voltar ? (
             <Link href={voltar.href} className="botao botao-fraco">
               {voltar.texto}
