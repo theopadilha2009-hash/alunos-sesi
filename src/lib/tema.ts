@@ -61,8 +61,11 @@ export function alternarTemaComTinta(ev: { clientX: number; clientY: number }): 
           ],
         },
         {
-          duration: 500,
-          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          // O --ease do projeto (expo-out) estampa a tinta nos primeiros
+          // 150 ms e o resto morre parado — o Théo leu como "não flui".
+          // Ease-in-out dá percurso visível de ida e assentamento no fim.
+          duration: 600,
+          easing: "cubic-bezier(0.65, 0, 0.35, 1)",
           pseudoElement: "::view-transition-new(root)",
         },
       );

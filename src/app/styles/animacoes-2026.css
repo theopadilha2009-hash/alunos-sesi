@@ -55,7 +55,15 @@
   transform: translateY(0);
 }
 
-/* O botão oferta o tema de destino: lua no claro, sol no escuro. */
+/* O botão oferta o tema de destino: lua no claro, sol no escuro. A troca é
+   nos <span> wrappers (o <svg> da Base tem display inline e venceria a
+   folha de estilo se a classe estivesse nele). */
+.alternador-tema span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 :root[data-theme="light"] .alternador-tema-lua {
   display: none;
 }
