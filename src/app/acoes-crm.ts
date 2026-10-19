@@ -16,7 +16,7 @@ import { logger } from "@/lib/debug";
 import type { RepoGithub } from "@/lib/github";
 import { habilidadePermitida } from "@/lib/habilidades";
 import { DOMINIO_EMAIL_ESCOLA, descreverDescartes, type Descarte } from "@/lib/limites";
-import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
+import { normalizarGithub, processarLinksSociais } from "@/lib/links";
 import { limitar, limparLimite } from "@/lib/rate-limit";
 import { hashSenha, verificarSenha } from "@/lib/senha";
 import {
@@ -216,14 +216,16 @@ export async function salvarPerfilAction(
     }
   }
 
-  const linkedin = normalizarLinkedin(linkedinBruto);
-  const github = normalizarGithub(githubBruto);
-
-  // Normaliza instagram (garante @ ou link amigável)
-  let instagram = instagramBruto ? instagramBruto.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@/, "") : null;
-  if (instagram) {
-    instagram = sanitizarTexto(`@${instagram}`, 40);
+  // Links sociais seguem o contrato do e-mail logo abaixo: preenchido que não
+  // passa no normalizador é ERRO, não remoção silenciosa. Antes o normalizador
+  // devolvia null, o update gravava null por cima do valor salvo e a tela
+  // dizia "atualizado" — um `_` no handle do GitHub apagava o link que o
+  // aluno já tinha.
+  const { links, erro } = processarLinksSociais(linkedinBruto, githubBruto, instagramBruto);
+  if (erro || !links) {
+    return { ok: false, mensagem: erro ?? "Link social inválido." };
   }
+  const { linkedin, github, instagram } = links;
 
   // Só entra se for da escola: `sanitizarEmail` devolve `null` para qualquer
   // outro domínio, e campo vazio é remoção deliberada do próprio e-mail, que
