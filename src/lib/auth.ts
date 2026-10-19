@@ -150,10 +150,12 @@ export async function autenticarUsuario(
   const limit = await limitar(`login:${username}`, 5, 5 * 60 * 1000, 5 * 60 * 1000);
   if (!limit.permitido) {
     logger.warn("AUTH", `Tentativa de login bloqueada por rate limit para o usuário: ${username}`);
-    const minutos = Math.ceil((limit.tempoRestanteMs ?? 60000) / 60000);
+    // Sem minuto na frase: o caminho primário do limitar é a RPC do banco, que
+    // só devolve boolean — o `?? 60000` anunciava "1 minuto" enquanto o bloqueio
+    // real era de 5, e a pessoa voltava antes da hora para continuar travada.
     return {
       ok: false,
-      mensagem: `Muitas tentativas seguidas. Aguarde ${minutos} minuto(s) antes de tentar novamente.`,
+      mensagem: "Muitas tentativas seguidas. Aguarde alguns minutos antes de tentar novamente.",
     };
   }
 
@@ -502,10 +504,13 @@ export async function ativarAcessoComCodigo(dados: {
   const senha = dados.senha.trim();
 
   // Antes de qualquer consulta: o código tem 40 bits sorteados, o que deixa de
-  // ser muito quando se pode tentar sem custo nenhum.
+  // ser muito quando se pode tentar sem custo nenhum. 30 e não 10: numa escola
+  // toda a turma sai do mesmo NAT (o IP é um para todos), e 10 resgates em 15
+  // min travavam o 11º aluno com código CORRETO — o cadastro já usa 30 pelo
+  // mesmo motivo (limiteCadastro abaixo).
   const ip = await ipDoCliente();
   const balde = ip ? `ativacao:ip:${ip}` : "ativacao:global";
-  const limite = await limitar(balde, 10, 15 * 60 * 1000);
+  const limite = await limitar(balde, 30, 15 * 60 * 1000);
   if (!limite.permitido) {
     return { ok: false, mensagem: "Muitas tentativas seguidas. Aguarde alguns minutos." };
   }
