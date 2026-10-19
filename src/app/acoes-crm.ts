@@ -193,13 +193,15 @@ export async function salvarPerfilAction(
     habilidadesBrutas = [];
   }
 
-  // Moderação preventiva para ambiente escolar
+  // Moderação preventiva para ambiente escolar. A mensagem NOMEIA o campo e o
+  // item: sem isso, o save inteiro era recusado com a mesma frase genérica para
+  // legenda e vídeo, e o aluno ficava 6 abas sem saber onde estava a palavra.
   const termosProibidos = /\b(porn|xxx|nsfw|sex|nude|violencia|arma|droga|aposta|bet)\b/i;
-  for (const m of midias) {
+  for (const [i, m] of midias.entries()) {
     if (m.legenda && termosProibidos.test(m.legenda)) {
       return {
         ok: false,
-        mensagem: "Conteúdo rejeitado pela moderação escolar: utilize apenas mídias educativas e adequadas para todas as idades.",
+        mensagem: `Conteúdo rejeitado pela moderação escolar: a legenda da mídia ${i + 1} tem palavra não permitida. Ajuste ou apague a legenda e salve de novo.`,
       };
     }
   }
@@ -207,11 +209,11 @@ export async function salvarPerfilAction(
   // batido: o embed em si é do YouTube/Vimeo, mas o rótulo em cima dele é texto
   // que o aluno escreveu. Sem esta varredura, o único campo de texto novo do
   // perfil seria o único sem moderação.
-  for (const v of videos) {
+  for (const [i, v] of videos.entries()) {
     if (v.titulo && termosProibidos.test(v.titulo)) {
       return {
         ok: false,
-        mensagem: "Conteúdo rejeitado pela moderação escolar: utilize apenas mídias educativas e adequadas para todas as idades.",
+        mensagem: `Conteúdo rejeitado pela moderação escolar: o título do vídeo ${i + 1} tem palavra não permitida. Ajuste ou apague o título e salve de novo.`,
       };
     }
   }

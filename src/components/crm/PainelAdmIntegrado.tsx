@@ -173,7 +173,11 @@ export function PainelAdmIntegrado({
   );
   // Os dois caminhos de código (emitir para quem não tem acesso; resetar quem
   // tem) mostram o resultado no MESMO bloco — o ADM lê um código por vez.
-  const codigoAtivo = estadoCodigo.codigo ? estadoCodigo : estadoReset;
+  // O bloco de CÓDIGO aceita qualquer um dos dois; as mensagens de erro ficam
+  // com o recado lá embaixo, um por caminho (o `?:` antigo mandava a mensagem
+  // de falha da emissão para o estado do reset, virgem quando o reset nunca
+  // foi usado — o ADM clicava a chave e a tela não mostrava nada).
+  const codigoAtivo = estadoReset.codigo ? estadoReset : estadoCodigo;
   const [estadoDesafio, formDesafio, publicando] = useActionState(
     publicarDesafioAction,
     ESTADO_INICIAL,
@@ -445,9 +449,14 @@ export function PainelAdmIntegrado({
             </div>
           ) : null}
 
-          {codigoAtivo.mensagem ? (
+          {estadoCodigo.mensagem && !estadoCodigo.codigo ? (
             <p className="recado recado-erro" role="alert">
-              {codigoAtivo.mensagem}
+              {estadoCodigo.mensagem}
+            </p>
+          ) : null}
+          {estadoReset.mensagem && !estadoReset.codigo ? (
+            <p className="recado recado-erro" role="alert">
+              {estadoReset.mensagem}
             </p>
           ) : null}
 

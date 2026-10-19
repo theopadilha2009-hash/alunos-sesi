@@ -6,10 +6,12 @@ import { limitar } from "@/lib/rate-limit";
 import { COOKIE_VISITANTE, abrirAssinado } from "@/lib/sessao";
 
 /**
- * Marca uma visita de perfil. Telemetria pura: TODA saída é 204, com ou sem
- * gravação — quem chama é o `useEffect` do perfil, que não tem o que fazer
- * com corpo de resposta, e um 4xx/5xx aqui viraria erro no console do aluno
- * por nada. As recusas ficam no log.
+ * Marca uma visita de perfil. Telemetria: a resposta é **204** quando nada
+ * foi gravado (sem cookie, rate limit, slug ruim, aluno pendente) e **201**
+ * com `{"contou":true}` quando a visita entrou — é o perfil que soma +1 no
+ * contador da tela, porque a página já renderizou com o total ANTES desta
+ * visita (o servidor roda primeiro). Erro de banco segue 204 com log: um 5xx
+ * aqui viraria erro no console do aluno por nada.
  *
  * A visita vem do cookie anônimo assinado (o mesmo das estrelas), não do
  * corpo: o corpo só diz o slug. Sem cookie válido não há o que contar.
@@ -42,7 +44,12 @@ export async function POST(request: Request): Promise<NextResponse> {
       return new NextResponse(null, { status: 204 });
     }
 
-    await registrarVisita(aluno.id, visitante);
+    const contou = await registrarVisita(aluno.id, visitante);
+    // Recarregar no mesmo dia não conta de novo (a PK cuida disso) e não
+    // soma na tela: o 201 é só para a visita que entrou de verdade.
+    if (contou) {
+      return NextResponse.json({ contou: true }, { status: 201 });
+    }
   } catch (erro) {
     logger.error("VISITA", "Falha ao registrar a visita", erro);
   }

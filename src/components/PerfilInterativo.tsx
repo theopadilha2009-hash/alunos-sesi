@@ -77,17 +77,25 @@ export function PerfilInterativo({
 
   // A visita se marca do CLIENTE de propósito: o prefetch de <Link> da vitrine
   // carrega o HTML do perfil sem executar efeito, então só navegação real
-  // chega aqui — uma por montagem. A resposta é ignorada (a rota é 204 sempre,
-  // de propósito): recarregamento no mesmo dia não infla, a PK cuida disso.
+  // chega aqui — uma por montagem. A página do servidor já renderizou com o
+  // total ANTES desta visita, então a rota responde 201 quando a visita entrou
+  // e o contador da tela soma +1 na hora (sem isso, a primeira abertura de
+  // cada dia aparecia sem número, parecendo que o contador não existe).
+  // Recarregamento no mesmo dia devolve 204: não infla, a PK cuida disso.
+  const [visitasNaTela, setVisitasNaTela] = useState(visitas);
   useEffect(() => {
     void fetch("/api/visita", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ slug: aluno.slug }),
       keepalive: true,
-    }).catch(() => {
-      // Sem rede, sem visita — não é erro de tela.
-    });
+    })
+      .then((res) => {
+        if (res.status === 201) setVisitasNaTela((v) => v + 1);
+      })
+      .catch(() => {
+        // Sem rede, sem visita — não é erro de tela.
+      });
     // O slug do aluno não muda durante a montagem: uma marca por abertura.
   }, []);
 
@@ -576,9 +584,9 @@ export function PerfilInterativo({
               {/* Contagem, não vitrine de engajamento: o número é o que faz o
                   dono cuidar do perfil. Sem visitante nenhum, a linha some —
                   bloco vazio marcaria ausência. */}
-              {visitas > 0 ? (
+              {visitasNaTela > 0 ? (
                 <span style={{ color: "var(--dim)", fontSize: "0.85rem" }}>
-                  {visitas} {visitas === 1 ? "visita" : "visitas"}
+                  {visitasNaTela} {visitasNaTela === 1 ? "visita" : "visitas"}
                 </span>
               ) : null}
             </div>

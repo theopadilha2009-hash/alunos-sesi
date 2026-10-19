@@ -504,7 +504,11 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
       id: `proj_${Date.now()}`,
       titulo: novoProjTitulo.trim(),
       descricao: novoProjDesc.trim(),
-      link: novoProjLink.trim() || undefined,
+      // Normalizado, como no ramo de edição acima: o aluno digita
+      // `github.com/user/repo` sem esquema, o valor cru era gravado aqui e o
+      // servidor descartava o link no save ("endereço inválido") — o mesmo
+      // link colado em modo EDIÇÃO salvava normalizado e funcionava.
+      link: linkNormalizado || undefined,
       imagem: novoProjImg.trim() || undefined,
     };
     setProjetos([...projetos, novo]);

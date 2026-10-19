@@ -154,16 +154,22 @@ export async function alunoIdDoUsuario(usuarioId: string): Promise<string | null
  * O `on conflict` é o que faz o recarregamento não inflar: a PK
  * (aluno, visitante, dia) só aceita a primeira linha do dia.
  */
-export async function registrarVisita(alunoId: string, visitanteId: string): Promise<void> {
-  const { error } = await clientePublico()
+export async function registrarVisita(alunoId: string, visitanteId: string): Promise<boolean> {
+  // `count` é o que separa "visita nova" de "este visitante já passou hoje" — a
+  // PK (aluno, visitante, dia) faz o `ignoreDuplicates` engolir a repetição, e
+  // quem chama usa isso para não inflar o contador na tela com visita que não
+  // aconteceu.
+  const { error, count } = await clientePublico()
     .from("visitas_perfil")
     .upsert(
       { aluno_id: alunoId, visitante_id: visitanteId },
-      { onConflict: "aluno_id,visitante_id,dia", ignoreDuplicates: true },
+      { onConflict: "aluno_id,visitante_id,dia", ignoreDuplicates: true, count: "exact" },
     );
   if (error) {
     logger.error("DADOS", "Erro ao registrar visita", error);
+    return false;
   }
+  return (count ?? 0) > 0;
 }
 
 /** Total de visitas acumuladas do perfil. Falha vira 0 com log — a contagem
