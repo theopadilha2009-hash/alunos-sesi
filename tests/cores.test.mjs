@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { CORES_SALA, chaveDaSala, corDaSala, corDoAluno, nomeDaCor } from "../src/lib/cores.ts";
+import {
+  CORES_SALA,
+  chaveDaSala,
+  corDaSala,
+  corDoAluno,
+  decodificarSegmento,
+  nomeDaCor,
+} from "../src/lib/cores.ts";
 
 const SQL_APARENCIA = readFileSync(
   fileURLToPath(new URL("../src/sql/012_aparencia_do_aluno.sql", import.meta.url)),
@@ -46,6 +53,22 @@ test("chaveDaSala ignora caixa e espaço — mas não acento nem ordinal", () =>
   assert.notEqual(chaveDaSala("3ºA"), chaveDaSala("3A"));
   assert.notEqual(chaveDaSala("3ªB"), chaveDaSala("3B"));
   assert.notEqual(chaveDaSala("Técnico"), chaveDaSala("TECNICO"));
+});
+
+// ── decodificarSegmento: o Next entrega o param de rota percent-encoded ─────
+
+test("o segmento de rota percent-encoded vira o nome do banco", () => {
+  // O Next entrega o segmento CRU (`params.nome` = "3%C2%BAB%20%C2%B7%20..."),
+  // e `chaveDaSala` é só trim+caixa: sem decodificar, a chave nunca casa com o
+  // nome do banco e toda turma com espaço, acento ou `·` caía na 404 — enquanto
+  // as turmas ASCII puras abriam, o que escondeu o bug (medido em produção em
+  // 19/10/2026).
+  const cru = "3%C2%BAB%20%C2%B7%20Rob%C3%B3tica%20FLL";
+  assert.equal(chaveDaSala(decodificarSegmento(cru)), chaveDaSala("3ºB · Robótica FLL"));
+  assert.equal(decodificarSegmento("DSM3"), "DSM3");
+  // `%` solto é URI malformada: volta cru em vez de lançar, e a rota cai na
+  // 404 — que é o comportamento certo para nome que não existe.
+  assert.equal(decodificarSegmento("100%"), "100%");
 });
 
 test("a cor sai da chave: se as duas divergirem, a mesma turma tem duas cores", () => {
