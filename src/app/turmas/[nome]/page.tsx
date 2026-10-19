@@ -4,14 +4,17 @@ import type { Metadata } from "next";
 import { Avatar } from "@/components/Avatar";
 import { BadgeDestaque, BadgeFixado } from "@/components/CargosBadges";
 import { Rodape, Topo, Vazio } from "@/components/ds";
-import { chaveDaSala, corDaSala, corDoAluno } from "@/lib/cores";
+import { chaveDaSala, corDaSala, corDoAluno, decodificarSegmento } from "@/lib/cores";
 import { listarAlunos, listarSalas } from "@/lib/dados";
 import { corHabilidade } from "@/lib/habilidades";
 
 type Props = PageProps<"/turmas/[nome]">;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { nome } = await params;
+  const { nome: bruto } = await params;
+  // O segmento chega percent-encoded (ver `decodificarSegmento`): sem isso o
+  // título e a descrição anunciavam `3%C2%BAB%20...` no lugar do nome.
+  const nome = decodificarSegmento(bruto);
   return {
     title: `${nome} · Turma · Alunos SESI`,
     description: `Os portfólios e crachás digitais dos alunos da turma ${nome} na Escola SESI.`,
@@ -21,7 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TurmaPage({ params }: Props) {
-  const { nome } = await params;
+  const { nome: bruto } = await params;
+  const nome = decodificarSegmento(bruto);
 
   let sala: Awaited<ReturnType<typeof listarSalas>>[number] | undefined;
   let alunos: Awaited<ReturnType<typeof listarAlunos>> = [];

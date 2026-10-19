@@ -69,6 +69,23 @@ export function chaveDaSala(nome: string): string {
   return String(nome ?? "").trim().toUpperCase();
 }
 
+/**
+ * O Next entrega o segmento de rota percent-encoded: `params.nome` chega como
+ * `3%C2%BAB%20%C2%B7%20Rob%C3%B3tica%20FLL`, não como o nome do banco. Sem
+ * decodificar, `chaveDaSala` nunca casa e toda turma com espaço, acento ou `·`
+ * vira 404 — enquanto as turmas ASCII puras abriam normalmente, o que escondeu
+ * o defeito (medido em produção em 19/10/2026). `%` solto é URI malformada e
+ * `decodeURIComponent` lança: volta cru, e a rota cai na 404, que é o
+ * comportamento certo para nome que não existe.
+ */
+export function decodificarSegmento(bruto: string): string {
+  try {
+    return decodeURIComponent(bruto);
+  } catch {
+    return String(bruto ?? "");
+  }
+}
+
 export function corDaSala(nome: string): string {
   // A normalização mora aqui dentro, e não em cada chamador: o contrato do
   // arquivo é "a mesma turma tem a mesma cor em qualquer tela", e com o `trim`
