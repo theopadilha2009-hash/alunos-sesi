@@ -1445,3 +1445,68 @@ body::before {
   to { opacity: 1; }
 }
 
+/* ── Cabeçalho escolar da vitrine (20/10/2026) ───────────────────────────── */
+/* A vitrine é a porta pública da escola: o cabeçalho diz de onde é a turma
+   antes da grade de cards. Flat, como a aba Tabelas e a Visão geral. */
+.escola-topo {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.escola-titulo {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.escola-sub {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--dim);
+  font-size: var(--fs-300);
+  line-height: 1.6;
+}
+
+/* ── Métricas da turma com ícone ─────────────────────────────────────────── */
+/* Mesma linguagem da Visão geral: quadrado tintado + número grande. O número
+   animado é um <span> dentro do <b>, e o `.numero span` acima o pegava por
+   engano — o valor saía a 12px. A regra abaixo devolve a tipografia do <b>. */
+.numero b .numero-animado {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
+.card-metrica {
+  gap: 0.3rem;
+}
+
+.card-metrica-topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.card-metrica-topo > span {
+  min-width: 0;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.card-metrica-icone {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: none;
+  border-radius: 9px;
+  background: color-mix(in oklab, var(--tom-metrica, var(--accent)) 14%, var(--surface));
+  color: color-mix(in oklab, var(--tom-metrica, var(--accent)) 45%, var(--text));
+}
+

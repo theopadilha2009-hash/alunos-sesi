@@ -37,9 +37,14 @@ export default async function AlunosPage() {
       <>
         <Topo />
         <main className="wrap" style={{ paddingBlock: "1.5rem" }}>
-          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", letterSpacing: "-0.04em", marginBottom: "1.25rem" }}>
-            A turma
-          </h1>
+          <header className="escola-topo">
+            <p className="eyebrow">Escola SESI SENAI · Joinville</p>
+            <h1 className="escola-titulo">A turma</h1>
+            <p className="escola-sub">
+              Portfólios, competências e projetos reais dos estudantes de
+              Desenvolvimento de Sistemas.
+            </p>
+          </header>
           <Vitrine
             alunos={alunos}
             salas={salas}

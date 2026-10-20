@@ -1,0 +1,791 @@
+/* ==========================================================================
+   visao-geral-2026.css — a home "Visão geral" do CRM.
+
+   A direção é a da aba Tabelas (19/10/2026): flat, sem sombra, sem gradiente
+   decorativo, cores de verdade. Os únicos gradientes aqui são de DADO (o anel
+   de conquistas e as barras de progresso), não de enfeite.
+
+   Tudo é escopado em `.visao-geral`; nenhum pixel fora da aba. As cores vêm
+   só de tokens e de `color-mix` com a cor da sala — a mesma receita do
+   `.aluno-sala` para texto sobre cor de turma.
+   ========================================================================== */
+
+.visao-geral {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* ── HERO ────────────────────────────────────────────────────────────────── */
+
+.vg-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.5rem;
+  align-items: center;
+  overflow: hidden;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  background: var(--surface);
+}
+
+.vg-hero::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 4px;
+  background: var(--accent);
+}
+
+.vg-hero-texto {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.vg-titulo {
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(var(--fs-500), 2.6vw, 1.75rem);
+  font-weight: 800;
+  line-height: var(--lh-titulo);
+  letter-spacing: -0.03em;
+}
+
+.vg-sub {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--dim);
+  font-size: var(--fs-300);
+  line-height: 1.6;
+}
+
+.vg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.vg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--dim);
+  font-size: var(--fs-100);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.vg-chip-sala {
+  border-color: color-mix(in oklab, var(--vg-sala) 24%, var(--line));
+  background: color-mix(in oklab, var(--vg-sala) 10%, var(--surface));
+  color: color-mix(in oklab, var(--vg-sala) 55%, var(--text));
+}
+
+.vg-ponto {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--vg-sala);
+}
+
+.vg-hero-acoes {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: end;
+}
+
+.vg-hero-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.vg-hero-marca {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding-inline-start: 0.9rem;
+  border-inline-start: 1px solid var(--line);
+  color: var(--dim);
+}
+
+.vg-hero-marca div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.vg-hero-marca strong {
+  color: var(--text);
+  font-size: var(--fs-200);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.vg-hero-marca span {
+  font-size: var(--fs-100);
+}
+
+/* ── NÚMEROS ─────────────────────────────────────────────────────────────── */
+
+.vg-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.vg-stat {
+  --vg-tom: var(--accent);
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  background: var(--surface);
+}
+
+.vg-stat--ciano {
+  --vg-tom: var(--ciano);
+}
+
+.vg-stat--azul {
+  --vg-tom: var(--azul-claro);
+}
+
+.vg-stat--amarelo {
+  --vg-tom: var(--amarelo);
+}
+
+.vg-stat--verde {
+  --vg-tom: var(--verde);
+}
+
+.vg-stat-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.vg-stat-icone {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: none;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--vg-tom) 14%, var(--surface));
+  color: color-mix(in oklab, var(--vg-tom) 45%, var(--text));
+}
+
+.vg-stat-rotulo {
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-stat-numero {
+  font-family: var(--fonte-titulo);
+  font-size: clamp(var(--fs-600), 2.4vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.vg-stat-dica {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: var(--fs-100);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── GRADE PRINCIPAL ─────────────────────────────────────────────────────── */
+
+.vg-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.vg-coluna {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.vg-painel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--raio);
+  background: var(--surface);
+}
+
+.vg-painel-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vg-painel-topo h2 {
+  margin: 0;
+  font-size: var(--fs-500);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.vg-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: var(--fs-200);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.vg-link:hover {
+  text-decoration: underline;
+}
+
+.vg-link:focus-visible,
+.vg-atalho:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── MINHA TURMA ─────────────────────────────────────────────────────────── */
+
+.vg-turma-identidade {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.vg-turma-selo {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--vg-sala) 26%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--vg-sala) 14%, var(--surface));
+  color: color-mix(in oklab, var(--vg-sala) 55%, var(--text));
+}
+
+.vg-turma-texto {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.vg-turma-nome {
+  overflow: hidden;
+  font-size: var(--fs-500);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-turma-curso {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: var(--fs-200);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-turma-avatar {
+  margin-inline-start: auto;
+  width: 2.8rem;
+  height: 2.8rem;
+  font-size: var(--fs-300);
+}
+
+.vg-metricas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.vg-metricas--quatro {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.vg-metrica {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.vg-metrica span {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: var(--fs-100);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-metrica strong {
+  font-family: var(--fonte-titulo);
+  font-size: var(--fs-500);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.vg-barra-bloco {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.vg-barra-rotulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--dim);
+  font-size: var(--fs-100);
+  font-weight: 600;
+}
+
+/* ── PROGRESSO ───────────────────────────────────────────────────────────── */
+
+.vg-progresso {
+  overflow: hidden;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+
+.vg-progresso > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.4s var(--ease);
+}
+
+/* ── ENTREGAS ────────────────────────────────────────────────────────────── */
+
+.vg-entregas-lista,
+.vg-envios-lista,
+.vg-conquistas-lista,
+.vg-turmas-lista {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vg-entrega {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.vg-entrega:hover {
+  border-color: var(--line);
+}
+
+.vg-entrega-icone {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface));
+  color: color-mix(in oklab, var(--accent) 55%, var(--text));
+}
+
+.vg-entrega-texto {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.vg-entrega-texto strong {
+  overflow: hidden;
+  font-size: var(--fs-300);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-entrega-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  color: var(--dim);
+  font-size: var(--fs-100);
+}
+
+.vg-entrega-prazo {
+  font-weight: 700;
+}
+
+/* ── SELOS DE ESTADO ─────────────────────────────────────────────────────── */
+
+.vg-selo {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: var(--fs-100);
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.vg-selo--pendente {
+  background: color-mix(in oklab, var(--amarelo) 16%, var(--surface));
+  color: color-mix(in oklab, var(--amarelo) 45%, var(--text));
+}
+
+.vg-selo--aprovado {
+  background: color-mix(in oklab, var(--verde) 16%, var(--surface));
+  color: color-mix(in oklab, var(--verde) 45%, var(--text));
+}
+
+.vg-selo--rejeitado {
+  background: color-mix(in oklab, var(--vermelho) 16%, var(--surface));
+  color: color-mix(in oklab, var(--vermelho) 45%, var(--text));
+}
+
+/* ── SEUS ENVIOS ─────────────────────────────────────────────────────────── */
+
+.vg-envio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.vg-envio-texto {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.vg-envio-texto strong {
+  overflow: hidden;
+  font-size: var(--fs-300);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-envio-texto span {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: var(--fs-100);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── CONQUISTAS ──────────────────────────────────────────────────────────── */
+
+.vg-conquistas-topo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vg-anel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 7rem;
+  height: 7rem;
+  flex: none;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) calc(var(--vg-pct) * 1%),
+    var(--surface-3) 0
+  );
+}
+
+.vg-anel::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.vg-anel-centro {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  text-align: center;
+}
+
+.vg-anel-centro strong {
+  font-family: var(--fonte-titulo);
+  font-size: var(--fs-600);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.vg-anel-centro span {
+  color: var(--dim);
+  font-size: var(--fs-100);
+  font-weight: 600;
+}
+
+.vg-conquistas-resumo {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.vg-conquistas-resumo strong {
+  font-size: var(--fs-500);
+  font-weight: 800;
+}
+
+.vg-conquistas-resumo span {
+  color: var(--dim);
+  font-size: var(--fs-200);
+}
+
+.vg-conquista {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.vg-conquista-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--fs-200);
+}
+
+.vg-conquista-topo span:first-child {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-conquista-topo span:last-child {
+  color: var(--dim);
+  font-size: var(--fs-100);
+  font-weight: 700;
+}
+
+.vg-conquista .vg-progresso {
+  height: 0.4rem;
+}
+
+/* ── ATALHOS ─────────────────────────────────────────────────────────────── */
+
+.vg-atalhos-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.vg-atalho {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-200);
+  font-weight: 700;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.vg-atalho svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.vg-atalho span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-atalho:hover {
+  border-color: var(--line);
+  background: color-mix(in oklab, var(--accent) 6%, var(--surface-2));
+}
+
+/* ── TURMAS (visão do ADM) ───────────────────────────────────────────────── */
+
+.vg-turma-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.vg-turma-cor {
+  width: 0.55rem;
+  height: 1.9rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--vg-sala);
+}
+
+.vg-turma-linha-texto {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.vg-turma-linha-texto strong {
+  overflow: hidden;
+  font-size: var(--fs-200);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-turma-linha-texto span {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: var(--fs-100);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-turma-linha-numero {
+  margin-inline-start: auto;
+  color: var(--dim);
+  font-size: var(--fs-100);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── VAZIO ───────────────────────────────────────────────────────────────── */
+
+.vg-vazio {
+  margin: 0;
+  padding: 0.35rem 0;
+  color: var(--dim);
+  font-size: var(--fs-200);
+  line-height: 1.55;
+}
+
+/* ── RESPONSIVO ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1080px) {
+  .vg-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vg-metricas--quatro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .vg-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vg-hero-acoes {
+    justify-items: start;
+  }
+
+  .vg-hero-botoes {
+    justify-content: flex-start;
+  }
+
+  .vg-hero-marca {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .vg-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .vg-stats,
+  .vg-metricas,
+  .vg-metricas--quatro,
+  .vg-atalhos-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vg-entrega {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .vg-entrega .vg-selo {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .vg-turma-avatar {
+    display: none;
+  }
+
+  .vg-conquistas-topo {
+    align-items: flex-start;
+  }
+
+  .vg-anel {
+    width: 6rem;
+    height: 6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-progresso > span {
+    transition: none;
+  }
+}

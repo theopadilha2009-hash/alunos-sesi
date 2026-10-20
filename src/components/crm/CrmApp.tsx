@@ -13,6 +13,7 @@ import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
 import { PainelTabelaAlunos } from "@/components/PainelTabelaAlunos";
 import {
   IconeCards,
+  IconeCasa,
   IconeCracha,
   IconeEditar,
   IconeEscudo,
@@ -31,6 +32,7 @@ import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
+import { VisaoGeral } from "@/components/crm/VisaoGeral";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
 import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
@@ -72,6 +74,7 @@ type Props = {
 };
 
 type AbaAtiva =
+  | "inicio"
   | "portfolio"
   | "projetos"
   | "desafios"
@@ -91,7 +94,7 @@ export function CrmApp({
   submissoesIniciais = [],
   meusEnvios = [],
 }: Props) {
-  const [aba, setAba] = useState<AbaAtiva>("portfolio");
+  const [aba, setAba] = useState<AbaAtiva>("inicio");
   // Sem setter: `desafios` é só lido, e o estado congela o valor da prop — quem
   // troca a lista é o remonte depois da Server Action. Não confundir com o
   // `meus` logo abaixo: ele **tem** setter, porque o voto é otimista.
@@ -504,6 +507,17 @@ export function CrmApp({
         <nav className="sidebar-nav">
           <button
             type="button"
+            className={`nav-item ${aba === "inicio" ? "nav-item-ativo" : ""}`}
+            onClick={() => setAba("inicio")}
+          >
+            <span className="nav-icone">
+              <IconeCasa tamanho={18} />
+            </span>
+            <span className="nav-label">Visão geral</span>
+          </button>
+
+          <button
+            type="button"
             className={`nav-item ${aba === "portfolio" ? "nav-item-ativo" : ""}`}
             onClick={() => setAba("portfolio")}
           >
@@ -708,7 +722,9 @@ export function CrmApp({
         <header className="crm-header" ref={headerRef}>
           <div>
             <span className="eyebrow">
-              {aba === "portfolio"
+              {aba === "inicio"
+                ? "Sua escola"
+                : aba === "portfolio"
                 ? "Vitrine Profissional"
                 : aba === "projetos"
                   ? "Criações da Escola"
@@ -721,7 +737,9 @@ export function CrmApp({
                         : "Administração"}
             </span>
             <h1 className="crm-header-titulo">
-              {aba === "portfolio"
+              {aba === "inicio"
+                ? "Visão geral"
+                : aba === "portfolio"
                 ? "Portfólio da Turma"
                 : aba === "projetos"
                   ? "Criações & Projetos SESI"
@@ -767,6 +785,26 @@ export function CrmApp({
           <p className="recado recado-erro" role="status">
             {recado}
           </p>
+        ) : null}
+
+        {/* ── ABA 0: VISÃO GERAL (a primeira coisa que a pessoa vê) ─────── */}
+        {aba === "inicio" ? (
+          <div className="crm-secao-conteudo">
+            <VisaoGeral
+              usuario={usuario}
+              aluno={meuAlunoNaTela}
+              alunos={naTela}
+              salas={salas}
+              retrato={retrato}
+              desafios={desafios}
+              meusEnvios={meusEnvios}
+              onIrPara={setAba}
+              onAbrirPerfil={() => setPerfilAberto(true)}
+              onAbrirCracha={() => {
+                if (meuAlunoNaTela) setAlunoCracha(meuAlunoNaTela);
+              }}
+            />
+          </div>
         ) : null}
 
         {/* ── ABA 1: PORTFÓLIO (Aba Principal) ──────────────────────────── */}

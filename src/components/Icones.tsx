@@ -299,3 +299,20 @@ export const IconeCrop = ({ tamanho = 15, className = "" }: Props) => (
   </Base>
 );
 
+export const IconeCasa = ({ tamanho = 16, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <path d="M3.5 10.5 12 3.5l8.5 7" />
+    <path d="M5.5 9.2V20h13V9.2" />
+    <path d="M9.8 20v-5.5h4.4V20" />
+  </Base>
+);
+
+export const IconeCalendario = ({ tamanho = 16, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+    <path d="M3.5 9.5h17" />
+    <path d="M8 3v4M16 3v4" />
+    <path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2" />
+  </Base>
+);
+

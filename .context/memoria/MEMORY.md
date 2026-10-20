@@ -14,6 +14,7 @@
 - [Feedback do PDF "Plataforma sesi"](feedback-pdf-plataforma-sesi.md) — 23 anotações do Théo (06/10); frente 1 (currículo + crachá) fechada, o resto é fix de design ou feature a decidir
 - [Auditoria visual das 16 telas](auditoria-visual-16-telas.md) — 60+ achados (08-09/10); em 15-16/10 fecharam o sticker do cartão (#122) e parte do contraste do claro (#123/#124), e o "ícone invisível" do ADM se provou falso
 - [Tabela cortada e o falso "pesado"](tabela-corte-e-o-falso-peso.md) — o corte da coluna de ações (fix #119) e a medição que não achou lentidão nenhuma; a porta 3000 desta máquina é de outro projeto
+- [Visão geral escolar](visao-geral-escolar.md) — a home "Visão geral" virou a porta do CRM (20/10), e vitrine/turma ganharam cabeçalho e métricas; cursos/aulas/calendário ainda não têm dado
 - [O peso das imagens (Giphy)](peso-das-imagens-stickers.md) — o "pesado" de 16/10 era real: GIFs do Giphy no original a 44px (5,9MB no modal); por que o Resource Timing não mostrava, e o fix da rendição #126
 - [notFound() devolve 200](notfound-devolve-200.md) — sistêmico no Next 16.3.5 (página dinâmica), pré-existente, não é o loading nem o proxy; impacto baixo porque os perfis são noindex
 - [Seed demo 025 e links sociais](seed-demo-025-e-links-sociais.md) — a demo de 19/10 em 3 PRs: seed, turma com acento que dava 404 (`params` chega encoded) e polimento ao vivo; limpeza dos `demo-*` e 7 achados menores seguem em aberto
