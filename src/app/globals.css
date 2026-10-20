@@ -72,3 +72,6 @@
 /* A aba Tabelas & Alunos: filtros + estilo flat pedido pelo Théo — escopado
    em .aba-tabelas, nenhum pixel fora da aba. FIM da cascata. */
 @import "./styles/tabelas-2026.css";
+/* A home "Visão geral": dashboard escolar do aluno, na mesma direção flat da
+   aba Tabelas. Seletor novo (.vg-*), escopado em .visao-geral. FIM da cascata. */
+@import "./styles/visao-geral-2026.css";

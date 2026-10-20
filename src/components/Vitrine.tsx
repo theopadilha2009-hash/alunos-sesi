@@ -6,6 +6,13 @@ import { Avatar } from "@/components/Avatar";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
+import {
+  IconeEstrela,
+  IconeLink,
+  IconeProjetos,
+  IconeSala,
+  IconeUsuario,
+} from "@/components/Icones";
 import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
@@ -223,35 +230,75 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
     <>
       {/* Retrato / Métricas da Turma com Progresso Visual */}
       <section className="retrato" aria-label="Retrato da turma">
-        <div className="numero card-metrica">
+        <div
+          className="numero card-metrica"
+          style={{ ["--tom-metrica" as string]: "var(--accent)" }}
+        >
+          <div className="card-metrica-topo">
+            <div className="card-metrica-icone" aria-hidden="true">
+              <IconeUsuario tamanho={15} />
+            </div>
+            <span>alunos na rede</span>
+          </div>
           <b><NumeroAnimado valor={total} /></b>
-          <span>alunos na rede</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--accent)" }} />
         </div>
-        <div className="numero card-metrica">
+        <div
+          className="numero card-metrica"
+          style={{ ["--tom-metrica" as string]: "var(--verde)" }}
+        >
+          <div className="card-metrica-topo">
+            <div className="card-metrica-icone" aria-hidden="true">
+              <IconeSala tamanho={15} />
+            </div>
+            <span>salas ativas</span>
+          </div>
           <b><NumeroAnimado valor={salasComAlunos} /></b>
-          <span>salas ativas</span>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--verde)" }} />
         </div>
-        <div className="numero card-metrica">
+        <div
+          className="numero card-metrica"
+          style={{ ["--tom-metrica" as string]: "var(--azul-claro)" }}
+        >
+          <div className="card-metrica-topo">
+            <div className="card-metrica-icone" aria-hidden="true">
+              <IconeLink tamanho={15} />
+            </div>
+            <span>com LinkedIn</span>
+          </div>
           <b><NumeroAnimado valor={percentual(comLinkedin)} />%</b>
-          <span>com LinkedIn</span>
           <div
             className="metrica-barra"
             style={{ width: `${percentual(comLinkedin)}%`, background: "var(--azul-claro)" }}
           />
         </div>
-        <div className="numero card-metrica">
+        <div
+          className="numero card-metrica"
+          style={{ ["--tom-metrica" as string]: "var(--amarelo)" }}
+        >
+          <div className="card-metrica-topo">
+            <div className="card-metrica-icone" aria-hidden="true">
+              <IconeProjetos tamanho={15} />
+            </div>
+            <span>com GitHub</span>
+          </div>
           <b><NumeroAnimado valor={percentual(comGithub)} />%</b>
-          <span>com GitHub</span>
           <div
             className="metrica-barra"
             style={{ width: `${percentual(comGithub)}%`, background: "var(--amarelo)" }}
           />
         </div>
-        <div className="numero card-metrica">
-          <b>★ <NumeroAnimado valor={totalEstrelas} /></b>
-          <span>estrelas trocadas</span>
+        <div
+          className="numero card-metrica"
+          style={{ ["--tom-metrica" as string]: "var(--amarelo)" }}
+        >
+          <div className="card-metrica-topo">
+            <div className="card-metrica-icone" aria-hidden="true">
+              <IconeEstrela tamanho={15} />
+            </div>
+            <span>estrelas trocadas</span>
+          </div>
+          <b><NumeroAnimado valor={totalEstrelas} /></b>
           <div className="metrica-barra" style={{ width: "100%", background: "var(--amarelo)" }} />
         </div>
       </section>

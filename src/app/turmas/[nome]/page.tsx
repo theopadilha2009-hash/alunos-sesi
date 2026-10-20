@@ -4,6 +4,13 @@ import type { Metadata } from "next";
 import { Avatar } from "@/components/Avatar";
 import { BadgeDestaque, BadgeFixado } from "@/components/CargosBadges";
 import { Rodape, Topo, Vazio } from "@/components/ds";
+import {
+  IconeEstrela,
+  IconeLink,
+  IconeSparkles,
+  IconeUsuario,
+} from "@/components/Icones";
+import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { chaveDaSala, corDaSala, corDoAluno, decodificarSegmento } from "@/lib/cores";
 import { listarAlunos, listarSalas } from "@/lib/dados";
 import { corHabilidade } from "@/lib/habilidades";
@@ -69,35 +76,108 @@ export default async function TurmaPage({ params }: Props) {
   if (!sala) notFound();
 
   const cor = corDaSala(sala.nome);
+  const totalEstrelas = alunos.reduce((soma, a) => soma + (a.estrelas || 0), 0);
+  const competencias = new Set(
+    alunos.flatMap((a) => a.habilidades ?? []),
+  ).size;
+  const comLinkedin = alunos.filter((a) => a.linkedin).length;
+  const pctLinkedin = alunos.length
+    ? Math.round((100 * comLinkedin) / alunos.length)
+    : 0;
 
     return (
       <>
         <Topo voltar={{ href: "/alunos", texto: "← A turma" }} />
         <main className="wrap" style={{ paddingBlock: "1.5rem" }}>
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3rem)",
-              letterSpacing: "-0.04em",
-              marginBottom: "0.25rem",
-            }}
-          >
-            <span
-              aria-hidden="true"
-              style={{
-                display: "inline-block",
-                width: "0.6em",
-                height: "0.6em",
-                borderRadius: "50%",
-                background: cor,
-              }}
-            />{" "}
-            {sala.nome}
-          </h1>
-          <p style={{ color: "var(--dim)", marginBottom: "1.5rem" }}>
-            {alunos.length === 1
-              ? "1 aluno nesta turma."
-              : `${alunos.length} alunos nesta turma, em ordem de estrelas.`}
-          </p>
+          <header className="escola-topo">
+            <p className="eyebrow">Escola SESI SENAI · Joinville</p>
+            <h1 className="escola-titulo">
+              <span
+                aria-hidden="true"
+                style={{
+                  display: "inline-block",
+                  width: "0.6em",
+                  height: "0.6em",
+                  borderRadius: "50%",
+                  background: cor,
+                }}
+              />{" "}
+              {sala.nome}
+            </h1>
+            <p className="escola-sub">
+              {sala.curso ?? "Curso não informado"}
+              {sala.turno ? ` · ${sala.turno}` : ""} ·{" "}
+              {alunos.length === 1 ? "1 aluno" : `${alunos.length} alunos`}, em
+              ordem de estrelas.
+            </p>
+          </header>
+
+          <section className="retrato" aria-label="Números da turma">
+            <div
+              className="numero card-metrica"
+              style={{ ["--tom-metrica" as string]: "var(--accent)" }}
+            >
+              <div className="card-metrica-topo">
+                <div className="card-metrica-icone" aria-hidden="true">
+                  <IconeUsuario tamanho={15} />
+                </div>
+                <span>alunos</span>
+              </div>
+              <b><NumeroAnimado valor={alunos.length} /></b>
+              <div
+                className="metrica-barra"
+                style={{ width: "100%", background: "var(--accent)" }}
+              />
+            </div>
+            <div
+              className="numero card-metrica"
+              style={{ ["--tom-metrica" as string]: "var(--amarelo)" }}
+            >
+              <div className="card-metrica-topo">
+                <div className="card-metrica-icone" aria-hidden="true">
+                  <IconeEstrela tamanho={15} />
+                </div>
+                <span>estrelas</span>
+              </div>
+              <b><NumeroAnimado valor={totalEstrelas} /></b>
+              <div
+                className="metrica-barra"
+                style={{ width: "100%", background: "var(--amarelo)" }}
+              />
+            </div>
+            <div
+              className="numero card-metrica"
+              style={{ ["--tom-metrica" as string]: "var(--azul-claro)" }}
+            >
+              <div className="card-metrica-topo">
+                <div className="card-metrica-icone" aria-hidden="true">
+                  <IconeSparkles tamanho={15} />
+                </div>
+                <span>competências</span>
+              </div>
+              <b><NumeroAnimado valor={competencias} /></b>
+              <div
+                className="metrica-barra"
+                style={{ width: "100%", background: "var(--azul-claro)" }}
+              />
+            </div>
+            <div
+              className="numero card-metrica"
+              style={{ ["--tom-metrica" as string]: "var(--verde)" }}
+            >
+              <div className="card-metrica-topo">
+                <div className="card-metrica-icone" aria-hidden="true">
+                  <IconeLink tamanho={15} />
+                </div>
+                <span>com LinkedIn</span>
+              </div>
+              <b><NumeroAnimado valor={pctLinkedin} />%</b>
+              <div
+                className="metrica-barra"
+                style={{ width: `${pctLinkedin}%`, background: "var(--verde)" }}
+              />
+            </div>
+          </section>
 
           {alunos.length === 0 ? (
             <Vazio titulo="Ninguém publicado nesta turma ainda.">
