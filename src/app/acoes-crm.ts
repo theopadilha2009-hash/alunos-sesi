@@ -9,6 +9,7 @@ import {
   criarTokenSessao,
   deslogarUsuario,
   obterSessao,
+  problemaDaSenha,
   registrarUsuario,
 } from "@/lib/auth";
 import { apoiarHabilidade, atualizarPerfilAluno, alunoIdDoUsuario, desafioAtivo, submeterDesafio } from "@/lib/dados";
@@ -34,6 +35,7 @@ import {
   urlSegura,
 } from "@/lib/seguranca";
 import { abrirAssinado, COOKIE_VISITANTE, opcoesCookie, TRINTA_DIAS } from "@/lib/sessao";
+import { normalizarUsername, validarUsername } from "@/lib/username";
 import { clienteAdmin } from "@/lib/supabase/admin";
 
 export type EstadoAcaoCrm = {
@@ -327,7 +329,7 @@ export async function salvarPerfilAction(
   }
 }
 
-/** Altera credenciais de segurança, senha e nome visual do usuário */
+/** Altera credenciais de segurança, login, senha e nome visual do usuário */
 export async function alterarSegurancaAction(
   _prev: EstadoAcaoCrm,
   formData: FormData,
@@ -340,8 +342,12 @@ export async function alterarSegurancaAction(
   const nome = sanitizarTexto(formData.get("nome"), 100);
   const emailBruto = String(formData.get("email") ?? "").trim();
   const email = sanitizarEmail(formData.get("email"));
+  const senhaAtual = String(formData.get("senhaAtual") ?? "").trim();
   const novaSenha = String(formData.get("novaSenha") ?? "").trim();
   const confirmarSenha = String(formData.get("confirmarSenha") ?? "").trim();
+  const novoUsername = normalizarUsername(String(formData.get("novoUsername") ?? ""));
+  const mudancaLogin = Boolean(novoUsername) && novoUsername !== sessao.username;
+  const mudancaSenha = Boolean(novaSenha);
 
   // Ausente/vazio é remoção deliberada; preenchido e inválido é erro. Sem esta
   // separação, um caractere fora do permitido apagava o endereço em silêncio.
@@ -349,34 +355,24 @@ export async function alterarSegurancaAction(
     return { ok: false, mensagem: `O e-mail precisa terminar em @${DOMINIO_EMAIL_ESCOLA} e usar só letras, números, ponto, hífen e _ antes do @.` };
   }
 
+  if (!mudancaLogin && !mudancaSenha) {
+    return { ok: false, mensagem: "Altere o login ou a senha para salvar." };
+  }
+
   const db = clienteAdmin();
   const mudancas: string[] = [];
 
-  // 1. Atualização de Senha
-  if (novaSenha) {
-    const senhaAtual = String(formData.get("senhaAtual") ?? "").trim();
-
-    // Sem este limite, exigir a senha atual vira um oráculo de força bruta
-    // para quem já tem o cookie de sessão.
+  // 1. Credenciais (login e/ou senha). As duas exigem a senha atual: sem este
+  // limite, quem já tem o cookie de sessão poderia trocar o login de alguém
+  // que deixou a aba aberta. O rate limit é o mesmo da troca de senha.
+  {
     const limit = await limitar(`senha:${sessao.id}`, 5, 5 * 60 * 1000, 15 * 60 * 1000);
     if (!limit.permitido) {
-      return { ok: false, mensagem: "Muitas tentativas de troca de senha. Aguarde alguns minutos." };
+      return { ok: false, mensagem: "Muitas tentativas de troca de credenciais. Aguarde alguns minutos." };
     }
 
     if (!senhaAtual) {
-      return { ok: false, mensagem: "Informe a sua senha atual para definir uma nova." };
-    }
-    if (novaSenha.length < 8) {
-      return { ok: false, mensagem: "A nova senha deve ter no mínimo 8 caracteres." };
-    }
-    if (novaSenha !== confirmarSenha) {
-      return { ok: false, mensagem: "A confirmação de senha não coincide com a nova senha digitada." };
-    }
-    if (novaSenha === senhaAtual) {
-      return { ok: false, mensagem: "A nova senha precisa ser diferente da atual." };
-    }
-    if (novaSenha.toLowerCase() === sessao.username.toLowerCase()) {
-      return { ok: false, mensagem: "A senha não pode ser igual ao nome de usuário." };
+      return { ok: false, mensagem: "Informe a sua senha atual para confirmar a alteração." };
     }
 
     const { data: conta } = await db
@@ -391,21 +387,70 @@ export async function alterarSegurancaAction(
 
     const confere = await verificarSenha(senhaAtual, conta.senha_hash);
     if (!confere.ok) {
-      logger.warn("AUTH", `Senha atual incorreta na troca de senha: ${sessao.username}`);
+      logger.warn("AUTH", `Senha atual incorreta na troca de credenciais: ${sessao.username}`);
       return { ok: false, mensagem: "Senha atual incorreta." };
     }
 
-    const { error: errSenha } = await db
-      .from("usuarios")
-      .update({ senha_hash: await hashSenha(novaSenha) })
-      .eq("id", sessao.id);
+    if (mudancaLogin) {
+      const problema = validarUsername(novoUsername);
+      if (problema) {
+        return { ok: false, mensagem: problema };
+      }
 
-    if (errSenha) {
-      logger.error("AUTH", "Erro ao atualizar senha no banco", errSenha);
-      return { ok: false, mensagem: "Erro ao salvar nova senha no banco de dados." };
+      const { data: colisao, error: erroBusca } = await db
+        .from("usuarios")
+        .select("id")
+        .eq("username", novoUsername)
+        .neq("id", sessao.id)
+        .maybeSingle();
+
+      if (erroBusca) {
+        logger.error("AUTH", `Erro ao checar login disponível: ${novoUsername}`, erroBusca);
+        return { ok: false, mensagem: "Não foi possível validar o login agora. Tente de novo." };
+      }
+      if (colisao) {
+        return { ok: false, mensagem: "Já existe uma conta com esse login." };
+      }
+
+      const { error: errLogin } = await db
+        .from("usuarios")
+        .update({ username: novoUsername })
+        .eq("id", sessao.id);
+
+      if (errLogin) {
+        logger.error("AUTH", "Erro ao atualizar login no banco", errLogin);
+        return { ok: false, mensagem: "Não foi possível alterar o login agora. Tente de novo." };
+      }
+      mudancas.push("login alterado");
     }
+
+    if (mudancaSenha) {
+      // A regra canônica (8–100 e diferente do login) mora em `lib/auth.ts`.
+      // Manter uma segunda cópia aqui já custou a divergência 4/8 no cadastro.
+      const problema = problemaDaSenha(novaSenha, novoUsername || sessao.username);
+      if (problema) {
+        return { ok: false, mensagem: problema };
+      }
+      if (novaSenha !== confirmarSenha) {
+        return { ok: false, mensagem: "A confirmação de senha não coincide com a nova senha digitada." };
+      }
+      if (novaSenha === senhaAtual) {
+        return { ok: false, mensagem: "A nova senha precisa ser diferente da atual." };
+      }
+
+      const { error: errSenha } = await db
+        .from("usuarios")
+        .update({ senha_hash: await hashSenha(novaSenha) })
+        .eq("id", sessao.id);
+
+      if (errSenha) {
+        logger.error("AUTH", "Erro ao atualizar senha no banco", errSenha);
+        return { ok: false, mensagem: "Erro ao salvar nova senha no banco de dados." };
+      }
+      mudancas.push("senha alterada");
+    }
+
     await limparLimite(`senha:${sessao.id}`);
-    mudancas.push("senha alterada com sucesso");
   }
 
   // 2. Atualização de Nome Visual e E-mail no Perfil
@@ -445,6 +490,7 @@ export async function alterarSegurancaAction(
   // 3. Atualização do Cookie de Sessão
   const novaSessao = {
     ...sessao,
+    username: mudancaLogin ? novoUsername : sessao.username,
     nome: nome && nome.length >= 2 ? nome : sessao.nome,
     email: email || sessao.email,
   };

@@ -71,7 +71,7 @@ export async function obterSessao(): Promise<UsuarioSessao | null> {
  * cadastro aceitava 4 enquanto a troca exigia 8), e quem se cadastrou com senha
  * curta não conseguia nem repetir o próprio padrão depois.
  */
-function problemaDaSenha(senha: string, username: string): string | null {
+export function problemaDaSenha(senha: string, username: string): string | null {
   if (senha.length < 8 || senha.length > 100) {
     return "A senha deve ter entre 8 e 100 caracteres.";
   }
