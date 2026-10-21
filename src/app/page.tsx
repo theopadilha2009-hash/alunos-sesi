@@ -38,6 +38,7 @@ export default async function PaginaPrincipal() {
   if (!sessao) {
     return (
       <div
+        className="login-landing"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 26rem), 1fr))",
@@ -54,6 +55,7 @@ export default async function PaginaPrincipal() {
           <Roseta tamanho={56} />
           <h1
             style={{
+              color: "var(--text)",
               fontSize: "clamp(2.2rem, 6vw, 3.5rem)",
               lineHeight: 1.05,
               letterSpacing: "-0.04em",

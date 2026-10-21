@@ -13,7 +13,6 @@ import { ModalPerfilBreve } from "@/components/crm/ModalPerfilBreve";
 import { PainelTabelaAlunos } from "@/components/PainelTabelaAlunos";
 import {
   IconeCards,
-  IconeCasa,
   IconeCracha,
   IconeEditar,
   IconeEscudo,
@@ -475,15 +474,15 @@ export function CrmApp({
       <aside className="crm-sidebar">
         {/* Topo da Sidebar: Marca & Workspace */}
         <div className="sidebar-topo">
-          {/* "logo → home" (p4 do PDF). A home do CRM é o Portfólio — a raiz
+          {/* "logo → home" (p4 do PDF). A home do CRM é a Visão geral — a raiz
               `/` é o login, então apontar para lá seria logout disfarçado. Na
               vitrine a marca já é link (`/alunos`); aqui ela era um `<div>`
               morto, e o clique não fazia nada. */}
           <button
             type="button"
             className="sidebar-marca"
-            onClick={() => setAba("portfolio")}
-            title="Ir para o Portfólio"
+            onClick={() => setAba("inicio")}
+            title="Ir para a Visão geral"
           >
             <Roseta tamanho={28} />
             <div>
@@ -507,17 +506,6 @@ export function CrmApp({
         <nav className="sidebar-nav">
           <button
             type="button"
-            className={`nav-item ${aba === "inicio" ? "nav-item-ativo" : ""}`}
-            onClick={() => setAba("inicio")}
-          >
-            <span className="nav-icone">
-              <IconeCasa tamanho={18} />
-            </span>
-            <span className="nav-label">Visão geral</span>
-          </button>
-
-          <button
-            type="button"
             className={`nav-item ${aba === "portfolio" ? "nav-item-ativo" : ""}`}
             onClick={() => setAba("portfolio")}
           >
@@ -526,6 +514,17 @@ export function CrmApp({
             </span>
             <span className="nav-label">Portfólio</span>
             <span className="nav-badge">{naTela.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-item ${aba === "tabelas" ? "nav-item-ativo" : ""}`}
+            onClick={() => setAba("tabelas")}
+          >
+            <span className="nav-icone">
+              <IconeTabela tamanho={18} />
+            </span>
+            <span className="nav-label">Tabelas & Alunos</span>
           </button>
 
           <button
@@ -552,17 +551,6 @@ export function CrmApp({
             <span className="nav-badge">{desafios.length}</span>
           </button>
 
-          <button
-            type="button"
-            className={`nav-item ${aba === "tabelas" ? "nav-item-ativo" : ""}`}
-            onClick={() => setAba("tabelas")}
-          >
-            <span className="nav-icone">
-              <IconeTabela tamanho={18} />
-            </span>
-            <span className="nav-label">Tabelas & Alunos</span>
-          </button>
-
           {/* "Meu Perfil" NÃO é item de navegação: ele abre como janela (p5 do
               PDF), pelo card do usuário no rodapé da sidebar ou pelo botão do
               header. Como aba, o editor denso dividia a tela com a moldura do
@@ -573,8 +561,8 @@ export function CrmApp({
               "Em construção". Fica aqui, e não escondida atrás de um link, para
               ser alcançável e — mais importante — para ter volta: a tela abre
               com o botão de retorno ao Portfólio, que é o "não um limbo
-              aleatório" pedido. Sem badge: o selo "Em breve" era do espaço
-              reservado; agora a tela tem conteúdo. */}
+              aleatório" pedido. O selo "Em breve" é curto de propósito: a
+              capa existe, mas as modalidades e datas ainda não. */}
           <button
             type="button"
             className={`nav-item ${aba === "olisesi" ? "nav-item-ativo" : ""}`}
@@ -584,6 +572,7 @@ export function CrmApp({
               <IconeTrofeu tamanho={18} />
             </span>
             <span className="nav-label">Olimpíadas SESI</span>
+            <span className="nav-badge nav-badge-em-breve">Em breve</span>
           </button>
 
           {ehSuperAdm ? (
@@ -623,8 +612,8 @@ export function CrmApp({
         <div className="sidebar-rodape">
           <div
             className="card-usuario-logado"
-            onClick={() => setPerfilAberto(true)}
-            title="Acessar meu perfil e editor completo"
+            onClick={() => setAba("inicio")}
+            title="Abrir a Visão geral"
           >
             {meuAlunoNaTela?.banner_url ? (
               <div
@@ -809,7 +798,7 @@ export function CrmApp({
 
         {/* ── ABA 1: PORTFÓLIO (Aba Principal) ──────────────────────────── */}
         {aba === "portfolio" ? (
-          <div className="crm-secao-conteudo">
+          <div className="crm-secao-conteudo crm-secao-compacta">
             {/* Controles de Busca e Filtro de Salas */}
             <div className="controles">
               <label className="busca-campo" style={{ flex: "1 1 18rem" }}>
@@ -1093,7 +1082,7 @@ export function CrmApp({
 
         {/* ── ABA 2: PROJETOS & CRIAÇÕES DA ESCOLA ─────────────────────── */}
         {aba === "projetos" ? (
-          <div className="crm-secao-conteudo">
+          <div className="crm-secao-conteudo crm-secao-compacta">
             <div className="projetos-intro-banner">
               <h2>Mural de Projetos & Inovações dos Estudantes</h2>
               <p>

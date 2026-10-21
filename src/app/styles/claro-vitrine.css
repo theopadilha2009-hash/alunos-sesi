@@ -200,13 +200,6 @@
   color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
 }
 
-/* src: vitrine.css:1066 — .hall-medalha (eyebrow OURO/PRATA/BRONZE do Hall)
-   src: vitrine.css:1110 — .hall-estrelas (contador do pódio)
-   Os dois sentem sobre --surface-2 do claro: o mix acima fecha em 6,07:1. */
-:root[data-theme="light"] .hall-medalha,
-:root[data-theme="light"] .hall-estrelas {
-  color: color-mix(in srgb, var(--amarelo) 42%, var(--text));
-}
 
 /* src: vitrine-moderno.css:540-541 — .botao-estrela-grande
    Botão inteiro: a borda é o desenho do botão, acompanha. */
@@ -268,11 +261,7 @@
      fonte, com valores medidos (vitrine.css:419-434: #fef3e2/#92400e e
      #e2f7f0/#065f46, 6,46:1 e 6,88:1). Repisar aqui seria segunda fonte de
      verdade do mesmo selo.
-   . .podio-prata e .podio-bronze (vitrine.css:1054, 1058): prata #95a5a6 e
-     bronze #d35400 são tintas de medalha mixadas a 50/40% com --line, que é
-     o token que vira no claro. O mix acompanha a tinta do tema nas duas
-     luzes; a borda fica legível sobre o --surface-2.
-   . .capa-card-preview (vitrine-moderno.css:257): a sombra preta 0.85 da ilha
+      . .capa-card-preview (vitrine-moderno.css:257): a sombra preta 0.85 da ilha
      fica com ela — sobre fundo escuro é a elevação correta, e o showcase faz
      igual dentro de ilha (sistema-b.css:1387-1388). A sombra do .cmd-container
      (vitrine-moderno.css:8), essa sim, foi tratada na seção 2.

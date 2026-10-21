@@ -15,7 +15,12 @@
    pinta `.login-card` no claro.
    ========================================================================== */
 
-:root[data-theme="light"] .login-tela-container {
+/* A landing é a MESMA ilha: a coluna esquerda (título, texto e o botão "Ver a
+   turma") mora fora do `.login-tela-container`, e sem estes tokens o h1 herdava
+   o `--text` do claro sobre o body escuro — 1,09:1, medido. O pin no wrapper
+   cobre a coluna inteira sem duplicar o fundo do body. */
+:root[data-theme="light"] .login-tela-container,
+:root[data-theme="light"] .login-landing {
   --bg: #090d12;
   --surface: #10161f;
   --surface-2: #16202c;
