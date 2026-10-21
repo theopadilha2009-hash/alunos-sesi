@@ -112,12 +112,17 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
     ok: false,
   });
 
-  // Senha trocada: limpa os campos para o formulário não reenviar o valor antigo.
+  // Credenciais trocadas: limpa as senhas e adota o login que o servidor
+  // devolveu no cookie novo. Sem isso o campo reenviaria o valor antigo.
   useEffect(() => {
     if (estadoSeguranca.ok) {
       setSenhaAtual("");
       setNovaSenha("");
       setConfirmarSenha("");
+      const atualizado = (
+        estadoSeguranca.usuario as { username?: string } | undefined
+      )?.username;
+      if (atualizado) setNovoUsername(atualizado);
     }
   }, [estadoSeguranca]);
   const [abaAtiva, setAbaAtiva] = useState<
@@ -162,6 +167,12 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [novoUsername, setNovoUsername] = useState(usuario.username);
+  const usernameExibido =
+    (estadoSeguranca.usuario as { username?: string } | undefined)?.username ??
+    usuario.username;
+  const loginAlterado =
+    novoUsername.trim().toLowerCase() !== usuario.username.toLowerCase();
   const [bio, setBio] = useState(alunoAtual?.bio ?? "");
   const [linkedin, setLinkedin] = useState(alunoAtual?.linkedin ?? "");
   const [github, setGithub] = useState(alunoAtual?.github ?? "");
@@ -1202,7 +1213,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
 
             <div className="hero-banner-meta-linha">
               <span className="meta-item">
-                <IconeUsuario tamanho={14} /> @{usuario.username}
+                <IconeUsuario tamanho={14} /> {usernameExibido}
               </span>
               <span className="meta-item">
                 <IconeEstrela preenchida tamanho={14} /> {alunoAtual?.estrelas ?? 0} estrelas recebidas
@@ -2488,14 +2499,34 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               </div>
             </div>
 
-            {/* Card 2: Alteração de Senha Segura */}
+            {/* Card 2: Login e senha */}
             <div className="painel-card">
               <header className="painel-card-topo">
-                <h3>Alterar Senha de Acesso</h3>
-                <p>Confirme a senha atual e defina uma nova com pelo menos 8 caracteres</p>
+                <h3>Login e Senha de Acesso</h3>
+                <p>
+                  Troque o nome de usuário e/ou a senha. As duas alterações pedem
+                  a senha atual.
+                </p>
               </header>
 
               <div className="formulario-corpo">
+                <label className="campo-form">
+                  <span className="label-texto">Nome de Usuário (Login)</span>
+                  <input
+                    type="text"
+                    name="novoUsername"
+                    className="input-texto"
+                    value={novoUsername}
+                    onChange={(e) => setNovoUsername(e.target.value)}
+                    placeholder="Ex.: theo ou theo@estudante.sesisenai.org.br"
+                    autoComplete="username"
+                  />
+                  <span className="campo-dica">
+                    Letras, números e os sinais . _ - @; o e-mail da escola
+                    também vale.
+                  </span>
+                </label>
+
                 <label className="campo-form">
                   <span className="label-texto">Senha Atual</span>
                   <input
@@ -2541,14 +2572,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                     ⚠ A confirmação de senha não coincide com a nova senha digitada.
                   </span>
                 ) : null}
-                {novaSenha && novaSenha.length < 8 ? (
+                {novaSenha && (novaSenha.length < 8 || novaSenha.length > 100) ? (
                   <span className="aviso-senha-invalida" style={{ color: "var(--vermelho)", fontSize: "0.82rem", fontWeight: 700 }}>
-                    ⚠ A nova senha precisa ter pelo menos 8 caracteres.
+                    ⚠ A nova senha precisa ter entre 8 e 100 caracteres.
                   </span>
                 ) : null}
-                {novaSenha && !senhaAtual ? (
+                {(novaSenha || loginAlterado) && !senhaAtual ? (
                   <span className="aviso-senha-invalida" style={{ color: "var(--amarelo)", fontSize: "0.82rem", fontWeight: 700 }}>
-                    ⚠ Informe a senha atual para confirmar a troca.
+                    ⚠ Informe a senha atual para confirmar a alteração.
                   </span>
                 ) : null}
 
@@ -2570,14 +2601,14 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                   className="botao botao-primario"
                   formAction={acaoSeguranca}
                   // O `onSubmit` do form roda para este botão também. Sem a
-                  // marca, trocar a senha passaria pela validação do perfil e
-                  // uma mensagem sobre o nome barrava uma troca que não tem
+                  // marca, trocar credenciais passaria pela validação do perfil
+                  // e uma mensagem sobre o nome barrava uma troca que não tem
                   // nada a ver com o nome.
                   data-acao="senha"
-                  disabled={alterandoSenha || !novaSenha}
+                  disabled={alterandoSenha || (!novaSenha && !loginAlterado)}
                 >
                   <IconeEscudo tamanho={16} />
-                  <span>{alterandoSenha ? "Alterando senha..." : "Alterar Senha"}</span>
+                  <span>{alterandoSenha ? "Salvando..." : "Salvar credenciais"}</span>
                 </button>
               </div>
             </div>
@@ -2591,10 +2622,6 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
 
               <div className="formulario-corpo">
                 <div className="info-bloco-seguranca">
-                  <div className="seguranca-item">
-                    <span className="seguranca-rotulo">Nome de Usuário (Login)</span>
-                    <span className="seguranca-dado">@{usuario.username}</span>
-                  </div>
                   <div className="seguranca-item">
                     <span className="seguranca-rotulo">Privilégio da Conta</span>
                     <span className="seguranca-dado">

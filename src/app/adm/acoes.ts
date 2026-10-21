@@ -22,9 +22,10 @@ import { parseLista, type ErroLinha } from "@/lib/importar";
 import { tomDaImportacao } from "@/lib/importacao";
 import { normalizarGithub, normalizarLinkedin } from "@/lib/links";
 import { alvoDaSala } from "@/lib/sala-do-aluno";
-import { SENHA_BLOQUEADA } from "@/lib/senha";
+import { hashSenha, SENHA_BLOQUEADA } from "@/lib/senha";
 import { sanitizarEmail, sanitizarTexto } from "@/lib/seguranca";
-import { obterSessao } from "@/lib/auth";
+import { obterSessao, problemaDaSenha } from "@/lib/auth";
+import { normalizarUsername, validarUsername } from "@/lib/username";
 import { COOKIE_ADM, crachaValido } from "@/lib/sessao";
 import { slugUnico } from "@/lib/slug";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -598,6 +599,126 @@ export async function resetarAcesso(
     mensagem: "",
     codigo: formatarCodigo(codigo),
     paraQuem: aluno.nome as string,
+  };
+}
+
+/**
+ * Define login e/ou senha de um aluno diretamente pelo painel.
+ *
+ * O caminho do código de ativação continua sendo a primeira entrada e o
+ * autoatendimento do aluno. Este aqui existe para o ADM resolver sem depender
+ * de o aluno resgatar o código — e é o que dá sentido ao bloco de credenciais.
+ *
+ * Duas regras não óbvias:
+ * - conta com `SENHA_BLOQUEADA` só sai do bloqueio com senha nova; definir só
+ *   o login deixaria a conta inacessível;
+ * - ao gravar senha, `codigo_hash`/`codigo_expira_em` são zerados NA MESMA
+ *   escrita. Sem isso, um código emitido antes continuaria válido e o resgate
+ *   sobrescreveria a senha que o ADM acabou de passar.
+ */
+export async function definirCredenciaisAction(
+  _estado: Estado,
+  formData: FormData,
+): Promise<Estado> {
+  if (!(await podeAdm())) return recusaAdm();
+
+  const alunoId = texto(formData, "alunoId");
+  if (!RE_UUID.test(alunoId)) {
+    return { ok: false, mensagem: "Aluno inválido." };
+  }
+
+  const novoUsername = normalizarUsername(texto(formData, "username"));
+  const novaSenha = texto(formData, "novaSenha");
+  const confirmarSenha = texto(formData, "confirmarSenha");
+
+  if (!novoUsername && !novaSenha) {
+    return { ok: false, mensagem: "Informe o novo login ou a nova senha." };
+  }
+  if (novaSenha && novaSenha !== confirmarSenha) {
+    return { ok: false, mensagem: "A confirmação de senha não coincide." };
+  }
+
+  const db = clienteAdmin();
+
+  const { data: aluno } = await db
+    .from("alunos")
+    .select("id,nome")
+    .eq("id", alunoId)
+    .maybeSingle();
+  if (!aluno) {
+    return { ok: false, mensagem: "Aluno não encontrado." };
+  }
+
+  const { data: conta } = await db
+    .from("usuarios")
+    .select("id,username,senha_hash")
+    .eq("aluno_id", alunoId)
+    .maybeSingle();
+
+  if (!conta) {
+    return {
+      ok: false,
+      mensagem: `${aluno.nome} ainda não tem conta — use o código de ativação.`,
+    };
+  }
+  if (conta.senha_hash === SENHA_BLOQUEADA && !novaSenha) {
+    return { ok: false, mensagem: "Defina uma senha para ativar a conta." };
+  }
+
+  if (novoUsername) {
+    const problema = validarUsername(novoUsername);
+    if (problema) {
+      return { ok: false, mensagem: problema };
+    }
+
+    const { data: colisao, error: erroBusca } = await db
+      .from("usuarios")
+      .select("id")
+      .eq("username", novoUsername)
+      .neq("id", conta.id)
+      .maybeSingle();
+
+    if (erroBusca) {
+      logger.error("ADM", `Erro ao checar login de ${aluno.nome}`, erroBusca);
+      return { ok: false, mensagem: "Não foi possível validar o login agora. Tente de novo." };
+    }
+    if (colisao) {
+      return { ok: false, mensagem: "Já existe uma conta com esse login." };
+    }
+  }
+
+  if (novaSenha) {
+    const problema = problemaDaSenha(novaSenha, novoUsername || conta.username);
+    if (problema) {
+      return { ok: false, mensagem: problema };
+    }
+  }
+
+  const update: Record<string, string | null> = {};
+  if (novoUsername) update.username = novoUsername;
+  if (novaSenha) {
+    update.senha_hash = await hashSenha(novaSenha);
+    update.codigo_hash = null;
+    update.codigo_expira_em = null;
+  }
+
+  const { error } = await db.from("usuarios").update(update).eq("id", conta.id);
+  if (error) {
+    logger.error("ADM", `Falha ao definir credenciais de ${aluno.nome}`, error);
+    return { ok: false, mensagem: "Não foi possível salvar as credenciais agora. Tente de novo." };
+  }
+
+  logger.info(
+    "ADM",
+    `Credenciais de ${aluno.nome} atualizadas${novaSenha ? " com senha nova" : ""}`,
+  );
+  revalidar();
+
+  return {
+    ok: true,
+    mensagem: novaSenha
+      ? `Credenciais atualizadas. Passe o login ${novoUsername || conta.username} e a senha nova ao aluno.`
+      : `Login atualizado para ${novoUsername}.`,
   };
 }
 

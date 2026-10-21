@@ -14,6 +14,7 @@ import {
   resetarAcesso,
 } from "@/app/adm/acoes";
 import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL } from "@/app/adm/estado";
+import { ModalCredenciais } from "@/components/crm/ModalCredenciais";
 import { NumeroAnimado } from "@/components/NumeroAnimado";
 import {
   IconeCheck,
@@ -93,6 +94,8 @@ export function PainelAdmIntegrado({
   const [lacuna, setLacuna] = useState<Lacuna | null>(null);
   /** A linha com a edição de nome/e-mail aberta — uma por vez. */
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  // Aluno cujas credenciais o ADM está definindo no modal.
+  const [alunoCredenciais, setAlunoCredenciais] = useState<AlunoNaTela | null>(null);
 
   // Unifica turmas oficiais padronizadas com turmas já salvas no banco
   const opcoesTurmas = useMemo(() => {
@@ -591,6 +594,16 @@ export function PainelAdmIntegrado({
                             title="Editar nome e e-mail"
                           >
                             <IconeEditar tamanho={14} />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn-acao-tabela"
+                            onClick={() => setAlunoCredenciais(a)}
+                            title="Definir login e senha"
+                            aria-label={`Definir login e senha de ${a.nome}`}
+                          >
+                            <IconeUsuario tamanho={14} />
                           </button>
 
                           {/* Só para quem ainda não tem login. Emitir código de
@@ -1136,6 +1149,13 @@ export function PainelAdmIntegrado({
           </details>
         </section>
       </div>
+
+      {alunoCredenciais ? (
+        <ModalCredenciais
+          aluno={alunoCredenciais}
+          onFechar={() => setAlunoCredenciais(null)}
+        />
+      ) : null}
     </div>
   );
 }
