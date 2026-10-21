@@ -37,20 +37,26 @@ export function TabelaAlunos({
 
   return (
     <div className="tabela-container">
-      <table className="tabela-alunos">
+      <table className="tabela-alunos tabela-alunos-redes">
+        <colgroup>
+          <col className="col-aluno" />
+          <col className="col-redes" />
+          <col className="col-hab" />
+          {!ocultarColunaSala ? <col className="col-sala" /> : null}
+          <col className="col-estrelas" />
+          <col className="col-acoes" />
+        </colgroup>
         <thead>
           <tr>
             <th scope="col">Aluno</th>
-            {!ocultarColunaSala ? <th scope="col">Sala</th> : null}
-            <th scope="col">Habilidades & Foco</th>
-            {/* "Redes" e não "Redes Profissionais (LinkedIn / GitHub)": o rótulo
-                longo forçava 256px só de cabeçalho e empurrava a coluna de
-                ações (Crachá & Perfil) para fora da tela — medido: 265px de
-                corte em 1440px. Os ícones de LinkedIn/GitHub já dizem de que
-                rede se trata. O `title` preserva o texto completo. */}
-            <th scope="col" title="Redes Profissionais (LinkedIn / GitHub)">
+            {/* "Redes" e não o rótulo longo: o título completo fica no `title`.
+                A coluna sobe para a segunda posição porque o reconhecimento
+                profissional é o foco da tabela. */}
+            <th scope="col" title="Redes Profissionais (LinkedIn / GitHub / Instagram)">
               Redes
             </th>
+            <th scope="col">Habilidades & Foco</th>
+            {!ocultarColunaSala ? <th scope="col">Sala</th> : null}
             <th scope="col" style={{ textAlign: "right" }}>
               Estrelas
             </th>
@@ -120,12 +126,43 @@ export function TabelaAlunos({
                   </div>
                 </td>
 
+                {/* Redes Sociais com badges destacados oficiais do LinkedIn, GitHub e Instagram */}
+                <td>
+                  <GrupoRedes
+                    linkedin={aluno.linkedin}
+                    github={aluno.github}
+                    instagram={aluno.instagram}
+                    nomeAluno={aluno.nome}
+                  />
+                </td>
+
+                <td>
+                  {aluno.habilidades && aluno.habilidades.length > 0 ? (
+                    <div className="tabela-habilidades-clean">
+                      <span className="tag-habilidade-clean">
+                        {aluno.habilidades[0]}
+                      </span>
+                      {aluno.habilidades.length > 1 ? (
+                        <span
+                          className="tabela-mais-hab"
+                          title={aluno.habilidades.slice(1).join(", ")}
+                        >
+                          +{aluno.habilidades.length - 1}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="tabela-sem-dado">Geral</span>
+                  )}
+                </td>
+
                 {!ocultarColunaSala ? (
                   <td>
                     {aluno.sala ? (
                       <span
                         className="badge-sala-tabela"
                         style={{ ["--sala-cor" as string]: aluno.corSala }}
+                        title={aluno.sala}
                       >
                         <span className="ponto-sala" style={{ background: aluno.corSala }} />
                         <span>{aluno.sala}</span>
@@ -135,30 +172,6 @@ export function TabelaAlunos({
                     )}
                   </td>
                 ) : null}
-
-                <td>
-                  {aluno.habilidades && aluno.habilidades.length > 0 ? (
-                    <div className="tabela-habilidades-clean">
-                      {aluno.habilidades.slice(0, 2).map((hab) => (
-                        <span key={hab} className="tag-habilidade-clean">
-                          {hab}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="tabela-sem-dado">Geral</span>
-                  )}
-                </td>
-
-                {/* Redes Sociais com badges destacados oficiais do LinkedIn e GitHub */}
-                <td>
-                  <GrupoRedes
-                    linkedin={aluno.linkedin}
-                    github={aluno.github}
-                    instagram={aluno.instagram}
-                    nomeAluno={aluno.nome}
-                  />
-                </td>
 
                 <td style={{ textAlign: "right" }}>
                   {/* O motivo do bloqueio mora no `<span>`, não no botão: o Chrome

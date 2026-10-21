@@ -2276,13 +2276,13 @@ body:has(.login-tela-container) {
 /* As duas colunas de ação são estreitas por natureza (estrela e dois botões
    curtos): travar a largura delas devolve o último fio de espaço para a
    coluna Aluno e fecha os ~14px que faltavam. */
-.tabela-alunos th:nth-child(5),
-.tabela-alunos td:nth-child(5) {
+.tabela-alunos:not(.tabela-alunos-redes) th:nth-child(5),
+.tabela-alunos:not(.tabela-alunos-redes) td:nth-child(5) {
   width: 5.5rem;
 }
 
-.tabela-alunos th:nth-child(6),
-.tabela-alunos td:nth-child(6) {
+.tabela-alunos:not(.tabela-alunos-redes) th:nth-child(6),
+.tabela-alunos:not(.tabela-alunos-redes) td:nth-child(6) {
   width: 9rem;
 }
 
@@ -4440,5 +4440,97 @@ body:has(.login-tela-container) {
 
 .crm-secao-compacta .grade-portfolio {
   margin-bottom: 0;
+}
+
+/* ── Tabela com redes profissionais em destaque ───────────────────────────
+   A ordem passou a ser Aluno → Redes → Habilidades → Sala → Estrelas →
+   Ações. O `colgroup` + larguras fixas dão à coluna Redes o espaço que os
+   rótulos precisam sem empurrar as ações para fora. A classe é exclusiva
+   desta tabela: o painel do ADM usa `.tabela-alunos` puro e continua com as
+   larguras por `nth-child`. */
+.tabela-alunos-redes {
+  min-width: 1000px;
+  table-layout: fixed;
+}
+
+.tabela-alunos-redes .col-aluno {
+  width: 24%;
+}
+
+.tabela-alunos-redes .col-redes {
+  width: 34%;
+}
+
+.tabela-alunos-redes .col-hab {
+  width: 12%;
+}
+
+.tabela-alunos-redes .col-sala {
+  width: 7%;
+}
+
+.tabela-alunos-redes .col-estrelas {
+  width: 7%;
+}
+
+.tabela-alunos-redes .col-acoes {
+  width: 16%;
+}
+
+.tabela-alunos-redes .badge-rede {
+  padding: 0.4rem 0.6rem;
+  gap: 0.35rem;
+}
+
+.tabela-alunos-redes .badge-rede .badge-rede-texto {
+  display: inline;
+  max-width: 8.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabela-alunos-redes .grupo-redes-destacadas {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* O teto antigo da coluna Aluno existia para a célula não engolir o espaço
+   livre da tabela. Com largura de coluna fixa, ele só desperdiça o track. */
+.tabela-alunos-redes .tabela-aluno-celula {
+  max-width: none;
+}
+
+.tabela-alunos-redes .badge-sala-tabela {
+  max-width: 100%;
+  padding: 0.22rem 0.45rem;
+  font-size: 0.72rem;
+}
+
+.tabela-alunos-redes .badge-sala-tabela > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabela-alunos-redes .tag-habilidade-clean {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabela-mais-hab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--dim);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
