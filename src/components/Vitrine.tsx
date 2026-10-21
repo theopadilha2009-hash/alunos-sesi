@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Avatar } from "@/components/Avatar";
 import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
@@ -126,12 +125,6 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
       .filter(([_, count]) => count > 0)
       .sort((a, b) => b[1] - a[1])
       .map(([nome, count]) => ({ nome, count }));
-  }, [naTela]);
-
-  // Top 3 Hall da Fama (Alunos mais estrelados)
-  const hallDaFama = useMemo(() => {
-    const comEstrelas = naTela.filter((a) => a.estrelas > 0);
-    return [...comEstrelas].sort((a, b) => b.estrelas - a.estrelas).slice(0, 3);
   }, [naTela]);
 
   const salasRanqueadas = useMemo(() => rankingSalas(retrato), [retrato]);
@@ -336,59 +329,6 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
               </Link>
             ))}
         </div>
-      ) : null}
-
-      {/* Hall da Fama / Destaques da Turma (se houver alunos estrelados) */}
-      {hallDaFama.length > 0 && query === "" && sala === TODAS ? (
-        <section className="hall-da-fama" aria-label="Hall da Fama">
-          <div className="hall-cabecalho">
-            <span className="eyebrow">Destaques da Turma</span>
-            <h2>🏆 Hall da Fama</h2>
-            <p className="hall-sub">
-              Os alunos que mais receberam estrelas e reconhecimento dos colegas.
-            </p>
-          </div>
-
-          <div className="hall-podio">
-            {hallDaFama.map((aluno, idx) => {
-              const medalha = idx === 0 ? "🥇 1º Lugar" : idx === 1 ? "🥈 2º Lugar" : "🥉 3º Lugar";
-              const classeMedalha = idx === 0 ? "podio-ouro" : idx === 1 ? "podio-prata" : "podio-bronze";
-
-              return (
-                <div
-                  key={aluno.id}
-                  className={`hall-card ${classeMedalha}`}
-                  style={{ ["--sala" as string]: aluno.cor }}
-                >
-                  <span className="hall-medalha">{medalha}</span>
-                  <div className="hall-avatar-wrap">
-                    <Avatar
-                      nome={aluno.nome}
-                      foto={aluno.foto_url}
-                      className="hall-avatar"
-                    />
-                  </div>
-                  <h3 className="hall-nome">{aluno.nome}</h3>
-                  {aluno.sala ? (
-                    <span className="hall-sala" style={{ ["--sala-cor" as string]: aluno.corSala }}>
-                      {aluno.sala}
-                    </span>
-                  ) : null}
-                  <div className="hall-pes">
-                    <span className="hall-estrelas">★ {aluno.estrelas} estrelas</span>
-                    <button
-                      type="button"
-                      className="mini botao-cracha-acao"
-                      onClick={() => setAlunoCracha(aluno)}
-                    >
-                      📇 Crachá 3D
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
       ) : null}
 
       {/* Barra de Controles: Busca, Spotlight Trigger, Ordenação e Visualização */}

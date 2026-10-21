@@ -94,6 +94,37 @@ body:has(.login-tela-container) {
   animation: scaleUp 0.25s var(--ease);
 }
 
+/* Recusa de login: o card treme uma vez. O estado da action troca a cada
+   retorno, então o mesmo erro repetido volta a tremer. */
+.login-card-erro {
+  animation: login-shake 0.4s var(--ease);
+}
+
+@keyframes login-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-7px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card-erro {
+    animation: none;
+  }
+}
+
 .login-topo {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -107,8 +138,13 @@ body:has(.login-tela-container) {
   margin-bottom: 0.8rem;
 }
 
+.login-marca .logo-sesi-wrap {
+  flex: none;
+}
+
 .login-titulo-marca {
   display: block;
+  white-space: nowrap;
   font-family: var(--fonte-titulo);
   /* B: wordmark grande em Bricolage, duas linhas ("ALUNOS / SESI" no
      showcase). Aqui é uma linha só — o markup tem um span — mas o corpo
@@ -414,6 +450,20 @@ body:has(.login-tela-container) {
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+/* Selo curto de "Em breve" (Olimpíadas SESI). A tinta é o acento, não o
+   amarelo de advertência: não é pendência, é aviso de conteúdo futuro. */
+.nav-badge-em-breve {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* ── Canto Inferior Esquerdo da Sidebar (Card do Usuário) ──────────────── */
@@ -4356,5 +4406,39 @@ body:has(.login-tela-container) {
 .btn-remover-capa-mini:hover {
   background: rgba(239, 68, 68, 0.35);
   color: #fff;
+}
+
+/* ── Conteúdo compacto (Portfólio e Projetos) ─────────────────────────────
+   O `gap` de 2.25rem do `.crm-secao-conteudo` somava com as margens de cada
+   bloco e abria ~70–92px entre busca, chips, competências e Top 3. Escopado
+   para não apertar Desafios, Tabelas nem o painel do ADM. */
+.crm-secao-compacta {
+  gap: 1rem;
+}
+
+.crm-secao-compacta .controles {
+  margin-bottom: 0;
+  padding-block: 0.5rem;
+}
+
+.crm-secao-compacta .trilho {
+  padding-bottom: 0.25rem;
+}
+
+.crm-secao-compacta .trilho-habilidades {
+  margin-bottom: 0;
+}
+
+.crm-secao-compacta .top-projetos-secao {
+  margin-bottom: 0;
+  padding: 1.5rem;
+}
+
+.crm-secao-compacta .top-projetos-cabecalho {
+  margin-bottom: 1rem;
+}
+
+.crm-secao-compacta .grade-portfolio {
+  margin-bottom: 0;
 }
 

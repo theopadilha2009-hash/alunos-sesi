@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   ativarAcessoAction,
   cadastroAction,
@@ -36,9 +36,23 @@ function completarDominio(idCampo: string) {
 export function LoginTela() {
   const [modo, setModo] = useState<"login" | "cadastro" | "ativar">("login");
 
+  // Os campos do login são controlados: o React 19 reseta o <form> depois de
+  // uma server action, e o aluno perdia usuário e senha a cada recusa. O
+  // estado sobrevive ao reset; os outros dois formulários seguem não
+  // controlados porque a queixa era do login.
+  const [usuarioLogin, setUsuarioLogin] = useState("");
+  const [senhaLogin, setSenhaLogin] = useState("");
+  const [erroAtivo, setErroAtivo] = useState(false);
+
   const [estadoLogin, formActionLogin, carregandoLogin] = useActionState(loginAction, {
     ok: false,
   });
+
+  // O tremor é por tentativa: o estado da action muda a cada retorno, mesmo
+  // quando a mensagem é a mesma. `onAnimationEnd` desarma para o próximo erro.
+  useEffect(() => {
+    if (estadoLogin.mensagem) setErroAtivo(true);
+  }, [estadoLogin]);
 
   const [estadoCadastro, formActionCadastro, carregandoCadastro] = useActionState(
     cadastroAction,
@@ -54,10 +68,13 @@ export function LoginTela() {
     <div className="login-tela-container">
       <div className="login-mesh-glow" aria-hidden="true" />
 
-      <div className="login-card">
+      <div
+        className={`login-card ${erroAtivo ? "login-card-erro" : ""}`.trim()}
+        onAnimationEnd={() => setErroAtivo(false)}
+      >
         <header className="login-topo">
           <div className="login-marca">
-            <Roseta tamanho={38} />
+            <Roseta tamanho={38} iconeApenas />
             <div>
               <span className="login-titulo-marca">ALUNOS SESI</span>
               <span className="login-sub-marca">CRM & PORTFÓLIO ESCOLAR</span>
@@ -121,9 +138,13 @@ export function LoginTela() {
           aria-labelledby="login-tab-login"
           style={{ display: modo === "login" ? "block" : "none" }}
         >
-          <form action={formActionLogin} className="login-form">
+          <form
+            action={formActionLogin}
+            className="login-form"
+            onSubmit={() => setErroAtivo(false)}
+          >
             {estadoLogin.mensagem ? (
-              <p className="recado recado-erro" role="alert">
+              <p id="login-erro" className="recado recado-erro" role="alert">
                 {estadoLogin.mensagem}
               </p>
             ) : null}
@@ -135,6 +156,10 @@ export function LoginTela() {
                 name="username"
                 type="text"
                 placeholder="Ex.: theo ou theo@estudante.sesisenai.org.br"
+                value={usuarioLogin}
+                onChange={(e) => setUsuarioLogin(e.target.value)}
+                aria-invalid={estadoLogin.mensagem ? true : undefined}
+                aria-describedby={estadoLogin.mensagem ? "login-erro" : undefined}
                 required
                 autoComplete="username"
               />
@@ -147,6 +172,10 @@ export function LoginTela() {
                 name="senha"
                 type="password"
                 placeholder="Sua senha de acesso"
+                value={senhaLogin}
+                onChange={(e) => setSenhaLogin(e.target.value)}
+                aria-invalid={estadoLogin.mensagem ? true : undefined}
+                aria-describedby={estadoLogin.mensagem ? "login-erro" : undefined}
                 required
                 autoComplete="current-password"
               />
