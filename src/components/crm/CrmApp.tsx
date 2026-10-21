@@ -32,7 +32,7 @@ import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { VisaoGeral } from "@/components/crm/VisaoGeral";
-import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
+import { ESTRELADOS, TODAS, filtrarAlunos, fold } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
 import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
@@ -101,6 +101,11 @@ export function CrmApp({
   const [query, setQuery] = useState("");
   const [salaSelecionada, setSalaSelecionada] = useState<string>(TODAS);
   const [habilidadeFiltro, setHabilidadeFiltro] = useState<string>("Todas");
+  // Filtros da aba Projetos: locais de propósito. O que o Portfólio filtra é
+  // aluno; reutilizar o mesmo estado faria a busca de uma aba esconder a outra.
+  const [queryProjetos, setQueryProjetos] = useState("");
+  const [salaProjetos, setSalaProjetos] = useState<string>(TODAS);
+  const [habilidadeProjetos, setHabilidadeProjetos] = useState<string>("Todas");
   // Filtro roda sobre o valor adiado: o input responde na hora e a lista pesada
   // é recalculada depois, com o mesmo resultado final.
   const queryAdiada = useDeferredValue(query);
@@ -363,6 +368,52 @@ export function CrmApp({
     }
     return arr;
   }, [naTela]);
+
+  // Filtros da aba Projetos. A competência sai dos AUTORES que têm projeto —
+  // usar a lista global do Portfólio criaria chip que não filtra nada.
+  const contagemProjetosPorSala = useMemo(() => {
+    const contagem = new Map<string, number>();
+    for (const p of todasCriacoes) {
+      const salaId = p.alunoObjeto.sala_id;
+      if (salaId) contagem.set(salaId, (contagem.get(salaId) ?? 0) + 1);
+    }
+    return contagem;
+  }, [todasCriacoes]);
+
+  const salasComProjetos = useMemo(
+    () => salas.filter((s) => contagemProjetosPorSala.has(s.id)),
+    [salas, contagemProjetosPorSala],
+  );
+
+  const competenciasProjetos = useMemo(() => {
+    const contagem = new Map<string, number>();
+    for (const p of todasCriacoes) {
+      for (const h of p.alunoObjeto.habilidades ?? []) {
+        contagem.set(h, (contagem.get(h) ?? 0) + 1);
+      }
+    }
+    return Array.from(contagem.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([nome]) => nome);
+  }, [todasCriacoes]);
+
+  const projetosFiltrados = useMemo(() => {
+    const termo = fold(queryProjetos).trim();
+    return todasCriacoes.filter((p) => {
+      if (salaProjetos !== TODAS && p.alunoObjeto.sala_id !== salaProjetos) return false;
+      if (
+        habilidadeProjetos !== "Todas" &&
+        !(p.alunoObjeto.habilidades ?? []).includes(habilidadeProjetos)
+      ) {
+        return false;
+      }
+      if (!termo) return true;
+      const alvo = fold(
+        `${p.titulo} ${p.descricao} ${p.alunoNome} ${p.alunoSala ?? ""}`,
+      );
+      return termo.split(/\s+/).every((parte) => alvo.includes(parte));
+    });
+  }, [todasCriacoes, salaProjetos, habilidadeProjetos, queryProjetos]);
 
   // Voto de estrela otimista; som e confete só depois do "ok" do servidor.
   //
@@ -1091,10 +1142,97 @@ export function CrmApp({
               </p>
             </div>
 
+            <div className="controles">
+              <label className="busca-campo" style={{ flex: "1 1 18rem" }}>
+                <span className="sr-only">Buscar projeto, autor ou sala</span>
+                <input
+                  type="search"
+                  className="busca"
+                  value={queryProjetos}
+                  onChange={(e) => setQueryProjetos(e.target.value)}
+                  placeholder="Buscar projeto, autor, sala ou tecnologia..."
+                  style={{ width: "100%" }}
+                />
+              </label>
+              <p className="conta" aria-live="polite">
+                {projetosFiltrados.length} de {todasCriacoes.length}
+              </p>
+            </div>
+
+            <div className="trilho" role="group" aria-label="Filtrar projetos por sala">
+              <button
+                type="button"
+                className="ficha"
+                aria-pressed={salaProjetos === TODAS}
+                onClick={() => setSalaProjetos(TODAS)}
+              >
+                Todas <span className="n">{todasCriacoes.length}</span>
+              </button>
+              {salasComProjetos.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="ficha"
+                  style={{ ["--sala" as string]: corDaSala(s.nome) }}
+                  aria-pressed={salaProjetos === s.id}
+                  onClick={() => setSalaProjetos(s.id)}
+                >
+                  <span className="ponto" />
+                  {s.nome}{" "}
+                  <span className="n">{contagemProjetosPorSala.get(s.id) ?? 0}</span>
+                </button>
+              ))}
+            </div>
+
+            {competenciasProjetos.length > 0 ? (
+              <div
+                className="trilho-habilidades"
+                role="group"
+                aria-label="Filtrar projetos por competência"
+              >
+                <span className="trilho-label">Competências:</span>
+                <button
+                  type="button"
+                  className={`chip-hab ${habilidadeProjetos === "Todas" ? "chip-hab-ativo" : ""}`}
+                  onClick={() => setHabilidadeProjetos("Todas")}
+                >
+                  Todas
+                </button>
+                {competenciasProjetos.map((hab) => (
+                  <button
+                    key={hab}
+                    type="button"
+                    className={`chip-hab ${habilidadeProjetos === hab ? "chip-hab-ativo" : ""}`}
+                    onClick={() =>
+                      setHabilidadeProjetos((atual) => (atual === hab ? "Todas" : hab))
+                    }
+                  >
+                    <span
+                      className="ponto-hab"
+                      style={{ background: corHabilidade(hab) }}
+                    />
+                    {hab}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {projetosFiltrados.length === 0 ? (
+              <div className="vazio">
+                <b>
+                  {todasCriacoes.length === 0
+                    ? "Nenhum projeto publicado ainda."
+                    : "Nenhum projeto encontrado com esses filtros."}
+                </b>
+                {todasCriacoes.length > 0 ? (
+                  <p>Tente outra sala, outra competência ou limpe a busca.</p>
+                ) : null}
+              </div>
+            ) : (
             <div className="grade-projetos-mural">
-              {todasCriacoes.map((p, idx) => (
+              {projetosFiltrados.map((p) => (
                 <div
-                  key={idx}
+                  key={`${p.alunoSlug}:${p.id}`}
                   className="card-criacao-mural"
                   onClick={() => setAlunoBreveSelecionado(p.alunoObjeto)}
                 >
@@ -1155,6 +1293,7 @@ export function CrmApp({
                 </div>
               ))}
             </div>
+            )}
           </div>
         ) : null}
 

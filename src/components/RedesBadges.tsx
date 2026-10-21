@@ -123,7 +123,7 @@ export function BadgeGitHub({ username, nomeAluno, className = "" }: BadgeProps)
       <span className="badge-rede-icone-wrap gh-icone">
         <IconeGitHub tamanho={15} />
       </span>
-      <span className="badge-rede-texto">GitHub</span>
+      <span className="badge-rede-texto">{handleLimpo}</span>
     </a>
   );
 }
