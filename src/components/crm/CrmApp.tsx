@@ -1118,7 +1118,7 @@ export function CrmApp({
                                     setAlunoBreveSelecionado(aluno);
                                   }}
                                 >
-                                  Ver perfil completo & criações →
+                                  Ver prévia do perfil →
                                 </button>
                               </footer>
                             </article>

@@ -156,7 +156,7 @@ export function TopProjetosTurma({ alunos, onAbrirPerfil, onAbrirCracha }: Props
                     }}
                     role="button"
                     tabIndex={0}
-                    title="Ver perfil completo do autor"
+                    title="Ver prévia do perfil do autor"
                   >
                     <Avatar
                       nome={proj.autor.nome}

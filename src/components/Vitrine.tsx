@@ -6,10 +6,12 @@ import { CartaoAluno } from "@/components/CartaoAluno";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
 import {
+  IconeCards,
   IconeEstrela,
   IconeLink,
   IconeProjetos,
   IconeSala,
+  IconeTabela,
   IconeUsuario,
 } from "@/components/Icones";
 import { NumeroAnimado } from "@/components/NumeroAnimado";
@@ -317,7 +319,10 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
             fontSize: "0.92rem",
           }}
         >
-          <span style={{ color: "var(--dim)" }}>⭐ Destaque da escola:</span>
+          <span style={{ color: "var(--dim)", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+            <IconeEstrela tamanho={14} />
+            Destaque da escola:
+          </span>
           {alunos
             .filter((a) => a.destaque)
             .map((a) => (
@@ -384,7 +389,8 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
             title="Visualização em Cards 3D"
             aria-pressed={visualizacao === "grade"}
           >
-            🎴 Cards
+            <IconeCards tamanho={14} />
+            Cards
           </button>
           <button
             type="button"
@@ -393,7 +399,8 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
             title="Visualização em Tabela Tática"
             aria-pressed={visualizacao === "tabela"}
           >
-            📊 Tabela
+            <IconeTabela tamanho={14} />
+            Tabela
           </button>
         </div>
 
@@ -481,7 +488,20 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
       ) : visiveis.length === 0 ? (
         <div className="vazio">
           <b>Nenhum aluno encontrado com esses filtros.</b>
-          Tente outra sala, outra habilidade ou limpe a busca.
+          {/* O texto mandava "limpar a busca" sem dar como. Estado vazio tem
+              que oferecer a saída (design-theo: tudo clicável, botão cheio). */}
+          <p>Tente outra sala, outra habilidade ou comece a busca de novo.</p>
+          <button
+            type="button"
+            className="botao botao-secundario"
+            onClick={() => {
+              setQuery("");
+              setSala(TODAS);
+              setHabilidadeFiltro("Todas");
+            }}
+          >
+            Limpar filtros
+          </button>
         </div>
       ) : visualizacao === "grade" ? (
         <ul className="grade">
