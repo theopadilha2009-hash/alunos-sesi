@@ -548,6 +548,16 @@
   margin-bottom: 0.35rem;
 }
 
+/* O vazio agora pode trazer uma saída (o botão "Limpar filtros"); sem a
+   margem, o botão encostava na sombra de cima. */
+.vazio p {
+  margin: 0 0 1rem;
+}
+
+.vazio .botao {
+  margin: 0 auto;
+}
+
 /* ── painel do ADM ─────────────────────────────────────────────────────── */
 
 .painel {
@@ -1071,6 +1081,9 @@ body::before {
 }
 
 .btn-modo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.35rem 0.65rem;
   border: none;
   border-radius: calc(var(--raio-p) - 3px);

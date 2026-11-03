@@ -77,9 +77,10 @@
   background: color-mix(in srgb, var(--sala, var(--accent)) 10%, var(--surface-2));
 }
 
-/* ── CARTÕES: sombra do B em repouso ──────────────────────────────────────
-   O app só dava sombra no hover; o B tem sombra suave permanente no cartão
-   (sistema-b.css:620). Aplicado aos cards de aluno, que são a grade pública. */
+/* ── CARTÕES: sem sombra em repouso ───────────────────────────────────────
+   Aqui o app seguia a sombra permanente do B. A direção que ficou (PR #150 e
+   o fix do mesmo dia, "ficou demais") é FLAT: card parado sem sombra, e o
+   relevo aparece só na borda. O hover continua levantando (vitrine.css). */
 .aluno {
-  box-shadow: var(--sombra-suave);
+  box-shadow: none;
 }

@@ -65,7 +65,6 @@
     #0c141f 60%,
     #080e16 100%
   );
-  backdrop-filter: blur(20px);
   padding: 1.85rem 1.65rem;
   box-shadow:
     0 25px 65px -10px rgba(0, 0, 0, 0.8),

@@ -228,8 +228,8 @@ export function TabelaAlunos({
                         type="button"
                         className="mini botao-ver-perfil-acao"
                         onClick={() => onSelecionarAluno(aluno)}
-                        title={`Ver perfil completo de ${aluno.nome}`}
-                        aria-label={`Ver perfil completo de ${aluno.nome}`}
+                        title={`Ver prévia do perfil de ${aluno.nome}`}
+                        aria-label={`Ver prévia do perfil de ${aluno.nome}`}
                       >
                         <span className="botao-perfil-texto">Perfil</span> →
                       </button>

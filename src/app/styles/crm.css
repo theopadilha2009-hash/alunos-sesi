@@ -2007,10 +2007,9 @@ body:has(.login-tela-container) {
   cursor: pointer;
 }
 
+/* Direção flat: o hover troca a borda, sem subir o card nem acender sombra. */
 .card-top-projeto:hover {
-  transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.45);
 }
 
 .card-top-projeto.rank-1 {
@@ -2040,9 +2039,7 @@ body:has(.login-tela-container) {
   transition: transform 0.4s var(--ease);
 }
 
-.card-top-projeto:hover .top-proj-img {
-  transform: scale(1.05);
-}
+/* Sem zoom da capa no hover: a direção flat troca a borda, não move a foto. */
 
 .top-proj-gradiente-overlay {
   position: absolute;
@@ -2063,20 +2060,21 @@ body:has(.login-tela-container) {
   text-transform: uppercase;
   color: #fff;
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* Selo leve sem borda e sem sombra; ouro, prata e bronze viravam três
+     sólidos concorrentes na mesma tela (um por card do pódio). O 1º lugar fica
+     com o --amarelo, que já é o sinal de destaque do app; os outros dois usam
+     a tinta neutra do card. */
+  background: color-mix(in oklab, var(--text) 72%, var(--surface));
 }
 
 .badge-rank-1 {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #000;
+  background: var(--amarelo);
+  color: #1a1205;
 }
 
-.badge-rank-2 {
-  background: linear-gradient(135deg, #94a3b8, #64748b);
-}
-
+.badge-rank-2,
 .badge-rank-3 {
-  background: linear-gradient(135deg, #d97706, #b45309);
+  color: var(--text);
 }
 
 .top-proj-corpo {
