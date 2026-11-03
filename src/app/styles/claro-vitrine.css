@@ -112,7 +112,7 @@
   color: #f8fafc;
   --surface-2: #16202c;
   --dim: #94a3b8;
-  --accent: #38c7bd;
+  --accent: #4fb3da;
   --line: rgba(255, 255, 255, 0.08);
   --line-soft: rgba(255, 255, 255, 0.04);
 }
@@ -129,7 +129,7 @@
    ficam: são tinta sobre mídia, funcionam nas duas luzes. */
 :root[data-theme="light"] .video-embed-capa {
   --surface-3: #1e2a38;
-  --accent: #38c7bd;
+  --accent: #4fb3da;
 }
 
 /* ── 4. FUNDOS PLANOS QUE NÃO SÃO PAPEL ───────────────────────────────── */

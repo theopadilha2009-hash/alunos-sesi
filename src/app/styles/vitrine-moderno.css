@@ -179,21 +179,24 @@
   margin-bottom: 2rem;
 }
 
+/* O CTA grande era gradiente ciano→azul com texto branco: 2,18:1 no ciano e
+   4,08:1 no meio, reprovando AA no tema escuro (o claro já tinha override em
+   claro-vitrine.css). Acento chapado + --on-accent dá 8:1 nos dois temas, e
+   o hover escurece em vez de só levantar sombra. */
 .botao-primario-grande {
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
   border-radius: var(--raio-p);
-  background: linear-gradient(135deg, var(--ciano), var(--azul));
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 800;
   text-decoration: none;
-  box-shadow: 0 10px 25px -8px var(--ciano);
-  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
 .botao-primario-grande:hover {
+  background: color-mix(in oklab, var(--accent) 88%, black);
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px -6px var(--ciano);
 }
 
 .botao-fraco-grande {

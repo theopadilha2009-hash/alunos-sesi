@@ -75,3 +75,10 @@
 /* A home "Visão geral": dashboard escolar do aluno, na mesma direção flat da
    aba Tabelas. Seletor novo (.vg-*), escopado em .visao-geral. FIM da cascata. */
 @import "./styles/visao-geral-2026.css";
+/* A seleção própria (B12): substitui o <select> nativo. Seletor novo
+   (.selecao*), escopado — não encosta em nada existente. */
+@import "./styles/selecao-2026.css";
+/* prefers-reduced-motion para o app inteiro (crachá, crachá digital, estúdio,
+   vitrine, adm). Só @media: não pinta nada sem a preferência ligada. FIM da
+   cascata de propósito — precisa vencer a especificidade das famílias. */
+@import "./styles/movimento-2026.css";

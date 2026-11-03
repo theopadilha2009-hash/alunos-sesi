@@ -149,9 +149,9 @@
   --text: #f8fafc;
   --dim: #9fb0c4;
   --faint: #8291a8;
-  --accent: #45d3c9;
-  --on-accent: #04211f;
-  --glow: rgba(69, 211, 201, 0.22);
+  --accent: #4fb3da;
+  --on-accent: #04202e;
+  --glow: rgba(79, 179, 218, 0.3);
 }
 
 /* `color` explícito, não só o token no container: o `h2` do `crm.css:1322` não
@@ -228,7 +228,7 @@
    0.75), lê var(--accent), que no claro é azul escuro sobre preto. Pino o
    accent de ilha do showcase. */
 :root[data-theme="light"] .badge-tipo-midia {
-  color: #45d3c9;
+  color: #4fb3da;
 }
 
 /* src: crm.css:3867-3873 — .viewport-loading-overlay: mesma lógica, overlay
@@ -258,8 +258,8 @@
    apagados. Pino o accent de ilha aprovado (sistema-b.css:220) e troco a
    sombra preta 0.5 pela névoa. */
 :root[data-theme="light"] .perfil-hero-banner {
-  --accent: #45d3c9;
-  --glow: rgba(69, 211, 201, 0.22);
+  --accent: #4fb3da;
+  --glow: rgba(79, 179, 218, 0.3);
   box-shadow: 0 16px 40px -15px rgb(15 23 42 / 0.22);
 }
 

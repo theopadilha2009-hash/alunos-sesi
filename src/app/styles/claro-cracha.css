@@ -82,14 +82,14 @@
   /* src: cracha.css:274/275/280 — .cracha-avatar fallback sem --sala-cor,
      :236 — .cracha-sub (o card puro pinou 38c7bd literal na linha 150, o
      card-leve não), :340-341 — .badge-sala-tabela, :354 — .ponto-sala */
-  --accent: #38c7bd !important;
+  --accent: #4fb3da !important;
   /* src: validar/[slug]/page.tsx:165 — .botao-primario embutido na ilha
      consumir var(--on-accent) sobre --accent: no claro o texto branco do
      botão sumiria no teal */
-  --on-accent: #04211f !important;
+  --on-accent: #04202e !important;
   /* src: cracha.css:485 — .btn-cracha-download (fora do card; escudo para
      variantes de botão embutidas nas ilhas de página) */
-  --glow: rgba(56, 199, 189, 0.16) !important;
+  --glow: rgba(79, 179, 218, 0.3) !important;
   /* src: cracha-digital.css:379 — .nfc-hero-card tem sombra literal, mas o
      deck externo e cartões compartilhados que usam var(--sombra) dentro da
      ilha receberiam a névoa azul do claro sobre fundo escuro */

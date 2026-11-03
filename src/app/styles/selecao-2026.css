@@ -1,0 +1,216 @@
+/* ==========================================================================
+   selecao-2026.css — a seleção própria (design-theo/biblioteca.md, B12).
+
+   Substituta do <select> nativo, que a regra proíbe ("nunca o do sistema"):
+   no login (ilha escura) o nativo abria a lista clara do Windows/macOS por
+   cima do app.
+
+   Gatilho = mesma caixa de um campo (--ctrl-h, --raio-md); lista = painel de
+   vidro (B5) que abre para cima quando falta espaço embaixo. Tudo com os
+   TOKENS, sem cor solta: muda de tema sem regra extra.
+   ========================================================================== */
+
+.selecao {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.selecao-rotulo {
+  font-size: var(--fs-200);
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.selecao-gatilho {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: var(--ctrl-h);
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--raio-md);
+  background: color-mix(in oklab, var(--bg) 55%, var(--surface));
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-300);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.14s var(--ease),
+    box-shadow 0.24s var(--ease),
+    background 0.14s var(--ease);
+}
+
+.selecao-gatilho:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--line));
+}
+
+.selecao-gatilho:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.selecao-gatilho[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.selecao-gatilho[data-vazio] .selecao-texto {
+  color: var(--faint);
+}
+
+.selecao-gatilho:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.selecao-gatilho[aria-invalid="true"] {
+  border-color: var(--vermelho);
+}
+
+.selecao.compacta .selecao-gatilho {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  font-size: var(--fs-200);
+}
+
+.selecao-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selecao-seta {
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease);
+}
+
+.selecao-gatilho[aria-expanded="true"] .selecao-seta {
+  transform: rotate(180deg);
+}
+
+/* ── Painel (B5: menu opaco com brilho de borda) ────────────────────────────
+   O componente pedia `className="vidro"`, que só existe no Atlas — aqui a
+   lista abria SEM fundo e as opções se misturavam ao formulário atrás. O
+   vidro do atlas também não é portável literal: a receita usa `--popover`,
+   que este app não tem. Então o painel nasce opaco com o próprio token de
+   superfície, que é o que o B5 quer quando o texto é pequeno. */
+.selecao-painel {
+  position: fixed;
+  z-index: 60;
+  max-height: 20rem;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--raio-md);
+  border: 1px solid var(--line);
+  box-shadow:
+    0 18px 40px -18px rgb(0 0 0 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  padding: 0.3rem;
+  animation: selecao-entrar 0.18s var(--ease);
+}
+
+@keyframes selecao-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.selecao-painel.acima {
+  animation-name: selecao-entrar-acima;
+}
+
+@keyframes selecao-entrar-acima {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.selecao-busca {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 2.25rem;
+  margin-bottom: 0.3rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-200);
+}
+
+.selecao-busca:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.selecao-painel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.selecao-painel ul:focus {
+  outline: none;
+}
+
+.selecao-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  font-size: var(--fs-300);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.selecao-item.ativo {
+  background: var(--accent-suave);
+}
+
+.selecao-item[aria-selected="true"] {
+  font-weight: 700;
+  color: var(--accent-texto);
+}
+
+.selecao-check {
+  color: var(--accent-texto);
+  animation: selecao-pop 0.2s var(--ease);
+}
+
+@keyframes selecao-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+.selecao-vazio {
+  padding: 0.6rem 0.65rem;
+  font-size: var(--fs-200);
+  color: var(--faint);
+}
+
+/* O painel é `position: fixed` ao gatilho: em tela pequena não pode estourar.
+   Largura mínima maior que a coluna → limita à viewport. */
+@media (max-width: 420px) {
+  .selecao-painel {
+    max-width: calc(100vw - 1.5rem);
+  }
+}
+
+/* Nos painéis estreitos (editor de sticker, filtro do ADM) a seleção ocupa a
+   coluna toda, como o <select> que ela substitui ocupava. */
+.selecao-projeto {
+  width: 100%;
+}

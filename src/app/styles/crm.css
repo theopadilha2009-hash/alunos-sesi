@@ -84,12 +84,12 @@ body:has(.login-tela-container) {
   border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
   /* O mix de dentro tinge; o de fora devolve a transparência que o cartão já
      tinha (e que o `backdrop-filter` abaixo usa). */
-  background: color-mix(
-    in srgb,
-    color-mix(in srgb, var(--surface) 88%, var(--accent)) 92%,
-    transparent
-  );
-  backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent));
+  /* Enquanto o card era translúcido, a tinta da ilha escura (ilhas-2026.css)
+     vencia por ser mais específica. Sem a transparência o card é um bloco
+     próprio e precisa declarar o par: sem isto, o título herdava o --text do
+     claro (#0f172a) sobre o card escuro — ~1,1:1, ilegível. */
+  color: var(--text);
   box-shadow: 0 25px 60px -20px rgb(0 0 0 / 0.85);
   animation: scaleUp 0.25s var(--ease);
 }
@@ -2855,7 +2855,7 @@ body:has(.login-tela-container) {
 }
 
 .meta-rede-ativa {
-  color: #38c7bd;
+  color: var(--accent-texto);
 }
 
 .badge-aviso-nao-salvo {
@@ -3562,8 +3562,8 @@ body:has(.login-tela-container) {
   gap: 0.75rem;
   padding: 1rem 1.25rem;
   border-radius: 12px;
-  background: rgba(56, 199, 189, 0.08);
-  border: 1px solid rgba(56, 199, 189, 0.2);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   color: var(--text);
   font-size: 0.84rem;
   line-height: 1.5;
@@ -3773,9 +3773,9 @@ body:has(.login-tela-container) {
 
 .adm-select-sala-wrap:hover,
 .adm-select-sala-wrap:focus-within {
-  border-color: var(--accent, #38c7bd);
+  border-color: var(--accent);
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 10px rgba(56, 199, 189, 0.18);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .adm-sala-dot-indicador {
@@ -3853,14 +3853,14 @@ body:has(.login-tela-container) {
 }
 
 .btn-hero-banner-ajuste-auto {
-  background: rgba(56, 199, 189, 0.2);
-  border-color: rgba(56, 199, 189, 0.45);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   color: #a7f3d0;
 }
 
 .btn-hero-banner-ajuste-auto:hover {
-  background: rgba(56, 199, 189, 0.35);
-  border-color: #38c7bd;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-color: var(--accent);
   color: #ffffff;
 }
 
@@ -4253,7 +4253,7 @@ body:has(.login-tela-container) {
 
 /* ─── Upload de Capa de Projeto estilo Vitrine / OLX ─── */
 .projeto-dropzone-olx {
-  border: 2px dashed rgba(56, 199, 189, 0.35);
+  border: 2px dashed color-mix(in srgb, var(--accent) 35%, transparent);
   background: rgba(15, 23, 42, 0.45);
   border-radius: 12px;
   padding: 1.5rem 1rem;
@@ -4264,9 +4264,9 @@ body:has(.login-tela-container) {
 
 .projeto-dropzone-olx:hover,
 .projeto-dropzone-olx.dropzone-arrastando {
-  border-color: #38c7bd;
-  background: rgba(56, 199, 189, 0.08);
-  box-shadow: 0 0 20px rgba(56, 199, 189, 0.15);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .dropzone-conteudo {
@@ -4296,8 +4296,8 @@ body:has(.login-tela-container) {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(56, 199, 189, 0.15);
-  color: #38c7bd;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent-texto);
   display: flex;
   align-items: center;
   justify-content: center;

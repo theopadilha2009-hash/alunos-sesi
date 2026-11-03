@@ -10,6 +10,7 @@ import {
 } from "@/components/Icones";
 import type { ProjetoAluno, StickerPerfil } from "@/lib/tipos";
 import { Avatar } from "@/components/Avatar";
+import { Selecao } from "@/components/Selecao";
 import { blobDoDataUrl, caminhoDaMidia, EnvioRecusado, enviarAoBlob, nomeDaImagem } from "@/lib/blob";
 import { corDoAluno } from "@/lib/cores";
 import { conferirTamanhoDaImagem, LIMITES_STICKERS } from "@/lib/limites";
@@ -426,17 +427,13 @@ export function StickerCanvas({
             {alvoAtivo === "projeto" && projetos.length > 0 ? (
               <div className="campo-selecao-projeto">
                 <label className="sub-rotulo">Selecione o projeto alvo:</label>
-                <select
-                  className="select-projeto-alvo"
+                <Selecao
+                  className="selecao-projeto"
+                  ariaLabel="Projeto alvo do sticker"
                   value={projetoAlvoId}
-                  onChange={(e) => setProjetoAlvoId(e.target.value)}
-                >
-                  {projetos.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.titulo}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setProjetoAlvoId}
+                  opcoes={projetos.map((p) => ({ valor: p.id, rotulo: p.titulo }))}
+                />
               </div>
             ) : null}
           </div>
@@ -569,19 +566,18 @@ export function StickerCanvas({
                     </button>
                   </div>
                   {stickerSelecionado.alvo === "projeto" && projetos.length > 0 ? (
-                    <select
-                      className="select-projeto-alvo"
-                      style={{ marginTop: "0.5rem" }}
-                      value={stickerSelecionado.projetoId || projetoAlvoId}
-                      onChange={(e) => {
-                        atualizarSticker(stickerSelecionado.id, { projetoId: e.target.value });
-                        setProjetoAlvoId(e.target.value);
-                      }}
-                    >
-                      {projetos.map((p) => (
-                        <option key={p.id} value={p.id}>{p.titulo}</option>
-                      ))}
-                    </select>
+                    <div style={{ marginTop: "0.5rem" }}>
+                      <Selecao
+                        className="selecao-projeto"
+                        ariaLabel="Projeto do sticker"
+                        value={stickerSelecionado.projetoId || projetoAlvoId}
+                        onChange={(v) => {
+                          atualizarSticker(stickerSelecionado.id, { projetoId: v });
+                          setProjetoAlvoId(v);
+                        }}
+                        opcoes={projetos.map((p) => ({ valor: p.id, rotulo: p.titulo }))}
+                      />
+                    </div>
                   ) : null}
                 </div>
 

@@ -39,3 +39,45 @@
   --lh-apertado: 1.25;
   --lh-titulo: 1.08;
 }
+
+/* ── PALETA CÉU (design-theo/references/paleta-ceu.md) ─────────────────────
+   Escolhida pelo Théo em 23/10/2026. Antes deste bloco o app usava o teal
+   #38c7bd no escuro e o azul institucional #02609e no claro como acento —
+   ou seja, a Céu nunca tinha chegado aqui. A regra da paleta é "muda o
+   ACENTO, não a tela": fundo, card e borda continuam neutros; o vermelho
+   institucional SESI (#e30613, acima) continua sendo marca, não acento.
+
+   O acento é exposto por `--accent`/`--on-accent`/`--glow`, que são os nomes
+   que o app inteiro já lê (9 consumidores), então a troca de paleta não
+   encosta em JSX. Os nomes canônicos (--primary/--ring/--brand) nascem
+   junto para quem portar peça do showcase ler o mesmo vocabulário.
+
+   Contrastes medidas:
+   - branco sobre #1477a0 (claro) = 5,03:1  → passa 4,5 no botão primário
+   - #04202e sobre #4fb3da (escuro) = 8,11:1 → passa com folga
+   - --accent-texto #0f5e83 sobre branco = 7,1:1 */
+:root[data-theme="light"] {
+  --primary: #1477a0;
+  --primary-foreground: #ffffff;
+  --ring: #1786b4;
+  --brand: #0f5e83;
+  --accent: #1477a0;
+  --on-accent: #ffffff;
+  --glow: rgba(23, 134, 180, 0.28);
+  /* fundo tingido quase neutro: hover, item ativo de menu, foco suave */
+  --accent-suave: #ebf6fc;
+  --accent-texto: #0f5e83;
+}
+
+:root,
+:root[data-theme="dark"] {
+  --primary: #4fb3da;
+  --primary-foreground: #04202e;
+  --ring: #4fb3da;
+  --brand: #98d5ee;
+  --accent: #4fb3da;
+  --on-accent: #04202e;
+  --glow: rgba(79, 179, 218, 0.3);
+  --accent-suave: #16232f;
+  --accent-texto: #98d5ee;
+}

@@ -344,21 +344,21 @@
 }
 
 .canvas-ativo {
-  border-color: #38c7bd;
-  box-shadow: 0 0 0 2px rgba(56, 199, 189, 0.25);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .canvas-zona-destaque {
-  border-color: rgba(56, 199, 189, 0.65) !important;
+  border-color: var(--accent) !important;
   animation: pulseZona 1.8s infinite alternate ease-in-out;
 }
 
 @keyframes pulseZona {
   0% {
-    box-shadow: 0 0 8px rgba(56, 199, 189, 0.15);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 15%, transparent);
   }
   100% {
-    box-shadow: 0 0 20px rgba(56, 199, 189, 0.35);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 35%, transparent);
   }
 }
 

@@ -13,6 +13,7 @@ import {
   IconeUsuario,
 } from "@/components/Icones";
 import { NumeroAnimado } from "@/components/NumeroAnimado";
+import { Selecao } from "@/components/Selecao";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
 import { ESTRELADOS, TODAS, filtrarAlunos } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
@@ -360,19 +361,18 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
 
         {/* Seletor de Ordenação */}
         <div className="seletor-ordenacao">
-          <label htmlFor="select-ordem" className="sr-only">
-            Ordenar alunos
-          </label>
-          <select
+          <Selecao
             id="select-ordem"
-            className="select-custom"
+            ariaLabel="Ordenar alunos"
+            compacta
             value={ordenacao}
-            onChange={(e) => setOrdenacao(e.target.value as TipoOrdenacao)}
-          >
-            <option value="estrelas">★ Mais Estrelados</option>
-            <option value="nome">🔤 Ordem Alfabética (A-Z)</option>
-            <option value="conectados">🌐 Mais Conectados</option>
-          </select>
+            onChange={(v) => setOrdenacao(v as TipoOrdenacao)}
+            opcoes={[
+              { valor: "estrelas", rotulo: "Mais estrelados" },
+              { valor: "nome", rotulo: "Ordem alfabética (A-Z)" },
+              { valor: "conectados", rotulo: "Mais conectados" },
+            ]}
+          />
         </div>
 
         {/* Alternador de Modo de Visualização: Grade vs Tabela */}

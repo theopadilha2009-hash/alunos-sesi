@@ -29,18 +29,18 @@
 /* ── BOTÃO SECUNDÁRIO ────────────────────────────────────────────────────── */
 /* Viviam 5 usos em "botao botao-secundario" sem nenhuma regra CSS: o botão
    secundário RENDERIZAVA como o primário teal (a lista órfã do teste
-   classes-css confirmava). Forma = B's btn--secundario; opacity:1 mata o
-   fade do .botao:hover porque a borda de accent é o feedback. */
+   classes-css confirmava). Forma = B's btn--secundario (sistema-b.css:413):
+   CHEIO, sem borda — a skill reprova "botão só com contorno" e o hover de
+   borda era exatamente o desenho rejeitado. Hover escurece o fundo. */
 .botao-secundario {
   background: var(--surface-2);
-  border-color: var(--line);
+  border-color: transparent;
   color: var(--text);
 }
 
 .botao-secundario:hover {
   opacity: 1;
-  border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
-  background: color-mix(in oklab, var(--accent) 7%, var(--surface-2));
+  background: color-mix(in oklab, var(--surface-2) 88%, var(--text));
 }
 
 :root[data-theme="light"] .botao-secundario {
@@ -120,7 +120,9 @@
 
 /* A convenção do repo (base.css:49-52): quem escreve :focus em campo segura
    com :not(:focus-visible) — aqui é o caminho VISÍVEL, então focus-visible é
-   o alvo correto e o anel substitui o outline global sem apagá-lo à toa. */
+   o alvo correto. O anel era `0 0 0 3px var(--glow)` com o `outline` zerado:
+   --glow tem alfa 0,12–0,16, ou seja, focar um campo não acendia nada
+   (WCAG 2.4.7). Agora o anel é o `--accent` cheio com folga contra o fundo. */
 .campo input:focus-visible,
 .campo textarea:focus-visible,
 .campo select:focus-visible,
@@ -129,9 +131,10 @@
 .input-textarea:focus-visible,
 .input-texto-custom:focus-visible,
 .busca:focus-visible {
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--glow);
+  box-shadow: none;
   background: var(--surface);
 }
 

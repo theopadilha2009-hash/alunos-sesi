@@ -124,7 +124,7 @@ export function ModalCredenciais({
             </button>
             <button type="submit" className="botao botao-primario" disabled={salvando}>
               <IconeChave tamanho={15} />
-              <span>{salvando ? "Salvando..." : "Salvar credenciais"}</span>
+              <span>{salvando ? "Salvando…" : "Salvar credenciais"}</span>
             </button>
           </div>
         </form>

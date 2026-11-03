@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useActionState, useEffect, useMemo, useState } from "react";
+import { Fragment, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
   alternar,
   criarAluno,
@@ -15,6 +15,7 @@ import {
 } from "@/app/adm/acoes";
 import { ESTADO_CODIGO_INICIAL, ESTADO_INICIAL } from "@/app/adm/estado";
 import { ModalCredenciais } from "@/components/crm/ModalCredenciais";
+import { Selecao } from "@/components/Selecao";
 import { NumeroAnimado } from "@/components/NumeroAnimado";
 import {
   IconeCheck,
@@ -416,18 +417,16 @@ export function PainelAdmIntegrado({
             </div>
 
             <div className="adm-seletor-sala">
-              <select
-                className="input-select"
+              <Selecao
+                ariaLabel="Filtrar por sala"
+                compacta
                 value={salaFiltro}
-                onChange={(e) => setSalaFiltro(e.target.value)}
-              >
-                <option value="todas">Todas as salas ({alunos.length})</option>
-                {salas.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nome}
-                  </option>
-                ))}
-              </select>
+                onChange={setSalaFiltro}
+                opcoes={[
+                  { valor: "todas", rotulo: `Todas as salas (${alunos.length})` },
+                  ...salas.map((s) => ({ valor: s.id, rotulo: s.nome })),
+                ]}
+              />
             </div>
           </div>
 
@@ -735,7 +734,7 @@ export function PainelAdmIntegrado({
                   disabled={importando}
                 >
                   <IconeUpload tamanho={16} />
-                  <span>{importando ? "Processando e Importando..." : "Importar Turma Agora"}</span>
+                  <span>{importando ? "Processando e Importando…" : "Importar Turma Agora"}</span>
                 </button>
               </div>
             </form>
@@ -837,7 +836,7 @@ export function PainelAdmIntegrado({
                   disabled={criando}
                 >
                   <IconePlus tamanho={16} />
-                  <span>{criando ? "Salvando Aluno..." : "Cadastrar Estudante"}</span>
+                  <span>{criando ? "Salvando Aluno…" : "Cadastrar Estudante"}</span>
                 </button>
               </div>
             </form>
@@ -1068,13 +1067,13 @@ export function PainelAdmIntegrado({
                 </div>
                 <div className="campo">
                   <label htmlFor="dft-categoria">Categoria</label>
-                  <select id="dft-categoria" name="categoria" required defaultValue={CATEGORIAS[0]}>
-                    {CATEGORIAS.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                  <Selecao
+                    id="dft-categoria"
+                    name="categoria"
+                    required
+                    defaultValue={CATEGORIAS[0]}
+                    opcoes={CATEGORIAS.map((c) => ({ valor: c, rotulo: c }))}
+                  />
                 </div>
               </div>
 
@@ -1143,7 +1142,7 @@ export function PainelAdmIntegrado({
               </div>
 
               <button type="submit" className="botao botao-primario" disabled={publicando}>
-                {publicando ? "Publicando..." : "Publicar no mural"}
+                {publicando ? "Publicando…" : "Publicar no mural"}
               </button>
             </form>
           </details>
@@ -1269,6 +1268,9 @@ function SeletorSala({
   onSalaRecusada,
 }: SeletorSalaProps) {
   const [estado, trocarTurma] = useActionState(mudarSalaDoAluno, ESTADO_INICIAL);
+  // O <form> da linha: a seleção própria devolve só o valor escolhido, então
+  // quem precisa preencher o input escondido e chamar requestSubmit é aqui.
+  const formRef = useRef<HTMLFormElement>(null);
 
   // O efeito depende só do `estado`. Ele é um objeto novo a cada resposta da
   // action (é o que se quer), enquanto `onSalaRecusada` nasce de novo a cada
@@ -1281,6 +1283,7 @@ function SeletorSala({
 
   return (
     <form
+      ref={formRef}
       action={trocarTurma}
       className="adm-form-sala"
       onSubmit={(e) => {
@@ -1299,19 +1302,22 @@ function SeletorSala({
           style={{ background: aluno.corSala || "var(--dim)" }}
           aria-hidden="true"
         />
-        <select
+        <Selecao
           name="salaId"
-          className="adm-select-sala"
+          ariaLabel={`Trocar a turma de ${aluno.nome}`}
+          placeholder="Sem sala definida"
+          compacta
+          invalido={!estado.ok}
           value={sala?.valor ?? ""}
-          onChange={(e) => {
-            const val = e.target.value;
+          opcoes={[
+            ...(sala?.lista ?? opcoesTurmas).map((opt) => ({ valor: opt.id, rotulo: opt.nome })),
+            { valor: SENTINELA_NOVA_TURMA, rotulo: "+ Nova turma…" },
+          ]}
+          onChange={(val) => {
             if (val === SENTINELA_NOVA_TURMA) {
               const nomeNova = window.prompt("Nome da nova turma (ex: DSM3-25):");
-              if (!nomeNova || nomeNova.trim().length < 2) {
-                e.target.value = aluno.sala_id ?? "";
-                return;
-              }
-              const form = e.currentTarget.form;
+              if (!nomeNova || nomeNova.trim().length < 2) return;
+              const form = formRef.current;
               if (form) {
                 let inputCustom = form.querySelector<HTMLInputElement>("input[name='sala']");
                 if (!inputCustom) {
@@ -1324,43 +1330,30 @@ function SeletorSala({
                 onMudarSalaAluno?.(aluno.id, "", nomeNova.trim());
                 form.requestSubmit();
               }
-              // O `<select>` é controlado pela turma que vem das props, e o React
-              // só mexe no DOM quando o `value` calculado MUDA: enquanto a
-              // resposta não re-renderiza, "+ Nova turma…" fica na tela como se
-              // fosse a turma do aluno. Devolve a seleção para a turma de verdade
-              // agora; a nova entra quando as props chegarem.
-              e.target.value = aluno.sala_id ?? "";
+              // Este select é controlado pela turma que vem das props: enquanto a
+              // resposta não re-renderiza, "+ Nova turma…" ficaria como se fosse a
+              // turma do aluno. Como o `value` não mudou, não há o que desfazer —
+              // a nova turma entra quando as props chegarem.
               return;
             }
             const opt = opcoesTurmas.find((o) => o.id === val);
-            if (opt) {
-              onMudarSalaAluno?.(aluno.id, opt.id, opt.nome);
-              const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-              if (!ehUuid) {
-                let inpSala = e.currentTarget.form?.querySelector<HTMLInputElement>("input[name='sala']");
-                if (!inpSala) {
-                  inpSala = document.createElement("input");
-                  inpSala.type = "hidden";
-                  inpSala.name = "sala";
-                  e.currentTarget.form?.appendChild(inpSala);
-                }
-                inpSala.value = opt.nome;
+            if (!opt) return;
+            onMudarSalaAluno?.(aluno.id, opt.id, opt.nome);
+            const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+            const form = formRef.current;
+            if (!ehUuid && form) {
+              let inpSala = form.querySelector<HTMLInputElement>("input[name='sala']");
+              if (!inpSala) {
+                inpSala = document.createElement("input");
+                inpSala.type = "hidden";
+                inpSala.name = "sala";
+                form.appendChild(inpSala);
               }
+              inpSala.value = opt.nome;
             }
-            e.currentTarget.form?.requestSubmit();
+            form?.requestSubmit();
           }}
-          aria-label={`Trocar a turma de ${aluno.nome}`}
-        >
-          <option value="" disabled>
-            Sem sala definida
-          </option>
-          {(sala?.lista ?? opcoesTurmas).map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.nome}
-            </option>
-          ))}
-          <option value={SENTINELA_NOVA_TURMA}>+ Nova turma...</option>
-        </select>
+        />
       </div>
 
       {/* A recusa fica na célula da linha que o ADM acabou de mexer, e não num
