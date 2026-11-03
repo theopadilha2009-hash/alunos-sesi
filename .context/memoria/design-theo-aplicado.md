@@ -30,3 +30,22 @@ Atlas sem conferir se existe aqui.
 
 Sem lint no repo: o gate real é `npm run typecheck` + `npm test` (342 testes).
 Ver [[tabela-corte-e-o-falso-peso]] e [[infra-deploy]].
+
+## Lote 2 (PR #160, `7471b00`) e o que ainda NÃO foi feito
+
+O que entrou: rótulo "Ver perfil completo" virou "Ver prévia do perfil" (o modal só copia o link;
+o perfil completo é `/alunos/[slug]`); blur removido de três cards parados (crachá, `/validar`, hero
+do NFC); vazio de filtro ganhou o botão "Limpar filtros"; emojis `🎴📊⭐` viraram SVG; direção flat no
+card de aluno e no pódio (sem sombra em repouso, sem `scale` no hover, `badge-rank` sem ouro/prata/bronze).
+
+Segue **não aplicado** ao fechar esta rodada (não confundir com "design-theo completo"):
+
+- **Som do B13 completo:** só existe `tocarSomEstrela`; faltam `notificação`, `sucesso`, `erro` e
+  `envio`. O botão de silenciar existe e já está global.
+- **Auditoria dedicada** de Painel ADM, desafios/visão geral e meu perfil: os subagentes caíram com
+  503 do gateway (`infer.flatt.com.br`) e não foram refeitos.
+- **Telas com dados nunca vistas no navegador** (vitrine montada, perfis, turmas, validar): o Supabase
+  não resolve DNS nesta máquina (`ENOTFOUND`). O QA de /alunos validou os ícones **injetando o markup**
+  no navegador, o que mede o CSS e não o componente montado.
+- `/alunos` no estado de erro não tem `<h1>` (o cabeçalho só existe no ramo de sucesso) — achado do QA,
+  não corrigido.
