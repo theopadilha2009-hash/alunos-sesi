@@ -155,7 +155,7 @@ export function ImportarGithub({ handleInicial, projetos, onImportar }: Props) {
             onClick={buscar}
             disabled={carregando || !handle.trim()}
           >
-            {carregando ? "Buscando..." : "Buscar repositórios"}
+            {carregando ? "Buscando…" : "Buscar repositórios"}
           </button>
           <button
             type="button"

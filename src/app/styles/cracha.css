@@ -122,8 +122,10 @@
   font-weight: 800;
 }
 
+/* Era teal fixo, que sobrevivia à troca de paleta. O cartão é sempre escuro
+   (crachá), então a cor de texto vem do acento do tema escuro. */
 .cracha-card .cracha-sub {
-  color: #38c7bd !important;
+  color: var(--accent) !important;
   font-weight: 800;
 }
 

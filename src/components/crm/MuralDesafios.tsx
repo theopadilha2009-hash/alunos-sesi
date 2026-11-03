@@ -356,7 +356,7 @@ export function MuralDesafios({
                   disabled={enviando}
                 >
                   <IconeCheck tamanho={16} />
-                  <span>{enviando ? "Enviando Solução..." : "Confirmar Envio ao SESI"}</span>
+                  <span>{enviando ? "Enviando Solução…" : "Confirmar Envio ao SESI"}</span>
                 </button>
               </div>
             </form>

@@ -2608,7 +2608,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
                   disabled={alterandoSenha || (!novaSenha && !loginAlterado)}
                 >
                   <IconeEscudo tamanho={16} />
-                  <span>{alterandoSenha ? "Salvando..." : "Salvar credenciais"}</span>
+                  <span>{alterandoSenha ? "Salvando…" : "Salvar credenciais"}</span>
                 </button>
               </div>
             </div>
@@ -2689,7 +2689,7 @@ export function PaginaMeuPerfil({ usuario, alunoAtual, salas, onAtualizarAluno }
               disabled={salvando}
             >
               <IconeCheck tamanho={16} />
-              <span>{salvando ? "Salvando Alterações..." : "Salvar Todas as Alterações"}</span>
+              <span>{salvando ? "Salvando Alterações…" : "Salvar Todas as Alterações"}</span>
             </button>
           </div>
         </main>

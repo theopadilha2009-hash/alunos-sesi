@@ -205,7 +205,7 @@
 }
 
 .contato-link {
-  color: #0284c7;
+  color: #02609e;
   text-decoration: none;
   font-weight: 600;
 }
@@ -294,7 +294,7 @@
 
 .curriculo-proj-url {
   font-size: 0.72rem;
-  color: #0284c7;
+  color: #02609e;
   font-family: monospace;
 }
 
@@ -312,6 +312,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* O bloco de autenticação (QR, data, aviso) não pode ser partido no meio
+     entre duas páginas do PDF. */
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .curriculo-qrcode-bloco {
@@ -346,7 +350,7 @@
 .val-url {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #0284c7;
+  color: #02609e;
   font-family: monospace;
 }
 
@@ -369,9 +373,11 @@
   border-radius: 6px;
 }
 
+/* #94a3b8 sobre papel branco dá 2,56:1 e reprova até em negrito — a data
+   saía quase invisível no PDF. #475569 dá 7,58:1. */
 .selo-emissao-data {
   font-size: 0.68rem;
-  color: #94a3b8;
+  color: #475569;
 }
 
 /* Impressão específica da folha A4 */
@@ -427,6 +433,24 @@
      ideia, escopada — só o backdrop do currículo sobrevive. */
   .pagina-perfil-container:has(.curriculo-folha-a4) > :not(.curriculo-modal-backdrop) {
     display: none !important;
+  }
+
+  /* A página PÚBLICA do aluno (/alunos/[slug]) não usa `.crm-layout` nem
+     `.pagina-perfil-container`: o PerfilInterativo mora em `main.wrap`, então
+     as duas regras acima não a alcançavam e o PDF saía com a capa, os
+     stickers, os projetos e o link "Voltar para a turma" ANTES da folha.
+     Aqui o escopo é o `main` que contém a folha, qualquer que seja a shell. */
+  main:has(.curriculo-folha-a4) > :not(.curriculo-modal-backdrop) {
+    display: none !important;
+  }
+
+  /* O topo/rodapé públicos são irmãos do `main`, não filhos. */
+  body:has(.curriculo-folha-a4) > :not(main) {
+    display: none !important;
+  }
+
+  body:has(.curriculo-folha-a4) {
+    background: #fff !important;
   }
 
   .meu-perfil-fechar {

@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { AlternadorTema } from "@/components/AlternadorTema";
+import { BotaoSom } from "@/components/BotaoSom";
 import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
 import { CrachaModal } from "@/components/CrachaModal";
@@ -795,6 +796,7 @@ export function CrmApp({
 
           <div className="crm-header-acoes">
             <AlternadorTema />
+            <BotaoSom />
             <button
               type="button"
               className="botao botao-primario"

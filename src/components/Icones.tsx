@@ -285,6 +285,13 @@ export const IconeSomMudo = ({ tamanho = 16, className = "" }: Props) => (
   </Base>
 );
 
+// A seta do gatilho da seleção própria (B12): gira 180° ao abrir.
+export const IconeSeta = ({ tamanho = 14, className = "" }: Props) => (
+  <Base tamanho={tamanho} className={className}>
+    <polyline points="6 9 12 15 18 9" />
+  </Base>
+);
+
 export const IconePin = ({ tamanho = 14, className = "" }: Props) => (
   <Base tamanho={tamanho} className={className}>
     <line x1="12" y1="17" x2="12" y2="22" />

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apoiarHabilidadeAction } from "@/app/acoes-crm";
 import { Avatar } from "@/components/Avatar";
+import { BotaoSom } from "@/components/BotaoSom";
 import { LinhaCargos } from "@/components/CargosBadges";
 import { CrachaModal } from "@/components/CrachaModal";
 import { CurriculoImpressao } from "@/components/CurriculoImpressao";
@@ -16,8 +17,6 @@ import {
   IconeEscudo,
   IconeEstrela,
   IconePlus,
-  IconeSom,
-  IconeSomMudo,
 } from "@/components/Icones";
 import { NumeroAnimado } from "@/components/NumeroAnimado";
 import { BadgeEmail, BadgeGitHub, BadgeInstagram, BadgeLinkedIn } from "@/components/RedesBadges";
@@ -26,7 +25,7 @@ import { copiarTexto } from "@/lib/clipboard";
 import { lerRespostaEstrela } from "@/lib/estrela";
 import { habilidadePermitida } from "@/lib/habilidades";
 import { MAX_VIDEOS } from "@/lib/limites";
-import { definirSom, dispararConfetes, somLigado, tocarSomEstrela } from "@/lib/som";
+import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
 import type { AlunoNaTela } from "@/lib/tipos";
 
 type Props = {
@@ -70,11 +69,6 @@ export function PerfilInterativo({
   const [estrelas, setEstrelas] = useState(aluno.estrelas);
   const [estrelado, setEstrelado] = useState(estreladoInicial);
   const [carregandoVoto, setCarregandoVoto] = useState(false);
-  // Som e confetes são opcionais e nascem ligados. `somLigado()` lê o
-  // localStorage, que não existe no servidor — daí o valor entrar por efeito em
-  // vez do inicializador do useState, que faria o HTML do servidor divergir do
-  // primeiro render do cliente.
-  const [comSom, setComSom] = useState(true);
 
   // A visita se marca do CLIENTE de propósito: o prefetch de <Link> da vitrine
   // carrega o HTML do perfil sem executar efeito, então só navegação real
@@ -150,19 +144,6 @@ export function PerfilInterativo({
       vivo = false;
     };
   }, [urlAtual]);
-
-  useEffect(() => {
-    setComSom(somLigado());
-  }, []);
-
-  function alternarSom() {
-    const proximo = !comSom;
-    definirSom(proximo);
-    setComSom(proximo);
-    // Toca o próprio efeito ao ligar: é o som que a pessoa acabou de reativar,
-    // e sem ele o clique não dá retorno nenhum.
-    if (proximo) tocarSomEstrela();
-  }
 
   async function copiarLink() {
     if (await copiarTexto(urlAtual)) {
@@ -574,15 +555,7 @@ export function PerfilInterativo({
                 </span>
               </button>
 
-              <button
-                type="button"
-                className="botao-som-toggle"
-                onClick={alternarSom}
-                title={comSom ? "Efeitos sonoros e confetes ativos (clique para silenciar)" : "Efeitos sonoros e confetes desativados (clique para ativar)"}
-                aria-label={comSom ? "Desativar efeitos sonoros" : "Ativar efeitos sonoros"}
-              >
-                {comSom ? <IconeSom tamanho={15} /> : <IconeSomMudo tamanho={15} />}
-              </button>
+              <BotaoSom />
 
               {/* Contagem, não vitrine de engajamento: o número é o que faz o
                   dono cuidar do perfil. Sem visitante nenhum, a linha some —

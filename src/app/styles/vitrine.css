@@ -394,30 +394,23 @@
   transition: all 0.16s var(--ease);
 }
 
+/* Selo é leve, tingido e SEM borda (design-theo/botoes.md). A borda de 1px e
+   o glow no hover foram o desenho rejeitado em 23/10; e selo não é botão:
+   sem hover nenhum. */
 .selo-destaque {
   background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 0;
   color: #fbbf24;
   box-shadow: none;
   text-shadow: none;
 }
 
-.selo-destaque:hover {
-  background: rgba(245, 158, 11, 0.22);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-}
-
 .selo-fixado {
   background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 0;
   color: #34d399;
   box-shadow: none;
   text-shadow: none;
-}
-
-.selo-fixado:hover {
-  background: rgba(16, 185, 129, 0.22);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 /* No claro o #fbbf24 fica em 1,52:1 e o #34d399 em 1,72:1 sobre o branco da
@@ -654,36 +647,46 @@
   transition: opacity 0.16s var(--ease);
 }
 
+/* Hover ESCURECE (design-theo/botoes.md: "hover de cor cheia escurece"). Era
+   opacity .88, que apagava o botão e derrubava o texto abaixo de 4,5:1. O
+   escurecimento é da própria tinta, então o par de texto não muda de tema. */
 .botao:hover {
-  opacity: 0.88;
+  background: color-mix(in oklab, var(--accent) 88%, black);
 }
 
+/* `cursor: progress` prometia carregamento que não existe; o sinal de
+   desabilitado é a opacidade, como em botoes.md. */
 .botao:disabled {
   opacity: 0.5;
-  cursor: progress;
+  cursor: not-allowed;
 }
 
+/* .botao-fraco era transparente com contorno — o "botão falso" que o Théo
+   recusou. Continua sendo a ação mais leve da hierarquia, mas CHEIA: cinza
+   azulado (--surface-2), sem borda. 16 usos no JSX herdam daqui. */
 .botao-fraco {
-  background: transparent;
+  background: var(--surface-2);
   color: var(--dim);
-  border-color: var(--line);
+  border-color: transparent;
 }
 
 .botao-fraco:hover {
+  background: color-mix(in oklab, var(--surface-2) 88%, var(--text));
   color: var(--text);
-  border-color: var(--accent);
-  opacity: 1;
 }
 
+/* Perigo segue a regra de "só a confirmação final de algo destrutivo", mas
+   também cheio. --vermelho (#d74d42) com branco dá 4,18:1 e reprova AA;
+   #b8342a é o mesmo matiz um degrau mais escuro e dá 5,89:1. Não troca o
+   --vermelho de dado de sala, só a tinta deste botão. */
 .botao-perigo {
-  background: transparent;
-  color: var(--vermelho);
-  border-color: color-mix(in srgb, var(--vermelho) 45%, var(--line));
+  background: #b8342a;
+  color: #fff;
+  border-color: transparent;
 }
 
 .botao-perigo:hover {
-  background: color-mix(in srgb, var(--vermelho) 12%, transparent);
-  opacity: 1;
+  background: color-mix(in oklab, #b8342a 88%, black);
 }
 
 .lista-adm {

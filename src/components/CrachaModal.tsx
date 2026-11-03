@@ -290,7 +290,7 @@ export function CrachaModal({ aluno, role, onClose }: Props) {
               title="Baixar imagem em alta resolução (PNG) para impressão ou crachá físico"
             >
               <IconeDownload tamanho={16} />
-              <span>{baixando ? "Gerando PNG..." : "Baixar Crachá (PNG)"}</span>
+              <span>{baixando ? "Gerando PNG…" : "Baixar Crachá (PNG)"}</span>
             </button>
 
             <button

@@ -7,6 +7,7 @@ import {
   loginAction,
 } from "@/app/acoes-crm";
 import { Roseta } from "@/components/Roseta";
+import { Selecao } from "@/components/Selecao";
 import { aoSetasDasAbas } from "@/lib/abas";
 import { DOMINIO_EMAIL_ESCOLA } from "@/lib/limites";
 import { TURMAS_OFICIAIS } from "@/lib/turmas";
@@ -186,7 +187,7 @@ export function LoginTela() {
               className="botao botao-primario-grande w-full"
               disabled={carregandoLogin}
             >
-              {carregandoLogin ? "Entrando..." : "Acessar o CRM →"}
+              {carregandoLogin ? "Entrando…" : "Acessar o CRM →"}
             </button>
           </form>
         </div>
@@ -217,19 +218,16 @@ export function LoginTela() {
 
             <div className="campo">
               <label htmlFor="cad-sala">Sua Sala / Turma</label>
-              <select
+              <Selecao
                 id="cad-sala"
                 name="sala"
                 defaultValue="DSM3"
                 required
-                className="select-sala"
-              >
-                {TURMAS_OFICIAIS.map((t) => (
-                  <option key={t} value={t}>
-                    {t} {t === "DSM3" ? "(Turma Principal)" : ""}
-                  </option>
-                ))}
-              </select>
+                opcoes={TURMAS_OFICIAIS.map((t) => ({
+                  valor: t,
+                  rotulo: t === "DSM3" ? `${t} (Turma Principal)` : t,
+                }))}
+              />
               <span className="dica-campo">Selecione sua turma oficial no SESI SENAI.</span>
             </div>
 
@@ -272,7 +270,7 @@ export function LoginTela() {
               className="botao botao-primario-grande w-full"
               disabled={carregandoCadastro}
             >
-              {carregandoCadastro ? "Criando conta..." : "Criar Conta & Entrar no CRM →"}
+              {carregandoCadastro ? "Criando conta…" : "Criar Conta & Entrar no CRM →"}
             </button>
           </form>
         </div>
@@ -349,7 +347,7 @@ export function LoginTela() {
               className="botao botao-primario-grande w-full"
               disabled={carregandoAtivar}
             >
-              {carregandoAtivar ? "Ativando..." : "Ativar meu acesso →"}
+              {carregandoAtivar ? "Ativando…" : "Ativar meu acesso →"}
             </button>
           </form>
         </div>

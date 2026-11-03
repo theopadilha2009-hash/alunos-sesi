@@ -34,8 +34,10 @@
   text-decoration: none;
 }
 
-.badge-cargo:hover {
-  transform: translateY(-0.5px);
+/* Selo não é botão: sem hover. O translateY de 0.5px fazia a pílula parecer
+   clicável e não levava a nada (design-theo/botoes.md § Selos). */
+.badge-cargo {
+  border: 0;
 }
 
 .badge-cargo-texto {
@@ -65,15 +67,9 @@
 
 .badge-cargo-turma {
   background: color-mix(in srgb, var(--cor-turma, #38c7bd) 24%, rgba(15, 23, 42, 0.8));
-  border: 1px solid color-mix(in srgb, var(--cor-turma, #38c7bd) 55%, rgba(255, 255, 255, 0.25));
+  border: 0;
   color: #ffffff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-.badge-cargo-turma:hover {
-  background: color-mix(in srgb, var(--cor-turma, #38c7bd) 35%, rgba(15, 23, 42, 0.9));
-  border-color: var(--cor-turma, #38c7bd);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--cor-turma, #38c7bd) 40%, transparent);
 }
 
 .badge-led-ponto {
@@ -81,7 +77,6 @@
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 6px var(--cor-turma, #38c7bd);
 }
 
 .badge-pequeno .badge-led-ponto {
@@ -98,83 +93,53 @@
 
 .badge-cargo-super-adm {
   background: rgba(245, 158, 11, 0.24);
-  border: 1px solid rgba(245, 158, 11, 0.65);
+  border: 0;
   color: #fef08a;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.badge-cargo-super-adm:hover {
-  background: rgba(245, 158, 11, 0.38);
-  border-color: #fbbf24;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
-}
 
 /* ── Badge ADM ───────────────────────────────────────────────────────────── */
 
 .badge-cargo-adm {
   background: rgba(56, 189, 248, 0.24);
-  border: 1px solid rgba(56, 189, 248, 0.65);
+  border: 0;
   color: #bae6fd;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.badge-cargo-adm:hover {
-  background: rgba(56, 189, 248, 0.38);
-  border-color: #38bdf8;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
-}
 
 /* ── Badge Fixado ────────────────────────────────────────────────────────── */
 
 .badge-cargo-fixado {
   background: rgba(16, 185, 129, 0.24);
-  border: 1px solid rgba(16, 185, 129, 0.65);
+  border: 0;
   color: #a7f3d0;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.badge-cargo-fixado:hover {
-  background: rgba(16, 185, 129, 0.38);
-  border-color: #34d399;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
-}
 
 /* ── Badge Destaque ──────────────────────────────────────────────────────── */
 
 .badge-cargo-destaque {
   background: rgba(234, 179, 8, 0.24);
-  border: 1px solid rgba(234, 179, 8, 0.65);
+  border: 0;
   color: #fef08a;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.badge-cargo-destaque:hover {
-  background: rgba(234, 179, 8, 0.38);
-  border-color: #fde047;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(234, 179, 8, 0.45);
-}
 
 /* ── Badge Extra (+ / Agrupamento de Honras) ─────────────────────────────── */
 
 .badge-cargo-extra {
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 0;
   color: #f1f5f9;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.badge-cargo-extra:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.5);
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-}
 
 /* ── Tema claro: as cores acima foram escolhidas para fundo escuro — todas
    carregam `text-shadow` preto. Na `.aluno` da vitrine (`--surface`, #ffffff)
@@ -209,9 +174,6 @@
   text-shadow: none;
 }
 
-:root[data-theme="light"] .badge-cargo-super-adm:hover {
-  background: #fbdaa2;
-}
 
 :root[data-theme="light"] .badge-cargo-adm {
   background: #cfeffd;
@@ -219,9 +181,6 @@
   text-shadow: none;
 }
 
-:root[data-theme="light"] .badge-cargo-adm:hover {
-  background: #b3e6fc;
-}
 
 :root[data-theme="light"] .badge-cargo-fixado {
   background: #c6eee1;
@@ -229,9 +188,6 @@
   text-shadow: none;
 }
 
-:root[data-theme="light"] .badge-cargo-fixado:hover {
-  background: #a4e4cf;
-}
 
 :root[data-theme="light"] .badge-cargo-destaque {
   background: #faedc4;
@@ -239,23 +195,12 @@
   text-shadow: none;
 }
 
-:root[data-theme="light"] .badge-cargo-destaque:hover {
-  background: #f7e2a1;
-}
 
-/* No claro a tinta branca do extra some sobre a superfície branca: sem fundo
-   nem borda, sobraria o texto solto. */
+/* No claro a tinta branca do extra some sobre a superfície branca: sem fundo,
+   sobraria o texto solto. */
 :root[data-theme="light"] .badge-cargo-extra {
   background: #e7e8ea;
-  border-color: #caccd0;
+  border: 0;
   color: #475569;
   text-shadow: none;
-}
-
-/* Sem esta regra o hover do extra não apareceria no claro (fundo e borda
-   brancos sobre branco). O texto continua o do bloco acima, que tem
-   especificidade maior que a cor branca do hover do tema escuro. */
-:root[data-theme="light"] .badge-cargo-extra:hover {
-  background: #d9dadd;
-  border-color: #b2b5bb;
 }

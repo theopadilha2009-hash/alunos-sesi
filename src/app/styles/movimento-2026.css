@@ -1,0 +1,49 @@
+/* ==========================================================================
+   movimento-2026.css — quem pediu menos movimento fica parado, em todo o app.
+   Entra no FIM da cascata de globals.css.
+
+   Antes deste arquivo só o crm.css:1578 e o skeleton-2026.css respeitavam
+   prefers-reduced-motion. As demais famílias (crachá, crachá digital,
+   estúdio, vitrine, adm) animavam igual para todo mundo, e seis delas em
+   loop infinito.
+
+   A regra vale nos dois sentidos:
+   - animation-duration/iteration-count: qualquer keyframe, inclusive os
+     `infinite`, roda uma vez em 0,01ms — o estado final (100%) pinta.
+   - transition-duration: a troca de estado salta direto.
+   Mantém-se a CRT/confetes: o gate deles é JS (lib/som.ts, movimentoReduzido).
+
+   Os `!important` são o único jeito de vencer especificidade de família
+   (`.selecao[aria-expanded="true"]`, `#foo .bar`) sem repetir seletor por
+   seletor — e este arquivo é declaradamente o último da cascata.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Vidro com limite: quem pediu menos transparência recebe a superfície
+   sólida. O véu escuro de `.modal-backdrop` já segura o contraste sozinho,
+   então o diálogo continua legível sem o desfoque. */
+@media (prefers-reduced-transparency: reduce) {
+  .modal-backdrop,
+  .curriculo-modal-backdrop,
+  .login-card,
+  .vidro,
+  .controles,
+  .crm-header {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .login-card {
+    background: var(--surface) !important;
+  }
+}

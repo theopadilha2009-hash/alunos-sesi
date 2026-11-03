@@ -56,9 +56,12 @@
    PREFIXO só, e o Chromium ignora `-webkit-backdrop-filter` sozinho — o blur
    simplesmente NÃO pintava (o QA de 05/10 mediu `computed: none`). Aqui vai
    SÓ a forma padrão, que o minificador preserva. */
+/* 6px borrava tanto que a página de trás deixava de ser reconhecível; a
+   receita do design-theo/b6 é 2-4px ("a pessoa precisa reconhecer a tela de
+   trás"). O fallback sem transparência vive em movimento-2026.css. */
 .modal-backdrop {
   background: var(--backdrop);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(3px);
 }
 
 /* ── AVATARES: o mesmo aluno é círculo em toda tela ───────────────────────

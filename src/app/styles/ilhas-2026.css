@@ -32,9 +32,9 @@
   --line-soft: rgba(255, 255, 255, 0.04);
   --fg: var(--text);
   --border: var(--line);
-  --accent: #38c7bd;
-  --on-accent: #04211f;
-  --glow: rgba(56, 199, 189, 0.16);
+  --accent: #4fb3da;
+  --on-accent: #04202e;
+  --glow: rgba(79, 179, 218, 0.3);
 }
 
 /* O `<body>` do login pinta o "elástico" da rolagem (crm.css:51) e fica FORA
