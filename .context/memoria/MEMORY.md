@@ -2,6 +2,8 @@
 
 Índice dos fatos. Uma linha por fato — o conteúdo está no arquivo.
 
+- [O design-theo foi aplicado](design-theo-aplicado.md) — PR #158 (03/11): a paleta Céu chegou, o acento deixou de ser teal, 9 selects nativos morreram; e a armadilha de portar nome de classe do Atlas
+
 - [Rotacionar os tokens do transcript](rotacionar-tokens-do-transcript.md) — quatro tokens (Vercel ×2, Supabase, PAT do GitHub) passaram pelo chat e nenhum foi rotacionado; a varredura do git de 15/10 mostrou que o repo está limpo
 - [O segundo app não foi definido](segundo-app-nao-definido.md) — o Théo falou em "dois apps"; só a Vitrine foi entregue
 - [O alternador de tema voltou](alternador-de-tema-voltou.md) — PR #147 (19/10): tinta da View Transitions + números que contam; R1 atualizada com a chave `sesi.tema.v2`, não desfeita
