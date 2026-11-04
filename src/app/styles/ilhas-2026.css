@@ -35,6 +35,25 @@
   --accent: #4fb3da;
   --on-accent: #04202e;
   --glow: rgba(79, 179, 218, 0.3);
+  /* O vermelho de dado de sala (#d74d42) sobre o card escuro dá 3,57:1 e
+     reprova AA — era a mensagem "Usuário ou senha incorretos", justamente a
+     que precisa ser lida. Este tinte dá 5,92:1 e continua lendo como erro. */
+  --vermelho-sesi-texto: #ff7b72;
+  --suave-vermelho: #ff7b72;
+}
+
+:root[data-theme="light"] .login-tela-container,
+:root[data-theme="light"] .login-landing {
+  --suave-vermelho: #ff7b72;
+}
+
+/* A mensagem de recusa é o texto mais importante desta tela: no escuro ela
+   precisa passar AA, e o --vermelho de dado de sala não passa. */
+:root .login-tela-container .recado-erro,
+:root .login-landing .recado-erro {
+  color: #ff7b72;
+  border-color: color-mix(in srgb, #ff7b72 45%, transparent);
+  background: color-mix(in srgb, #ff7b72 10%, transparent);
 }
 
 /* O `<body>` do login pinta o "elástico" da rolagem (crm.css:51) e fica FORA

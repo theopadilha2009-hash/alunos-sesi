@@ -577,7 +577,8 @@ export function PainelAdmIntegrado({
                             type="button"
                             className="btn-acao-tabela"
                             onClick={() => onAbrirCracha(a)}
-                            title="Abrir crachá digital 3D"
+                            aria-label={`Abrir crachá digital de ${a.nome}`}
+                            data-dica="Crachá"
                           >
                             <IconeCracha tamanho={14} />
                           </button>
@@ -590,7 +591,8 @@ export function PainelAdmIntegrado({
                             className="btn-acao-tabela"
                             onClick={() => setEditandoId(editandoId === a.id ? null : a.id)}
                             aria-expanded={editandoId === a.id}
-                            title="Editar nome e e-mail"
+                            aria-label={`Editar nome e e-mail de ${a.nome}`}
+                            data-dica="Editar"
                           >
                             <IconeEditar tamanho={14} />
                           </button>
@@ -599,8 +601,8 @@ export function PainelAdmIntegrado({
                             type="button"
                             className="btn-acao-tabela"
                             onClick={() => setAlunoCredenciais(a)}
-                            title="Definir login e senha"
                             aria-label={`Definir login e senha de ${a.nome}`}
+                            data-dica="Login e senha"
                           >
                             <IconeUsuario tamanho={14} />
                           </button>
@@ -614,7 +616,8 @@ export function PainelAdmIntegrado({
                               <button
                                 type="submit"
                                 className="btn-acao-tabela"
-                                title="Gerar código de ativação para este aluno"
+                                aria-label={`Gerar código de ativação para ${a.nome}`}
+                                data-dica="Gerar código"
                                 disabled={emitindoCodigo}
                               >
                                 <IconeChave tamanho={14} />
@@ -641,7 +644,8 @@ export function PainelAdmIntegrado({
                               <button
                                 type="submit"
                                 className="btn-acao-tabela"
-                                title="Resetar acesso: derruba a senha e gera código novo de ativação"
+                                aria-label={`Resetar acesso de ${a.nome}`}
+                                data-dica="Resetar acesso"
                                 disabled={resetando}
                               >
                                 <IconeChave tamanho={14} />
@@ -661,7 +665,8 @@ export function PainelAdmIntegrado({
                             <button
                               type="submit"
                               className="btn-acao-tabela btn-perigo-tabela"
-                              title="Excluir estudante"
+                              aria-label={`Excluir ${a.nome}`}
+                              data-dica="Excluir"
                             >
                               <IconeLixeira tamanho={14} />
                             </button>

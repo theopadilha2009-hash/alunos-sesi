@@ -39,7 +39,9 @@ import type {
  * entregas" usa os desafios do mural, que é a agenda real da escola hoje.
  */
 
-type AbaDestino = "portfolio" | "projetos" | "desafios" | "tabelas" | "adm";
+// "tabelas" deixou de ser aba em 04/11: a tabela virou um modo dentro do
+// Portfólio, e os atalhos daqui levam para lá.
+type AbaDestino = "portfolio" | "projetos" | "desafios" | "adm";
 
 type Props = {
   usuario: UsuarioSessao;
@@ -245,7 +247,7 @@ export function VisaoGeral({
                 <button
                   type="button"
                   className="botao botao-secundario"
-                  onClick={() => onIrPara("tabelas")}
+                  onClick={() => onIrPara("portfolio")}
                 >
                   <IconeTabela tamanho={15} />
                   <span>Ver tabela de alunos</span>
@@ -400,7 +402,7 @@ export function VisaoGeral({
                 <button
                   type="button"
                   className="vg-link"
-                  onClick={() => onIrPara("tabelas")}
+                  onClick={() => onIrPara("portfolio")}
                 >
                   Ver alunos
                 </button>
@@ -640,7 +642,7 @@ export function VisaoGeral({
                   <button
                     type="button"
                     className="vg-atalho"
-                    onClick={() => onIrPara("tabelas")}
+                    onClick={() => onIrPara("portfolio")}
                   >
                     <IconeTabela tamanho={17} />
                     <span>Tabela de alunos</span>

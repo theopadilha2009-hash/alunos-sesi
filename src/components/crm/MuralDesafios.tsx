@@ -147,6 +147,16 @@ export function MuralDesafios({
           const meuEnvio = envioPorDesafio.get(desafio.id);
           return (
             <div key={desafio.id} className="card-desafio-item">
+              {/* Capa do desafio (pedido de 04/11). Sem imagem, o card segue
+                  igual ao de antes: nada de espaço vazio reservado. */}
+              {desafio.imagemUrl ? (
+                <img
+                  className="desafio-capa"
+                  src={desafio.imagemUrl}
+                  alt=""
+                  loading="lazy"
+                />
+              ) : null}
               <div className="desafio-card-header">
                 <span className="desafio-categoria-badge">{desafio.categoria}</span>
                 <span className="desafio-prazo-tag">Prazo: {desafio.prazo}</span>
@@ -155,6 +165,11 @@ export function MuralDesafios({
               <div className="desafio-corpo">
                 <h2 className="desafio-titulo">{desafio.titulo}</h2>
                 <p className="desafio-subtitulo-texto">{desafio.subtitulo}</p>
+                {desafio.responsavel ? (
+                  <p className="desafio-responsavel">
+                    Apresentado por <strong>{desafio.responsavel}</strong>
+                  </p>
+                ) : null}
                 <p className="desafio-descricao">{desafio.descricao}</p>
 
                 {/* Critérios de Avaliação */}

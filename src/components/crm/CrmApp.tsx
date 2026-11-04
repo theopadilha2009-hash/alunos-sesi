@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { logoutAction } from "@/app/acoes-crm";
 import { AlternadorTema } from "@/components/AlternadorTema";
+import { Selecao } from "@/components/Selecao";
 import { BotaoSom } from "@/components/BotaoSom";
 import { Avatar } from "@/components/Avatar";
 import { CommandBar } from "@/components/CommandBar";
@@ -78,7 +79,6 @@ type AbaAtiva =
   | "portfolio"
   | "projetos"
   | "desafios"
-  | "tabelas"
   | "adm"
   | "olisesi";
 
@@ -248,14 +248,30 @@ export function CrmApp({
     }
   }, [meuAlunoId, estrelasAtuais]);
 
+  const [modoVisualizacao, setModoVisualizacao] = useState<"tabela" | "cards" | "gestao">("tabela");
+
+  // Ordem da lista: no modo de gestão manda a estrela; nas demais visões, a
+  // curadoria do ADM (fixado > destaque > estrelas).
+  const abaOrdenacao = modoVisualizacao;
+
   // Filtro de alunos visíveis no Portfólio
   const visiveis = useMemo(() => {
     const filtrados = filtrarAlunos(
       naTela.map((a) => ({ ...a, salaId: a.sala_id })),
       { sala: salaSelecionada, query: queryAdiada, estrelados: meus, habilidade: habilidadeFiltro },
     );
+    // Na TABELA o ranking é por estrelas, e só isso: pedido de 04/11 ("aqui
+    // devia ficar em primeiro os mais com estrelas"). O `ordenarAlunos` global
+    // (fixado > destaque > estrelas) continua valendo na vitrine e na grade,
+    // onde fixar/destacar é curadoria do ADM. Aqui, não: quem está na tabela
+    // quer ver o mais reconhecido no topo.
+    if (abaOrdenacao === "gestao") {
+      return [...filtrados].sort(
+        (a, b) => b.estrelas - a.estrelas || a.nome.localeCompare(b.nome, "pt-BR"),
+      );
+    }
     return ordenarAlunos(filtrados);
-  }, [naTela, salaSelecionada, queryAdiada, meus, habilidadeFiltro]);
+  }, [naTela, salaSelecionada, queryAdiada, meus, habilidadeFiltro, abaOrdenacao]);
 
   // Top 10 competências técnicas mais frequentes para o filtro interativo
   const todasHabilidadesUnicas = useMemo(() => {
@@ -272,7 +288,6 @@ export function CrmApp({
     return ["Todas", ...ordenadas];
   }, [naTela]);
 
-  const [modoVisualizacao, setModoVisualizacao] = useState<"tabela" | "cards">("tabela");
 
   // Agrupamento por sala para o Portfólio (organizado por sala na mesma ordem oficial)
   const gruposSalas = useMemo(() => {
@@ -568,16 +583,11 @@ export function CrmApp({
             <span className="nav-badge">{naTela.length}</span>
           </button>
 
-          <button
-            type="button"
-            className={`nav-item ${aba === "tabelas" ? "nav-item-ativo" : ""}`}
-            onClick={() => setAba("tabelas")}
-          >
-            <span className="nav-icone">
-              <IconeTabela tamanho={18} />
-            </span>
-            <span className="nav-label">Tabelas & Alunos</span>
-          </button>
+          {/* "Tabelas & Alunos" deixou de ser aba em 04/11 (pedido do Théo):
+              as duas telas mostravam os mesmos alunos e o menu ficava longo.
+              A tabela virou um MODO dentro de Portfólio — o botão "Tabela"
+              ao lado dos filtros — então nada se perdeu, só parou de ser um
+              segundo caminho para o mesmo dado. */}
 
           <button
             type="button"
@@ -769,9 +779,7 @@ export function CrmApp({
                 ? "Vitrine Profissional"
                 : aba === "projetos"
                   ? "Criações da Escola"
-                  : aba === "tabelas"
-                    ? "Gestão Tabular"
-                    : aba === "desafios"
+                  : aba === "desafios"
                       ? "Desafios da Escola"
                       : aba === "olisesi"
                         ? "Escola SESI"
@@ -784,9 +792,7 @@ export function CrmApp({
                 ? "Portfólio da Turma"
                 : aba === "projetos"
                   ? "Criações & Projetos SESI"
-                  : aba === "tabelas"
-                    ? "Tabela de Alunos & Salas"
-                    : aba === "desafios"
+                  : aba === "desafios"
                       ? "Mural de Desafios"
                       : aba === "olisesi"
                         ? "Olimpíadas SESI"
@@ -870,61 +876,43 @@ export function CrmApp({
               </p>
             </div>
 
-            {/* Trilho de Salas */}
-            <div className="trilho" role="group" aria-label="Filtrar por sala">
-              <button
-                type="button"
-                className="ficha"
-                aria-pressed={salaSelecionada === TODAS}
-                onClick={() => setSalaSelecionada(TODAS)}
-              >
-                Todas as Salas <span className="n">{naTela.length}</span>
-              </button>
+            {/* Filtros enxutos (pedido de 04/11: "muitos filtros
+                pré-estabelecidos, deixa menos"). Eram 13 chips de sala + 10
+                de competência abertos na tela; viraram dois seletores que
+                abrem só quando você quer. A busca continua grande em cima. */}
+            <div className="filtros-enxutos">
+              <Selecao
+                ariaLabel="Filtrar por sala"
+                compacta
+                value={salaSelecionada}
+                onChange={setSalaSelecionada}
+                opcoes={[
+                  { valor: TODAS, rotulo: `Todas as salas (${naTela.length})` },
+                  { valor: ESTRELADOS, rotulo: `Meus estrelados (${meus.length})` },
+                  ...salas.map((s) => ({ valor: s.id, rotulo: s.nome })),
+                ]}
+              />
 
-              <button
-                type="button"
-                className="ficha"
-                style={{ ["--sala" as string]: "var(--amarelo)" }}
-                aria-pressed={salaSelecionada === ESTRELADOS}
-                onClick={() => setSalaSelecionada(ESTRELADOS)}
-              >
-                <span className="ponto" />
-                Meus Estrelados <span className="n">{meus.length}</span>
-              </button>
+              <Selecao
+                ariaLabel="Filtrar por competência"
+                compacta
+                value={habilidadeFiltro}
+                onChange={setHabilidadeFiltro}
+                opcoes={todasHabilidadesUnicas.map((h) => ({ valor: h, rotulo: h }))}
+              />
 
-              {salas.map((s) => (
+              {(salaSelecionada !== TODAS || habilidadeFiltro !== "Todas") ? (
                 <button
-                  key={s.id}
                   type="button"
-                  className="ficha"
-                  style={{ ["--sala" as string]: corDaSala(s.nome) }}
-                  aria-pressed={salaSelecionada === s.id}
-                  onClick={() => setSalaSelecionada(s.id)}
+                  className="botao botao-fraco"
+                  onClick={() => {
+                    setSalaSelecionada(TODAS);
+                    setHabilidadeFiltro("Todas");
+                  }}
                 >
-                  <span className="ponto" />
-                  {s.nome}
+                  Limpar filtros
                 </button>
-              ))}
-            </div>
-
-            {/* Barra de Filtro Rápido por Competência Técnica */}
-            <div className="trilho-habilidades" role="group" aria-label="Filtrar por competência técnica">
-              <span className="label-habilidades">Competência:</span>
-              <div className="chips-habilidades-wrap">
-                {todasHabilidadesUnicas.map((hab) => (
-                  <button
-                    key={hab}
-                    type="button"
-                    className={`chip-hab ${habilidadeFiltro === hab ? "chip-hab-ativo" : ""}`}
-                    onClick={() => setHabilidadeFiltro(habilidadeFiltro === hab ? "Todas" : hab)}
-                  >
-                    {hab !== "Todas" ? (
-                      <span className="ponto-hab" style={{ background: corHabilidade(hab) }} />
-                    ) : null}
-                    {hab}
-                  </button>
-                ))}
-              </div>
+              ) : null}
             </div>
 
             {/* Top 3 Projetos da Turma no Topo do Portfólio */}
@@ -975,10 +963,37 @@ export function CrmApp({
                     <IconeCards tamanho={14} />
                     <span>Cards</span>
                   </button>
+                  {/* A tabela de GESTÃO (com fixar/destacar/ações) era uma aba
+                      própria. Virou modo aqui em 04/11: mesmo dado, um caminho
+                      só. */}
+                  <button
+                    type="button"
+                    className={`btn-modo ${modoVisualizacao === "gestao" ? "btn-modo-ativo" : ""}`}
+                    onClick={() => setModoVisualizacao("gestao")}
+                    title="Tabela de gestão: fixar, destacar e ações por aluno"
+                  >
+                    <IconeTabela tamanho={14} />
+                    <span>Gestão</span>
+                  </button>
                 </div>
               </div>
 
-              {gruposSalas.length === 0 ? (
+              {modoVisualizacao === "gestao" ? (
+                /* A tabela de gestão completa (fixar, destacar, ações), que
+                   antes era a aba "Tabelas & Alunos". Filtros locais dela,
+                   como sempre foram. */
+                <div className="aba-tabelas">
+                  <PainelTabelaAlunos
+                    alunos={visiveis}
+                    salas={salas}
+                    meusVotos={meus}
+                    ocupado={ocupado}
+                    onEstrelar={estrelar}
+                    onAbrirCracha={setAlunoCracha}
+                    onSelecionarAluno={setAlunoBreveSelecionado}
+                  />
+                </div>
+              ) : gruposSalas.length === 0 ? (
                 <div className="vazio">
                   <b>Nenhum estudante encontrado</b>
                   <p>Tente ajustar a busca ou escolher outra sala no seletor acima.</p>
@@ -1317,37 +1332,6 @@ export function CrmApp({
                     }
                   : undefined
               }
-            />
-          </div>
-        ) : null}
-
-        {/* ── ABA 3: TABELAS & ALUNOS ──────────────────────────────────── */}
-        {aba === "tabelas" ? (
-          <div className="crm-secao-conteudo aba-tabelas">
-            <div className="bloco-cabecalho-tabela">
-              <h2>Tabela Geral de Estudantes SESI</h2>
-              {/* O texto antigo prometia filtros que a aba nunca teve (e os da
-                  Portfólio vazavam pra cá, invisíveis). Desde 19/10/2026 os
-                  filtros existem de verdade — moram no PainelTabelaAlunos,
-                  locais da aba, e a frase volta a prometer o que a tela
-                  entrega. */}
-              <p>
-                Busque e filtre a turma inteira: sala, estrelados, fixação e redes
-                profissionais.
-              </p>
-            </div>
-
-            {/* Filtros locais da aba (PainelTabelaAlunos), não os do CrmApp:
-                a tabela aparecia filtrada sem nada na tela explicando por quê
-                quando os controles da Portfólio vazavam pra cá. */}
-            <PainelTabelaAlunos
-              alunos={naTela}
-              salas={salas}
-              meusVotos={meus}
-              ocupado={ocupado}
-              onEstrelar={estrelar}
-              onAbrirCracha={setAlunoCracha}
-              onSelecionarAluno={setAlunoBreveSelecionado}
             />
           </div>
         ) : null}

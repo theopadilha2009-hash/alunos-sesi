@@ -76,7 +76,6 @@ const SEM_CSS = {
   "btn-imprimir-curriculo": BASE,
   "campo-dica": TEXTO,
   "cmd-label": TEXTO,
-  "cracha-habilidades": CAIXA,
   "criacao-desc": TEXTO,
   "criacao-titulo": TEXTO,
   "curriculo-avatar-col": CAIXA,

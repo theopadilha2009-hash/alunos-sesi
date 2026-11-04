@@ -64,6 +64,10 @@ export type DesafioHackathon = {
   criterios: string[];
   submissoesCount: number;
   ativo: boolean;
+  /** Capa do desafio (Blob). Sem ela, o mural usa o ícone da categoria. */
+  imagemUrl: string | null;
+  /** Quem apresenta o desafio (texto livre, ex.: "Prof. Ewerton"). */
+  responsavel: string | null;
 };
 
 export type SubmissaoDesafio = {

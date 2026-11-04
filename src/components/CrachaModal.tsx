@@ -200,11 +200,9 @@ export function CrachaModal({ aluno, role, onClose }: Props) {
                 <span className="cracha-sub">STUDENT PASS · 2026</span>
               </div>
             </div>
-            <div className="cracha-chip" aria-hidden="true">
-              <span className="chip-linha" />
-              <span className="chip-linha" />
-              <span className="chip-linha" />
-            </div>
+            {/* O "chip dourado" saiu em 04/11 (pedido do Théo): imitava o
+                contato de um cartão físico, não informava nada e virava um
+                bloco solto quando o cartão mudava de largura. */}
           </header>
 
           <div className="cracha-corpo">

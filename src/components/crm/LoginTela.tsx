@@ -180,6 +180,27 @@ export function LoginTela() {
                 required
                 autoComplete="current-password"
               />
+              {/* O gerenciador de senhas do navegador reenche este campo com a
+                  senha que ele guardou para o endereço. Depois que o projeto
+                  Supabase foi trocado (04/11), essa senha antiga passou a
+                  chegar no servidor e o login respondia "incorreto" com o
+                  texto certo na tela. O aviso abaixo é a saída visível: o
+                  navegador não deixa o app apagar o que ele guardou. */}
+              <button
+                type="button"
+                className="login-limpar-senha"
+                onClick={(e) => {
+                  const campo = e.currentTarget
+                    .closest(".campo")
+                    ?.querySelector<HTMLInputElement>("input[type='password']");
+                  if (!campo) return;
+                  setSenhaLogin("");
+                  campo.value = "";
+                  campo.focus();
+                }}
+              >
+                Limpar senha salva pelo navegador
+              </button>
             </div>
 
             <button

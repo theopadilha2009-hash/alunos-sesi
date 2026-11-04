@@ -366,7 +366,7 @@ export async function desafioAtivo(
 export async function listarDesafios(): Promise<DesafioHackathon[]> {
   const { data, error } = await clientePublico()
     .from("desafios")
-    .select("id,titulo,subtitulo,categoria,prazo,recompensa,insignia_icone,descricao,criterios,submissoes_count,ativo")
+    .select("id,titulo,subtitulo,categoria,prazo,recompensa,insignia_icone,descricao,criterios,submissoes_count,ativo,imagem_url,responsavel")
     .order("prazo", { ascending: true });
 
   if (error) {
@@ -386,6 +386,8 @@ export async function listarDesafios(): Promise<DesafioHackathon[]> {
     criterios: Array.isArray(d.criterios) ? d.criterios : [],
     submissoesCount: d.submissoes_count ?? 0,
     ativo: Boolean(d.ativo),
+    imagemUrl: d.imagem_url ?? null,
+    responsavel: d.responsavel ?? null,
   }));
 }
 

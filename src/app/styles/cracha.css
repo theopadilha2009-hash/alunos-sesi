@@ -5,7 +5,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 28rem;
+  /* 28rem -> 32rem: com a foto em cima o cartão ficou mais alto que largo
+     ("mal otimizado"); a largura extra devolve a proporção de cartão. */
+  max-width: 32rem;
   width: 100%;
   contain: layout style;
   will-change: transform, opacity;
@@ -213,27 +215,18 @@
   color: var(--accent);
 }
 
-.cracha-chip {
-  width: 32px;
-  height: 24px;
-  background: linear-gradient(135deg, #d4af37, #f3e5ab, #aa771c);
-  border-radius: 4px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  padding: 3px;
-  border: 1px solid #5a450c;
-}
+/* .cracha-chip / .chip-linha: removidos em 04/11 junto com o markup — o
+   "chip dourado" imitava um cartão físico e não informava nada. */
 
-.chip-linha {
-  height: 1px;
-  background: #5a450c;
-  width: 100%;
-}
-
+/* Layout pedido em 04/11: foto redonda em cima, dados embaixo, cartão mais
+   largo. Antes era foto à esquerda e texto à direita, e o cartão ficava
+   estreito e alto demais ("mal otimizado, deixa mais esticado"). */
 .cracha-corpo {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
   margin-bottom: 1.2rem;
 }
 
@@ -242,12 +235,27 @@
   flex: none;
 }
 
+/* A FOTO do aluno é o centro do crachá: quando existe, preenche o círculo.
+   Sem esta regra o <img> não ocupava o avatar e o cartão mostrava só as
+   iniciais, mesmo com foto cadastrada. */
+.cracha-avatar img,
+.cracha-avatar > img,
+.cracha-foto-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+}
+
 .cracha-avatar {
   display: grid;
   place-items: center;
-  width: 4.8rem;
-  height: 4.8rem;
-  border-radius: 18px;
+  width: 6.2rem;
+  height: 6.2rem;
+  border-radius: 50%;
+  overflow: hidden;
   border: 2px solid var(--sala-cor, var(--accent));
   background: color-mix(in srgb, var(--sala-cor, var(--accent)) 25%, var(--surface-2));
   font-family: var(--fonte-titulo);
@@ -272,8 +280,11 @@
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
 }
 
+/* Vertical: o crachá agora empilha foto e dados (pedido de 04/11), então o
+   bloco de texto ocupa a largura toda e centraliza — não é mais a coluna ao
+   lado da foto. */
 .cracha-dados {
-  flex: 1;
+  width: 100%;
   min-width: 0;
 }
 
@@ -285,10 +296,13 @@
   margin: 0 0 0.4rem;
 }
 
-.cracha-linha-sala {
+/* Selos (sala, cargo, estrelas) centro-alinhados sob o nome. */
+.cracha-linha-sala,
+.cracha-habilidades {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   margin-bottom: 0.5rem;
 }
