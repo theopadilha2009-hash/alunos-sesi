@@ -36,7 +36,6 @@ import { VisaoGeral } from "@/components/crm/VisaoGeral";
 import { ESTRELADOS, TODAS, filtrarAlunos, fold } from "@/lib/busca";
 import { corDaSala, corDoAluno } from "@/lib/cores";
 import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
-import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos } from "@/lib/ranking";
 import { dispararConfetes, tocarSom, tocarSomEstrela } from "@/lib/som";
 import type {
@@ -1176,63 +1175,49 @@ export function CrmApp({
               </p>
             </div>
 
-            <div className="trilho" role="group" aria-label="Filtrar projetos por sala">
-              <button
-                type="button"
-                className="ficha"
-                aria-pressed={salaProjetos === TODAS}
-                onClick={() => setSalaProjetos(TODAS)}
-              >
-                Todas <span className="n">{todasCriacoes.length}</span>
-              </button>
-              {salasComProjetos.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  className="ficha"
-                  style={{ ["--sala" as string]: corDaSala(s.nome) }}
-                  aria-pressed={salaProjetos === s.id}
-                  onClick={() => setSalaProjetos(s.id)}
-                >
-                  <span className="ponto" />
-                  {s.nome}{" "}
-                  <span className="n">{contagemProjetosPorSala.get(s.id) ?? 0}</span>
-                </button>
-              ))}
-            </div>
+            {/* Mesma redução das Turmas (pedido de 04/11): 13 chips de sala +
+                10 de competência viraram dois seletores. */}
+            <div className="filtros-enxutos">
+              <Selecao
+                ariaLabel="Filtrar projetos por sala"
+                compacta
+                value={salaProjetos}
+                onChange={setSalaProjetos}
+                opcoes={[
+                  { valor: TODAS, rotulo: `Todas as salas (${todasCriacoes.length})` },
+                  ...salasComProjetos.map((s) => ({
+                    valor: s.id,
+                    rotulo: `${s.nome} (${contagemProjetosPorSala.get(s.id) ?? 0})`,
+                  })),
+                ]}
+              />
 
-            {competenciasProjetos.length > 0 ? (
-              <div
-                className="trilho-habilidades"
-                role="group"
-                aria-label="Filtrar projetos por competência"
-              >
-                <span className="trilho-label">Competências:</span>
+              {competenciasProjetos.length > 0 ? (
+                <Selecao
+                  ariaLabel="Filtrar projetos por competência"
+                  compacta
+                  value={habilidadeProjetos}
+                  onChange={setHabilidadeProjetos}
+                  opcoes={[
+                    { valor: "Todas", rotulo: "Todas as competências" },
+                    ...competenciasProjetos.map((h) => ({ valor: h, rotulo: h })),
+                  ]}
+                />
+              ) : null}
+
+              {(salaProjetos !== TODAS || habilidadeProjetos !== "Todas") ? (
                 <button
                   type="button"
-                  className={`chip-hab ${habilidadeProjetos === "Todas" ? "chip-hab-ativo" : ""}`}
-                  onClick={() => setHabilidadeProjetos("Todas")}
+                  className="botao botao-fraco"
+                  onClick={() => {
+                    setSalaProjetos(TODAS);
+                    setHabilidadeProjetos("Todas");
+                  }}
                 >
-                  Todas
+                  Limpar filtros
                 </button>
-                {competenciasProjetos.map((hab) => (
-                  <button
-                    key={hab}
-                    type="button"
-                    className={`chip-hab ${habilidadeProjetos === hab ? "chip-hab-ativo" : ""}`}
-                    onClick={() =>
-                      setHabilidadeProjetos((atual) => (atual === hab ? "Todas" : hab))
-                    }
-                  >
-                    <span
-                      className="ponto-hab"
-                      style={{ background: corHabilidade(hab) }}
-                    />
-                    {hab}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+              ) : null}
+            </div>
 
             {projetosFiltrados.length === 0 ? (
               <div className="vazio">
