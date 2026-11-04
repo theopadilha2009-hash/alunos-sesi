@@ -31,7 +31,6 @@ import { LinhaCargos } from "@/components/CargosBadges";
 import { BadgeGitHub, BadgeLinkedIn } from "@/components/RedesBadges";
 import { Roseta } from "@/components/Roseta";
 import { TabelaAlunos } from "@/components/TabelaAlunos";
-import { TopProjetosTurma } from "@/components/TopProjetosTurma";
 import { MuralDesafios } from "@/components/crm/MuralDesafios";
 import { VisaoGeral } from "@/components/crm/VisaoGeral";
 import { ESTRELADOS, TODAS, filtrarAlunos, fold } from "@/lib/busca";
@@ -39,7 +38,7 @@ import { corDaSala, corDoAluno } from "@/lib/cores";
 import { lerRespostaEstrela, motivoParaNaoEstrelar } from "@/lib/estrela";
 import { corHabilidade } from "@/lib/habilidades";
 import { ordenarAlunos } from "@/lib/ranking";
-import { dispararConfetes, tocarSomEstrela } from "@/lib/som";
+import { dispararConfetes, tocarSom, tocarSomEstrela } from "@/lib/som";
 import type {
   Aluno,
   AlunoNaTela,
@@ -484,6 +483,8 @@ export function CrmApp({
       if (!resultado.ok) {
         desfazer();
         setRecado(resultado.motivo);
+        // O som acompanha o aviso na tela, nunca o substitui (B13).
+        tocarSom("erro");
         return;
       }
 
@@ -579,7 +580,7 @@ export function CrmApp({
             <span className="nav-icone">
               <IconePortfolio tamanho={18} />
             </span>
-            <span className="nav-label">Portfólio</span>
+            <span className="nav-label">Turmas</span>
             <span className="nav-badge">{naTela.length}</span>
           </button>
 
@@ -916,11 +917,10 @@ export function CrmApp({
             </div>
 
             {/* Top 3 Projetos da Turma no Topo do Portfólio */}
-            <TopProjetosTurma
-              alunos={naTela}
-              onAbrirPerfil={setAlunoBreveSelecionado}
-              onAbrirCracha={setAlunoCracha}
-            />
+            {/* Top 3 saiu daqui em 04/11 (pedido do Théo): a aba
+                Projetos & Criações já mostra os destaques, e no Portfólio ele
+                empurrava a lista de alunos para baixo da dobra. */}
+
 
             {/* ── ORGANIZADO POR SALA COM OS ALUNOS CORRESPONDENTES ─── */}
             <div className="portfolio-salas-container">

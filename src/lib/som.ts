@@ -99,6 +99,65 @@ export function tocarSomEstrela() {
   }
 }
 
+/**
+ * As peças sonoras do design-theo (biblioteca.md, B13), sintetizadas aqui
+ * mesmo — sem arquivo para baixar.
+ *
+ * Regras da skill, todas respeitadas abaixo:
+ * - volume baixo de propósito (0,04 a 0,09);
+ * - só toca em EVENTO; nada em hover, digitação ou loop;
+ * - o som nunca é o único sinal — quem chama já mudou algo na tela.
+ *
+ * `tocarSomEstrela` continua existindo separado: o acorde de quatro notas é a
+ * assinatura do voto, mais rico que os sons de estado abaixo.
+ */
+export type NomeDoSom = "notificacao" | "sucesso" | "erro" | "envio" | "clique";
+
+const PARTITURAS: Record<NomeDoSom, { notas: number[]; tipo: OscillatorType; dur: number; vol: number; passo: number }> = {
+  // aviso chegou: duas notas subindo, seno
+  notificacao: { notas: [880, 1320], tipo: "sine", dur: 0.3, vol: 0.06, passo: 0.12 },
+  // salvou, enviou, concluiu: três notas subindo, triângulo
+  sucesso: { notas: [523.25, 659.25, 783.99], tipo: "triangle", dur: 0.3, vol: 0.07, passo: 0.08 },
+  // tentativa recusada: duas notas descendo
+  erro: { notas: [392, 311.13], tipo: "triangle", dur: 0.26, vol: 0.07, passo: 0.1 },
+  // mandou mensagem / entrou no sistema: duas notas curtas
+  envio: { notas: [740, 880], tipo: "sine", dur: 0.15, vol: 0.05, passo: 0.07 },
+  // confirmação mínima
+  clique: { notas: [1600], tipo: "sine", dur: 0.03, vol: 0.04, passo: 0 },
+};
+
+/** Toca o som de um evento. Silencioso quando o som está desligado. */
+export function tocarSom(nome: NomeDoSom) {
+  if (typeof window === "undefined" || !somLigado()) return;
+
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const { notas, tipo, dur, vol, passo } = PARTITURAS[nome];
+    const agora = ctx.currentTime;
+
+    notas.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const inicio = agora + i * passo;
+
+      osc.type = tipo;
+      osc.frequency.setValueAtTime(freq, inicio);
+      gain.gain.setValueAtTime(0.0001, inicio);
+      gain.gain.exponentialRampToValueAtTime(vol, inicio + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, inicio + dur);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(inicio);
+      osc.stop(inicio + dur + 0.02);
+    });
+  } catch {
+    // Navegador sem permissão de áudio: o som é opcional, a tela já sinalizou.
+  }
+}
+
 /** Dispara uma explosão festiva de confetes com as cores oficiais do SESI */
 export function dispararConfetes(x?: number, y?: number) {
   if (typeof window === "undefined") return;
