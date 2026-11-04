@@ -1,7 +1,10 @@
 // Service Worker para PWA do Ecossistema SESI SC - Joinville
 // Garante funcionamento offline do crachá, catálogo e perfis escolares
 
-const CACHE_NAME = "sesi-joinville-v3";
+// v4: o cache de estáticos passou a revalidar e a avisar a página quando um
+  // asset muda. Subir a versão aqui descarta o cache antigo de todo mundo no
+  // activate — é o que faz um aparelho que já tem CSS velho se corrigir sozinho.
+  const CACHE_NAME = "sesi-joinville-v4";
 const RECURSOS_ESTATICOS = [
   "/",
   "/manifest.webmanifest",
@@ -100,28 +103,51 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Arquivos estáticos (_next/static, imagens, css)
+  // Arquivos estáticos (_next/static, imagens, css).
+  //
+  // Antes era Cache-First: o cache respondia e a atualização entrava "em
+  // segundo plano", então uma troca de CSS só aparecia na SEGUNDA visita. Foi
+  // exatamente o que fez o login parecer quebrado depois do redesign — o HTML
+  // vinha novo (network-first) e o CSS vinha velho do cache, então o layout
+  // rachava. Agora é Stale-While-Revalidate de verdade: responde do cache para
+  // ser instantâneo, mas quando a rede traz uma versão diferente o cache é
+  // atualizado E a página recarrega uma vez, para a pessoa já ver o certo.
   event.respondWith(
-    caches.match(req).then((respostaCache) => {
-      if (respostaCache) {
-        // Busca atualização em segundo plano
-        fetch(req)
-          .then((respostaRede) => {
-            if (respostaRede && respostaRede.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(req, respostaRede));
-            }
-          })
-          .catch(() => {});
-        return respostaCache;
-      }
-
-      return fetch(req).then((respostaRede) => {
+    caches.match(req).then(async (respostaCache) => {
+      if (!respostaCache) {
+        const respostaRede = await fetch(req);
         if (respostaRede && respostaRede.status === 200) {
           const copia = respostaRede.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, copia));
         }
         return respostaRede;
-      });
+      }
+
+      // Revalida em paralelo; quem já está na tela segue com o cache.
+      const redePromise = fetch(req)
+        .then(async (respostaRede) => {
+          if (respostaRede && respostaRede.status === 200) {
+            const copia = respostaRede.clone();
+            const cache = await caches.open(CACHE_NAME);
+            const antigo = await cache.match(req);
+            const etagAntigo = antigo?.headers.get("etag");
+            const etagNovo = respostaRede.headers.get("etag");
+            await cache.put(req, copia);
+            // Só recarrega quando o conteúdo mudou de fato (ETag diferente).
+            // Sem ETag, não força recarga: recarregar a cada navegação por um
+            // asset estático seria pior que servir o antigo por um instante.
+            if (etagAntigo && etagNovo && etagAntigo !== etagNovo) {
+              const clientes = await self.clients.matchAll({ type: "window" });
+              for (const c of clientes) c.postMessage({ tipo: "asset-atualizado", url: req.url });
+            }
+          }
+          return respostaRede;
+        })
+        .catch(() => null);
+
+      // Não espera a rede: entrega o cache agora.
+      event.waitUntil(redePromise);
+      return respostaCache;
     })
   );
 });

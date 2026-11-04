@@ -70,7 +70,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
-              "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}",
+              // O ouvinte de `asset-atualizado` é o que fecha o ciclo do cache:
+              // o SW entrega o CSS do cache (rápido) e, se a rede trouxer uma
+              // versão diferente, avisa aqui e a página recarrega UMA vez. Sem
+              // isso, quem já visitou via HTML novo com CSS velho até a próxima
+              // visita — foi o que fez o login parecer quebrado após o redesign.
+              "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});navigator.serviceWorker.addEventListener('message',function(e){if(!e.data||e.data.tipo!=='asset-atualizado')return;try{if(sessionStorage.getItem('sesi.asset.recarregou')===e.data.url)return;sessionStorage.setItem('sesi.asset.recarregou',e.data.url);}catch(x){}location.reload();});});}",
           }}
         />
         <script

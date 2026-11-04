@@ -653,6 +653,9 @@
   font: inherit;
   font-size: var(--fs-300);
   font-weight: 700;
+  /* `.botao` também veste <Link> (ex.: "Ver a turma" na landing). Sem isto o
+     sublinhado do link corta o rótulo por dentro do botão. */
+  text-decoration: none;
   cursor: pointer;
   transition: opacity 0.16s var(--ease);
 }
