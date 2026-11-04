@@ -214,3 +214,25 @@
 .selecao-projeto {
   width: 100%;
 }
+/* O `.adm-select-sala-wrap` nasceu para embrulhar o <select> nativo da coluna
+   Sala (borda, padding e o ponto colorido). Com o `Selecao` dentro dele, as
+   duas caixas se sobrepõem e aparece a borda dupla — a "vermelha" vista em
+   04/11. O wrapper continua no DOM (o ponto de cor mora nele), mas deixa de
+   desenhar caixa: quem desenha agora é o gatilho. */
+.adm-select-sala-wrap:has(.selecao) {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.adm-select-sala-wrap:has(.selecao):hover,
+.adm-select-sala-wrap:has(.selecao):focus-within {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.adm-select-sala-wrap .selecao {
+  flex: 1;
+}

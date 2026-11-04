@@ -1194,46 +1194,78 @@ function LinhaEditarAluno({
   return (
     <tr>
       <td colSpan={6}>
-        <form
-          action={salvar}
-          style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "end" }}
-        >
-          <input type="hidden" name="id" value={aluno.id} />
-          <label className="campo-form">
-            <span className="label-texto">Nome</span>
-            <input
-              type="text"
-              name="nome"
-              className="input-texto"
-              defaultValue={aluno.nome}
-              required
-              minLength={2}
-              maxLength={120}
-            />
-          </label>
-          <label className="campo-form">
-            <span className="label-texto">E-mail da escola (opcional)</span>
-            <input
-              type="text"
-              name="email"
-              className="input-texto"
-              defaultValue={aluno.email ?? ""}
-              maxLength={120}
-              placeholder="aluno@estudante.sesisenai.org.br"
-            />
-          </label>
-          <button type="submit" className="botao" disabled={pendente}>
-            {pendente ? "Salvando…" : "Salvar"}
-          </button>
-          <button type="button" className="botao botao-fraco" onClick={onFechar}>
-            Cancelar
-          </button>
-          {!estado.ok && estado.mensagem ? (
-            <span className="recado recado-erro" role="status">
-              {estado.mensagem}
-            </span>
-          ) : null}
-        </form>
+        {/* Dois formulários IRMÃOS, nunca aninhados: o HTML não permite
+            <form> dentro de <form>, e o React acusava erro de hidratação.
+            O de cima salva nome/e-mail; cada chip de cargo tem o próprio. */}
+        <div className="adm-editor-linha">
+          <form
+            action={salvar}
+            className="adm-editor-dados"
+          >
+            <input type="hidden" name="id" value={aluno.id} />
+            <label className="campo-form">
+              <span className="label-texto">Nome</span>
+              <input
+                type="text"
+                name="nome"
+                className="input-texto"
+                defaultValue={aluno.nome}
+                required
+                minLength={2}
+                maxLength={120}
+              />
+            </label>
+            <label className="campo-form">
+              <span className="label-texto">E-mail da escola (opcional)</span>
+              <input
+                type="text"
+                name="email"
+                className="input-texto"
+                defaultValue={aluno.email ?? ""}
+                maxLength={120}
+                placeholder="aluno@estudante.sesisenai.org.br"
+              />
+            </label>
+            <button type="submit" className="botao" disabled={pendente}>
+              {pendente ? "Salvando…" : "Salvar"}
+            </button>
+            <button type="button" className="botao botao-fraco" onClick={onFechar}>
+              Cancelar
+            </button>
+            {!estado.ok && estado.mensagem ? (
+              <span className="recado recado-erro" role="status">
+                {estado.mensagem}
+              </span>
+            ) : null}
+          </form>
+
+          {/* Cargos (pedido de 04/11: "poder editar, tirar e botar cargos").
+              Cada chip é o próprio form — sem aninhamento — e mostra o estado
+              atual, então dá para ver o que está ligado sem sair da linha. */}
+          <div className="editor-cargos">
+            <span className="label-texto">Cargos</span>
+            <div className="editor-cargos-linha">
+              {(["fixado", "destaque"] as const).map((campo) => {
+                const ativo = Boolean(aluno[campo]);
+                return (
+                  <form key={campo} action={alternar}>
+                    <input type="hidden" name="id" value={aluno.id} />
+                    <input type="hidden" name="campo" value={campo} />
+                    <input type="hidden" name="valor" value={String(!ativo)} />
+                    <button
+                      type="submit"
+                      className={`chip-cargo ${ativo ? "chip-cargo-ativo" : ""}`}
+                      aria-pressed={ativo}
+                    >
+                      {ativo ? <IconeCheck tamanho={13} /> : <IconePlus tamanho={13} />}
+                      {campo === "fixado" ? "Fixado" : "Destaque"}
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </td>
     </tr>
   );
@@ -1312,7 +1344,7 @@ function SeletorSala({
           ariaLabel={`Trocar a turma de ${aluno.nome}`}
           placeholder="Sem sala definida"
           compacta
-          invalido={!estado.ok}
+          invalido={Boolean(estado.mensagem)}
           value={sala?.valor ?? ""}
           opcoes={[
             ...(sala?.lista ?? opcoesTurmas).map((opt) => ({ valor: opt.id, rotulo: opt.nome })),
