@@ -6,7 +6,13 @@
      as abas têm sublinhado. Até 05/10/2026 esta tela tinha paleta própria
      azul (PR #44) — o Théo reverteu em 05/10/2026 para o login abrir na cara
      do B. O `--azul` segue como dado de sala no resto do app. */
-  min-height: 100vh;
+  /* `100%`, não `100vh`: o container vive DENTRO de `.login-landing`, que já
+     reserva `100svh` e aplica 48px de padding. Com `100vh` aqui, os dois
+     somavam — a página nascia sempre 96px mais alta que a janela e ganhava
+     scroll vertical eterno (barra escura na borda, medido em 1440/1280/1024:
+     scrollHeight 996 para 900 de janela). `100%` ocupa a coluna do grid e não
+     reintroduz a viewport. */
+  min-height: 100%;
   display: flex;
   /* O card fica ancorado no TOPO, não centralizado: centralizado, o topo dele
      era função da própria altura, e as três abas têm alturas bem diferentes
@@ -275,6 +281,8 @@ body:has(.login-tela-container) {
 }
 
 .login-tela-container .botao-primario-grande:hover {
+  /* O hover escurece o fundo (regra do design-theo); a sombra é só o relevo. */
+  background: color-mix(in oklab, var(--accent) 88%, black);
   box-shadow: 0 14px 30px -6px color-mix(in srgb, var(--accent) 80%, transparent);
 }
 
