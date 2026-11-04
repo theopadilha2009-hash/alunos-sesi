@@ -390,7 +390,12 @@ export function PainelAdmIntegrado({
           tabIndex={subAba === "desafios" ? 0 : -1}
         >
           <IconeEstrela tamanho={15} />
-          <span>Desafios do Mural ({pendentes.length})</span>
+          {/* O número é de ENVIOS ESPERANDO JULGAMENTO, não de desafios.
+              Dizer "Desafios do Mural (0)" ao lado de um menu que mostra 4
+              desafios fazia parecer que os desafios tinham sumido. */}
+          <span>
+            Julgar envios{pendentes.length > 0 ? ` (${pendentes.length})` : ""}
+          </span>
         </button>
       </div>
 

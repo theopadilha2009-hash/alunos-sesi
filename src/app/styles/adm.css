@@ -512,28 +512,69 @@
 
 /* Editor inline da linha (04/11). Agora são DOIS formulários irmãos (dados e
    cargos), nunca aninhados — o HTML não permite <form> em <form>. */
+/* Editor da linha (redesenho de 04/11). Antes era uma tira de inputs soltos
+   no meio da tabela, com rótulo solto e sem nenhum agrupamento — o "aberto de
+   edição" parecia quebrado. Agora é um painel dentro da linha: fundo próprio,
+   grade de duas colunas, e os cargos viraram pílulas com o estado à vista.
+   A cor fica só no acento (pílula ligada) e no botão Salvar. */
 .adm-editor-linha {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.35rem 0 0.5rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem 1.25rem;
+  margin: 0.15rem 0;
+  border-radius: var(--raio-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .adm-editor-dados {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 0.9rem 1rem;
+  align-items: end;
+}
+
+/* Os botões formam a última linha do painel. Antes cada um caía na coluna do
+   grid e esticava (Cancelar virava um bloco de 441px); agora eles se agrupam
+   à direita, no tamanho do próprio conteúdo. */
+.adm-editor-dados > .botao,
+.adm-editor-dados > .botao-fraco {
+  grid-column: auto;
+  justify-self: start;
+  width: auto;
+}
+
+.adm-editor-dados > .recado {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .adm-editor-dados {
+    grid-template-columns: 1fr;
+  }
+
+  .adm-editor-dados > .botao,
+  .adm-editor-dados > .botao-fraco {
+    justify-self: stretch;
+  }
 }
 
 .editor-cargos {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  flex: 1 1 100%;
-  padding-top: 0.35rem;
+  gap: 0.55rem;
+  padding-top: 0.85rem;
   border-top: 1px solid var(--line-soft);
-  margin-top: 0.15rem;
+}
+
+/* Rótulo da seção: um passo acima do rótulo de campo, para a seção se ler
+   como seção — antes "Cargos" tinha o mesmo peso de "Nome". */
+.editor-cargos > .label-texto {
+  font-size: var(--fs-100);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
 }
 
 .editor-cargos-linha {

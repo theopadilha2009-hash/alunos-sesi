@@ -107,6 +107,9 @@
   gap: 1.5rem;
 }
 
+/* `height: 100%` faz o card ocupar a linha da grade: sem isso os cards tinham
+   alturas diferentes (672 x 674px) e os rodapés não se alinhavam entre
+   colunas. O `margin-top: auto` no rodapé (abaixo) fecha o alinhamento. */
 .card-desafio-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -115,6 +118,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  height: 100%;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
@@ -398,4 +402,10 @@
 .desafio-responsavel strong {
   color: var(--text);
   font-weight: 700;
+}
+
+/* Rodapé do card sempre colado no fim, então a linha de dados (submissões e
+   botão) fica na mesma altura em todos os cards da grade. */
+.card-desafio-item .desafio-card-footer {
+  margin-top: auto;
 }
