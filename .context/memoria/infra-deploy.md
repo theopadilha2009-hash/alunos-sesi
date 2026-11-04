@@ -67,3 +67,26 @@ para qualquer rota, o que engana quem testa por ali achando que é o app.
 `next typegen` antes do `tsc` de propósito — sem isso o CI quebra num clone limpo,
 porque `PageProps` e `RouteContext` só existem depois que o Next gera os tipos de
 rota. Ver [[segundo-app-nao-definido]] e [[rotacionar-tokens-do-transcript]].
+
+## 2026-11-04 — o projeto Supabase foi substituído
+
+O `adzauecsqoxgnvidrcfm` **deixou de existir**: o subdomínio não resolvia nem no DNS
+público (NXDOMAIN) e o pooler respondia `tenant/user … not found`. Não era rede nem
+credencial.
+
+- **Projeto novo:** `cqohdhkvosopzmqzmvkw`, org **`sesi`** (`ydsdkwkuiocmeicqbfgd`),
+  região `sa-east-1`, plano free. Criado pela Management API com o token pessoal do Théo.
+- **Host do pooler é `aws-1-sa-east-1.pooler.supabase.com`**, não `aws-0`: copiar o
+  `aws-0` do projeto antigo dá o mesmo `tenant not found` e parece falha de senha.
+- **Restore:** as 25 migrations de `src/sql` aplicadas em ordem pelo endpoint
+  `POST /v1/projects/<ref>/database/query` (ele aceita SQL multi-statement; o
+  `db-query.sh --psql` também serve, mas precisa do `.env.local` já correto).
+- **Senha do `theo1234` (super_adm) não vem do repo** — a migration grava
+  `!bloqueado` de propósito. Ela foi definida em 04/11 por
+  `NOVA_SENHA=… npm run senha -- --usuario theo1234` (stdin/`NOVA_SENHA`, nunca argv);
+  o script recusa stdin que não é terminal.
+- **Env da Vercel atualizada** em Production: `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`. O PATCH em lote dá 404;
+  a API é por variável (`/env/<id>`).
+- **Os dados reais se perderam:** voltaram só o schema e o seed de demonstração
+  (002 e 025). A vitrine mostrou 37 perfis, muitos `demo-*`.
