@@ -213,11 +213,46 @@
   gap: 0.4rem;
 }
 
+/* Tooltip do botão só de ícone. O `title` do navegador NUNCA aparece no
+   toque — no celular a pessoa via cinco quadradinhos mudos. O texto vem de
+   `data-dica` e aparece no hover (mouse) e no :focus-visible (teclado); no
+   toque, o `:active` resolve. */
+.btn-acao-tabela[data-dica] {
+  position: relative;
+}
+
+.btn-acao-tabela[data-dica]::after {
+  content: attr(data-dica);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 0;
+  padding: 0.28rem 0.5rem;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s var(--ease);
+  z-index: 5;
+}
+
+.btn-acao-tabela[data-dica]:hover::after,
+.btn-acao-tabela[data-dica]:focus-visible::after,
+.btn-acao-tabela[data-dica]:active::after {
+  opacity: 1;
+}
+
 .btn-acao-tabela {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid var(--line);
+  /* Sem contorno: a regra do design-theo reprova botão só com borda. O fundo
+     já dá a caixa; a borda some e o hover tinge o fundo. */
+  border: 0;
   background: var(--surface-2);
   color: var(--text);
   display: grid;

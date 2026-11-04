@@ -90,6 +90,14 @@ export function Vitrine({ alunos, salas, retrato, meusVotos, ehAdm = false }: Pr
       { sala, query, estrelados: meus, habilidade: habilidadeFiltro },
     );
 
+    if (ordenacao === "estrelas") {
+      // Pedido de 04/11: "aqui devia ficar em primeiro os mais com estrelas".
+      // O `ordenarAlunos` põe fixado e destaque na frente; na vitrine quem
+      // escolhe "Mais estrelados" quer o número, e só ele.
+      return [...filtrados].sort(
+        (a, b) => b.estrelas - a.estrelas || a.nome.localeCompare(b.nome, "pt-BR"),
+      );
+    }
     if (ordenacao === "nome") {
       return [...filtrados].sort((a, b) => a.nome.localeCompare(b.nome));
     }

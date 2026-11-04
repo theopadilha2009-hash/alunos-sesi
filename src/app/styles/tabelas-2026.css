@@ -166,3 +166,58 @@
     transition: none;
   }
 }
+
+/* Filtros enxutos do Portfólio (04/11): dois seletores lado a lado, com
+   quebra em telas estreitas. Substituem os 13 chips de sala + 10 de
+   competência que ficavam abertos na tela. */
+.filtros-enxutos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.filtros-enxutos .selecao {
+  min-width: 12rem;
+}
+
+@media (max-width: 560px) {
+  .filtros-enxutos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros-enxutos .selecao {
+    min-width: 0;
+  }
+}
+
+/* Telas menores (pedido de 04/11: "aplicar resolução para todos tipos de
+   monitores"). A tabela tem largura mínima de propósito — rola dentro do
+   próprio container em vez de espremer colunas. Abaixo de 1100px, o cabeçalho
+   do CRM e a barra de filtros também quebram em vez de vazar. */
+@media (max-width: 1100px) {
+  .crm-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .crm-header-acoes {
+    flex-wrap: wrap;
+  }
+
+  .filtros-enxutos .selecao {
+    flex: 1 1 12rem;
+  }
+}
+
+/* Abaixo de 720px a tabela continua rolando, mas ganha o esfumado da borda
+   que sinaliza "tem mais à direita" (ações da última coluna). */
+@media (max-width: 720px) {
+  .tabela-container,
+  .adm-tabela-wrap {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+}

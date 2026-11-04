@@ -374,3 +374,28 @@
   gap: 0.4rem;
   white-space: nowrap;
 }
+
+/* Capa do desafio (04/11): faixa no topo do card, proporção de foto.
+   `object-fit: cover` evita esticar o rosto de quem apresenta. */
+.desafio-capa {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  object-position: center 35%;
+  border-radius: 12px 12px 0 0;
+  display: block;
+  margin-bottom: 0.25rem;
+  background: var(--surface-2);
+}
+
+/* Quem apresenta o desafio — discreto, abaixo do subtítulo. */
+.desafio-responsavel {
+  margin: 0 0 0.6rem;
+  font-size: var(--fs-200);
+  color: var(--dim);
+}
+
+.desafio-responsavel strong {
+  color: var(--text);
+  font-weight: 700;
+}

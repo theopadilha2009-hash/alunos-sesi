@@ -463,15 +463,21 @@ body:has(.login-tela-container) {
 /* Selo curto de "Em breve" (Olimpíadas SESI). A tinta é o acento, não o
    amarelo de advertência: não é pendência, é aviso de conteúdo futuro. */
 .nav-badge-em-breve {
-  padding: 0.15rem 0.5rem;
+  /* Mesma altura de linha do contador ao lado: com line-height diferente o
+     selo subia e o item do menu ficava "torto" (relatado em 04/11). */
+  padding: 0.16rem 0.5rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+  color: color-mix(in srgb, var(--accent) 70%, var(--text));
   font-size: 0.62rem;
   font-weight: 800;
+  line-height: 1.3;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* O item do menu é flex: sem isto o selo estica ou encolhe com o texto. */
+  flex-shrink: 0;
+  align-self: center;
 }
 
 /* ── Canto Inferior Esquerdo da Sidebar (Card do Usuário) ──────────────── */
@@ -4583,3 +4589,29 @@ body:has(.login-tela-container) {
   }
 }
 
+
+/* Saída visível para o autofill: o navegador guarda a senha por endereço e
+   reenche o campo, e não há como o app apagar isso sozinho. Link discreto,
+   não botão — a ação forte desta tela continua sendo "Acessar o CRM". */
+.login-limpar-senha {
+  margin-top: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.login-limpar-senha:hover {
+  color: var(--text);
+}
+
+.login-limpar-senha:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
